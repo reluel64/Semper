@@ -1,0 +1,98 @@
+#pragma once
+#ifdef WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#include <windows.h>
+#endif
+
+#include <stdio.h>
+#include <math.h>
+#include <stddef.h>
+#include <skeleton.h>
+#include <linked_list.h>
+#include <event.h>
+#include <crosswin/crosswin.h>
+#include <diag.h>
+#ifndef unused_parameter
+#define unused_parameter(p) ((p)=(p))
+#endif
+
+#ifndef min
+#undef min
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+#else
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+
+#ifndef max
+#undef max
+#define max(a, b) (((a) > (b)) ? (a) : (b))
+#else
+#define max(a, b) (((a) > (b)) ? (a) : (b))
+#endif
+
+#undef CLAMP
+#define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
+
+typedef struct
+{
+#ifdef WIN32
+    OVERLAPPED over;
+#endif
+    void* pv;
+} semper_overlapped;
+
+
+typedef struct
+{
+    
+    void* pv;
+    unsigned char* kv; // this will store the key value
+    key lk;
+    section ls;
+    size_t depth;
+} skeleton_handler_data;
+
+typedef struct
+{
+    crosswin c;
+    unsigned char* root_dir;            // root directory path
+    unsigned char* cf;                  // configuration file
+    unsigned char* surface_dir;         // surfaces directory
+    unsigned char* ext_dir;             // extensions directory
+    unsigned char* font_cache_dir;
+    list_entry shead;                   // config skeleton
+    list_entry surfaces;                // surfaces head
+    section smp;                        //[Semper]
+    void *srf_reg;                      // surface registry
+    size_t surface_dir_length;
+    size_t ext_dir_length;
+    size_t root_dir_length;
+    event_queue* eq;                    //main event queue
+    void *ich;                          //image cache holder
+    void *ttip;                         //tooltip holder 
+    /*Surface Watcher*/
+#ifdef WIN32
+    semper_overlapped* so;
+    unsigned long* notify_buf;
+    void* dh;
+#elif __linux__
+    int inotify_fd;
+#endif
+    /*Diagnostic provider*/
+    void  *diag_prov;
+
+
+} control_data;
+
+typedef struct
+{
+    size_t tm1;
+    size_t tm2;
+} semper_timestamp;
+
+int semper_save_configuration(control_data* cd);
+int semper_get_file_timestamp(unsigned char *file,semper_timestamp *st);
+int diag_init(control_data *cd);
+int diag_log(unsigned char lvl,char *fmt, ...);
+int diag_print(void);
+/**************************************************************************/
