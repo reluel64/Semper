@@ -69,7 +69,7 @@ static size_t source_routines_table(unsigned char* s,source_table **st)
         { "Iterator",           iterator_init,              iterator_destroy,           iterator_update,            iterator_reset,             NULL,                                 iterator_command },
         { "FolderInfo",         folderinfo_init,            folderinfo_destroy,         folderinfo_update,          folderinfo_reset,           NULL,                                             NULL },
         //{ "WebGet",             webget_init,                webget_destroy,             webget_update,              webget_reset,               webget_string,                                    NULL },
-        { "WebGet",             webget2_init,                NULL,                      webget2_update,              webget2_reset,               webget2_string,                                    NULL },
+        { "WebGet",             webget2_init,                webget2_destroy,                      webget2_update,              webget2_reset,               webget2_string,                                    NULL },
         { "TimedAction",        timed_action_init,          timed_action_destroy,       NULL,                       timed_action_reset,         NULL,                             timed_action_command },
         { "Time",               time_init,                  time_destroy,               time_update,                time_reset,                 time_string,                                      NULL },
         { "Script",             script_init,                script_destroy,             script_update,              script_reset,               script_string,                          script_command },

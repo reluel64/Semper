@@ -8,3 +8,4 @@ void webget2_reset(void *spv,void *ip);
 void webget2_init(void **spv,void *ip);
 double webget2_update(void *spv);
 unsigned char *webget2_string(void *spv);
+void webget2_destroy(void **spv);

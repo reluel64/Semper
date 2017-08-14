@@ -50,7 +50,7 @@ SEMPER_API size_t extension_size_t(unsigned char* pn, void* ip, size_t def)
     {
         return (def);
     }
-    
+
     source* s = ip;
     return (parameter_size_t(s, pn, def, XPANDER_SOURCE));
 }
@@ -96,7 +96,7 @@ SEMPER_API unsigned char* extension_string(unsigned char* pn, unsigned char flag
     {
         return (NULL);
     }
-    
+
     source* s = ip;
     sfree((void**)&s->ext_str);
     s->ext_str = parameter_string(s, pn, def, (flags | XPANDER_REQUESTOR_SOURCE) & 0x13);
@@ -304,7 +304,11 @@ SEMPER_API unsigned char *extension_absolute_path(void *ip,unsigned char *rp,uns
         size_t rpl=string_length(rp);
         sfree((void**)&s->ext_str);
         s->ext_str=zmalloc(rootl+rpl+2); //null + /
-        snprintf(s->ext_str,rootl+rpl+1,"%s/%s",root,rp);
+        snprintf(s->ext_str,rootl+rpl+2,"%s/%s",root,rp);
+#ifdef WIN32
+        windows_slahses(s->ext_str);
+#endif
+        uniform_slashes(s->ext_str);
         return(s->ext_str);
     }
 

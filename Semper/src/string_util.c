@@ -574,6 +574,7 @@ int windows_slahses(unsigned char* s)
             s[i] = '\\';
         }
     }
+
     return (0);
 }
 

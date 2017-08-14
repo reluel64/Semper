@@ -72,6 +72,7 @@ static inline int speedfan_gather_data(speedfan_shared_memory *data)
 
         CloseHandle(fm);
     }
+
     return(ret);
 }
 
@@ -80,7 +81,8 @@ double extension_update_func(void *spv)
     speedfan_data *spd=spv;
     static speedfan_shared_memory data= {0};
     speedfan_gather_data(&data);
-
+    if(data.version!=1)
+        return(0.0);
     switch(spd->senz_type)
     {
     case 0:

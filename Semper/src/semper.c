@@ -345,11 +345,6 @@ static void semper_create_directory_path(control_data* cd)
             break;
         }
     }
-    for(size_t i = 0; pth[i]; i++)
-    {
-        if(pth[i] == '\\')
-            pth[i] = '/';
-    }
     SetCurrentDirectoryW(pth);
     buf = ucs_to_utf8(pth, NULL, 0);
     sfree((void**)&pth);
@@ -380,16 +375,24 @@ static void semper_create_directory_path(control_data* cd)
     cd->ext_dir = zmalloc(tsz + 1);
     snprintf(cd->ext_dir,tsz,"%s/Extensions",cd->root_dir);
     cd->ext_dir_length = tsz - 1;
-
+    #ifdef WIN32
+    windows_slahses(cd->ext_dir);
+    #endif
     /////////////////////////////////////////////////////////
     tsz = rdl + string_length("/Semper.ini") + 1;
     cd->cf = zmalloc(tsz);
     snprintf(cd->cf,tsz,"%s/Semper.ini",cd->root_dir);
+    #ifdef WIN32
+    windows_slahses(cd->cf);
+    #endif
     /////////////////////////////////////////////////////////
     tsz = rdl + string_length("/Surfaces") + 1;
     cd->surface_dir = zmalloc(tsz);
     snprintf(cd->surface_dir,tsz,"%s/Surfaces",cd->root_dir);
     cd->surface_dir_length = tsz - 1;
+     #ifdef WIN32
+    windows_slahses(cd->surface_dir);
+    #endif
     ////////////////////////////////////////////////////////
 }
 
@@ -632,7 +635,7 @@ static int semper_desktop_checker(control_data *cd)
 
 int main(void)
 {
-   
+
     control_data* cd = zmalloc(sizeof(control_data));
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
@@ -678,7 +681,7 @@ int main(void)
         }
         crosswin_message_dispatch(&cd->c); // dispatch any windows message
         event_process(cd->eq);             // process the queue
-        
+
         if(cd->c.quit)
             break;
     }
