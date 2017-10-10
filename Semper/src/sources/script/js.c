@@ -62,14 +62,14 @@ static duk_ret_t js_engine_object_get_x(duk_context *ctx)
 static duk_ret_t js_engine_object_get_y(duk_context *ctx)
 {
     script_item_data *sid=js_engine_item_data(ctx,"SemperObjectData");
-    
+
     if(sid)
     {
         double d= script_object_param(sid,2);
         duk_push_number(ctx,d);
         return(1);
     }
-    
+
     return(0);
 }
 
@@ -433,9 +433,9 @@ static duk_ret_t js_engine_parse_formula(duk_context *ctx)
     {
         return(0);
     }
-    
+
     double d=0.0;
-   
+
     if(math_parser(s,&d,NULL,NULL)==0)
     {
         duk_push_number(ctx,d);
@@ -586,7 +586,7 @@ static void js_engine_register(void *ctx,void *pv)
         { "xpand",          js_engine_xpand,                   1 },
         { "variable",       js_engine_variable,                1 },
         { "script",         js_engine_create_self_source,      0 },
-        { "formula",        js_engine_parse_formula,           1 }, 
+        { "formula",        js_engine_parse_formula,           1 },
         { NULL,             NULL,                              0 }
     };
 
@@ -656,7 +656,7 @@ unsigned char *js_engine_call_string(duk_context *ctx)
 
 void js_engine_call_command(duk_context *ctx,unsigned char *comm)
 {
-	if(duk_get_global_string(ctx,"script_command"))
+    if(duk_get_global_string(ctx,"script_command"))
     {
         if(comm)
         {

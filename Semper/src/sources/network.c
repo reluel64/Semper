@@ -171,8 +171,6 @@ static size_t network_get_bytes(network *n)
         }
         else
         {
-
-
             for(size_t i=0; i<tbl->NumEntries; i++)
             {
                 if(tbl->Table[i].InterfaceIndex==(NET_IFINDEX)n->if_index)

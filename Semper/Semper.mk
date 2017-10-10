@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=amdv2
-Date                   :=14/08/2017
+Date                   :=10/10/2017
 CodeLitePath           :="C:/Program Files/CodeLite"
 LinkerName             :=D:/mingw-w64/x86_64-7.1.0-posix-seh-rt_v5-rev0/mingw64/bin/g++.exe
 SharedObjectLinkerName :=D:/mingw-w64/x86_64-7.1.0-posix-seh-rt_v5-rev0/mingw64/bin/g++.exe -shared -fPIC
@@ -68,12 +68,13 @@ CompilerLib:=$(CompilerDir)\lib
 Objects0=$(IntermediateDirectory)/src_ancestor.c$(ObjectSuffix) $(IntermediateDirectory)/src_bind.c$(ObjectSuffix) $(IntermediateDirectory)/src_command.c$(ObjectSuffix) $(IntermediateDirectory)/src_diag.c$(ObjectSuffix) $(IntermediateDirectory)/src_enumerator.c$(ObjectSuffix) $(IntermediateDirectory)/src_event.c$(ObjectSuffix) $(IntermediateDirectory)/src_ini_parser.c$(ObjectSuffix) $(IntermediateDirectory)/src_math_parser.c$(ObjectSuffix) $(IntermediateDirectory)/src_mem.c$(ObjectSuffix) $(IntermediateDirectory)/src_mouse.c$(ObjectSuffix) \
 	$(IntermediateDirectory)/src_parameter.c$(ObjectSuffix) $(IntermediateDirectory)/src_semper.c$(ObjectSuffix) $(IntermediateDirectory)/src_skeleton.c$(ObjectSuffix) $(IntermediateDirectory)/src_string_util.c$(ObjectSuffix) $(IntermediateDirectory)/src_surface.c$(ObjectSuffix) $(IntermediateDirectory)/src_surface_builtin.c$(ObjectSuffix) $(IntermediateDirectory)/src_team.c$(ObjectSuffix) $(IntermediateDirectory)/src_xpander.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_action.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_average.c$(ObjectSuffix) \
 	$(IntermediateDirectory)/src_sources_calculator.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_disk.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_extension.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_folderinfo.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_folderview.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_input.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_iterator.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_memory.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_network.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_processor.c$(ObjectSuffix) \
-	$(IntermediateDirectory)/src_sources_replacer.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_script.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_source.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_string.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_timed_action.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_time_s.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_webget.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_wifi.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_webget_reborn.c$(ObjectSuffix) $(IntermediateDirectory)/src_3rdparty_duktape.c$(ObjectSuffix) \
-	$(IntermediateDirectory)/src_3rdparty_unicode_table.c$(ObjectSuffix) $(IntermediateDirectory)/src_crosswin_crosswin.c$(ObjectSuffix) $(IntermediateDirectory)/src_crosswin_win32.c$(ObjectSuffix) $(IntermediateDirectory)/src_crosswin_xlib.c$(ObjectSuffix) $(IntermediateDirectory)/src_image_image_cache.c$(ObjectSuffix) $(IntermediateDirectory)/src_image_image_cache_bmp.c$(ObjectSuffix) $(IntermediateDirectory)/src_image_image_cache_jpeg.c$(ObjectSuffix) $(IntermediateDirectory)/src_image_image_cache_png.c$(ObjectSuffix) $(IntermediateDirectory)/src_image_image_cache_svg.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_arc.c$(ObjectSuffix) \
-	$(IntermediateDirectory)/src_objects_bar.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_button.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_histogram.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_image.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_line.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_object.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_spinner.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_string.c$(ObjectSuffix) 
+	$(IntermediateDirectory)/src_sources_replacer.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_script.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_source.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_string.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_timed_action.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_time_s.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_wifi.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_webget.c$(ObjectSuffix) $(IntermediateDirectory)/src_3rdparty_duktape.c$(ObjectSuffix) $(IntermediateDirectory)/src_3rdparty_unicode_table.c$(ObjectSuffix) \
+	$(IntermediateDirectory)/src_crosswin_crosswin.c$(ObjectSuffix) $(IntermediateDirectory)/src_crosswin_win32.c$(ObjectSuffix) $(IntermediateDirectory)/src_crosswin_xlib.c$(ObjectSuffix) $(IntermediateDirectory)/src_image_image_cache.c$(ObjectSuffix) $(IntermediateDirectory)/src_image_image_cache_bmp.c$(ObjectSuffix) $(IntermediateDirectory)/src_image_image_cache_jpeg.c$(ObjectSuffix) $(IntermediateDirectory)/src_image_image_cache_png.c$(ObjectSuffix) $(IntermediateDirectory)/src_image_image_cache_svg.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_arc.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_bar.c$(ObjectSuffix) \
+	$(IntermediateDirectory)/src_objects_button.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_histogram.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_image.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_line.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_object.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_spinner.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_string.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_vector.c$(ObjectSuffix) 
 
 Objects1=$(IntermediateDirectory)/src_sources_internal__diag_show.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_internal__surface_collector.c$(ObjectSuffix) \
-	$(IntermediateDirectory)/src_sources_internal__surface_info.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_internal__surface_lister.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_script_js.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_script_lua.c$(ObjectSuffix) 
+	$(IntermediateDirectory)/src_sources_internal__surface_info.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_internal__surface_lister.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_script_js.c$(ObjectSuffix) $(IntermediateDirectory)/src_sources_script_lua.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_string_string_attr.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_string_string_attr_font.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_string_string_attr_size.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_string_string_attr_underline.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_string_string_attr_weight.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_string_string_attr_strike.c$(ObjectSuffix) \
+	$(IntermediateDirectory)/src_objects_string_string_attr_style.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_string_string_attr_stretch.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_string_string_attr_rise.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_string_string_attr_case.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_string_string_attr_spacing.c$(ObjectSuffix) $(IntermediateDirectory)/src_objects_string_string_attr_color.c$(ObjectSuffix) 
 
 
 
@@ -294,20 +295,15 @@ $(IntermediateDirectory)/src_sources_time_s.c$(ObjectSuffix): src/sources/time_s
 $(IntermediateDirectory)/src_sources_time_s.c$(PreprocessSuffix): src/sources/time_s.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_sources_time_s.c$(PreprocessSuffix) src/sources/time_s.c
 
-$(IntermediateDirectory)/src_sources_webget.c$(ObjectSuffix): src/sources/webget.c 
-	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/sources/webget.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_sources_webget.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/src_sources_webget.c$(PreprocessSuffix): src/sources/webget.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_sources_webget.c$(PreprocessSuffix) src/sources/webget.c
-
 $(IntermediateDirectory)/src_sources_wifi.c$(ObjectSuffix): src/sources/wifi.c 
 	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/sources/wifi.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_sources_wifi.c$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/src_sources_wifi.c$(PreprocessSuffix): src/sources/wifi.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_sources_wifi.c$(PreprocessSuffix) src/sources/wifi.c
 
-$(IntermediateDirectory)/src_sources_webget_reborn.c$(ObjectSuffix): src/sources/webget_reborn.c 
-	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/sources/webget_reborn.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_sources_webget_reborn.c$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/src_sources_webget_reborn.c$(PreprocessSuffix): src/sources/webget_reborn.c
-	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_sources_webget_reborn.c$(PreprocessSuffix) src/sources/webget_reborn.c
+$(IntermediateDirectory)/src_sources_webget.c$(ObjectSuffix): src/sources/webget.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/sources/webget.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_sources_webget.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_sources_webget.c$(PreprocessSuffix): src/sources/webget.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_sources_webget.c$(PreprocessSuffix) src/sources/webget.c
 
 $(IntermediateDirectory)/src_3rdparty_duktape.c$(ObjectSuffix): src/3rdparty/duktape.c 
 	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/3rdparty/duktape.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_3rdparty_duktape.c$(ObjectSuffix) $(IncludePath)
@@ -404,6 +400,11 @@ $(IntermediateDirectory)/src_objects_string.c$(ObjectSuffix): src/objects/string
 $(IntermediateDirectory)/src_objects_string.c$(PreprocessSuffix): src/objects/string.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_string.c$(PreprocessSuffix) src/objects/string.c
 
+$(IntermediateDirectory)/src_objects_vector.c$(ObjectSuffix): src/objects/vector.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/objects/vector.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_objects_vector.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_objects_vector.c$(PreprocessSuffix): src/objects/vector.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_vector.c$(PreprocessSuffix) src/objects/vector.c
+
 $(IntermediateDirectory)/src_sources_internal__diag_show.c$(ObjectSuffix): src/sources/internal/_diag_show.c 
 	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/sources/internal/_diag_show.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_sources_internal__diag_show.c$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/src_sources_internal__diag_show.c$(PreprocessSuffix): src/sources/internal/_diag_show.c
@@ -433,6 +434,66 @@ $(IntermediateDirectory)/src_sources_script_lua.c$(ObjectSuffix): src/sources/sc
 	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/sources/script/lua.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_sources_script_lua.c$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/src_sources_script_lua.c$(PreprocessSuffix): src/sources/script/lua.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_sources_script_lua.c$(PreprocessSuffix) src/sources/script/lua.c
+
+$(IntermediateDirectory)/src_objects_string_string_attr.c$(ObjectSuffix): src/objects/string/string_attr.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/objects/string/string_attr.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_objects_string_string_attr.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_objects_string_string_attr.c$(PreprocessSuffix): src/objects/string/string_attr.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_string_string_attr.c$(PreprocessSuffix) src/objects/string/string_attr.c
+
+$(IntermediateDirectory)/src_objects_string_string_attr_font.c$(ObjectSuffix): src/objects/string/string_attr_font.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/objects/string/string_attr_font.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_objects_string_string_attr_font.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_objects_string_string_attr_font.c$(PreprocessSuffix): src/objects/string/string_attr_font.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_string_string_attr_font.c$(PreprocessSuffix) src/objects/string/string_attr_font.c
+
+$(IntermediateDirectory)/src_objects_string_string_attr_size.c$(ObjectSuffix): src/objects/string/string_attr_size.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/objects/string/string_attr_size.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_objects_string_string_attr_size.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_objects_string_string_attr_size.c$(PreprocessSuffix): src/objects/string/string_attr_size.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_string_string_attr_size.c$(PreprocessSuffix) src/objects/string/string_attr_size.c
+
+$(IntermediateDirectory)/src_objects_string_string_attr_underline.c$(ObjectSuffix): src/objects/string/string_attr_underline.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/objects/string/string_attr_underline.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_objects_string_string_attr_underline.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_objects_string_string_attr_underline.c$(PreprocessSuffix): src/objects/string/string_attr_underline.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_string_string_attr_underline.c$(PreprocessSuffix) src/objects/string/string_attr_underline.c
+
+$(IntermediateDirectory)/src_objects_string_string_attr_weight.c$(ObjectSuffix): src/objects/string/string_attr_weight.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/objects/string/string_attr_weight.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_objects_string_string_attr_weight.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_objects_string_string_attr_weight.c$(PreprocessSuffix): src/objects/string/string_attr_weight.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_string_string_attr_weight.c$(PreprocessSuffix) src/objects/string/string_attr_weight.c
+
+$(IntermediateDirectory)/src_objects_string_string_attr_strike.c$(ObjectSuffix): src/objects/string/string_attr_strike.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/objects/string/string_attr_strike.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_objects_string_string_attr_strike.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_objects_string_string_attr_strike.c$(PreprocessSuffix): src/objects/string/string_attr_strike.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_string_string_attr_strike.c$(PreprocessSuffix) src/objects/string/string_attr_strike.c
+
+$(IntermediateDirectory)/src_objects_string_string_attr_style.c$(ObjectSuffix): src/objects/string/string_attr_style.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/objects/string/string_attr_style.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_objects_string_string_attr_style.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_objects_string_string_attr_style.c$(PreprocessSuffix): src/objects/string/string_attr_style.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_string_string_attr_style.c$(PreprocessSuffix) src/objects/string/string_attr_style.c
+
+$(IntermediateDirectory)/src_objects_string_string_attr_stretch.c$(ObjectSuffix): src/objects/string/string_attr_stretch.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/objects/string/string_attr_stretch.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_objects_string_string_attr_stretch.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_objects_string_string_attr_stretch.c$(PreprocessSuffix): src/objects/string/string_attr_stretch.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_string_string_attr_stretch.c$(PreprocessSuffix) src/objects/string/string_attr_stretch.c
+
+$(IntermediateDirectory)/src_objects_string_string_attr_rise.c$(ObjectSuffix): src/objects/string/string_attr_rise.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/objects/string/string_attr_rise.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_objects_string_string_attr_rise.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_objects_string_string_attr_rise.c$(PreprocessSuffix): src/objects/string/string_attr_rise.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_string_string_attr_rise.c$(PreprocessSuffix) src/objects/string/string_attr_rise.c
+
+$(IntermediateDirectory)/src_objects_string_string_attr_case.c$(ObjectSuffix): src/objects/string/string_attr_case.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/objects/string/string_attr_case.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_objects_string_string_attr_case.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_objects_string_string_attr_case.c$(PreprocessSuffix): src/objects/string/string_attr_case.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_string_string_attr_case.c$(PreprocessSuffix) src/objects/string/string_attr_case.c
+
+$(IntermediateDirectory)/src_objects_string_string_attr_spacing.c$(ObjectSuffix): src/objects/string/string_attr_spacing.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/objects/string/string_attr_spacing.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_objects_string_string_attr_spacing.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_objects_string_string_attr_spacing.c$(PreprocessSuffix): src/objects/string/string_attr_spacing.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_string_string_attr_spacing.c$(PreprocessSuffix) src/objects/string/string_attr_spacing.c
+
+$(IntermediateDirectory)/src_objects_string_string_attr_color.c$(ObjectSuffix): src/objects/string/string_attr_color.c 
+	$(CC) $(SourceSwitch) "D:/Semper_Workspace/Semper/src/objects/string/string_attr_color.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/src_objects_string_string_attr_color.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/src_objects_string_string_attr_color.c$(PreprocessSuffix): src/objects/string/string_attr_color.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/src_objects_string_string_attr_color.c$(PreprocessSuffix) src/objects/string/string_attr_color.c
 
 ##
 ## Clean

@@ -19,13 +19,13 @@
 #include <objects/object.h>
 #include <sources/source.h>
 
-typedef struct _enumerator
+typedef struct
 {
     void* anc; //ancestor queue
     section s; // starting section
     section as; // ancestor section
     key k;      //current key
-    section head;
+    section head; //skeleton head
 } enumerator;
 
 unsigned char* enumerator_first_value(void* r, int rt, void** ed)

@@ -13,6 +13,8 @@ Written by Alexandru-Daniel Mărgărit
 #include <objects/arc.h>
 #include <objects/spinner.h>
 #include <objects/button.h>
+#include <objects/string.h>
+#include <objects/vector.h>
 #include <string_util.h>
 #include <mem.h>
 #include <bind.h>
@@ -48,6 +50,7 @@ static int object_routines_table(object_routine_entry **ore,unsigned char *on)
         {"Arc",         arc_init,       arc_reset,          arc_update,         arc_render,                   arc_destroy},
         {"Spinner",     spinner_init,   spinner_reset,      spinner_update,     spinner_render,           spinner_destroy},
         {"Button",      button_init,    button_reset,       button_update,      button_render,             button_destroy},
+        {"Vector",      vector_init,    vector_reset,       vector_update,      vector_render,             vector_destroy},
     };
 
     if(on==NULL||ore==NULL)
@@ -68,10 +71,6 @@ static int object_routines_table(object_routine_entry **ore,unsigned char *on)
 
 static void object_render_background(object* o, cairo_t* cr)
 {
-
-    cairo_pattern_t* background = cairo_pattern_create_linear(o->w / 2, 0.0, o->w / 2, o->h);
-
-
     long w = o->w < 0 ? o->auto_w : o->w;
     long h = o->h < 0 ? o->auto_h : o->h;
     unsigned char* color = NULL;
@@ -85,6 +84,7 @@ static void object_render_background(object* o, cairo_t* cr)
     green = (double)color[1] / 255.0;
     blue = (double)color[0] / 255.0;
     alpha = (double)color[3] / 255.0;
+    cairo_pattern_t* background = cairo_pattern_create_linear(w / 2, 0.0, w / 2, h);
     cairo_pattern_add_color_stop_rgba(background, 0, red, green, blue, alpha);
 
     if(o->back_color_2)
@@ -167,8 +167,8 @@ int object_calculate_coordinates(object* o)
 
     if(nx!=o->x||ny!=o->y)
     {
-      o->x=nx;
-      o->y=ny;
+        o->x=nx;
+        o->y=ny;
     }
 
     return (1);
@@ -178,7 +178,7 @@ static void object_render_internal(object* o, cairo_t* cr)
 {
     long w = o->w < 0 ? o->auto_w : o->w;
     long h = o->h < 0 ? o->auto_h : o->h;
-    cairo_save(cr);
+
     cairo_matrix_t m = { 0 };
     cairo_matrix_init_translate(&m, o->x + o->op.left, o->y + o->op.top);
 
@@ -188,13 +188,15 @@ static void object_render_internal(object* o, cairo_t* cr)
         cairo_matrix_rotate(&m, DEG2RAD(o->angle));
         cairo_matrix_translate(&m, -w / 2, -h / 2);
     }
+    cairo_save(cr);
     cairo_set_matrix(cr, &m);
 
     object_render_background(o, cr);
 
     if(o->object_render_rtn)
+    {
         o->object_render_rtn(o, cr);
-
+    }
     cairo_restore(cr);
 }
 
@@ -317,7 +319,9 @@ void object_render(surface_data* sd, cairo_t* cr)
         {
             continue;
         }
+
         object_calculate_coordinates(o);
+
         if(o->enabled && o->hidden == 0 )
         {
             object_render_internal(o, cr);
@@ -330,21 +334,18 @@ int object_tooltip_update(object *o)
     surface_data *tsd=o->ttip;
     surface_data *sd=o->sd;
 
-    unsigned char titfmt[]= {"Variable(Title,\"%s\")"};
-    unsigned char txtfmt[]= {"Variable(Text,\"%s\")"};
 
-
-    string_bind titsb= {0};
-    string_bind txtsb= {0};
 
 
     if(o->ttip_title)
     {
+        string_bind titsb= {0};
         titsb.s_in=o->ttip_title;
         bind_update_string(o,&titsb);
 
         if(titsb.s_out)
         {
+            unsigned char titfmt[]= {"Variable(Title,\"%s\")"};
             size_t fbuf=sizeof(titfmt)+string_length(titsb.s_out);
             unsigned char *buf=zmalloc(fbuf+1);
             if(titsb.s_out[0]!=' ')
@@ -358,7 +359,7 @@ int object_tooltip_update(object *o)
     }
     else
     {
-         unsigned char *empty_title="Parameter(Title,Disabled,1); \
+        unsigned char *empty_title="Parameter(Title,Disabled,1); \
                                      Parameter(Title,W,0);\
                                      Parameter(Title,H,0);\
                                      Parameter(Title,X,0);\
@@ -369,11 +370,13 @@ int object_tooltip_update(object *o)
 
     if(o->ttip_text)
     {
+        string_bind txtsb= {0};
         txtsb.s_in=o->ttip_text;
         bind_update_string(o,&txtsb);
 
         if(txtsb.s_out)
         {
+            unsigned char txtfmt[]= {"Variable(Text,\"%s\")"};
             size_t fbuf=sizeof(txtfmt)+string_length(txtsb.s_out);
             unsigned char *buf=zmalloc(fbuf+1);
             if(txtsb.s_out[0]!=' ')

@@ -7305,8 +7305,8 @@ struct duk_harray
           DUK_HBUFFER_EXTERNAL_GET_DATA_PTR((heap), (duk_hbuffer_external *) (x)) : \
           DUK_HBUFFER_DYNAMIC_GET_DATA_PTR((heap), (duk_hbuffer_dynamic *) (x)) \
         ) : \
-            DUK_HBUFFER_FIXED_GET_DATA_PTR((heap), (duk_hbuffer_fixed *) (x)) \
-                                              )
+        DUK_HBUFFER_FIXED_GET_DATA_PTR((heap), (duk_hbuffer_fixed *) (x)) \
+                                          )
 #else
 /* Without heap pointer compression duk_hbuffer_dynamic and duk_hbuffer_external
  * have the same layout so checking for fixed vs. dynamic (or external) is enough.
@@ -14390,7 +14390,7 @@ DUK_LOCAL void duk__base64_encode_helper(const duk_uint8_t *src, duk_size_t srcl
 
     switch (n_final)
     {
-        /* case 0: nop */
+    /* case 0: nop */
     case 1:
     {
         /* XX== */
@@ -19091,10 +19091,10 @@ DUK_EXTERNAL duk_size_t duk_get_length(duk_context *ctx, duk_idx_t idx)
     case DUK_TAG_POINTER:
         return 0;
 #if defined(DUK_USE_PREFER_SIZE)
-        /* All of these types (besides object) have a virtual, non-configurable
-         * .length property which is within size_t range so we can just look it
-         * up without specific type checks.
-         */
+    /* All of these types (besides object) have a virtual, non-configurable
+     * .length property which is within size_t range so we can just look it
+     * up without specific type checks.
+     */
     case DUK_TAG_STRING:
     case DUK_TAG_BUFFER:
     case DUK_TAG_LIGHTFUNC:
@@ -22817,7 +22817,7 @@ DUK_LOCAL void duk__push_hstring_readable_unicode(duk_context *ctx, duk_hstring 
     duk_hthread *thr;
     const duk_uint8_t *p, *p_start, *p_end;
     duk_uint8_t buf[DUK_UNICODE_MAX_XUTF8_LENGTH * DUK__READABLE_STRING_MAXCHARS +
-                    2 /*quotes*/ + 3 /*periods*/];
+                                                 2 /*quotes*/ + 3 /*periods*/];
     duk_uint8_t *q;
     duk_ucodepoint_t cp;
     duk_small_uint_t nchars;
@@ -32491,7 +32491,7 @@ DUK_INTERNAL duk_ret_t duk_bi_function_prototype_apply(duk_context *ctx)
         DUK_ASSERT_TOP(ctx, 2);  /* not a vararg function */
         duk_push_this(ctx);
         duk_insert(ctx, 0);
-        /* Fall through intentionally for shared handling. */
+    /* Fall through intentionally for shared handling. */
     case 1:  /* Reflect.apply(); Function.prototype.apply() after 'this' fixup. */
         DUK_ASSERT_TOP(ctx, 3);  /* not a vararg function */
         idx_args = 2;
@@ -35966,7 +35966,7 @@ DUK_LOCAL duk_bool_t duk__enc_value(duk_json_enc_ctx *js_ctx, duk_idx_t idx_hold
     switch (DUK_TVAL_GET_TAG(tv))
     {
 #if defined(DUK_USE_JX) || defined(DUK_USE_JC)
-        /* When JX/JC not in use, the type mask above will avoid this case if needed. */
+    /* When JX/JC not in use, the type mask above will avoid this case if needed. */
     case DUK_TAG_UNDEFINED:
     {
         DUK__EMIT_STRIDX(js_ctx, js_ctx->stridx_custom_undefined);
@@ -38497,8 +38497,8 @@ DUK_INTERNAL duk_ret_t duk_bi_object_setprototype_shared(duk_context *ctx)
     {
         duk_hobject *curr_proto;
         curr_proto = thr->builtins[(mask & DUK_TYPE_MASK_LIGHTFUNC) ?
-                                   DUK_BIDX_FUNCTION_PROTOTYPE :
-                                   DUK_BIDX_UINT8ARRAY_PROTOTYPE];
+                                                                    DUK_BIDX_FUNCTION_PROTOTYPE :
+                                                                    DUK_BIDX_UINT8ARRAY_PROTOTYPE];
         if (h_new_proto == curr_proto)
         {
             goto skip;
@@ -40410,7 +40410,7 @@ found:
 #else  /* DUK_USE_REGEXP_SUPPORT */
                     goto repl_write;  /* unconditionally */
 #endif  /* DUK_USE_REGEXP_SUPPORT */
-                }  /* default case */
+                    }  /* default case */
                 }  /* switch (ch2) */
 
 repl_write:
@@ -69990,7 +69990,7 @@ DUK_LOCAL void duk__expr_nud(duk_compiler_ctx *comp_ctx, duk_ivalue *res)
     switch (tok)
     {
 
-        /* PRIMARY EXPRESSIONS */
+    /* PRIMARY EXPRESSIONS */
 
     case DUK_TOK_THIS:
     {
@@ -70551,7 +70551,7 @@ DUK_LOCAL void duk__expr_led(duk_compiler_ctx *comp_ctx, duk_ivalue *left, duk_i
     switch (tok)
     {
 
-        /* PRIMARY EXPRESSIONS */
+    /* PRIMARY EXPRESSIONS */
 
     case DUK_TOK_PERIOD:
     {
@@ -70739,7 +70739,7 @@ DUK_LOCAL void duk__expr_led(duk_compiler_ctx *comp_ctx, duk_ivalue *left, duk_i
         goto postincdec;
     }
 
-    /* EXPONENTIATION EXPRESSION */
+        /* EXPONENTIATION EXPRESSION */
 
 #if defined(DUK_USE_ES7_EXP_OPERATOR)
     case DUK_TOK_EXP:
@@ -77989,14 +77989,14 @@ restart_execution:
     }
 #endif
 
-            /* XXX: 12 + 12 bit variant might make sense too, for both reg and
-             * const loads.
-             */
+        /* XXX: 12 + 12 bit variant might make sense too, for both reg and
+         * const loads.
+         */
 
-            /* For LDREG, STREG, LDCONST footprint optimized variants would just
-             * duk_dup() + duk_replace(), but because they're used quite a lot
-             * they're currently intentionally not size optimized.
-             */
+        /* For LDREG, STREG, LDCONST footprint optimized variants would just
+         * duk_dup() + duk_replace(), but because they're used quite a lot
+         * they're currently intentionally not size optimized.
+         */
         case DUK_OP_LDREG:
         {
             duk_tval *tv1, *tv2;
@@ -78027,10 +78027,10 @@ restart_execution:
             break;
         }
 
-        /* LDINT and LDINTX are intended to load an arbitrary signed
-         * 32-bit value.  Only an LDINT+LDINTX sequence is supported.
-         * This also guarantees all values remain fastints.
-         */
+            /* LDINT and LDINTX are intended to load an arbitrary signed
+             * 32-bit value.  Only an LDINT+LDINTX sequence is supported.
+             * This also guarantees all values remain fastints.
+             */
 #if defined(DUK_USE_EXEC_PREFER_SIZE)
         case DUK_OP_LDINT:
         {
@@ -78256,7 +78256,7 @@ restart_execution:
 #endif  /* DUK_USE_EXEC_PREFER_SIZE */
         }
 
-        /* Equality: E5 Sections 11.9.1, 11.9.3 */
+            /* Equality: E5 Sections 11.9.1, 11.9.3 */
 
 #define DUK__EQ_BODY(barg,carg) { \
     duk_bool_t tmp; \
@@ -78406,7 +78406,7 @@ restart_execution:
             DUK__LE_BODY(DUK__CONSTP_B(ins), DUK__CONSTP_C(ins));
 #endif  /* DUK_USE_EXEC_PREFER_SIZE */
 
-            /* No size optimized variant at present for IF. */
+        /* No size optimized variant at present for IF. */
         case DUK_OP_IFTRUE_R:
         {
             if (duk_js_toboolean(DUK__REGP_BC(ins)) != 0)
@@ -78759,7 +78759,7 @@ restart_execution:
         }
 #endif  /* DUK_USE_EXEC_PREFER_SIZE */
 
-        /* For INSTOF and IN, B is always a register. */
+            /* For INSTOF and IN, B is always a register. */
 #define DUK__INSTOF_BODY(barg,carg) { \
     duk_bool_t tmp; \
     tmp = duk_js_instanceof(thr, (barg), (carg)); \
@@ -78951,9 +78951,9 @@ restart_execution:
 #endif
         }
 
-        /* XXX: GETPROP where object is 'this', GETPROPT?
-         * Occurs relatively often in object oriented code.
-         */
+            /* XXX: GETPROP where object is 'this', GETPROPT?
+             * Occurs relatively often in object oriented code.
+             */
 
 #define DUK__GETPROP_BODY(barg,carg) { \
     /* A -> target reg \
@@ -79021,7 +79021,7 @@ restart_execution:
             DUK__DELPROP_BODY(DUK__REGP_B(ins), DUK__CONSTP_C(ins));
 #endif  /* DUK_USE_EXEC_PREFER_SIZE */
 
-            /* No fast path for DECLVAR now, it's quite a rare instruction. */
+        /* No fast path for DECLVAR now, it's quite a rare instruction. */
         case DUK_OP_DECLVAR_RR:
         case DUK_OP_DECLVAR_CR:
         case DUK_OP_DECLVAR_RC:
@@ -85095,7 +85095,7 @@ DUK_LOCAL void duk__lexer_parse_string_literal(duk_lexer_ctx *lex_ctx, duk_token
                     /* escaped NonEscapeCharacter */
                     DUK__APPENDBUFFER(lex_ctx, x);
                 }
-            }  /* end default clause */
+                }  /* end default clause */
             }  /* end switch */
 
             /* Shared handling for single codepoint escapes. */

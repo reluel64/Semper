@@ -18,4 +18,3 @@ void *ancestor_fusion(void *r,unsigned char *npm,unsigned char xpander_flags,uns
 
 
 int ancestor_destroy_queue(void **qh);
-

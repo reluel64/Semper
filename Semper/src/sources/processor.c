@@ -319,7 +319,7 @@ static double processor_usage(processor* p)
 
 
 #endif
- return(ret);
+    return(ret);
 }
 
 

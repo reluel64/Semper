@@ -10,13 +10,13 @@
 #include <mouse.h>
 
 #define cairo_set_color(cr,color) \
-{ \
-    double alpha=((double)(((color)&0xff000000)>>24)) /255.0; \
-    double red=  ((double)(((color)&0x00ff0000)>>16)) /255.0; \
-    double green=((double)(((color)&0x0000ff00)>>8))  /255.0; \
-    double blue= ((double)((color)&0x000000ff))       /255.0; \
-    cairo_set_source_rgba((cr),red,green,blue,alpha); \
-}
+    { \
+        double alpha=((double)(((color)&0xff000000)>>24)) /255.0; \
+        double red=  ((double)(((color)&0x00ff0000)>>16)) /255.0; \
+        double green=((double)(((color)&0x0000ff00)>>8))  /255.0; \
+        double blue= ((double)((color)&0x000000ff))       /255.0; \
+        cairo_set_source_rgba((cr),red,green,blue,alpha); \
+    }
 
 typedef struct _surface_paths
 {
@@ -25,7 +25,7 @@ typedef struct _surface_paths
     unsigned char* surface_dir;                     // absolute surface directory
     unsigned char* surface_file;                    // file name
     unsigned char* surface_rel_dir;                 // surface relative name (acts as the surface name)
-   // unsigned char* inc;                             // surface header directory
+    // unsigned char* inc;                             // surface header directory
     size_t variant;                                 // this is used to obtain file name
 } surface_paths;
 

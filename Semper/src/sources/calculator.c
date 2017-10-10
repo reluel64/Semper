@@ -143,17 +143,17 @@ void calculator_reset(void* spv, void* ip)
     c->rg.max_random = (unsigned short)extension_double("MaxRandom", ip, 65535.0);
     c->rg.min_random = (unsigned short)extension_double("MinRandom", ip, 0.0);
     c->rg.seed = (unsigned int)time(NULL);
-    
+
     if(c->rg.max_random == 0)
     {
         c->rg.max_random = 100;
     }
-    
+
     if(c->rg.max_random == c->rg.min_random)
     {
         c->rg.max_random = c->rg.min_random + 1;
     }
-    
+
     c->rg.update = 1; // set it, temporarly, to 1 in order to obtain a first and potentially the single random number
     calculator_random(c);
     c->rg.update = extension_bool("RefreshRandom", ip, 0);
@@ -181,7 +181,7 @@ static int calculator_math_parser(unsigned char *vn,size_t len,double *v,void *p
     }
     else
     {
-        source *s=source_by_name(c->sd,vn,len);        
+        source *s=source_by_name(c->sd,vn,len);
         if(s)
         {
             *v=(double)s->d_info;
@@ -208,5 +208,3 @@ void calculator_destroy(void** spv)
     sfree((void**)&c->rg.vec);
     sfree(spv);
 }
-
-

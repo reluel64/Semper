@@ -294,7 +294,7 @@ void surface_lister_command(void* spv, unsigned char* command)
 
             if(sl->path!=sl->base_path&&strncasecmp(sl->path,sl->base_path,lo-sl->path))
             {
-                
+
                 sfree((void**)&sl->path);
                 sl->path=sl->base_path;
             }

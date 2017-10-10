@@ -1,10 +1,12 @@
 #ifdef __linux__
 #include <crosswin/crosswin.h>
+#include <crosswin/xlib.h>
 #include <string.h>
 #include <stdlib.h>
 #include <string_util.h>
 #include <surface.h>
 #include <event.h>
+#include <mem.h>
 #define CONTEXT_ID 0x201
 
 void xlib_init_display(crosswin *c)
@@ -30,8 +32,9 @@ void xlib_init_window(window *w)
     attr.colormap = XCreateColormap(w->c->display, DefaultRootWindow(w->c->display), w->c->vinfo.visual, AllocNone);
     attr.background_pixel=0;
     attr.border_pixel=0;
-    attr.override_redirect=1;
+    attr.override_redirect=0;
     attr.event_mask=KeyPressMask 		    |
+                    KeymapStateMask         |
                     StructureNotifyMask     |
                     SubstructureNotifyMask  |
                     SubstructureRedirectMask|
@@ -69,15 +72,18 @@ void xlib_init_window(window *w)
     Atom type = XInternAtom(w->c->display,"_NET_WM_WINDOW_TYPE", False);
     Atom value = XInternAtom(w->c->display,"_NET_WM_WINDOW_TYPE_NORMAL", False);
     XChangeProperty(w->c->display, w->window, type, XA_ATOM, 32, PropModeReplace,(unsigned char*)&value, 1);
-/*
+
     Hints hints;
     Atom property;
     hints.flags = 2;
     hints.decorations = 0;
     property = XInternAtom(w->c->display, "_MOTIF_WM_HINTS", 1);
     XChangeProperty(w->c->display,w->window,property,property,32,PropModeReplace,(unsigned char *)&hints,5);
-*/
+
     XMapWindow(w->c->display, w->window);
+
+    /*Create the input context*/
+
 
 }
 
@@ -136,19 +142,19 @@ static void xlib_render(window *w)
         cairo_set_operator(cr,CAIRO_OPERATOR_SOURCE);
         cairo_set_source_surface(cr,w->offscreen_buffer,0.0,0.0);
         cairo_paint(cr); //render it to the window
-       
+
         cairo_destroy(cr); //destroy the context
         cairo_surface_destroy(xs);
     }
 }
 
-static void xlib_set_mask(window *w)
+void xlib_set_mask(window *w)
 {
 
     cairo_surface_t *xs=cairo_xlib_surface_create_for_bitmap (w->c->display,w->pixmap,DefaultScreenOfDisplay(w->c->display),w->w,w->h);
     cairo_t *cr=cairo_create(xs);
 
-    if(w->click_through==0)
+    if(w->click_through==0&&w->offscreen_buffer)
     {
         cairo_set_operator(cr,CAIRO_OPERATOR_SOURCE);
         unsigned int *buf=(unsigned int*)cairo_image_surface_get_data(w->offscreen_buffer);
@@ -274,7 +280,7 @@ static void xlib_set_above(window *w,unsigned char clear)
     xev.xclient.data.l[1] = XInternAtom(w->c->display,"_NET_WM_STATE_ABOVE", False); /* y coord */
     xev.xclient.data.l[2] = 0; /* direction */
     xev.xclient.data.l[3] =0; /* button */
-   // XSendEvent(w->c->display, DefaultRootWindow(w->c->display), False, SubstructureRedirectMask|SubstructureNotifyMask, &xev);
+    // XSendEvent(w->c->display, DefaultRootWindow(w->c->display), False, SubstructureRedirectMask|SubstructureNotifyMask, &xev);
 }
 
 static void xlib_set_below(window *w,unsigned char clear)
@@ -296,7 +302,7 @@ static void xlib_set_below(window *w,unsigned char clear)
     xev.xclient.data.l[1] = XInternAtom(w->c->display,"_NET_WM_STATE_BELOW", False); /* y coord */
     xev.xclient.data.l[2] = 0; /* direction */
     xev.xclient.data.l[3] =0; /* button */
-   // XSendEvent(w->c->display, DefaultRootWindow(w->c->display), False, SubstructureRedirectMask|SubstructureNotifyMask, &xev);
+    // XSendEvent(w->c->display, DefaultRootWindow(w->c->display), False, SubstructureRedirectMask|SubstructureNotifyMask, &xev);
 }
 
 static void xlib_set_normal(window *w)
@@ -335,19 +341,56 @@ int xlib_message_dispatch(crosswin *c)
 {
     while(XPending(c->display))
     {
-       
+
         XEvent ev= {0};
         window *w=NULL;
-        
+
         XNextEvent(c->display,&ev);
 
         XFindContext(c->display,ev.xany.window,CONTEXT_ID,(char**)&w);
 
         if(c==NULL||w==NULL)
             continue;
-       
+
         switch(ev.xany.type)
         {
+        case KeyPress:
+        {
+            /*This is pretty ugly as I did not want to call the utf8_to_ucs() but for the moment it does the job*/
+            if(w->xInputContext)
+            {
+                unsigned short symbol=0;
+                if(ev.xkey.keycode==105||ev.xkey.keycode==37)
+                    w->ctrl_down=1;
+
+
+                if(w->ctrl_down&&ev.xkey.keycode==36)
+                    symbol='\n';
+                else
+                {
+                    unsigned char buf[9]= {0};
+                    unsigned short *temp=NULL;
+
+                    Status status = 0;
+                    Xutf8LookupString(w->xInputContext, &ev.xkey, (char*)&buf,8, NULL, &status);
+
+                    temp=utf8_to_ucs(buf);
+                    symbol=temp?temp[0]:0;
+
+                    sfree((void**)&temp);
+                }
+
+                if(symbol&&w->kbd_func)
+                    w->kbd_func(symbol,w->kb_data);
+            }
+            break;
+        }
+        case KeyRelease:
+        {
+            if(ev.xkey.keycode==105||ev.xkey.keycode==37)
+                w->ctrl_down=0;
+            break;
+        }
 
         case MotionNotify:
         {
@@ -391,7 +434,6 @@ int xlib_message_dispatch(crosswin *c)
             }
             else
             {
-                //xlib_move_internal(ev.xmotion.x_root,ev.xmotion.y_root,w,0);
                 w->dragging = 0;
                 w->cposx = ev.xmotion.x_root;
                 w->cposy = ev.xmotion.y_root;
@@ -430,6 +472,7 @@ void  xlib_set_position(window *w)
 
 void xlib_destroy_window(window **w)
 {
+    xlib_destroy_input_context(*w);
     XDestroyWindow((*w)->c->display,(*w)->window);
     XDeleteContext((*w)->c->display,(XID)*w,CONTEXT_ID);
     XFreePixmap((*w)->c->display,(*w)->pixmap);
@@ -456,4 +499,53 @@ void xlib_set_zpos(window *w)
         break;
     }
 }
+
+
+int xlib_create_input_context(window *w)
+{
+    if(w->xInputContext||w->xInputMethod)
+        return(0);
+
+    w->xInputMethod = XOpenIM(w->c->display, 0, 0, 0);
+
+    if(w->xInputMethod)
+    {
+        XIMStyles* styles = 0;
+
+        if(XGetIMValues(w->xInputMethod, XNQueryInputStyle, &styles, NULL)==0)
+        {
+            XIMStyle bestMatchStyle = 0;
+            for(int i=0; i<styles->count_styles; i++)
+            {
+
+                if ( styles->supported_styles[i] == (XIMPreeditNothing | XIMStatusNothing))
+                {
+                    bestMatchStyle =  styles->supported_styles[i];
+                    break;
+                }
+            }
+            XFree(styles);
+            w->xInputContext = XCreateIC(w->xInputMethod, XNInputStyle, bestMatchStyle,  XNClientWindow, w->window, XNFocusWindow, w->window, NULL);
+        }
+    }
+
+    if(w->xInputContext==NULL&&w->xInputMethod)
+    {
+        XCloseIM(w->xInputMethod);
+        w->xInputMethod=NULL;
+        return(-1);
+
+    }
+    return(0);
+}
+
+int xlib_destroy_input_context(window *w)
+{
+    w->xInputContext?XDestroyIC(w->xInputContext):0;
+    w->xInputMethod?XCloseIM(w->xInputMethod):0;
+    w->xInputContext=NULL;
+    w->xInputMethod=NULL;
+    return(0);
+}
+
 #endif

@@ -789,7 +789,8 @@ static int folderview_collect(unsigned char *root,folderview_parent *f,foldervie
 #endif
 
 #ifdef WIN32
-            (fh&&fh!=INVALID_HANDLE_VALUE)?FindClose(fh):0;
+            (fh!=NULL&&fh!=INVALID_HANDLE_VALUE)?FindClose(fh):0;
+            fh=NULL;
 #elif __linux__
             dh?closedir(dh):0;
 #endif

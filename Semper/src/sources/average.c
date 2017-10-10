@@ -51,7 +51,7 @@ double average_update(average** avg, size_t avg_count, double value)
     {
         return (value);
     }
-    
+
     if(*avg == NULL)
     {
         *avg = zmalloc(sizeof(average));

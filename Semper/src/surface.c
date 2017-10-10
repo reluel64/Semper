@@ -116,13 +116,7 @@ void surface_reset(surface_data* sd)
     {
         crosswin_set_dimension(sd->sw, sd->w,  sd->h);
     }
-    else
-    {
-        if(sd->lock_w==0||sd->lock_h==0)
-        {
-            surface_adjust_size(sd);
-        }
-    }
+
 
     /*Let's read the configuration from the Semper.ini*/
     if(sd->snp)
@@ -272,11 +266,11 @@ static unsigned char* surface_variant_file(unsigned char* sd, size_t variant)
     unsigned char* ret = NULL;
 #ifdef WIN32
     size_t sdl = string_length(sd);
-    size_t ftl = string_length("/*.ini");
 
-    unsigned char* buf = zmalloc(sdl + ftl + 1);
-    strcpy(buf, sd);
-    strcpy(buf + sdl, "/*.ini");
+
+    unsigned char* buf = zmalloc(sdl + 6 + 1);
+    snprintf(buf,sdl+6+1,"%s/*.ini",sd);
+
     WIN32_FIND_DATAW fd = { 0 };
     wchar_t* flt = utf8_to_ucs(buf);
     void* h = FindFirstFileW(flt, &fd);
@@ -295,7 +289,7 @@ static unsigned char* surface_variant_file(unsigned char* sd, size_t variant)
     }
     while(FindNextFileW(h, &fd));
 
-    if(h != INVALID_HANDLE_VALUE)
+    if(h!=NULL&&h != INVALID_HANDLE_VALUE)
     {
         FindClose(h);
     }
@@ -371,11 +365,11 @@ size_t surface_file_variant(unsigned char* sd, unsigned char* file)
 
 static int surface_render_background(surface_data* sd, cairo_t* cr)
 {
-    unsigned char* color = NULL;
+    unsigned char* color = (unsigned char*)&sd->srf_col;
     unsigned char *px=NULL;
     image_cache_query_image(sd->cd->ich,&sd->ia,&px,-1,-1);
 
-    color = (unsigned char*)&sd->srf_col;
+
 
     if(px)
     {
@@ -596,9 +590,7 @@ surface_data *surface_load_memory(control_data *cd,unsigned char *buf,size_t buf
 
 size_t surface_load(control_data* cd, unsigned char* name, size_t variant)
 {
-    surface_data* sd = NULL;
-
-    sd = surface_by_name(cd, name);
+    surface_data* sd = surface_by_name(cd, name);
 
     if(sd)
     {
@@ -663,7 +655,7 @@ static char* surface_read_from_memory(char* str, size_t ccount, surface_reader_s
     return (str);
 }
 
-void surface_init_items(surface_data* sd)
+static void surface_init_items(surface_data* sd)
 {
     section cs = skeleton_first_section(&sd->skhead);
     object *o=NULL;
@@ -890,8 +882,6 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
         tsd->scd = skeleton_get_section(&cd->shead, sp->surface_rel_dir);          // get the section from Semper.ini
     }
 
-
-
 #ifdef __linux__
     if(memory==0)
     {
@@ -901,15 +891,6 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
     surface_window_init(tsd);                                                   // initialize window
     surface_reset(tsd); // set or reset the surface parameters
     surface_init_items(tsd);                                                    // initialize sources and objects
-
-
-    /* list_enum_part(s, &tsd->sources, current)
-         source_update(s);
-
-     list_enum_part(o, &tsd->objects, current)
-         object_update(o);
-    */
-
 
     crosswin_click_through(tsd->sw, tsd->clkt);
     crosswin_set_position(tsd->sw, tsd->x, tsd->y);
@@ -922,7 +903,6 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
     tsd->cycle = 0;
     surface_update(tsd);
     tsd->cycle = temp_cycle;
-    surface_adjust_size(tsd);
     event_push(tsd->cd->eq, (event_handler)surface_fade, (void*)tsd,0,0);
 
     return (tsd);
@@ -995,7 +975,7 @@ int surface_update(surface_data* sd)
         object_update(o);
     }
 
-    if(sd->wsz)
+    if(sd->wsz||sd->cycle==0)
     {
         surface_adjust_size(sd);
     }
@@ -1012,7 +992,7 @@ int surface_update(surface_data* sd)
     if(sd->old_mouse_hover != sd->mouse_hover)
     {
         sd->mouse_hover ?(sd->focus_act ? command(sd, &sd->focus_act):0) :
-            (sd->focus_act ? command(sd, &sd->unfocus_act):0);
+        (sd->focus_act ? command(sd, &sd->unfocus_act):0);
         sd->old_mouse_hover = sd->mouse_hover;
     }
 
@@ -1020,7 +1000,7 @@ int surface_update(surface_data* sd)
 
 
     if(sd->uf!=(size_t)-1)
-{
+    {
         // re-schedule the update by removing any potential duplicates and push a new timed event
         event_push(sd->cd->eq, (event_handler)surface_update, (void*)sd, sd->uf, EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
     }

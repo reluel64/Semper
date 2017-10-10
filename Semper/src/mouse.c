@@ -18,7 +18,7 @@ typedef struct
 {
     unsigned char *name;
     unsigned char **act;
-}mouse_action_tbl;
+} mouse_action_tbl;
 
 static int mouse_set_actions_internal(void *pv,unsigned char tgt,unsigned char destroy)
 {
@@ -26,14 +26,14 @@ static int mouse_set_actions_internal(void *pv,unsigned char tgt,unsigned char d
 
     switch(tgt)
     {
-        case MOUSE_OBJECT:
-            ma=&((object*)pv)->ma;
-            break;
-        case MOUSE_SURFACE:
-            ma=&((surface_data*)pv)->ma;
-            break;
-        case MOUSE_SURFACE|MOUSE_OBJECT:
-            ma=pv;
+    case MOUSE_OBJECT:
+        ma=&((object*)pv)->ma;
+        break;
+    case MOUSE_SURFACE:
+        ma=&((surface_data*)pv)->ma;
+        break;
+    case MOUSE_SURFACE|MOUSE_OBJECT:
+        ma=pv;
     }
 
     if(ma==NULL)
@@ -76,7 +76,7 @@ int mouse_set_actions(void *pv,unsigned char tgt)
 
 void mouse_destroy_actions( mouse_actions* ma)
 {
-  mouse_set_actions_internal(ma,3,1);
+    mouse_set_actions_internal(ma,3,1);
 }
 
 int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)

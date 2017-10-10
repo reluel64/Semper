@@ -44,7 +44,7 @@ typedef struct
 
 typedef struct
 {
-    
+
     void* pv;
     unsigned char* kv; // this will store the key value
     key lk;
@@ -69,7 +69,7 @@ typedef struct
     size_t root_dir_length;
     event_queue* eq;                    //main event queue
     void *ich;                          //image cache holder
-    void *ttip;                         //tooltip holder 
+    void *ttip;                         //tooltip holder
     /*Surface Watcher*/
 #ifdef WIN32
     semper_overlapped* so;

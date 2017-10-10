@@ -46,5 +46,5 @@ void bind_reset(object* o);
 void bind_unbind(surface_data* sd, unsigned char* sn);
 int bind_update_string(object* o, string_bind* sb);
 int bind_update_numeric(object* o, bind_numeric* bn);
-double bind_percentual_value(double val, double min, double max);
+double bind_percentual_value(double val, double min_val, double max_val);
 unsigned char *bind_source_name(object *o,size_t index);

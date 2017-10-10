@@ -47,7 +47,6 @@ typedef struct
 /*Copied from Semper*/
 
 
-
 static wchar_t *utf8_to_ucs(unsigned char *str)
 {
     size_t len = string_length(str);
@@ -155,7 +154,9 @@ static unsigned char *ucs_to_utf8(wchar_t *s_in, size_t *bn, unsigned char be)
         }
     }
     if(bn)
+    {
         *bn = nb;
+    }
     return(out);
 }
 
@@ -167,7 +168,7 @@ static inline int gpuz_gather_data(GPUZ_SH_MEM *data)
     if(fm)
     {
         void *shd=MapViewOfFile(fm,FILE_MAP_READ,0,0,sizeof(GPUZ_SH_MEM));
-        
+
         if(shd)
         {
             memcpy(data,shd,sizeof(GPUZ_SH_MEM));

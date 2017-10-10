@@ -9,6 +9,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
+#include <X11/keysymdef.h>
 #include <X11/extensions/shape.h>
 #include <cairo/cairo.h>
 #include <cairo/cairo-xlib.h>
@@ -26,7 +27,7 @@ typedef enum
     crosswin_normal,
     crosswin_top,
     crosswin_topmost
-}crosswin_position;
+} crosswin_position;
 
 typedef struct _mouse_status
 {
@@ -44,7 +45,7 @@ typedef struct _crosswin_shared
 {
     long sw; // screen width
     long sh; // screen height
-      unsigned char quit;
+    unsigned char quit;
 #ifdef __linux__
     void *display;
     XVisualInfo vinfo;
@@ -83,8 +84,11 @@ typedef struct _window
     HWND window;
 #elif __linux__
     unsigned char click_through;
+    unsigned char ctrl_down;
     Window window;
     Pixmap pixmap;
+    XIM xInputMethod;
+    XIC xInputContext;
 #endif
 } window;
 
@@ -110,5 +114,5 @@ void crosswin_keep_on_screen(window* w, unsigned char keep_on_screen);
 int crosswin_update(crosswin* c);
 void crosswin_monitor_resolution(crosswin* c, long* w, long* h);
 void crosswin_set_window_z_order(window* w, unsigned char zorder);
-void crosswin_set_kbd_handler(window *w,int(*kbd_handler)(unsigned  int key_code ,void *p),void *kb_data);
+void crosswin_set_kbd_handler(window *w,int(*kbd_handler)(unsigned  int key_code,void *p),void *kb_data);
 void crosswin_set_window_z_order(window* w, unsigned char zorder);

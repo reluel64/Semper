@@ -39,19 +39,19 @@ unsigned char team_member(unsigned char *members,unsigned char *rmember)
         .string_tokenizer_filter=team_filter,
         .filter_data=&quotes
     };
-    
+
     if(members==NULL||rmember==NULL)
     {
         return(0);
     }
-    
+
     string_tokenizer(&sti);
-    
+
     for(size_t i=0; i<sti.oveclen/2; i++)
     {
         size_t start = sti.ovecoff[2*i];
         size_t end   = sti.ovecoff[2*i+1];
-        
+
         if(string_strip_space_offsets(members,&start,&end)==0)
         {
             if(members[start]==';')
@@ -67,14 +67,14 @@ unsigned char team_member(unsigned char *members,unsigned char *rmember)
             if(members[end-1]=='"'||members[end-1]=='\'')
                 end--;
         }
-        
+
         if(!strncasecmp(members+start,rmember,end-start))
         {
             found=1;
             break;
         }
     }
-    
+
     sfree((void**)&sti.ovecoff);
     return(found);
 }

@@ -375,24 +375,24 @@ static void semper_create_directory_path(control_data* cd)
     cd->ext_dir = zmalloc(tsz + 1);
     snprintf(cd->ext_dir,tsz,"%s/Extensions",cd->root_dir);
     cd->ext_dir_length = tsz - 1;
-    #ifdef WIN32
+#ifdef WIN32
     windows_slahses(cd->ext_dir);
-    #endif
+#endif
     /////////////////////////////////////////////////////////
     tsz = rdl + string_length("/Semper.ini") + 1;
     cd->cf = zmalloc(tsz);
     snprintf(cd->cf,tsz,"%s/Semper.ini",cd->root_dir);
-    #ifdef WIN32
+#ifdef WIN32
     windows_slahses(cd->cf);
-    #endif
+#endif
     /////////////////////////////////////////////////////////
     tsz = rdl + string_length("/Surfaces") + 1;
     cd->surface_dir = zmalloc(tsz);
     snprintf(cd->surface_dir,tsz,"%s/Surfaces",cd->root_dir);
     cd->surface_dir_length = tsz - 1;
-     #ifdef WIN32
+#ifdef WIN32
     windows_slahses(cd->surface_dir);
-    #endif
+#endif
     ////////////////////////////////////////////////////////
 }
 
@@ -633,9 +633,13 @@ static int semper_desktop_checker(control_data *cd)
     return(0);
 }
 
+
+
 int main(void)
 {
 
+
+   // while(1);
     control_data* cd = zmalloc(sizeof(control_data));
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
@@ -651,14 +655,13 @@ int main(void)
     semper_init_fonts(cd);
     diag_info("Fonts initialized");
     event_push(cd->eq, (event_handler)semper_surface_watcher_init, (void*)cd, 0, 0);
+    event_push(cd->eq,(event_handler)semper_desktop_checker,cd,100,EVENT_PUSH_TIMER);
 #elif __linux__
     event_queue_set_window_event(cd->eq,XConnectionNumber(cd->c.display));
     cd->inotify_fd=inotify_init1(IN_NONBLOCK);
     event_queue_set_inotify_event(cd->eq,cd->inotify_fd);
 
 #endif
-
-  //  event_push(cd->eq,(event_handler)semper_desktop_checker,cd,100,EVENT_PUSH_TIMER);
 
     if(semper_load_surfaces(cd)==0)
     {
@@ -683,7 +686,9 @@ int main(void)
         event_process(cd->eq);             // process the queue
 
         if(cd->c.quit)
+        {
             break;
+        }
     }
     semper_save_configuration(cd);
     return (0);

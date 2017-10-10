@@ -396,7 +396,7 @@ static int lua_engine_parse_formula(lua_State *ctx)
     {
         return(0);
     }
-   
+
     double d=0.0;
 
     if(math_parser((unsigned char*)s,&d,NULL,NULL)==0)
@@ -432,7 +432,7 @@ static int lua_engine_variable(lua_State *ctx)
  * Instantiation routines                   *
  ********************************************
  */
- 
+
 static int lua_engine_object(lua_State *ctx)
 {
     const unsigned char *s=luaL_checkstring(ctx,-1);

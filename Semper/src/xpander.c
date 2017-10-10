@@ -271,7 +271,7 @@ int xpander(xpander_request *xr)
             size_t *ovec=0;
             size_t ovecl=0;
 
-            size_t old_end=-1;
+            size_t old_end=0;
             has_var=0;
 
             string_tokenizer_info sti=
@@ -280,7 +280,7 @@ int xpander(xpander_request *xr)
                 .oveclen=0,
                 .ovecoff=NULL,
                 .filter_data=&sym,
-                .string_tokenizer_filter=xp&XPANDER_VARIABLES?xpander_var_token_filter:xpander_src_token_filter
+                .string_tokenizer_filter=(xp&XPANDER_VARIABLES)?xpander_var_token_filter:xpander_src_token_filter
             };
 
             string_tokenizer(&sti);
@@ -298,19 +298,22 @@ int xpander(xpander_request *xr)
                 if(start==end)
                     continue;
 
+                if(old_end>0&&old_end==start)
+                {
+                    old_end=0;
+                    start++;
+                    buf_start=wbuf+start;
+                }
+
                 if((wbuf[start+1]=='~' ||  wbuf[end-1]=='~')) //handle escapments
                 {
                     if((wbuf[start]=='[' &&wbuf[end]==']')||(wbuf[start]=='$' && wbuf[end]=='$'))
                     {
-                        //end+=1;
+                        old_end=end++;
                         escapments=1;
                     }
                 }
-                else  if(old_end==start)
-                {
-                    start++;
-                    buf_start=wbuf+start;
-                }
+
                 else if((xp&XPANDER_VARIABLES)&&wbuf[start]=='$' && wbuf[end]=='$') //handle surface variables
                 {
                     unsigned char found=0;
@@ -357,7 +360,6 @@ int xpander(xpander_request *xr)
                     {
                         start--;
                         end++;
-                        buf_start=wbuf+start;
                     }
                 }
                 else if((xp&XPANDER_SECTIONS)&&wbuf[start]=='[' &&wbuf[end]==']') //handle section variables
@@ -404,23 +406,27 @@ int xpander(xpander_request *xr)
                     {
                         start--;
                         end++;
-                        buf_start=wbuf+start;
                     }
                 }
                 void *tmp=realloc(new_buf,new_len+(end-start)+1);
+
                 if(tmp)
                 {
-                  new_buf=tmp;
-                  strncpy(new_buf+new_len,buf_start,end-start);
-                  new_len+=end-start;
-                  new_buf[new_len]=0; //make it a proper string
+                    new_buf=tmp;
+                    strncpy(new_buf+new_len,buf_start,end-start);
+                    new_len+=end-start;
+                    new_buf[new_len]=0; //make it a proper string
                 }
+
                 if(alloc)
+                {
                     sfree((void**)&buf_start);
+                }
+
                 if(tmp==NULL)
                 {
-                  sfree((void**)&new_buf);
-                  break;
+                    sfree((void**)&new_buf);
+                    break;
                 }
             }
 

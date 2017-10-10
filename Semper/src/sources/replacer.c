@@ -103,14 +103,14 @@ static unsigned char* perform_replacements_pcre(replace_state* rs)
         return (NULL);
     }
     /* ***Copied from http://libs.wikia.com/wiki/Pcre_exec***
-     * The first pair of integers, ovector[0] and ovector[1], 
-     * identify the portion of the subject string matched by the entire pattern. 
-     * The next pair is used for the first capturing subpattern, and so on. 
-     * The value returned by pcre_exec() is one more than the highest numbered pair that has been set. 
-     * For example, if two substrings have been captured, the returned value is 3. 
-     * If there are no capturing subpatterns, the return value from a successful match is 1, 
+     * The first pair of integers, ovector[0] and ovector[1],
+     * identify the portion of the subject string matched by the entire pattern.
+     * The next pair is used for the first capturing subpattern, and so on.
+     * The value returned by pcre_exec() is one more than the highest numbered pair that has been set.
+     * For example, if two substrings have been captured, the returned value is 3.
+     * If there are no capturing subpatterns, the return value from a successful match is 1,
      * indicating that just the first pair of offsets has been set.
-     */ 
+     */
     match_count = pcre_exec(pc, NULL, (char*)rs->in, in_length, 0, 0, ovector, sizeof(ovector) / sizeof(int));
     pcre_free(pc);
     sfree((void**)&expression);
@@ -341,19 +341,19 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
         {
             rs.rl_start=start;
             rs.rl_end=end;
-            
+
             if(regexp)
             {
                 if((work=perform_replacements_pcre(&rs))==NULL)
                 {
-                     work=perform_replacements(&rs);
+                    work=perform_replacements(&rs);
                 }
             }
             else
             {
                 work=perform_replacements(&rs);
             }
-            
+
             if(rs.in!=in)
             {
                 sfree((void**)&rs.in);
@@ -369,4 +369,3 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
     sfree((void**)&sti.ovecoff);
     return (rs.in==in?NULL:rs.in);
 }
-

@@ -57,7 +57,17 @@ static double disk_speed_parse(disk_speed *ds)
         size_t sec_write=0;
         size_t time_write=0;
         size_t dev_len=0;
-        sscanf(buf,"%lu%lu%s%lu%lu%lu%lu%lu%lu%lu%lu",&major,&minor,dev_name,&r_completed,&r_merged,&sec_read,&time_read,&w_completed,&w_merged,&sec_write,&time_write);
+        sscanf(buf,"%lu%lu%63s%lu%lu%lu%lu%lu%lu%lu%lu",&major,
+                                                      &minor,
+                                                      dev_name,
+                                                      &r_completed,
+                                                      &r_merged,
+                                                      &sec_read,
+                                                      &time_read,
+                                                      &w_completed,
+                                                      &w_merged,
+                                                      &sec_write,
+                                                      &time_write);
         dev_len=strlen(dev_name);
 
         if(ds->disk_name==NULL&&isdigit(dev_name[dev_len-1]))
@@ -84,7 +94,7 @@ static double disk_speed_parse(disk_speed *ds)
             break;
         }
     }
-    
+
     switch(ds->dst)
     {
     case read_total:
@@ -150,5 +160,5 @@ void extension_destroy_func(void **spv)
     disk_speed *ds=*spv;
     free(ds->disk_name);
     free(*spv);
-    ;
+    *spv=NULL;
 }

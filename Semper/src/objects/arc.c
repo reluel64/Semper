@@ -43,7 +43,7 @@ int arc_update(object* o)
 {
     arc_object* ao = o->pv;
     bind_numeric bn = { 0 };
-    
+
     bind_update_numeric(o, &bn);
     ao->percents = bind_percentual_value(bn.val, bn.min, bn.max);
     return (1);
@@ -61,7 +61,7 @@ int arc_render(object* o, cairo_t* cr)
         cairo_move_to(cr, o->w / 2, o->h / 2);
     }
 
-    cairo_arc(cr, o->w / 2, o->h / 2, ao->radius, ao->start_angle, ao->percents * 6.28);
+    cairo_arc(cr, o->w / 2, o->h / 2, ao->radius, ao->start_angle,  DEG2RAD(ao->percents*360.0));
 
     if(ao->fill)
     {

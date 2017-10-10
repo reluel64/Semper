@@ -26,7 +26,7 @@ void string_source_reset(void* pv, void* ip)
     if(str)
     {
         ssi->str = clone_string(str);
-        ssi->len = string_length(str);
+        ssi->len = utf8_len(str,0);
     }
 
     unsigned char* opt = extension_string("Mode", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "String");

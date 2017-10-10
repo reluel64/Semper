@@ -43,10 +43,10 @@ void image_init(object* o)
 void image_reset(object* o)
 {
     image_object* io = o->pv;
-   // surface_data *sd=o->sd;
+    // surface_data *sd=o->sd;
     /*
     image_cache_unref_image(sd->cd->ich, &io->ia,0);
-    
+
     if(io->ia.path!=io->image_path)
     {
         sfree((void**)&io->ia.path);
@@ -64,7 +64,7 @@ int image_update(object* o)
     image_object* io = o->pv;
     string_bind sb = { 0 };
     image_cache_unref_image(sd->cd->ich, &io->ia,0);
-    
+
     if(io->ia.path!=io->image_path)
     {
         sfree((void**)&io->ia.path);
@@ -72,12 +72,12 @@ int image_update(object* o)
     io->ia.path=NULL;
     sb.s_in = io->image_path;
     bind_update_string(o, &sb);
-    
+
     if(sb.s_out == NULL)
     {
         return (-1);
     }
-    
+
     io->ia.path=sb.s_out;
     image_cache_query_image(sd->cd->ich, &io->ia, NULL, o->w, o->h);
 

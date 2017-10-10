@@ -71,7 +71,7 @@ static inline unsigned char* surface_builtin_code(size_t* size,surface_builtin_t
         "UpdateAction=Update(Background);ForceDraw()\n"
     };
 #elif __linux__
-static char tooltip_code[]=
+    static char tooltip_code[]=
     {
         "[Surface-Meta]\n"
         "Name=Surface registry\n"
@@ -92,7 +92,7 @@ static char tooltip_code[]=
         "Volatile=1\n"
         "FontColor=0;0;0;128\n"
         "FontName=DejaVu Sans\n"
-        
+
         "[Background]\n"
         "Volatile=1\n"
         "Object=Image\n"
@@ -111,7 +111,7 @@ static char tooltip_code[]=
         "X=5\n"
         "UpdateAction=Update(Background);ForceDraw()\n"
         "FontName=DejaVu Sans\n"
-        
+
         "[Text]\n"
         "Volatile=1\n"
         "Object=String\n"
@@ -123,7 +123,7 @@ static char tooltip_code[]=
         "FontName=DejaVu Sans\n"
         "UpdateAction=Update(Background);ForceDraw()\n"
     };
-    #endif
+#endif
     if(size)
     {
         switch(tp)
@@ -191,6 +191,7 @@ int surface_builtin_init(void *holder,surface_builtin_type tp)
             crosswin_set_position(sd->sw, (o->x+osd->x),  o->y+o->h+osd->y);
 
             crosswin_click_through(sd->sw,1);
+            crosswin_set_window_z_order(sd->sw,crosswin_topmost);
             o->ttip=sd;
             object_tooltip_update(o);
 

@@ -78,5 +78,3 @@ void iterator_destroy(void** spv)
 {
     sfree(spv);
 }
-
-

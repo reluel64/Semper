@@ -229,12 +229,15 @@ int ini_parser_parse_file(unsigned char* fn, ini_handler ih, void* pv)
 #endif
 
     if(fh == NULL)
+    {
         return (-1);
-
+    }
     encoding enc = ini_detect_encoding(fh);
 
     if(enc != ucs2 && enc != ucs2_be)
+    {
         ret = ini_parser_parse_stream((ini_reader)fgets, fh, ih, pv);
+    }
     else
     {
         fseek(fh, 2, SEEK_SET);

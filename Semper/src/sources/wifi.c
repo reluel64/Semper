@@ -34,6 +34,27 @@ typedef struct
 
 #ifdef WIN32
 
+
+typedef
+#ifdef __WIDL__
+[v1_enum]
+#endif
+enum _IDOT11_PHY_TYPE
+{
+    _dot11_phy_type_unknown = 0,
+    _dot11_phy_type_any = dot11_phy_type_unknown,
+    _dot11_phy_type_fhss = 1,
+    _dot11_phy_type_dsss = 2,
+    _dot11_phy_type_irbaseband = 3,
+    _dot11_phy_type_ofdm = 4,
+    _dot11_phy_type_hrdsss = 5,
+    _dot11_phy_type_erp = 6,
+    _dot11_phy_type_ht = 7,
+    _dot11_phy_type_vht         = 8,
+    _dot11_phy_type_IHV_start = 0x80000000,
+    _dot11_phy_type_IHV_end = 0xffffffff
+} I_DOT11_PHY_TYPE;
+
 static unsigned char *wifi_get_chiper_algorithm(DOT11_CIPHER_ALGORITHM value)
 {
     switch (value)
@@ -81,25 +102,26 @@ static unsigned char *wifi_get_auth_algorithm(DOT11_AUTH_ALGORITHM value)
 }
 
 
-static unsigned char* wifi_get_phy(DOT11_PHY_TYPE value)
+
+static unsigned char* wifi_get_phy(I_DOT11_PHY_TYPE value)
 {
     switch (value)
     {
-    case dot11_phy_type_fhss:
+    case _dot11_phy_type_fhss:
         return "FHSS";
-    case dot11_phy_type_dsss:
+    case _dot11_phy_type_dsss:
         return "DSSS";
-    case dot11_phy_type_irbaseband:
+    case _dot11_phy_type_irbaseband:
         return "IR-Band";
-    case dot11_phy_type_ofdm:
+    case _dot11_phy_type_ofdm:
         return "802.11a";
-    case dot11_phy_type_hrdsss:
+    case _dot11_phy_type_hrdsss:
         return "802.11b";
-    case dot11_phy_type_erp:
+    case _dot11_phy_type_erp:
         return "802.11g";
-    case dot11_phy_type_ht:
+    case _dot11_phy_type_ht:
         return "802.11n";
-    case ((DOT11_PHY_TYPE)8):
+    case _dot11_phy_type_vht:
         return "802.11ac";
     default:
         return "N/A";
@@ -121,11 +143,11 @@ void wifi_init(void **spv,void*ip)
 void wifi_reset(void *spv,void *ip)
 {
     wifi_data *wd=spv;
+    unsigned char *s=NULL;
     wd->wifi_index=extension_size_t("WiFiInterfaceIndex",ip,0);
     wd->list_limit=extension_size_t("WiFiListEntries",ip,10);
     wd->list_lvl=(unsigned char)extension_size_t("WifiListLevel",ip,0);
-    unsigned char *s=extension_string("WifiInfo",0x3,ip,"List");
-
+    s=extension_string("WifiInfo",0x3,ip,"List");
 
     if(s)
     {
@@ -165,7 +187,6 @@ void wifi_reset(void *spv,void *ip)
         extension_set_max(0.0,ip,1,0);
         extension_set_min(0.0,ip,1,0);
     }
-
 }
 
 double wifi_update(void *spv)
@@ -246,13 +267,13 @@ double wifi_update(void *spv)
 
                 if(wd->list_lvl>=1)
                     bn+=string_length(wifi_get_phy(av_lis->Network[i].dot11PhyTypes[0]))+sizeof(" | Band: ");
-                
+
                 if(wd->list_lvl>=2)
                     bn+=string_length(wifi_get_chiper_algorithm(av_lis->Network[i].dot11DefaultCipherAlgorithm))+sizeof(" | Encryption: ");
-                
+
                 if(wd->list_lvl>=3)
                     bn+=string_length(wifi_get_auth_algorithm(av_lis->Network[i].dot11DefaultAuthAlgorithm))+sizeof(" | Auth: ");
-                
+
                 if(wd->list_lvl>=4)
                     bn+=5+sizeof(" | Quality: ");
             }

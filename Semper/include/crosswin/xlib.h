@@ -10,3 +10,5 @@ void xlib_set_position(window *w);
 void xlib_destroy_window(window **w);
 void xlib_set_mask(window *w);
 void xlib_set_zpos(window *w);
+int xlib_destroy_input_context(window *w);
+int xlib_create_input_context(window *w);

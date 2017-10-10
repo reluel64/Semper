@@ -419,6 +419,31 @@ COMMAND_HANDLER(handler_change_param)
     return (1);
 }
 
+COMMAND_HANDLER(handler_surface_pos)
+{
+    unsigned char* x = ap->pms[0];
+    unsigned char* y = ap->pms[1];
+
+    if(ap->plength >= 3)
+    {
+        sd = surface_by_name(sd->cd, ap->pms[3]);
+    }
+
+    if(sd == NULL||ap->plength<2)
+    {
+        return (-1);
+    }
+
+    double xd=0.0;
+    double yd=0.0;
+    if(!math_parser(x,&xd,NULL,NULL)&&!math_parser(y,&yd,NULL,NULL))
+    {
+        crosswin_set_position(sd->sw,(long)xd,(long)yd);
+    }
+
+    return (1);
+}
+
 COMMAND_HANDLER(handler_execute)
 {
     unused_parameter(sd);
@@ -860,6 +885,7 @@ static int command_process_single_action(command_handler_status* chs)
         { "SetOpacity",         handler_set_opacity,        1 },
 //---------------------------------------------------------------------
         { "Parameter",          handler_change_param,       2 },
+        { "SurfacePos",         handler_surface_pos,        2 },
         { "AddObject",          handler_add_object,         2 },
         { "ParameterTeam",      handler_parameter_team,     2 },
         { "SourceCommand",      handler_source_command,     2 },
@@ -897,58 +923,39 @@ static int command_process_single_action(command_handler_status* chs)
 static int command_parse_string_filter(string_tokenizer_status *pi, void* pv)
 {
     command_tokenizer_status* cts = pv;
+
     if(pi->reset)
     {
         memset(cts,0,sizeof(command_tokenizer_status));
         return(0);
     }
 
-
     if(cts->quote_type==0 && (pi->buf[pi->pos]=='"'||pi->buf[pi->pos]=='\''))
-    {
         cts->quote_type=pi->buf[pi->pos];
-    }
 
     if(pi->buf[pi->pos]==cts->quote_type)
-    {
         cts->quotes++;
-    }
 
     if(cts->quotes%2)
-    {
         return(0);
-    }
     else
-    {
         cts->quote_type=0;
-    }
 
 
     if(pi->buf[pi->pos] == '(')
-    {
         if(++cts->op==1)
-        {
             return(1);
-        }
-    }
 
     if(cts->op&&pi->buf[pi->pos] == ')')
-    {
         if(--cts->op==0)
-        {
             return(0);
-        }
-    }
 
     if(pi->buf[pi->pos] == ';')
-    {
         return (cts->op==0);
-    }
 
     if(cts->op%2&&pi->buf[pi->pos] == ',')
-    {
         return (1);
-    }
+
     return (0);
 }
 
@@ -963,7 +970,7 @@ int command(surface_data* sd, unsigned char **pa)
         diag_warn("%s %d surface_data %p action %p",__FUNCTION__,__LINE__,sd,pa);
         return (-1);
     }
-    
+
     command_tokenizer_status cts = { 0 };
     command_handler_status   chs=  { 0 };
     string_tokenizer_info    sti=
@@ -974,9 +981,9 @@ int command(surface_data* sd, unsigned char **pa)
         .ovecoff                 = NULL,
         .oveclen                 = 0
     };
-    
-    *pa=NULL; 
-    
+
+    *pa=NULL;
+
     string_tokenizer(&sti);
     for(size_t i=0; i<sti.oveclen/2; i++)
     {
@@ -1054,15 +1061,15 @@ int command(surface_data* sd, unsigned char **pa)
         }
     }
     sfree((void**)&sti.ovecoff);
-    
+
     /*If the string has been set during command processing then *pa will not be NULL and we could free the stored action.
      * Otherwise we just  restore the value
      * In this way we do not have to allocate additional memory to store a copy of the string*/
-    
+
     if(*pa==NULL)
         *pa=sti.buffer;
     else
         sfree((void**)&sti.buffer);
-        
+
     return (0);
 }

@@ -302,7 +302,7 @@ static int action_match(unsigned char* str, unsigned char* pattern)
 static int action_math_parser(unsigned char *vn,size_t len,double *v,void *pv)
 {
     source *s=source_by_name(pv,vn,len);
-    
+
     if(s)
     {
         *v=(double)s->d_info;
@@ -351,11 +351,11 @@ void action_execute(source* s)
     list_enum_part(a, &sa->cond, current)
     {
         double v=0.0;
-      
+
         if(math_parser(a->cond_e,&v,action_math_parser,s->sd)==0)
         {
             unsigned char bool_true=v>0.0;
-            
+
             if(bool_true && (a->done != 1 || s->always_do))
             {
                 a->cond_t?command(s->sd, &a->cond_t):0;

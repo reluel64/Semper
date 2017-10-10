@@ -49,64 +49,211 @@ typedef struct
 } output_queue;
 
 //Operators
-static double math_add    (double *vec               )     { return(vec[0]+vec[1]);                            }
-static double math_sub    (double *vec, size_t vec_sz)     { return((vec_sz==1)?-vec[0]:(vec[0]-vec[1]));      }
-static double math_pow    (double *vec               )     { return(pow(vec[0],vec[1]));                       }
-static double math_mul    (double *vec               )     { return(vec[0]*vec[1]);                            }
-static double math_div    (double *vec               )     { return(vec[0]/vec[1]);                            }
-static double math_mod    (double *vec               )     { return(fmod(vec[0],vec[1]));                      }
-static double math_and    (double *vec               )     { return((double)((size_t)vec[0]&&(size_t)vec[1])); }
-static double math_or     (double *vec               )     { return((double)((size_t)vec[0]||(size_t)vec[1])); }
-static double math_eq     (double *vec               )     { return((double)(vec[0]==vec[1]));                 }
-static double math_neq    (double *vec               )     { return((double)(vec[0]!=vec[1]));                 }
-static double math_gte    (double *vec               )     { return((double)(vec[0]>=vec[1]));                 }
-static double math_lte    (double *vec               )     { return((double)(vec[0]<=vec[1]));                 }
-static double math_le     (double *vec               )     { return((double)(vec[0]<vec[1]));                  }
-static double math_gt     (double *vec               )     { return((double)(vec[0]>vec[1]));                  }
+static double math_add    (double *vec               )
+{
+    return(vec[0]+vec[1]);
+}
+static double math_sub    (double *vec, size_t vec_sz)
+{
+    return((vec_sz==1)?-vec[0]:(vec[0]-vec[1]));
+}
+static double math_pow    (double *vec               )
+{
+    return(pow(vec[0],vec[1]));
+}
+static double math_mul    (double *vec               )
+{
+    return(vec[0]*vec[1]);
+}
+static double math_div    (double *vec               )
+{
+    return(vec[0]/vec[1]);
+}
+static double math_mod    (double *vec               )
+{
+    return(fmod(vec[0],vec[1]));
+}
+static double math_and    (double *vec               )
+{
+    return((double)((size_t)vec[0]&&(size_t)vec[1]));
+}
+static double math_or     (double *vec               )
+{
+    return((double)((size_t)vec[0]||(size_t)vec[1]));
+}
+static double math_eq     (double *vec               )
+{
+    return((double)(vec[0]==vec[1]));
+}
+static double math_neq    (double *vec               )
+{
+    return((double)(vec[0]!=vec[1]));
+}
+static double math_gte    (double *vec               )
+{
+    return((double)(vec[0]>=vec[1]));
+}
+static double math_lte    (double *vec               )
+{
+    return((double)(vec[0]<=vec[1]));
+}
+static double math_le     (double *vec               )
+{
+    return((double)(vec[0]<vec[1]));
+}
+static double math_gt     (double *vec               )
+{
+    return((double)(vec[0]>vec[1]));
+}
 //Functions
-static double math_sqrt   (double *vec               )     { return(sqrt(vec[0]));                             }
-static double math_deg2rad(double *vec               )     { return(vec[0]*(M_PI/180.0));                      }
-static double math_rad2deg(double *vec               )     { return(vec[0]*(180.0/M_PI));                      }
-static double math_max    (double *vec               )     { return(vec[0]>vec[1]?vec[0]:vec[1]);              }
-static double math_min    (double *vec               )     { return(vec[0]>vec[1]?vec[1]:vec[0]);              }
-static double math_acos   (double *vec               )     { return(acos(vec[0]));                             }
-static double math_asin   (double *vec               )     { return(asin(vec[0]));                             }
-static double math_atan2  (double *vec               )     { return(atan2(vec[0],vec[1]));                     }
-static double math_atan   (double *vec               )     { return(atan(vec[0]));                             }
-static double math_sinh   (double *vec               )     { return(sinh(vec[0]));                             }
-static double math_sin    (double *vec               )     { return(sin(vec[0]));                              }
-static double math_cosh   (double *vec               )     { return(cosh(vec[0]));                             }
-static double math_cos    (double *vec               )     { return(cos(vec[0]));                              }
-static double math_log10  (double *vec               )     { return(log10(vec[0]));                            }
-static double math_log    (double *vec               )     { return(log(vec[0]));                              }
-static double math_tanh   (double *vec               )     { return(tanh(vec[0]));                             }
-static double math_exp    (double *vec               )     { return(exp(vec[0]));                              }
-static double math_ldexp  (double *vec               )     { return(ldexp(vec[0],vec[1]));                     }
-static double math_abs    (double *vec               )     { return(abs(vec[0]));                              }
-static double math_floor  (double *vec               )     { return(floor(vec[0]));                            }
-static double math_ceil   (double *vec               )     { return(ceil(vec[0]));                             }
-static double math_condr  (double *vec               )     { return(vec[0]!=0.0?vec[1]:vec[2]);                }
-static double math_cond   (double *vec               )     { return(vec[0]);                                   }
-static double math_sign   (double *vec               )     { return(vec[0]<0.0?-1.0:(vec[0]==0.0?0.0:1.0));    }
-static double math_clamp  (double *vec               )     
-{ 
+static double math_sqrt   (double *vec               )
+{
+    return(sqrt(vec[0]));
+}
+static double math_deg2rad(double *vec               )
+{
+    return(vec[0]*(M_PI/180.0));
+}
+static double math_rad2deg(double *vec               )
+{
+    return(vec[0]*(180.0/M_PI));
+}
+static double math_max    (double *vec               )
+{
+    return(vec[0]>vec[1]?vec[0]:vec[1]);
+}
+static double math_min    (double *vec               )
+{
+    return(vec[0]>vec[1]?vec[1]:vec[0]);
+}
+static double math_acos   (double *vec               )
+{
+    return(acos(vec[0]));
+}
+static double math_asin   (double *vec               )
+{
+    return(asin(vec[0]));
+}
+static double math_atan2  (double *vec               )
+{
+    return(atan2(vec[0],vec[1]));
+}
+static double math_atan   (double *vec               )
+{
+    return(atan(vec[0]));
+}
+static double math_sinh   (double *vec               )
+{
+    return(sinh(vec[0]));
+}
+static double math_sin    (double *vec               )
+{
+    return(sin(vec[0]));
+}
+static double math_cosh   (double *vec               )
+{
+    return(cosh(vec[0]));
+}
+static double math_cos    (double *vec               )
+{
+    return(cos(vec[0]));
+}
+static double math_log10  (double *vec               )
+{
+    return(log10(vec[0]));
+}
+static double math_log    (double *vec               )
+{
+    return(log(vec[0]));
+}
+static double math_tanh   (double *vec               )
+{
+    return(tanh(vec[0]));
+}
+static double math_exp    (double *vec               )
+{
+    return(exp(vec[0]));
+}
+static double math_ldexp  (double *vec               )
+{
+    return(ldexp(vec[0],vec[1]));
+}
+static double math_abs    (double *vec               )
+{
+    return(abs(vec[0]));
+}
+static double math_floor  (double *vec               )
+{
+    return(floor(vec[0]));
+}
+static double math_ceil   (double *vec               )
+{
+    return(ceil(vec[0]));
+}
+static double math_condr  (double *vec               )
+{
+    return(vec[0]!=0.0?vec[1]:vec[2]);
+}
+static double math_cond   (double *vec               )
+{
+    return(vec[0]);
+}
+static double math_sign   (double *vec               )
+{
+    return(vec[0]<0.0?-1.0:(vec[0]==0.0?0.0:1.0));
+}
+static double math_clamp  (double *vec               )
+{
     if(vec[1]<vec[0])  return(vec[0]);
     if(vec[2]<vec[1])  return(vec[2]);
     return(vec[1]);
 }
 //Bitwise
-static double math_bitwand(double *vec               )     { return((double)((size_t)vec[0]&(size_t)vec[1]));  }
-static double math_bitwor (double *vec               )     { return((double)((size_t)vec[0]|(size_t)vec[1]));  }
-static double math_bitshr (double *vec               )     { return((double)((size_t)vec[0]>>(size_t)vec[1])); }
-static double math_bitshl (double *vec               )     { return((double)((size_t)vec[0]<<(size_t)vec[1])); }
-static double math_bitnot (double *vec               )     { return((double)~((long long)vec[0]));             }
-static double math_bitxor (double *vec               )     { return((double)((size_t)vec[0]^(size_t)vec[1]));  }
+static double math_bitwand(double *vec               )
+{
+    return((double)((size_t)vec[0]&(size_t)vec[1]));
+}
+static double math_bitwor (double *vec               )
+{
+    return((double)((size_t)vec[0]|(size_t)vec[1]));
+}
+static double math_bitshr (double *vec               )
+{
+    return((double)((size_t)vec[0]>>(size_t)vec[1]));
+}
+static double math_bitshl (double *vec               )
+{
+    return((double)((size_t)vec[0]<<(size_t)vec[1]));
+}
+static double math_bitnot (double *vec               )
+{
+    return((double)~((long long)vec[0]));
+}
+static double math_bitxor (double *vec               )
+{
+    return((double)((size_t)vec[0]^(size_t)vec[1]));
+}
 //Constants
-static double math_true   (void                      )     { return(1.0);                                      }
-static double math_false  (void                      )     { return(0.0);                                      }
-static double math_e      (void                      )     { return(M_E);                                      }
-static double math_pi     (void                      )     { return(M_PI);                                     }
-static double math_gold   (void                      )     { return(1.61803398874989484820);                   } //golden ratio
+static double math_true   (void                      )
+{
+    return(1.0);
+}
+static double math_false  (void                      )
+{
+    return(0.0);
+}
+static double math_e      (void                      )
+{
+    return(M_E);
+}
+static double math_pi     (void                      )
+{
+    return(M_PI);
+}
+static double math_gold   (void                      )
+{
+    return(1.61803398874989484820);                      //golden ratio
+}
 
 
 /*Stack Util*/
@@ -204,7 +351,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
         {"|",       OP_PRIO(0x0a), OP_AS_LE, 2, (math_rtn)       math_bitwor},
         {"<<",      OP_PRIO(0x05), OP_AS_LE, 2, (math_rtn)       math_bitshl},
         {">>",      OP_PRIO(0x05), OP_AS_LE, 2, (math_rtn)       math_bitshr},
-        {"^" ,      OP_PRIO(0x09), OP_AS_LE, 2, (math_rtn)       math_bitxor},
+        {"^",      OP_PRIO(0x09), OP_AS_LE, 2, (math_rtn)       math_bitxor},
         {"~",       OP_PRIO(0x02), OP_AS_RI, 1, (math_rtn)       math_bitnot},
         //Logical
         {"&&",      OP_PRIO(0x0b), OP_AS_LE, 2, (math_rtn)          math_and},
@@ -358,7 +505,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
                         for(size_t x=0; x<sizeof(opt)/sizeof(operator_info); x++)
                         {
                             token_len=string_length(opt[x].on);
-                            
+
                             if(strncasecmp(f+i+len,opt[x].on,token_len)==0)
                             {
                                 name=0;
@@ -366,16 +513,16 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
                             }
                             if(strncasecmp(":",opt[x].on,token_len)==0)
                                 break;
-                            
+
                         }
                         if(name==0)
                             break;
                     }
-                    
+
                     if(mpc(f+i,len,&v,pv)==0)
                     {
                         math_push_queue(out_queue,NULL,v);
-                       // was_number=1;
+                        // was_number=1;
                         i+=len-1;
                         continue;
                     }
@@ -449,7 +596,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
                 {
                     operator_info *loi=math_peek(&op_stack);
 
-                    if(loi==NULL||(loi->op_prec==0xff&&loi->op_prec==0x0))
+                    if(loi==NULL)
                     {
                         break; //this is not an operator
                     }

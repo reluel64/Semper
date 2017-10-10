@@ -143,25 +143,30 @@ unsigned char *bind_source_name(object *o,size_t index)
             if(index==bi->index)
             {
                 if(b->s)
+                {
                     return(skeleton_get_section_name(b->s->cs));
+                }
                 else
+                {
                     return(NULL);
+                }
             }
         }
     }
     return(NULL);
 }
 
-double bind_percentual_value(double val, double min, double max)
+double bind_percentual_value(double val, double min_val, double max_val)
 {
-    double range = max - min;
+    double range = max_val - min_val;
 
     if(range == 0.0)
+    {
         return (1.0);
-
-    val = min(val, max);
-    val = max(val, min);
-    val -= min;
+    }
+    val = min(val, max_val);
+    val = max(val, min_val);
+    val -= min_val;
     return (val / range);
 }
 
@@ -272,7 +277,10 @@ static void bind_create_strings(object* o, string_bind* sb)
     list_enum_part(b, &o->bindings, current)
     {
         if(!b->s || b->s->die||b->s->s_info)
+        {
             continue;
+        }
+
         source* s = b->s;
 
 
@@ -384,8 +392,9 @@ static inline size_t bind_string_sz(object* o, size_t index)
 
 static inline unsigned char* bind_string(object* o, size_t index, size_t* sz)
 {
-    *sz = 0;
     binding* b = NULL;
+    *sz = 0;
+
     list_enum_part(b, &o->bindings, current)
     {
         bind_index* bi = NULL;

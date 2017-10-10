@@ -16,7 +16,6 @@ Written by Alexandru-Daniel Mărgărit
 #include <parameter.h>
 #include <objects/object.h>
 
-#define DEG2RAD(x) ((x)*0.0174532925)
 
 void bar_init(object* o)
 {
@@ -83,7 +82,7 @@ int bar_update(object* o)
 {
     o->auto_w=o->w;
     o->auto_h=o->h;
-  ///  surface_data* sd = o->sd;
+    ///  surface_data* sd = o->sd;
     bar_object* bo = o->pv;
     bind_numeric bn = { 0 };
 
@@ -97,15 +96,15 @@ int bar_update(object* o)
         bind_update_numeric(o, &bn_2);
         bo->percents_2 = bind_percentual_value(bn_2.val, bn_2.min, bn_2.max);
     }
-/*
-    image_cache_unref_image(sd->cd->ich, &bo->b1ia,0);
-    image_cache_unref_image(sd->cd->ich, &bo->b2ia,0);
-    image_cache_unref_image(sd->cd->ich, &bo->bcia,0);
-    
-    image_cache_query_image(sd->cd->ich, &bo->b1ia, NULL, o->w, o->h);
-    image_cache_query_image(sd->cd->ich, &bo->b2ia, NULL, o->w, o->h);
-    image_cache_query_image(sd->cd->ich, &bo->bcia, NULL, o->w, o->h);
-*/
+    /*
+        image_cache_unref_image(sd->cd->ich, &bo->b1ia,0);
+        image_cache_unref_image(sd->cd->ich, &bo->b2ia,0);
+        image_cache_unref_image(sd->cd->ich, &bo->bcia,0);
+
+        image_cache_query_image(sd->cd->ich, &bo->b1ia, NULL, o->w, o->h);
+        image_cache_query_image(sd->cd->ich, &bo->b2ia, NULL, o->w, o->h);
+        image_cache_query_image(sd->cd->ich, &bo->bcia, NULL, o->w, o->h);
+    */
     return (1);
 }
 

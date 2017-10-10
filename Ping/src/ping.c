@@ -9,8 +9,8 @@
 #include <Iphlpapi.h>
 #include <Icmpapi.h>
 #include <string.h>
-
 #include <pthread.h>
+
 typedef struct
 {
     unsigned char th_active;

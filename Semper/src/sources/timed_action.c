@@ -228,7 +228,7 @@ size_t timed_action_fill_list(list_entry *head,string_tokenizer_info *sti,void *
     unsigned char finished=0;
     unsigned char step=0;
     size_t entries=0;
-    size_t index=0;
+
     timed_type type=none;
     timed_action_list *tal=NULL;
 
@@ -245,7 +245,6 @@ size_t timed_action_fill_list(list_entry *head,string_tokenizer_info *sti,void *
         /*Clean spaces*/
         if(string_strip_space_offsets(sti->buffer,&start,&end)==0)
         {
-
             if(sti->buffer[start]=='(')
             {
                 start++;
@@ -261,7 +260,7 @@ size_t timed_action_fill_list(list_entry *head,string_tokenizer_info *sti,void *
                 step=0;
                 finished=0;
                 start++;
-                index++;
+
                 type=none;
             }
             if(sti->buffer[end-1]==')')

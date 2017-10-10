@@ -186,8 +186,8 @@ int diag_log(unsigned char lvl,char *fmt, ...)
     struct timespec t2= {0};
     clock_gettime(CLOCK_REALTIME,&t2);
     buf_start=snprintf(buf,DIAG_MEM_ENTRY_LENGTH,"[%.8llu.%.4lu] ",
-                        t2.tv_sec-ds->t1.tv_sec,
-                        (t2.tv_nsec>ds->t1.tv_nsec?t2.tv_nsec-ds->t1.tv_nsec:0)/1000000);
+                       t2.tv_sec-ds->t1.tv_sec,
+                       (t2.tv_nsec>ds->t1.tv_nsec?t2.tv_nsec-ds->t1.tv_nsec:0)/1000000);
 
 
     va_list ifmt;

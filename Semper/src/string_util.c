@@ -12,11 +12,11 @@
 #include <inttypes.h>
 #include <ctype.h>
 #include <math_parser.h>
+
 extern uint32_t uppercase(uint32_t point);
 extern uint32_t lowercase(uint32_t point);
-
-
 #ifndef WIN32
+
 char *strlwr(char *s)
 {
     if(s==NULL)
@@ -88,6 +88,7 @@ int remove_character(unsigned char* str, unsigned char ch)
     {
         return (-1);
     }
+
     for(size_t i = 0; str[i]; i++)
     {
         if(str[i] == ch)
@@ -137,6 +138,7 @@ unsigned char* string_lower(unsigned char* s)
 {
     unsigned short* us = utf8_to_ucs(s);
     size_t slen = string_length(s);
+    size_t bn=0;
     for(size_t i = 0; us[i]; i++)
     {
         us[i] = lowercase(us[i]);
@@ -144,9 +146,9 @@ unsigned char* string_lower(unsigned char* s)
 
     memset(s, 0, slen);
 
-    unsigned char* utf = ucs_to_utf8(us, NULL, 0);
+    unsigned char* utf = ucs_to_utf8(us, &bn, 0);
 
-    strcpy(s, utf);
+    strncpy(s, utf,min(slen,bn));
     sfree((void**)&utf);
     sfree((void**)&us);
     return (s);
@@ -156,6 +158,8 @@ unsigned char* string_upper(unsigned char* s)
 {
     unsigned short* us = utf8_to_ucs(s);
     size_t slen = string_length(s);
+    size_t bn=0;
+
     for(size_t i = 0; us[i]; i++)
     {
         us[i] = uppercase(us[i]);
@@ -163,9 +167,9 @@ unsigned char* string_upper(unsigned char* s)
 
     memset(s, 0, slen);
 
-    unsigned char* utf = ucs_to_utf8(us, NULL, 0);
+    unsigned char* utf = ucs_to_utf8(us, &bn, 0);
 
-    strcpy(s, utf);
+    strncpy(s, utf,min(slen,bn));
     sfree((void**)&utf);
     sfree((void**)&us);
     return (s);
@@ -229,6 +233,34 @@ unsigned short* utf8_to_ucs(unsigned char* str)
     return (dest);
 }
 
+size_t utf8_len(unsigned char *str,size_t b_len)
+{
+    size_t ret=0;
+    if(str==NULL)
+        return(0);
+    if(b_len==0)
+    {
+        b_len = string_length(str);
+    }
+    for(size_t si = 0; si < b_len; si++)
+    {
+        if(str[si] <= 0x7F)
+        {
+            ret++;
+        }
+        else if(str[si] >= 0xE0 && str[si] <= 0xEF)
+        {
+            si+=2;
+            ret++;
+        }
+        else if(str[si] >= 0xc0 && str[si] <= 0xDF)
+        {
+            si++;
+            ret++;
+        }
+    }
+    return(ret);
+}
 
 
 unsigned char* ucs_to_utf8(unsigned short* s_in, size_t* bn, unsigned char be)
@@ -578,13 +610,6 @@ int windows_slahses(unsigned char* s)
     return (0);
 }
 
-typedef struct
-{
-    size_t op;
-    size_t quotes;
-} command_handler_status;
-
-
 
 int string_tokenizer(string_tokenizer_info *sti)
 {
@@ -711,7 +736,7 @@ int remove_trailing_zeros(unsigned char* s)
 
         for(size_t i = sl - 1; dot && s[i] && i; i--)
         {
-            if(s[i] == '0' && s[i] != '.')
+            if(s[i] == '0')
             {
                 s[i] = '\0';
             }

@@ -22,7 +22,7 @@ typedef struct
     size_t *ovecoff;                                                            //offset vector (in_out)
     int (*string_tokenizer_filter)(string_tokenizer_status *sts, void* pv);     //filtering function (mandatory)
     void *filter_data;                                                          //user data for the filtering function
-   
+    size_t buf_len;
 } string_tokenizer_info;
 
 
@@ -50,6 +50,7 @@ unsigned char* string_lower(unsigned char* s);
 unsigned char is_file_type(unsigned char* file, unsigned char* ext);
 unsigned char* replace(unsigned char* in, unsigned char* rep_pair, unsigned char regexp);
 unsigned short* utf8_to_ucs(unsigned char* str);
+size_t utf8_len(unsigned char *str,size_t b_len);
 #ifndef WIN32
 char *strlwr(char *s);
 char *strupr(char *s);

@@ -8,7 +8,7 @@
 #define USE_SCALE 1
 #if USE_SCALE
 /* After some testing it seems that this value (8) brings the perfect balance between performance and quality
- * Thank you Gabi for the suggestion. 
+ * Thank you Gabi for the suggestion.
  * */
 #define SCALE_FACTOR 8
 

@@ -150,7 +150,7 @@ void line_reset(object* o)
         }
 
         size_t index = 0;
-        
+
         sscanf(v+9, "%llu", &index);
 
         line_data* ld = line_data_alloc(lo, index);
@@ -241,14 +241,15 @@ int line_render(object* o, cairo_t* cr)
 
     list_enum_part(ld, &lo->lines, current)
     {
-        double x = 0;
-        double y = 0;
+
         cairo_set_color(cr, ld->line_color);
 
         line_value* lv = NULL;
         size_t i = 0;
         list_enum_part(lv, &ld->values, current)
         {
+            double x = 0.0;
+            double y = 0.0;
             double p = bind_percentual_value(lv->value, ld->min, ld->max);
 
             x = width - i;

@@ -30,15 +30,14 @@ void crosswin_init(crosswin* c)
     Screen *s=DefaultScreenOfDisplay(c->display);
     if(s)
     {
-      c->sw=s->width;
-      c->sh=s->height;
+        c->sw=s->width;
+        c->sh=s->height;
     }
 #endif
 }
 
 int crosswin_update(crosswin* c)
 {
-
     long oh=c->sh;
     long ow=c->sw;
 #ifdef WIN32
@@ -48,8 +47,8 @@ int crosswin_update(crosswin* c)
     Screen *s=DefaultScreenOfDisplay(c->display);
     if(s)
     {
-      c->sw=s->width;
-      c->sh=s->height;
+        c->sw=s->width;
+        c->sh=s->height;
     }
 #endif
     return(oh!=c->sh||ow!=c->sw);
@@ -98,7 +97,7 @@ void crosswin_click_through(window* w, unsigned char state)
     win32_click_through(w, state);
 #elif __linux__
     w->click_through=state;
-    //xlib_set_mask(w);
+
 #endif
 }
 
@@ -173,10 +172,13 @@ void crosswin_set_mouse_handler(window* w, int (*mouse_handler)(window* w, mouse
     w->mouse_func = mouse_handler;
 }
 
-void crosswin_set_kbd_handler(window *w,int(*kbd_func)(unsigned  int key_code ,void *p),void *kb_data)
+void crosswin_set_kbd_handler(window *w,int(*kbd_func)(unsigned  int key_code,void *p),void *kb_data)
 {
     w->kbd_func=kbd_func;
     w->kb_data=kb_data;
+#ifdef __linux__
+    w->kbd_func?xlib_create_input_context(w):xlib_destroy_input_context(w);
+#endif
 }
 
 void crosswin_hide(window* w)
@@ -219,5 +221,5 @@ void crosswin_set_window_z_order(window* w, unsigned char zorder)
     win32_set_zpos(w);
 #elif __linux__
     xlib_set_zpos(w);
-    #endif
+#endif
 }

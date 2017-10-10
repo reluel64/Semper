@@ -107,22 +107,22 @@ size_t parameter_size_t(void* req, unsigned char* npm, size_t def, unsigned char
 
     key k = skeleton_get_key(s, npm);
     xr.os = skeleton_key_value(k);
-   
-        if(xr.os == NULL)
-        {
-            xr.os = ancestor(req, npm, xpander_flags);
-        }
 
-        if(xpander(&xr))
-        {
-            ret = (size_t)compute_formula(xr.es);
-            sfree((void**)&xr.es);
-        }
-        else if(xr.os)
-        {
-            ret =(size_t) compute_formula(xr.os);
-        }
-    
+    if(xr.os == NULL)
+    {
+        xr.os = ancestor(req, npm, xpander_flags);
+    }
+
+    if(xpander(&xr))
+    {
+        ret = (size_t)compute_formula(xr.es);
+        sfree((void**)&xr.es);
+    }
+    else if(xr.os)
+    {
+        ret =(size_t) compute_formula(xr.os);
+    }
+
     xr.os = NULL;
     return (ret);
 }

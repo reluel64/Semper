@@ -248,7 +248,7 @@ event* event_push(event_queue* eq, event_handler handler, void* pv, size_t timeo
         memset(&ev,0,sizeof(struct sigevent));
         ev.sigev_notify=SIGEV_SIGNAL;
         ev.sigev_signo=SIGALRM;
-        ev.sigev_value.sival_ptr=eq;					//this little prick gave me about 2 hours of headaches
+        ev.sigev_value.sival_ptr=eq;//this little prick gave me about 2 hours of headaches
         timer_create(CLOCK_MONOTONIC,&ev,(timer_t*)&e->timer);
         timer_settime((timer_t)e->timer,0,&tval,NULL);
 #endif

@@ -32,7 +32,6 @@ void time_reset(void *spv,void *ip)
 double time_update(void *spv)
 {
     time_state *ts=spv;
-    tzset();
     ts->_tm=time(NULL);
     return((double)ts->_tm);
 }
@@ -41,7 +40,8 @@ double time_update(void *spv)
 unsigned char *time_string(void *spv)
 {
     time_state *ts=spv;
-    struct tm *fmt_time=localtime(&ts->_tm);
+    struct tm res= {0};
+    struct tm *fmt_time=localtime_r(&ts->_tm,&res);
     strftime(ts->buf,256,ts->format,fmt_time);
     return(ts->buf);
 }

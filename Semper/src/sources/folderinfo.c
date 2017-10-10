@@ -184,7 +184,11 @@ static int folderinfo_collect(unsigned char* root, folderinfo* fi)
         }
         while(fi->stop==0&&FindNextFileW(fh, &wfd));
 
-        (fh&&fh!=INVALID_HANDLE_VALUE)?FindClose(fh):0;
+        if(fh!=NULL&&fh!=INVALID_HANDLE_VALUE)
+        {
+            FindClose(fh);
+            fh=NULL;
+        }
 
         if(root!=file)
         {

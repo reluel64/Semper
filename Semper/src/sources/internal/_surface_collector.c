@@ -28,7 +28,7 @@ typedef struct _surfaces_collector_data
 
 void surfaces_collector_init(void** spv, void* ip)
 {
-    
+
     surfaces_collector_data* scd = zmalloc(sizeof(surfaces_collector_data));
     source* s = ip;
     surface_data* sd = s->sd;
@@ -118,7 +118,7 @@ void surfaces_collector_command(void* spv, unsigned char* command)
     }
     else if(command&&scd->parent)
     {
-         if(strcasecmp("Unload",command)==0)
+        if(strcasecmp("Unload",command)==0)
         {
             control_data* cd = scd->cd;
             size_t i = scd->parent->base + scd->index;

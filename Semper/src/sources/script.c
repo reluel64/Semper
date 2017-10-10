@@ -43,7 +43,6 @@ typedef enum
     lua,
     javascript,
     python
-
 } script_engine;
 
 typedef struct
@@ -394,7 +393,7 @@ void *script_source_param(script_item_data *sid,unsigned char id) /*this should 
 double script_math(unsigned char *frml)
 {
     double r=0.0;
-    
+
     if(frml&&math_parser(frml,&r,NULL,NULL)==0)
     {
         return(r);

@@ -56,12 +56,12 @@ int spinner_update(object* o)
     surface_data* sd = o->sd;
     bind_update_numeric(o, &bn);
     image_cache_unref_image(sd->cd->ich, &spo->sia,0);
-    
+
     if(spo->sia.path!=spo->spinner_img_path)
     {
         sfree((void**)&spo->sia.path);
     }
-    
+
     sb.s_in = spo->spinner_img_path;
 
     bind_update_string(o, &sb);

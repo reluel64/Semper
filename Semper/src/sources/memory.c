@@ -113,21 +113,21 @@ double memory_update(void* spv)
     switch(*type & 0xfb)
     {
     case 0:
-        return (*type & 0x4 ? (double)ms.ullTotalPhys : (double)(ms.ullTotalPhys - ms.ullAvailPhys));
+        return ((*type & 0x4) ? (double)ms.ullTotalPhys : (double)(ms.ullTotalPhys - ms.ullAvailPhys));
     case 1:
-        return (*type & 0x4 ? (double)ms.ullTotalVirtual : (double)(ms.ullTotalVirtual - ms.ullAvailVirtual));
+        return ((*type & 0x4 )? (double)ms.ullTotalVirtual : (double)(ms.ullTotalVirtual - ms.ullAvailVirtual));
     case 2:
-        return (*type & 0x4 ? (double)ms.ullTotalPageFile : (double)(ms.ullTotalPageFile - ms.ullAvailPageFile));
+        return ((*type & 0x4) ? (double)ms.ullTotalPageFile : (double)(ms.ullTotalPageFile - ms.ullAvailPageFile));
     }
 #elif __linux__
     size_t total=memory_get_linux("MemTotal:");
     size_t free=memory_get_linux("MemFree:")+memory_get_linux("Cached:")+memory_get_linux("Buffers:");
-    
+
     switch(*type & 0xfb)
     {
     case 0:
-        return ((*type & 0x4 ? (double)total : (double)(total- free)));
-         //case 1:
+        return (((*type & 0x4) ? (double)total : (double)(total- free)));
+        //case 1:
         //return (*type & 0x4 ? (double)ms.ullTotalVirtual : (double)(ms.ullTotalVirtual - ms.ullAvailVirtual));
         // case 2:
         //return (*type & 0x4 ? (double)inf.totalswap : (double)(inf.totalswap - inf.freeswap));

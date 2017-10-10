@@ -35,9 +35,8 @@
       <File Name="src/sources/string.c"/>
       <File Name="src/sources/timed_action.c"/>
       <File Name="src/sources/time_s.c"/>
-      <File Name="src/sources/webget.c"/>
       <File Name="src/sources/wifi.c"/>
-      <File Name="src/sources/webget_reborn.c"/>
+      <File Name="src/sources/webget.c"/>
     </VirtualDirectory>
     <VirtualDirectory Name="3rdparty">
       <File Name="src/3rdparty/duktape.c"/>
@@ -66,7 +65,22 @@
       <File Name="src/objects/line.c"/>
       <File Name="src/objects/object.c"/>
       <File Name="src/objects/spinner.c"/>
+      <VirtualDirectory Name="string">
+        <File Name="src/objects/string/string_attr.c"/>
+        <File Name="src/objects/string/string_attr_font.c"/>
+        <File Name="src/objects/string/string_attr_size.c"/>
+        <File Name="src/objects/string/string_attr_underline.c"/>
+        <File Name="src/objects/string/string_attr_weight.c"/>
+        <File Name="src/objects/string/string_attr_strike.c"/>
+        <File Name="src/objects/string/string_attr_style.c"/>
+        <File Name="src/objects/string/string_attr_stretch.c"/>
+        <File Name="src/objects/string/string_attr_rise.c"/>
+        <File Name="src/objects/string/string_attr_case.c"/>
+        <File Name="src/objects/string/string_attr_spacing.c"/>
+        <File Name="src/objects/string/string_attr_color.c"/>
+      </VirtualDirectory>
       <File Name="src/objects/string.c"/>
+      <File Name="src/objects/vector.c"/>
     </VirtualDirectory>
     <File Name="src/ancestor.c"/>
     <File Name="src/bind.c"/>
@@ -144,7 +158,11 @@
       <File Name="include/objects/line.h"/>
       <File Name="include/objects/object.h"/>
       <File Name="include/objects/spinner.h"/>
+      <VirtualDirectory Name="string">
+        <File Name="include/objects/string/string_attr.h"/>
+      </VirtualDirectory>
       <File Name="include/objects/string.h"/>
+      <File Name="include/objects/vector.h"/>
     </VirtualDirectory>
     <File Name="include/ancestor.h"/>
     <File Name="include/bind.h"/>
