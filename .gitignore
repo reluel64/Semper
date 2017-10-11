@@ -5,3 +5,4 @@ build
 *.mk
 *.dll
 *.exe
+*.ini
