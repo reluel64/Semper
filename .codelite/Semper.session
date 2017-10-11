@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Session Name="D:\Semper_Workspace\Semper.workspace">
-  <int Value="1" Name="m_selectedTab"/>
+  <int Value="2" Name="m_selectedTab"/>
   <wxString Value="D:\Semper_Workspace\Semper.workspace" Name="m_workspaceName"/>
   <TabInfoArray Name="TabInfoArray">
     <TabInfo>
@@ -19,8 +19,8 @@
     </TabInfo>
     <TabInfo>
       <wxString Value="D:\Semper_Workspace\Semper\src\objects\string\string_attr_color.c" Name="FileName"/>
-      <int Value="172" Name="FirstVisibleLine"/>
-      <int Value="195" Name="CurrentLine"/>
+      <int Value="210" Name="FirstVisibleLine"/>
+      <int Value="242" Name="CurrentLine"/>
       <wxArrayString Name="Bookmarks"/>
       <IntVector Name="CollapsedFolds"/>
     </TabInfo>

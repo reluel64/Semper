@@ -56,8 +56,6 @@ PangoAttribute *string_attr_color(unsigned char cl_type,string_attributes *sa,si
 
 static int string_attr_color_draw(string_object *so,string_attributes *sa,PangoRectangle *pr,cairo_t *cr,unsigned char shadow)
 {
-
-
     if(sa->font_shadow)
     {
         cairo_save(cr);
@@ -71,7 +69,10 @@ static int string_attr_color_draw(string_object *so,string_attributes *sa,PangoR
     }
 
     if(shadow)
+    {
         return(0);
+    }
+
     cairo_save(cr);
     cairo_rectangle(cr,pr->x,pr->y,pr->width,pr->height);
     cairo_clip(cr);
@@ -116,12 +117,16 @@ static int string_attr_color_draw(string_object *so,string_attributes *sa,PangoR
     if(sa->font_outline)
     {
         cairo_reset_clip(cr);
+
         if(so->was_outlined==0)
         {
             cairo_rectangle(cr,pr->x-1,pr->y,pr->width-1,pr->height);
         }
         else
+        {
             cairo_rectangle(cr,pr->x-1,pr->y,pr->width+2,pr->height);
+        }
+
         so->was_outlined=1;
         cairo_clip(cr);
         cairo_set_line_width(cr, 1.0);
@@ -157,6 +162,7 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
     long oy=0;
     long ox=0;
     unsigned char yh=0;
+
     if(sa->font_shadow==0&&pm[2])
     {
         return(0);
@@ -234,6 +240,7 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
             .width=pw,
             .height=ph
         };
+
         string_attr_color_draw(so,sa,&pr,cr,(unsigned char)(size_t)(pm[2]));
     }
     return(0);
