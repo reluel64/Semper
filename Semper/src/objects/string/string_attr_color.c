@@ -54,9 +54,9 @@ PangoAttribute *string_attr_color(unsigned char cl_type,string_attributes *sa,si
     return(&attr->attr);
 }
 
-static void string_attr_color_draw(string_object *so,string_attributes *sa,PangoRectangle *pr,cairo_t *cr)
+static int string_attr_color_draw(string_object *so,string_attributes *sa,PangoRectangle *pr,cairo_t *cr,unsigned char shadow)
 {
-    cairo_save(cr);
+
 
     if(sa->font_shadow)
     {
@@ -70,6 +70,9 @@ static void string_attr_color_draw(string_object *so,string_attributes *sa,Pango
         cairo_restore(cr);
     }
 
+    if(shadow)
+        return(0);
+    cairo_save(cr);
     cairo_rectangle(cr,pr->x,pr->y,pr->width,pr->height);
     cairo_clip(cr);
 
@@ -132,6 +135,7 @@ static void string_attr_color_draw(string_object *so,string_attributes *sa,Pango
     }
 
     cairo_restore(cr);
+    return(0);
 }
 
 
@@ -153,7 +157,10 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
     long oy=0;
     long ox=0;
     unsigned char yh=0;
-
+    if(sa->font_shadow==0&&pm[2])
+    {
+        return(0);
+    }
     if(pa->start_index==0&&so->bind_string[0]!=' '&&sa->font_outline)
     {
         cairo_translate(cr,1,0);
@@ -172,10 +179,7 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
             continue;
         }
 
-
         pango_layout_index_to_pos(so->layout,i,&pr);
-
-
 
         yh=0;
         pr.x>>=10;
@@ -208,7 +212,7 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
                     .width=pw,
                     .height=ph
                 };
-                string_attr_color_draw(so,sa,&prv,cr);
+                string_attr_color_draw(so,sa,&prv,cr,(unsigned char)(size_t)(pm[2]));
                 oy=pr.y;
                 yh=1;
                 pw=0;
@@ -230,7 +234,7 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
             .width=pw,
             .height=ph
         };
-        string_attr_color_draw(so,sa,&pr,cr);
+        string_attr_color_draw(so,sa,&pr,cr,(unsigned char)(size_t)(pm[2]));
     }
     return(0);
 }
