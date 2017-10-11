@@ -1,6 +1,7 @@
 
 #include <objects/object.h>
 #include <cairo/cairo.h>
+#include <mem.h>
 typedef struct
 {
     int i;

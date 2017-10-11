@@ -46,8 +46,6 @@ typedef struct
     unsigned int weight;
     unsigned char *pattern;
     list_entry current;
-    unsigned int *range;
-    size_t range_len;
     size_t gradient_len;
     double gradient_ang;
     unsigned int *gradient;

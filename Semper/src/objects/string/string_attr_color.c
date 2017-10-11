@@ -167,6 +167,7 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
     {
         return(0);
     }
+
     if(pa->start_index==0&&so->bind_string[0]!=' '&&sa->font_outline)
     {
         cairo_translate(cr,1,0);

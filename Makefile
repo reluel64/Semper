@@ -1,8 +1,8 @@
 .PHONY: clean All
 
 All:
-	@echo "----------Building project:[ Semper - Debug ]----------"
-	@cd "Semper" && "$(MAKE)" -f  "Semper.mk" PreBuild && "$(MAKE)" -f  "Semper.mk" && "$(MAKE)" -f  "Semper.mk" PostBuild
+	@echo "----------Building project:[ SpeedFan - Debug ]----------"
+	@cd "SpeedFan" && "$(MAKE)" -f  "SpeedFan.mk"
 clean:
-	@echo "----------Cleaning project:[ Semper - Debug ]----------"
-	@cd "Semper" && "$(MAKE)" -f  "Semper.mk" clean
+	@echo "----------Cleaning project:[ SpeedFan - Debug ]----------"
+	@cd "SpeedFan" && "$(MAKE)" -f  "SpeedFan.mk" clean

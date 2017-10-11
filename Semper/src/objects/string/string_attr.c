@@ -119,7 +119,6 @@ void string_destroy_attrs(string_object *so)
     so->attr_list=NULL;
     list_enum_part_safe(sa,tsa,&so->attr,current)
     {
-        sfree((void**)&sa->range);
         sfree((void**)&sa->font_name);
         sfree((void**)&sa->pattern);
         sfree((void**)&sa);
@@ -597,8 +596,6 @@ int string_apply_attr(string_object *so)
     {
         pcre *ctx=NULL;
         int rc=0;
-        sfree((void**)&sa->range);
-        sa->range_len=0;
         memset(ovec,0,sizeof(ovec));
 
         if(attr_no&&sa->pattern)
@@ -627,14 +624,10 @@ int string_apply_attr(string_object *so)
             rc=2;
         }
 
-        if((attr_no&&rc>1)||attr_no==0)
-        {
-            sa->range_len=rc-1;
-            sa->range=zmalloc(sizeof(unsigned int)*sa->range_len*2);
-            memcpy(sa->range,ovec+2,sizeof(unsigned int)*sa->range_len*2);
-        }
 
-        for(size_t i=1; i<rc; i++)
+
+
+        for(size_t i=rc>1?1:0; i<rc; i++)
         {
             PangoAttribute *pa=NULL;
             size_t start=ovec[2*i];

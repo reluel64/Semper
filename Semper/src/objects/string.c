@@ -190,9 +190,9 @@ int string_render(object* o, cairo_t* cr)
     cairo_rectangle(cr,0.0,0.0,clipw,cliph);
     cairo_clip(cr);
 
-    for(unsigned char i=0; i<2; i++)
+    for(unsigned char i=2; i; i--)
     {
-        void **pm[]= {(void*)so,(void*)cr,(void*)1};
+        void **pm[]= {(void*)so,(void*)cr,(void*)i-1};
         pango_attr_list_filter(so->attr_list,string_attr_color_handler,(void*)pm);
     }
     so->was_outlined=0;
