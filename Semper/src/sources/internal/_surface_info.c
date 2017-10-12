@@ -13,6 +13,7 @@ typedef struct _surface_info
     unsigned char data;
     unsigned char* sname;
     unsigned char *str;
+    unsigned char coord; //0 - x | 1- y
     unsigned char def[64];
 } surface_info;
 
@@ -35,7 +36,10 @@ void surface_info_reset(void* spv, void* ip)
     if(temp)
     {
         if(!strcasecmp(temp,"Coordinates"))
+        {
             si->data=0;
+            si->coord=extension_bool("CoordIndex",ip,0);
+        }
         else if(!strcasecmp(temp,"General"))
             si->data=1;
     }
@@ -76,8 +80,7 @@ double surface_info_update(void* spv)
     }
     else
     {
-        flags|=(((size_t)sd->x)&0xffffff)                          <<0;
-        flags|=(((size_t)sd->y)&0xffffff)                          <<23;
+        return ((double)(si->coord?sd->y:sd->x));
     }
     return ((double)flags);
 }
@@ -135,6 +138,10 @@ unsigned char* surface_info_string(void* spv)
                 bpos+=snprintf(si->str+bpos,nm-bpos,"%s: %s",name_tbl[i],t);
             }
         }
+    }
+    else
+    {
+        return(NULL);
     }
 
 

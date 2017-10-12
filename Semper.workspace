@@ -11,7 +11,7 @@
   <Project Name="Registry" Path="Registry/Registry.project" Active="No"/>
   <Project Name="DiskSpeed" Path="DiskSpeed/DiskSpeed.project" Active="No"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Debug" Selected="no">
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Environment/>
       <Project Name="CoreTemp" ConfigName="Debug"/>
       <Project Name="DiskSpeed" ConfigName="NoBuild"/>
@@ -24,7 +24,7 @@
       <Project Name="Semper" ConfigName="Debug"/>
       <Project Name="SpeedFan" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="yes">
+    <WorkspaceConfiguration Name="Release" Selected="no">
       <Environment/>
       <Project Name="CoreTemp" ConfigName="Release"/>
       <Project Name="DiskSpeed" ConfigName="NoBuild"/>

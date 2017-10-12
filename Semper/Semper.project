@@ -124,7 +124,6 @@
       <File Name="include/sources/memory.h"/>
       <File Name="include/sources/network.h"/>
       <File Name="include/sources/processor.h"/>
-      <File Name="include/sources/registry.h"/>
       <File Name="include/sources/script.h"/>
       <File Name="include/sources/source.h"/>
       <File Name="include/sources/string.h"/>
