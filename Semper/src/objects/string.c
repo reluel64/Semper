@@ -68,12 +68,15 @@ void string_reset(object* o)
     sfree((void**)&temp);
 
 
-    string_destroy_attrs(so);
-    string_fill_attrs(o);
+    string_attr_destroy(so);
+    string_attr_init(o);
     so->bind_string=so->string;
     so->bind_string_len=string_length(so->string);
+
     if(linked_list_single(&so->attr))
-        string_apply_attr(so);
+    {
+        string_attr_update(so);
+    }
     /*Set the layout attributes*/
     pango_layout_set_wrap(so->layout,PANGO_WRAP_WORD_CHAR);
     pango_layout_set_ellipsize(so->layout, so->ellipsize?PANGO_ELLIPSIZE_END:PANGO_ELLIPSIZE_NONE);
@@ -131,8 +134,11 @@ int string_update(object* o)
     }
 
     so->bind_string = sb.s_out;
+
     if(linked_list_single(&so->attr)==0)
-        string_apply_attr(so);
+    {
+        string_attr_update(so);
+    }
 
     if(o->w < 0)
     {
@@ -207,7 +213,7 @@ void string_destroy(object* o)
     if(o && o->pv)
     {
         string_object* so = o->pv;
-        string_destroy_attrs(so);
+        string_attr_destroy(so);
         g_object_unref(so->layout);
         g_object_unref(so->context);
         g_object_unref(so->font_map);

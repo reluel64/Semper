@@ -109,24 +109,6 @@ static int string_parse_filter(string_tokenizer_status *pi, void* pv)
     return (0);
 }
 
-
-void string_destroy_attrs(string_object *so)
-{
-    string_attributes *sa=NULL;
-    string_attributes *tsa=NULL;
-    pango_layout_set_attributes(so->layout,NULL);
-    pango_attr_list_unref(so->attr_list);
-    so->attr_list=NULL;
-    list_enum_part_safe(sa,tsa,&so->attr,current)
-    {
-        sfree((void**)&sa->font_name);
-        sfree((void**)&sa->pattern);
-        sfree((void**)&sa);
-    }
-    return;
-}
-
-
 static int string_validate_attributes(string_tokenizer_info *sti)
 {
     int param=0;
@@ -572,7 +554,7 @@ static int string_fill_text_format(object *o)
     return(0);
 }
 
-int string_apply_attr(string_object *so)
+int string_attr_update(string_object *so)
 {
     pango_layout_set_attributes(so->layout,NULL);
 
@@ -710,7 +692,7 @@ int string_apply_attr(string_object *so)
     return(0);
 }
 
-void string_fill_attrs(object *o)
+void string_attr_init(object *o)
 {
     string_object* so = o->pv;
     unsigned char *temp=NULL;
@@ -727,7 +709,6 @@ void string_fill_attrs(object *o)
     sa->weight = parameter_size_t(o, "FontWeight", PANGO_WEIGHT_NORMAL, XPANDER_OBJECT);
     sa->style = parameter_bool(o, "FontItalic", 0, XPANDER_OBJECT)!=0?PANGO_STYLE_ITALIC:PANGO_STYLE_NORMAL;
     sa->weight = sa->weight ? sa->weight :PANGO_WEIGHT_NORMAL;
-
 
     temp = parameter_string(o, "StringCase", NULL, XPANDER_OBJECT);
 
@@ -758,4 +739,19 @@ void string_fill_attrs(object *o)
     }
     string_fill_text_format(o);
 
+}
+
+void string_attr_destroy(string_object *so)
+{
+    string_attributes *sa=NULL;
+    string_attributes *tsa=NULL;
+    pango_layout_set_attributes(so->layout,NULL);
+    pango_attr_list_unref(so->attr_list);
+    so->attr_list=NULL;
+    list_enum_part_safe(sa,tsa,&so->attr,current)
+    {
+        sfree((void**)&sa->font_name);
+        sfree((void**)&sa->pattern);
+        sfree((void**)&sa);
+    }
 }

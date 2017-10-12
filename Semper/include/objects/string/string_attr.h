@@ -53,7 +53,6 @@ typedef struct
 
 
 
-void string_fill_attrs(object *o);
-int string_apply_color_attr(string_object *so,string_attributes *sa,int shadow);
-int string_apply_attr(string_object *so);
-void string_destroy_attrs(string_object *so);
+void string_attr_init(object *o);
+int string_attr_update(string_object *so);
+void string_attr_destroy(string_object *so);
