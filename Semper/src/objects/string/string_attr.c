@@ -319,8 +319,8 @@ static int string_fill_text_format(object *o)
                     fmt_type=type_shadow;
                     sa->font_shadow=1;
                     sa->shadow_color=0xff000000;
-                    sa->shadow_x=1.5;
-                    sa->shadow_y=-1.5;
+                    sa->shadow_x=1.0;
+                    sa->shadow_y=-1.0;
                 }
                 else if(!strncasecmp(str,"underline",9))
                 {
@@ -749,8 +749,8 @@ void string_fill_attrs(object *o)
     if ((sa->font_shadow = parameter_bool(o, "FontShadow", 0, XPANDER_OBJECT))!=0)
     {
         sa->shadow_color = parameter_color(o, "FontShadowColor", sa->font_color & 0xff000000, XPANDER_OBJECT);
-        sa->shadow_x=1.5;
-        sa->shadow_y=-1.5;
+        sa->shadow_x=1.0;
+        sa->shadow_y=-1.0;
     }
     if((sa->font_outline = parameter_bool(o, "FontOutline", 0, XPANDER_OBJECT))!=0)
     {
