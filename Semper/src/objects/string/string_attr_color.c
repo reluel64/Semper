@@ -59,9 +59,11 @@ static int string_attr_color_draw(string_object *so,string_attributes *sa,PangoR
     if(sa->font_shadow)
     {
         cairo_save(cr);
-        cairo_translate(cr, sa->shadow_x+PADDING_W / 2.0, PADDING_H / 2.0 +sa->shadow_y);
+
+        cairo_translate(cr,sa->shadow_x,sa->shadow_y);
         cairo_rectangle(cr,pr->x,pr->y,pr->width,pr->height);
         cairo_clip(cr);
+
         cairo_set_color(cr,sa->shadow_color);
         pango_cairo_show_layout(cr,so->layout);
         cairo_reset_clip(cr);
@@ -175,12 +177,12 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
 
 
     size_t start=pa->start_index;
-
-    for(size_t i=pa->start_index; i<pa->end_index; i++)
+    size_t end=((pa->end_index==-1)?so->bind_string_len:pa->end_index);
+    for(size_t i=pa->start_index; i<end; i++)
     {
         PangoRectangle pr= {0};
 
-        if(((i+1==pa->end_index)||(i==pa->start_index))&&so->bind_string[i]==' ')
+        if(((i+1==end)||(i==pa->start_index))&&so->bind_string[i]==' ')
         {
             start++;
             continue;
@@ -200,7 +202,6 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
             py=pr.y;
             oy=pr.y;
         }
-
         else
         {
             if(ox==pr.x)

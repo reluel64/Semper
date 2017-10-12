@@ -54,14 +54,7 @@ int string_attr_case_handler(PangoAttribute *pa,void *pv)
         return(0);
     }
 
-    if(pa->end_index!=-1)
-    {
-        end=pa->end_index;
-    }
-    else
-    {
-        end=string_length(so->bind_string);
-    }
+    end=((pa->end_index==-1)?so->bind_string_len:pa->end_index);
 
     if(so->bind_string==so->string)
     {

@@ -20,6 +20,7 @@ typedef struct
     unsigned char percentual;
     unsigned char* string;
     unsigned char* bind_string;
+
     unsigned int scaling;
 
     /*Pango stuff*/
@@ -29,5 +30,6 @@ typedef struct
     void* font_map;
     void* font_desc;
     void *attr_list;
+    size_t bind_string_len;
     list_entry attr;
 } string_object;

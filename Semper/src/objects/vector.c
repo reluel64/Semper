@@ -27,11 +27,11 @@ int vector_update(object *o)
 int vector_render(object *o,cairo_t *cr)
 {
     vector *v=o->pv;
-  cairo_arc(cr,100,100,50,0,6.28);
+    cairo_arc(cr,100,100,50,0,6.28);
     cairo_path_t *p=cairo_copy_path(cr);
 
 
-    for(size_t i=0;i<p->num_data;i+=p->data[i].header.length)
+    for(size_t i=0; i<p->num_data; i+=p->data[i].header.length)
     {
         cairo_path_data_t *data=&p->data[i];
         printf("%d %lf %lf\n",data[0].header.type,data[1].point.x,data[1].point.y);

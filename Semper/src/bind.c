@@ -446,20 +446,20 @@ static inline size_t bind_query_memory(object* o, string_bind* sb)
     return (mem);
 }
 
-int bind_update_string(object* o, string_bind* sb)
+size_t bind_update_string(object* o, string_bind* sb)
 {
 
     size_t nmbl = 0;
     size_t di = 0;
     if(!o || !sb || !sb->s_in)
     {
-        return (-1);
+        return (0);
     }
 
     if(!need_replacements(sb->s_in))
     {
         sb->s_out = sb->s_in;
-        return (0);
+        return (string_length(sb->s_out));
     }
 
     bind_create_strings(o, sb);
@@ -497,7 +497,7 @@ int bind_update_string(object* o, string_bind* sb)
     }
 
     bind_destroy_strings(o);
-    return (0);
+    return (nmbl);
 }
 
 int bind_update_numeric(object* o, bind_numeric* bn)

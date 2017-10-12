@@ -8,7 +8,7 @@
 "SurfaceColor=0;0;0;200\n"
 "Width=800\n"
 "Height=600\n"
-"UpdateFrequency=10\n"
+"UpdateFrequency=1000\n"
 "\n"
 "\n"
 "\n"

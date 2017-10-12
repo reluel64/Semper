@@ -70,11 +70,10 @@ void string_reset(object* o)
 
     string_destroy_attrs(so);
     string_fill_attrs(o);
-
+    so->bind_string=so->string;
+    so->bind_string_len=string_length(so->string);
     if(linked_list_single(&so->attr))
-    {
         string_apply_attr(so);
-    }
     /*Set the layout attributes*/
     pango_layout_set_wrap(so->layout,PANGO_WRAP_WORD_CHAR);
     pango_layout_set_ellipsize(so->layout, so->ellipsize?PANGO_ELLIPSIZE_END:PANGO_ELLIPSIZE_NONE);
@@ -124,7 +123,7 @@ int string_update(object* o)
     sb.self_scaling = so->scaling;
 
     /*Obtain the string*/
-    bind_update_string(o, &sb);
+    so->bind_string_len=bind_update_string(o, &sb);
 
     if(sb.s_out == NULL)
     {
@@ -132,11 +131,8 @@ int string_update(object* o)
     }
 
     so->bind_string = sb.s_out;
-
     if(linked_list_single(&so->attr)==0)
-    {
         string_apply_attr(so);
-    }
 
     if(o->w < 0)
     {
@@ -186,17 +182,22 @@ int string_render(object* o, cairo_t* cr)
     string_object* so = o->pv;
     double clipw=(double)(o->w<0?o->auto_w:o->w);
     double cliph=(double)(o->h<0?o->auto_h:o->h);
-
+    cairo_translate(cr, PADDING_W / 2.0, PADDING_H / 2.0 );
     cairo_rectangle(cr,0.0,0.0,clipw,cliph);
     cairo_clip(cr);
 
     for(unsigned char i=2; i; i--)
     {
-        void **pm[]= {(void*)so,(void*)cr,(void*)i-1};
+        void **pm[]=
+        {
+            (void*)so,
+            (void*)cr,
+            (void*)(size_t)(i-1)
+        };
         pango_attr_list_filter(so->attr_list,string_attr_color_handler,(void*)pm);
     }
     so->was_outlined=0;
-
+    cairo_translate(cr, -PADDING_W / 2.0, -PADDING_H / 2.0 );
     return (0);
 }
 
@@ -206,11 +207,12 @@ void string_destroy(object* o)
     if(o && o->pv)
     {
         string_object* so = o->pv;
+        string_destroy_attrs(so);
         g_object_unref(so->layout);
         g_object_unref(so->context);
         g_object_unref(so->font_map);
         pango_font_description_free(so->font_desc);
-        string_destroy_attrs(so);
+
         if(so->bind_string!=so->string)
         {
             sfree((void**)&(so)->bind_string);

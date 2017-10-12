@@ -247,7 +247,7 @@ static int string_fill_text_format(object *o)
             continue;
         }
 
-       sscanf(eval+10,"%llu",&index);
+        sscanf(eval+10,"%llu",&index);
         if((sa=string_attr_alloc_index(&so->attr,index+1))==NULL)
         {
             sfree((void**)&val);
@@ -587,7 +587,7 @@ int string_apply_attr(string_object *so)
 
     string_attributes *sa=NULL;
     size_t attr_no=0;
-    size_t len=string_length(so->bind_string);
+    size_t len=so->bind_string_len;
     const char *errptr=NULL;
     unsigned int ovec[300];
     int erroff=0;
@@ -620,12 +620,9 @@ int string_apply_attr(string_object *so)
 
         if(attr_no==0)
         {
-            ovec[3]=len;
+            ovec[3]=-1;
             rc=2;
         }
-
-
-
 
         for(size_t i=rc>1?1:0; i<rc; i++)
         {
@@ -657,6 +654,7 @@ int string_apply_attr(string_object *so)
                 pa=string_attr_stretch(sa->stretch,start,end);
                 pango_attr_list_change(so->attr_list,pa);
             }
+
             if(sa->font_size!=0.0)
             {
                 pa=string_attr_size(sa->font_size,start,end);
@@ -668,21 +666,25 @@ int string_apply_attr(string_object *so)
                 pa=string_attr_weight(sa->weight,start,end);
                 pango_attr_list_change(so->attr_list,pa);
             }
+
             if(sa->style)
             {
                 pa=string_attr_style(sa->style,start,end);
                 pango_attr_list_change(so->attr_list,pa);
             }
+
             if(sa->rise)
             {
                 pa=string_attr_rise(sa->rise,start,end);
                 pango_attr_list_change(so->attr_list,pa);
             }
+
             if(sa->str_case)
             {
                 pa=string_attr_case(sa->str_case,start,end);
                 pango_attr_list_change(so->attr_list,pa);
             }
+
             if(sa->has_spacing)
             {
                 pa=string_attr_spacing(sa->spacing,start,end);
@@ -735,7 +737,7 @@ void string_fill_attrs(object *o)
 
         if(strstr(temp, "UPPER"))
         {
-           sa->str_case=STRING_CASE_UPPER;
+            sa->str_case=STRING_CASE_UPPER;
         }
         else if(strstr(temp, "LOWER"))
         {
