@@ -1,6 +1,8 @@
-/*String object attributes
- * Part of Project 'Semper'
- */
+/*
+String object attributes
+Part of Project "Semper"
+Wrriten by Alexandru-Daniel Mărgărit
+*/
 #define PCRE_STATIC
 #include <objects/string/string_attr.h>
 #include <pango/pango.h>

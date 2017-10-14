@@ -1,4 +1,8 @@
-
+/*
+String object color attribute
+Part of Project "Semper"
+Wrriten by Alexandru-Daniel Mărgărit
+*/
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 #include <mem.h>

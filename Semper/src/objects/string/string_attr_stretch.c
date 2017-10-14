@@ -1,3 +1,8 @@
+/*
+String object stretch attribute
+Part of Project "Semper"
+Wrriten by Alexandru-Daniel Mărgărit
+*/
 #include <pango/pango.h>
 #include <mem.h>
 #include <sources/extension.h>

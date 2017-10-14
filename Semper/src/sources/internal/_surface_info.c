@@ -114,6 +114,7 @@ unsigned char* surface_info_string(void* spv)
             "License",
             "Information"
         };
+
         for(unsigned char i=0; i<sizeof(name_tbl)/sizeof(void *); i++)
         {
             t=surface_info_meta(sd,name_tbl[i]);
@@ -138,14 +139,8 @@ unsigned char* surface_info_string(void* spv)
                 bpos+=snprintf(si->str+bpos,nm-bpos,"%s: %s",name_tbl[i],t);
             }
         }
+        return (si->str);
     }
-    else
-    {
-        return(NULL);
-    }
-
-
-    return (si->str);
 }
 
 void surface_info_destroy(void** spv)

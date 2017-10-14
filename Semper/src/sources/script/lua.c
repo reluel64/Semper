@@ -4,9 +4,9 @@
  */
 
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
+#include <3rdparty/lua/lua.h>
+#include <3rdparty/lua/lualib.h>
+#include <3rdparty/lua/lauxlib.h>
 #include <string_util.h>
 #include <sources/script/utils.h>
 #include <xpander.h>
