@@ -141,12 +141,14 @@ unsigned char* surface_info_string(void* spv)
         }
         return (si->str);
     }
+    return(NULL);
 }
 
 void surface_info_destroy(void** spv)
 {
 
     surface_info* s = *spv;
+    sfree((void**)&s->str);
     sfree((void**)&s->sname);
     sfree(spv);
 }

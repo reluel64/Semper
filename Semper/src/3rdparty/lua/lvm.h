@@ -38,7 +38,7 @@
 
 
 #define tonumber(o,n) \
-	(ttisfloat(o) ? (*(n) = fltvalue(o), 1) : luaV_tonumber_(o,n))
+    (ttisfloat(o) ? (*(n) = fltvalue(o), 1) : luaV_tonumber_(o,n))
 
 #define tointeger(o,i) \
     (ttisinteger(o) ? (*(i) = ivalue(o), 1) : luaV_tointeger(o,i,LUA_FLOORN2I))
@@ -56,17 +56,17 @@
 ** 'f' is the raw get function to use.
 */
 #define luaV_fastget(L,t,k,slot,f) \
-  (!ttistable(t)  \
-   ? (slot = NULL, 0)  /* not a table; 'slot' is NULL and result is 0 */  \
-   : (slot = f(hvalue(t), k),  /* else, do raw access */  \
-      !ttisnil(slot)))  /* result not nil? */
+    (!ttistable(t)  \
+     ? (slot = NULL, 0)  /* not a table; 'slot' is NULL and result is 0 */  \
+     : (slot = f(hvalue(t), k),  /* else, do raw access */  \
+        !ttisnil(slot)))  /* result not nil? */
 
 /*
 ** standard implementation for 'gettable'
 */
 #define luaV_gettable(L,t,k,v) { const TValue *slot; \
-  if (luaV_fastget(L,t,k,slot,luaH_get)) { setobj2s(L, v, slot); } \
-  else luaV_finishget(L,t,k,v,slot); }
+        if (luaV_fastget(L,t,k,slot,luaH_get)) { setobj2s(L, v, slot); } \
+        else luaV_finishget(L,t,k,v,slot); }
 
 
 /*
@@ -78,18 +78,18 @@
 ** call is not creating a new entry.
 */
 #define luaV_fastset(L,t,k,slot,f,v) \
-  (!ttistable(t) \
-   ? (slot = NULL, 0) \
-   : (slot = f(hvalue(t), k), \
-     ttisnil(slot) ? 0 \
-     : (luaC_barrierback(L, hvalue(t), v), \
-        setobj2t(L, cast(TValue *,slot), v), \
-        1)))
+    (!ttistable(t) \
+     ? (slot = NULL, 0) \
+     : (slot = f(hvalue(t), k), \
+        ttisnil(slot) ? 0 \
+        : (luaC_barrierback(L, hvalue(t), v), \
+           setobj2t(L, cast(TValue *,slot), v), \
+           1)))
 
 
 #define luaV_settable(L,t,k,v) { const TValue *slot; \
-  if (!luaV_fastset(L,t,k,slot,luaH_get,v)) \
-    luaV_finishset(L,t,k,v,slot); }
+        if (!luaV_fastset(L,t,k,slot,luaH_get,v)) \
+            luaV_finishset(L,t,k,v,slot); }
 
 
 

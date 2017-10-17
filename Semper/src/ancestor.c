@@ -174,7 +174,9 @@ void *ancestor_fusion(void *r,unsigned char  *npm,unsigned char xpander_flags,un
 
         //Look through the ancestors
 
-        for(size_t i=as->last_pos; as->sti.ovecoff && ( gq ? i < as->sti.oveclen / 2 : 1) ;  gq ? (i++,as->last_pos++) : (i--,as->last_pos--) )
+        for(size_t i=as->last_pos;
+                as->sti.ovecoff && ( gq ? i < as->sti.oveclen / 2 : 1) ;
+                gq ? (i++,as->last_pos++) : (i--,as->last_pos--) )
         {
             size_t start = as->sti.ovecoff[2*i];
             size_t end   = as->sti.ovecoff[2*i+1];
@@ -277,7 +279,6 @@ void *ancestor_fusion(void *r,unsigned char  *npm,unsigned char xpander_flags,un
     ancestor_status *pcas=NULL;
     list_enum_part_safe(as,pcas,&status_stack,current)
     {
-
         if(as->must_free)
         {
             sfree((void**)&as->value);

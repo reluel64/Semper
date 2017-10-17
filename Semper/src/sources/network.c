@@ -374,5 +374,4 @@ static size_t network_interface_index(unsigned char *iname)
     }
 #endif
     return(if_index);
-
 }

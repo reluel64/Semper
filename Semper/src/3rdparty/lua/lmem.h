@@ -28,9 +28,9 @@
 ** avoiding this warning but also this optimization.)
 */
 #define luaM_reallocv(L,b,on,n,e) \
-  (((sizeof(n) >= sizeof(size_t) && cast(size_t, (n)) + 1 > MAX_SIZET/(e)) \
+    (((sizeof(n) >= sizeof(size_t) && cast(size_t, (n)) + 1 > MAX_SIZET/(e)) \
       ? luaM_toobig(L) : cast_void(0)) , \
-   luaM_realloc_(L, (b), (on)*(e), (n)*(e)))
+     luaM_realloc_(L, (b), (on)*(e), (n)*(e)))
 
 /*
 ** Arrays of chars do not need any test
@@ -45,25 +45,24 @@
 #define luaM_malloc(L,s)	luaM_realloc_(L, NULL, 0, (s))
 #define luaM_new(L,t)		cast(t *, luaM_malloc(L, sizeof(t)))
 #define luaM_newvector(L,n,t) \
-		cast(t *, luaM_reallocv(L, NULL, 0, n, sizeof(t)))
+    cast(t *, luaM_reallocv(L, NULL, 0, n, sizeof(t)))
 
 #define luaM_newobject(L,tag,s)	luaM_realloc_(L, NULL, tag, (s))
 
 #define luaM_growvector(L,v,nelems,size,t,limit,e) \
-          if ((nelems)+1 > (size)) \
-            ((v)=cast(t *, luaM_growaux_(L,v,&(size),sizeof(t),limit,e)))
+    if ((nelems)+1 > (size)) \
+        ((v)=cast(t *, luaM_growaux_(L,v,&(size),sizeof(t),limit,e)))
 
 #define luaM_reallocvector(L, v,oldn,n,t) \
-   ((v)=cast(t *, luaM_reallocv(L, v, oldn, n, sizeof(t))))
+    ((v)=cast(t *, luaM_reallocv(L, v, oldn, n, sizeof(t))))
 
 LUAI_FUNC l_noret luaM_toobig (lua_State *L);
 
 /* not to be called directly */
 LUAI_FUNC void *luaM_realloc_ (lua_State *L, void *block, size_t oldsize,
-                                                          size_t size);
+                               size_t size);
 LUAI_FUNC void *luaM_growaux_ (lua_State *L, void *block, int *size,
                                size_t size_elem, int limit,
                                const char *what);
 
 #endif
-

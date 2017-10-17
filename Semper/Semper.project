@@ -37,6 +37,7 @@
       <File Name="src/sources/time_s.c"/>
       <File Name="src/sources/wifi.c"/>
       <File Name="src/sources/webget.c"/>
+      <File Name="src/sources/webget_reborn.c"/>
     </VirtualDirectory>
     <VirtualDirectory Name="3rdparty">
       <File Name="src/3rdparty/duktape.c"/>
@@ -201,32 +202,10 @@
       <File Name="include/3rdparty/nanosvgrast.h"/>
       <File Name="include/3rdparty/upper.h"/>
       <VirtualDirectory Name="lua">
-        <File Name="include/3rdparty/lua/lapi.h"/>
         <File Name="include/3rdparty/lua/lauxlib.h"/>
-        <File Name="include/3rdparty/lua/lcode.h"/>
-        <File Name="include/3rdparty/lua/lctype.h"/>
-        <File Name="include/3rdparty/lua/ldebug.h"/>
-        <File Name="include/3rdparty/lua/ldo.h"/>
-        <File Name="include/3rdparty/lua/lfunc.h"/>
-        <File Name="include/3rdparty/lua/lgc.h"/>
-        <File Name="include/3rdparty/lua/llex.h"/>
-        <File Name="include/3rdparty/lua/llimits.h"/>
-        <File Name="include/3rdparty/lua/lmem.h"/>
-        <File Name="include/3rdparty/lua/lobject.h"/>
-        <File Name="include/3rdparty/lua/lopcodes.h"/>
-        <File Name="include/3rdparty/lua/lparser.h"/>
-        <File Name="include/3rdparty/lua/lprefix.h"/>
-        <File Name="include/3rdparty/lua/lstate.h"/>
-        <File Name="include/3rdparty/lua/lstring.h"/>
-        <File Name="include/3rdparty/lua/ltable.h"/>
-        <File Name="include/3rdparty/lua/ltm.h"/>
-        <File Name="include/3rdparty/lua/lua.h"/>
-        <File Name="include/3rdparty/lua/lua.hpp"/>
         <File Name="include/3rdparty/lua/luaconf.h"/>
         <File Name="include/3rdparty/lua/lualib.h"/>
-        <File Name="include/3rdparty/lua/lundump.h"/>
-        <File Name="include/3rdparty/lua/lvm.h"/>
-        <File Name="include/3rdparty/lua/lzio.h"/>
+        <File Name="include/3rdparty/lua/lua.h"/>
       </VirtualDirectory>
     </VirtualDirectory>
     <VirtualDirectory Name="crosswin">
@@ -288,7 +267,7 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Debug" CompilerType="gcc.exe (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 7.1.0" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-Wall" C_Options="-g3;-Wall;-Wno-pointer-sign" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-g;-Wall" C_Options="-g;-Wall;-Wno-pointer-sign" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <IncludePath Value="include"/>
         <IncludePath Value="$(CompilerInclude)/pango-1.0"/>
@@ -631,4 +610,27 @@
       </Completion>
     </Configuration>
   </Settings>
+  <VirtualDirectory Name="gfxpoly">
+    <File Name="gfxpoly/active.c"/>
+    <File Name="gfxpoly/active.h"/>
+    <File Name="gfxpoly/convert.c"/>
+    <File Name="gfxpoly/convert.h"/>
+    <File Name="gfxpoly/dict.c"/>
+    <File Name="gfxpoly/dict.h"/>
+    <File Name="gfxpoly/gfxline.c"/>
+    <File Name="gfxpoly/gfxline.h"/>
+    <File Name="gfxpoly/heap.h"/>
+    <File Name="gfxpoly/moments.c"/>
+    <File Name="gfxpoly/moments.h"/>
+    <File Name="gfxpoly/poly.c"/>
+    <File Name="gfxpoly/poly.h"/>
+    <File Name="gfxpoly/render.c"/>
+    <File Name="gfxpoly/render.h"/>
+    <File Name="gfxpoly/stroke.c"/>
+    <File Name="gfxpoly/stroke.h"/>
+    <File Name="gfxpoly/wind.c"/>
+    <File Name="gfxpoly/wind.h"/>
+    <File Name="gfxpoly/xrow.c"/>
+    <File Name="gfxpoly/xrow.h"/>
+  </VirtualDirectory>
 </CodeLite_Project>

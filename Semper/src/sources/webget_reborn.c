@@ -397,7 +397,7 @@ static void *webget_worker_thread(void *p)
     if(w->dwl==0&&w->parent==NULL)
         ww->dwl_mode=DOWNLOAD_TO_BUFFER;
     else
-     ww->dwl_mode=w->dwl;
+        ww->dwl_mode=w->dwl;
 
     if(ww->dwl_mode&DOWNLOAD_TO_FILE)
         ww->save_root_dir=(w->dwl_local?clone_string(w->srf_dir):expand_env_var("%temp%"));

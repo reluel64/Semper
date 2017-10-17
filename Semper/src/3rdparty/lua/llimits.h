@@ -40,7 +40,7 @@ typedef unsigned char lu_byte;
 
 /* maximum size visible for Lua (must be representable in a lua_Integer */
 #define MAX_SIZE	(sizeof(size_t) < sizeof(lua_Integer) ? MAX_SIZET \
-                          : (size_t)(LUA_MAXINTEGER))
+                     : (size_t)(LUA_MAXINTEGER))
 
 
 #define MAX_LUMEM	((lu_mem)(~(lu_mem)0))
@@ -64,12 +64,13 @@ typedef unsigned char lu_byte;
 #if defined(LUAI_USER_ALIGNMENT_T)
 typedef LUAI_USER_ALIGNMENT_T L_Umaxalign;
 #else
-typedef union {
-  lua_Number n;
-  double u;
-  void *s;
-  lua_Integer i;
-  long l;
+typedef union
+{
+    lua_Number n;
+    double u;
+    void *s;
+    lua_Integer i;
+    long l;
 } L_Umaxalign;
 #endif
 
@@ -278,7 +279,7 @@ typedef unsigned long Instruction;
 */
 #if !defined(luai_nummod)
 #define luai_nummod(L,a,b,m)  \
-  { (m) = l_mathop(fmod)(a,b); if ((m)*(b) < 0) (m) += (b); }
+    { (m) = l_mathop(fmod)(a,b); if ((m)*(b) < 0) (m) += (b); }
 #endif
 
 /* exponentiation */
@@ -310,14 +311,14 @@ typedef unsigned long Instruction;
 #else
 /* realloc stack keeping its size */
 #define condmovestack(L,pre,pos)  \
-	{ int sz_ = (L)->stacksize; pre; luaD_reallocstack((L), sz_); pos; }
+    { int sz_ = (L)->stacksize; pre; luaD_reallocstack((L), sz_); pos; }
 #endif
 
 #if !defined(HARDMEMTESTS)
 #define condchangemem(L,pre,pos)	((void)0)
 #else
 #define condchangemem(L,pre,pos)  \
-	{ if (G(L)->gcrunning) { pre; luaC_fullgc(L, 0); pos; } }
+    { if (G(L)->gcrunning) { pre; luaC_fullgc(L, 0); pos; } }
 #endif
 
 #endif
