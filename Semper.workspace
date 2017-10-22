@@ -37,7 +37,7 @@
       <Project Name="Semper" ConfigName="Release"/>
       <Project Name="SpeedFan" ConfigName="Release"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Debug(Linux)" Selected="no">
+    <WorkspaceConfiguration Name="Debug(Linux)" Selected="yes">
       <Environment/>
       <Project Name="SpeedFan" ConfigName="Release"/>
       <Project Name="Semper" ConfigName="Debug_Linux"/>

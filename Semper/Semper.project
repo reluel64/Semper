@@ -105,6 +105,8 @@
         <File Name="src/3rdparty/lua/lzio.c"/>
         <File Name="src/3rdparty/lua/lzio.h"/>
       </VirtualDirectory>
+      <File Name="src/3rdparty/clipper.cpp"/>
+      <File Name="src/3rdparty/cairo_clipper.cpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="crosswin">
       <File Name="src/crosswin/crosswin.c"/>
@@ -143,6 +145,9 @@
       </VirtualDirectory>
       <File Name="src/objects/string.c"/>
       <File Name="src/objects/vector.c"/>
+      <VirtualDirectory Name="vector">
+        <File Name="src/objects/vector/vector_clipper_glue.cpp" ExcludeProjConfig=""/>
+      </VirtualDirectory>
     </VirtualDirectory>
     <File Name="src/ancestor.c"/>
     <File Name="src/bind.c"/>
@@ -155,7 +160,7 @@
     <File Name="src/mem.c"/>
     <File Name="src/mouse.c"/>
     <File Name="src/parameter.c"/>
-    <File Name="src/semper.c"/>
+    <File Name="src/semper.c" ExcludeProjConfig=""/>
     <File Name="src/skeleton.c"/>
     <File Name="src/string_util.c"/>
     <File Name="src/surface.c"/>
@@ -207,6 +212,8 @@
         <File Name="include/3rdparty/lua/lualib.h"/>
         <File Name="include/3rdparty/lua/lua.h"/>
       </VirtualDirectory>
+      <File Name="include/3rdparty/clipper.hpp"/>
+      <File Name="include/3rdparty/cairo_clipper.hpp"/>
     </VirtualDirectory>
     <VirtualDirectory Name="crosswin">
       <File Name="include/crosswin/crosswin.h"/>
@@ -230,6 +237,9 @@
       </VirtualDirectory>
       <File Name="include/objects/string.h"/>
       <File Name="include/objects/vector.h"/>
+      <VirtualDirectory Name="vector">
+        <File Name="include/objects/vector/vector_clipper_glue.h"/>
+      </VirtualDirectory>
     </VirtualDirectory>
     <File Name="include/ancestor.h"/>
     <File Name="include/bind.h"/>
@@ -278,7 +288,7 @@
         <Preprocessor Value="__USE_MINGW_ANSI_STDIO=1"/>
         <Preprocessor Value="WIN32"/>
       </Compiler>
-      <Linker Options="-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a" Required="yes">
+      <Linker Options="-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,-static" Required="yes">
         <LibraryPath Value="$(CompilerLib)"/>
         <Library Value="Iphlpapi"/>
         <Library Value="curl"/>
@@ -499,7 +509,7 @@
         <Preprocessor Value="__USE_MINGW_ANSI_STDIO=1"/>
         <Preprocessor Value="WIN32"/>
       </Compiler>
-      <Linker Options="-s;-mwindows;-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a" Required="yes">
+      <Linker Options="-s;-mwindows;-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,-static" Required="yes">
         <LibraryPath Value="$(CompilerLib)"/>
         <Library Value="Iphlpapi"/>
         <Library Value="curl"/>
@@ -610,27 +620,4 @@
       </Completion>
     </Configuration>
   </Settings>
-  <VirtualDirectory Name="gfxpoly">
-    <File Name="gfxpoly/active.c"/>
-    <File Name="gfxpoly/active.h"/>
-    <File Name="gfxpoly/convert.c"/>
-    <File Name="gfxpoly/convert.h"/>
-    <File Name="gfxpoly/dict.c"/>
-    <File Name="gfxpoly/dict.h"/>
-    <File Name="gfxpoly/gfxline.c"/>
-    <File Name="gfxpoly/gfxline.h"/>
-    <File Name="gfxpoly/heap.h"/>
-    <File Name="gfxpoly/moments.c"/>
-    <File Name="gfxpoly/moments.h"/>
-    <File Name="gfxpoly/poly.c"/>
-    <File Name="gfxpoly/poly.h"/>
-    <File Name="gfxpoly/render.c"/>
-    <File Name="gfxpoly/render.h"/>
-    <File Name="gfxpoly/stroke.c"/>
-    <File Name="gfxpoly/stroke.h"/>
-    <File Name="gfxpoly/wind.c"/>
-    <File Name="gfxpoly/wind.h"/>
-    <File Name="gfxpoly/xrow.c"/>
-    <File Name="gfxpoly/xrow.h"/>
-  </VirtualDirectory>
 </CodeLite_Project>

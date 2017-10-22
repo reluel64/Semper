@@ -78,7 +78,7 @@ static FILE *webget2_create_file(unsigned char *fp)
 {
     FILE *fd=NULL;
     if(fp==NULL)
-        return(-1);
+        return(NULL);
 #ifdef WIN32
     unsigned short *uc=utf8_to_ucs(fp);
     if(uc)
@@ -106,6 +106,7 @@ static int webget2_rename_file(unsigned char *on,unsigned char *nn)
 #elif __linux__
     remove(on,nn);
 #endif
+    return(0);
 }
 
 static int webget2_remove_file(unsigned char *fp)
@@ -120,6 +121,7 @@ static int webget2_remove_file(unsigned char *fp)
 #elif __linux__
     remove(fp);
 #endif
+    return(0);
 }
 
 static int webget2_mkdir(unsigned char *fp)
@@ -286,7 +288,7 @@ static int webget_curl_download(unsigned char *link,webget_worker *ww)
     int ret=1;
     unsigned char fn[256]= {0};
     unsigned char *fp=NULL;
-    unsigned char to_file=0;
+    //  unsigned char to_file=0;
     CURL *c_state=curl_easy_init();
     curl_easy_setopt(c_state, CURLOPT_URL,link);
     curl_easy_setopt(c_state, CURLOPT_WRITEFUNCTION,webget_curl_worker_callback);
@@ -596,7 +598,7 @@ double webget2_update(void *spv)
         }
     }
 
-    if(w->worker==NULL&&w->address&&w->c_rate==0)
+    if(w->worker==0&&w->address&&w->c_rate==0)
     {
         w->work=1;
         pthread_attr_t th_att= {0};

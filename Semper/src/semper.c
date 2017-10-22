@@ -633,7 +633,7 @@ static int semper_desktop_checker(control_data *cd)
     return(0);
 }
 
-
+#if 1
 
 int main(void)
 {
@@ -693,3 +693,8 @@ int main(void)
     semper_save_configuration(cd);
     return (0);
 }
+
+#endif
+
+//---------------------------------------------------------------------------
+
