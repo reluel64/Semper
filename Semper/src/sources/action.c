@@ -41,6 +41,7 @@ static action* action_alloc(list_entry* head, size_t index)
     action* a = NULL;
     action* p = NULL;
     action* n = NULL;
+
     list_enum_part(a, head, current)
     {
 
@@ -200,25 +201,11 @@ static int action_populate(source* s)
 
             if(type)
             {
-                if(scond)
-                {
-                    sscanf(v + 15 + (_bool ? 4 : 5), "%llu", &index);
-                }
-                else
-                {
-                    sscanf(v + 15, "%llu", &index);
-                }
+                scond?sscanf(v + 15 + (_bool ? 4 : 5), "%llu", &index):sscanf(v + 15, "%llu", &index);
             }
             else
             {
-                if(scond)
-                {
-                    sscanf(v + 11 + (_bool ? 4 : 5), "%llu", &index);
-                }
-                else
-                {
-                    sscanf(v + 11, "%llu", &index);
-                }
+                scond?sscanf(v + 11 + (_bool ? 4 : 5), "%llu", &index):sscanf(v + 11, "%llu", &index);
             }
 
             action* a = action_alloc(type == 0 ? &sa->match : &sa->cond, index);

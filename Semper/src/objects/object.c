@@ -50,7 +50,7 @@ static int object_routines_table(object_routine_entry **ore,unsigned char *on)
         {"Arc",         arc_init,       arc_reset,          arc_update,         arc_render,                   arc_destroy},
         {"Spinner",     spinner_init,   spinner_reset,      spinner_update,     spinner_render,           spinner_destroy},
         {"Button",      button_init,    button_reset,       button_update,      button_render,             button_destroy},
-        {"Vector",      vector_init,    vector_reset,       vector_update,      vector_render,             vector_destroy},
+        {"Vector",      vector_init,    vector_reset,       NULL,               vector_render,             vector_destroy},
     };
 
     if(on==NULL||ore==NULL)
@@ -359,7 +359,7 @@ int object_tooltip_update(object *o)
     }
     else
     {
-        unsigned char *empty_title="Parameter(Title,Disabled,1); \
+        static unsigned char *empty_title="Parameter(Title,Disabled,1); \
                                      Parameter(Title,W,0);\
                                      Parameter(Title,H,0);\
                                      Parameter(Title,X,0);\
@@ -391,7 +391,7 @@ int object_tooltip_update(object *o)
     else
     {
 
-        unsigned char *empty_txt="Parameter(Text,Disabled,1);\
+        static  unsigned char *empty_txt="Parameter(Text,Disabled,1);\
                                   Parameter(Text,W,0);\
                                   Parameter(Text,H,0);\
                                   Parameter(Text,X,0);\
@@ -515,14 +515,16 @@ int object_update(object *o)
         {
             object_tooltip_update(o);
         }
+
+        if(o->update_act_lock == 0)
+        {
+            o->update_act_lock = 1;
+            o->update_act?command(sd, &o->update_act):0;
+            o->update_act_lock = 0;
+        }
     }
 
-    if(o->update_act_lock == 0)
-    {
-        o->update_act_lock = 1;
-        o->update_act?command(sd, &o->update_act):0;
-        o->update_act_lock = 0;
-    }
+
     return (0);
 }
 

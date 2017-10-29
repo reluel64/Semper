@@ -23,8 +23,9 @@
       <Project Name="Registry" ConfigName="Debug"/>
       <Project Name="Semper" ConfigName="Debug"/>
       <Project Name="SpeedFan" ConfigName="Debug"/>
+      <Project Name="2geom" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="no">
+    <WorkspaceConfiguration Name="Release" Selected="yes">
       <Environment/>
       <Project Name="CoreTemp" ConfigName="Release"/>
       <Project Name="DiskSpeed" ConfigName="NoBuild"/>
@@ -36,6 +37,7 @@
       <Project Name="Registry" ConfigName="Release"/>
       <Project Name="Semper" ConfigName="Release"/>
       <Project Name="SpeedFan" ConfigName="Release"/>
+      <Project Name="2geom" ConfigName="Release"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="Debug(Linux)" Selected="yes">
       <Environment/>
@@ -49,6 +51,7 @@
       <Project Name="GPU-Z" ConfigName="Release"/>
       <Project Name="DiskSpeed" ConfigName="Debug_Linux"/>
       <Project Name="CoreTemp" ConfigName="Release"/>
+      <Project Name="2geom" ConfigName="Debug"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>

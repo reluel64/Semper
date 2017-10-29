@@ -147,6 +147,7 @@
       <File Name="src/objects/vector.c"/>
       <VirtualDirectory Name="vector">
         <File Name="src/objects/vector/vector_clipper_glue.cpp" ExcludeProjConfig=""/>
+        <File Name="src/objects/vector/vector_parser.c"/>
       </VirtualDirectory>
     </VirtualDirectory>
     <File Name="src/ancestor.c"/>

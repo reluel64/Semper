@@ -353,6 +353,7 @@ void event_process(event_queue* eq)
 
         if(pe)
         {
+
             pthread_mutex_lock(&eq->mutex);
             eq->ce=e;
             pthread_mutex_unlock(&eq->mutex);

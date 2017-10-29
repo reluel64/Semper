@@ -11,6 +11,7 @@ typedef struct _event
     event_handler handler;
     void* pv;
     void* timer;
+    size_t time;
     list_entry current;
 
 } event;
