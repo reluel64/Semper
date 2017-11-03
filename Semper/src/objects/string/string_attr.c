@@ -290,7 +290,7 @@ static int string_attr_fill_user(object *o,string_format_type *fmt_type,string_a
     case type_invalid:
         break;
     case type_strikethrough:
-        sa->strikethrough_color=parameter_color(o,pm,sa->strikethrough_color,XPANDER_OBJECT);
+        sa->strikethrough_color=string_to_color(pm);
         *fmt_type=type_invalid;
         break;
     case type_style:
@@ -306,7 +306,7 @@ static int string_attr_fill_user(object *o,string_format_type *fmt_type,string_a
     {
         if(param==1)
         {
-            sa->shadow_color=parameter_color(o,pm,sa->shadow_color,XPANDER_OBJECT);
+            sa->shadow_color=string_to_color(pm);
         }
         else if(param>=2&&param<=3)
         {
@@ -340,7 +340,7 @@ static int string_attr_fill_user(object *o,string_format_type *fmt_type,string_a
         }
         else if(param==2)
         {
-            sa->underline_color=parameter_color(o,pm,sa->underline_color,XPANDER_OBJECT);
+            sa->underline_color=string_to_color(pm);
         }
         else
         {
@@ -358,11 +358,11 @@ static int string_attr_fill_user(object *o,string_format_type *fmt_type,string_a
         *fmt_type=type_invalid;
         break;
     case type_font_color:
-        sa->font_color=parameter_color(o,pm,sa->font_color,XPANDER_OBJECT);
+        sa->font_color=string_to_color(pm);
         *fmt_type=type_invalid;
         break;
     case type_outline:
-        sa->outline_color=parameter_color(o,pm,sa->outline_color,XPANDER_OBJECT);
+        sa->outline_color=string_to_color(pm);
         *fmt_type=type_invalid;
         break;
     case type_size:
@@ -449,7 +449,7 @@ static int string_attr_fill_user(object *o,string_format_type *fmt_type,string_a
             if(temp)
             {
                 sa->gradient=temp;
-                sa->gradient[sa->gradient_len++]=parameter_color(o,pm,0,XPANDER_OBJECT);
+                sa->gradient[sa->gradient_len++]=string_to_color(pm);
             }
             *fmt_type=type_invalid;
         }

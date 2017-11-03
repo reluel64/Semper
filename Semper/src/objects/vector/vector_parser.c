@@ -322,13 +322,19 @@ static int vector_parse_paths(object *o)
 
                     }
                     else if(!strncasecmp(str,"StrokeWidth",11))
-                    {
                         vpmt=vector_param_stroke_width;
-                    }
-                    else if(!strncasecmp(str,"Stroke",11))
-                    {
+
+                    else if(!strncasecmp(str,"Stroke",6))
                         vpmt=vector_param_stroke;
-                    }
+
+                    else if(!strncasecmp(str,"Fill",4))
+                        vpmt=vector_param_fill;
+
+                    else if(!strncasecmp(str,"LineJoin",8))
+                        vpmt=vector_param_join;
+
+                    else if(!strncasecmp(str,"LineCap",7))
+                        vpmt=vector_param_cap;
                 }
             }
             else if(vpc&&start<end) //let's handle the parameters
@@ -399,14 +405,30 @@ static int vector_parse_paths(object *o)
                         vpc->stroke_w=atof(pm);
                         vpmt=vector_param_done;
                         break;
+
                     case vector_param_stroke:
-                    {
-                        vpc->stroke_color=parameter_color(o,pm,0,XPANDER_OBJECT);
+                        vpc->stroke_color=string_to_color(pm);
                         vpmt=vector_param_done;
                         break;
-                    }
+
                     case vector_param_fill:
-                        vpc->fill_color=parameter_color(o,pm,0,XPANDER_OBJECT);
+                        vpc->fill_color=string_to_color(pm);
+                        vpmt=vector_param_done;
+                        break;
+
+                    case vector_param_join:
+                        if(!strncasecmp(pm,"Round",5))
+                            vpc->join=CAIRO_LINE_JOIN_ROUND;
+                        else if(!strncasecmp(pm,"Bevel",5))
+                            vpc->join=CAIRO_LINE_JOIN_BEVEL;
+                        vpmt=vector_param_done;
+                        break;
+
+                    case vector_param_cap:
+                        if(!strncasecmp(pm,"ROUND",5))
+                            vpc->cap=CAIRO_LINE_CAP_ROUND;
+                        else if(!strncasecmp(pm,"SQUARE",6))
+                            vpc->cap=CAIRO_LINE_CAP_SQUARE;
                         vpmt=vector_param_done;
                         break;
                     }
