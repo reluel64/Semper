@@ -114,6 +114,7 @@ int object_calculate_coordinates(object* o)
     {
         return (-1);
     }
+
     surface_data* sd = o->sd;
 
     long poh = 0;

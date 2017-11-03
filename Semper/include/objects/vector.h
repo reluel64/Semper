@@ -16,68 +16,84 @@ typedef enum
     vector_path_arc,
     vector_path_rectangle,
     vector_path_path,
-
+    vector_subpath_none,
+    vector_subpath_arc_to,
+    vector_subpath_line_to,
+    vector_subpath_curve_to
 } vector_path_type;
 
 typedef enum
 {
-    vector_path_set_none=vector_path_path+1,
-    vector_path_set_arc_to,
-    vector_path_set_line_to,
-    vector_path_set_curve_to
-}vector_path_set;
-
-typedef enum
-{
-    vector_param_none=vector_path_set_curve_to+1,
+    vector_param_none=vector_subpath_curve_to+1,
+    vector_param_done,
     vector_param_stroke_width,
-    vector_param_stroke_color,
-    vector_param_fill
+    vector_param_stroke,
+    vector_param_fill,
+    vector_param_join,
+    vector_param_cap,
+    vector_param_matrix
 } vector_param_type;
 
-typedef enum
-{
-    vcm_none,
-    vcm_fill,
-    vcm_stroke
-} vector_path_colorization_mode;
 
 typedef struct
 {
+    vector_path_type vpt;
+    size_t index;
     double stroke_w;
+    unsigned int stroke_color;
+    unsigned int fill_color;
     cairo_line_cap_t cap;
     cairo_line_join_t join;
     list_entry colors;
     cairo_matrix_t mtx;
-    vector_path_colorization_mode vcm;
+    list_entry current;
 } vector_path_common;
 
 typedef struct
 {
+    vector_path_common vpc;
     double x;
     double y;
     double w;
     double h;
-    vector_path_common vpc;
 } vector_rectangle;
 
 typedef struct
 {
+    vector_path_common vpc;
     double sx;
     double sy;
     double dx;
     double dy;
-    vector_path_common vpc;
 } vector_line;
 
 typedef struct
 {
+    vector_path_common vpc;
+    double x;
+    double y;
+    list_entry paths; //ArcTo, CurveTo, etc.
+} vector_path;
+
+
+/*****************SUB PATHS******************/
+
+typedef struct
+{
+    vector_path_type vpt;
+    list_entry current;
+} vector_subpath_common;
+
+typedef struct
+{
+    vector_subpath_common vsc;
     double dx;
     double dy;
 } vector_path_line_to;
 
 typedef struct
 {
+    vector_subpath_common vsc;
     double radius;
     double start_angle;
     double end_angle;
@@ -85,6 +101,7 @@ typedef struct
 
 typedef struct
 {
+    vector_subpath_common vsc;
     double dx1;
     double dy1;
     double dx2;
@@ -93,25 +110,16 @@ typedef struct
     double dy3;
 } vector_path_curve_to;
 
-typedef struct
-{
-    double x;
-    double y;
-    list_entry paths;
-    vector_path_common vpc;
-} vector_path;
 
 typedef struct
 {
+    vector_path_type vpt;
     size_t index;
-    vector_path_type path_type;
-
     list_entry current;
-    void *path_data;
 } vector_paths;
 
 typedef struct
 {
     unsigned char joined;
-    list_entry paths_sets;
+    list_entry paths;
 } vector;

@@ -16,14 +16,14 @@ typedef struct _random_generator
 {
     unsigned char unique;
     unsigned char update;
-    unsigned short seed; 			// current random number
-    unsigned short* vec; 			// vector of random numbers
-    unsigned short rnum; 			// the random number
+    unsigned short seed;          // current random number
+    unsigned short* vec;          // vector of random numbers
+    unsigned short rnum;          // the random number
     unsigned short min_random;
     unsigned short max_random;
-    size_t la; 						// last accessed
-    size_t vec_count; 				// elements in vector
-    size_t rcount; 					// reset number of the unique generator
+    size_t la;                    // last accessed
+    size_t vec_count;             // elements in vector
+    size_t rcount;                // reset number of the unique generator
 
 } random_generator;
 

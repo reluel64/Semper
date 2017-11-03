@@ -200,6 +200,7 @@ int diag_log(unsigned char lvl,char *fmt, ...)
         pthread_mutex_unlock(&ds->mutex);
         return(-1);
     }
+
     if(ds->mem_log_elem<ds->max_mem_log)
     {
         diag_mem_log *l=zmalloc(sizeof(diag_mem_log));
