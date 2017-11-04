@@ -25,7 +25,7 @@
       <Project Name="SpeedFan" ConfigName="Debug"/>
       <Project Name="2geom" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="yes">
+    <WorkspaceConfiguration Name="Release" Selected="no">
       <Environment/>
       <Project Name="CoreTemp" ConfigName="Release"/>
       <Project Name="DiskSpeed" ConfigName="NoBuild"/>

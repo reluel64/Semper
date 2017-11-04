@@ -222,13 +222,12 @@ static inline double processor_usage_calculate_win32(void* spv, size_t idle, siz
     size_t idle_delta = idle - p->idle_time_old;
 
     double usage = 100.0 - ((double)idle_delta / (double)system_delta) * 100.0;
-    usage = min(usage, 100.0);
-    usage = max(usage, 0.0);
+
 
     p->idle_time_old = idle;
     p->system_time_old = system;
 
-    return (usage);
+    return (CLAMP(usage,0.0, 100.0));
 }
 #endif
 static double processor_usage(processor* p)

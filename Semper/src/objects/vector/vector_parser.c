@@ -70,6 +70,7 @@ static void *vector_alloc_index(list_entry *head, size_t index,size_t bytes)
     }
 
     vp = zmalloc(bytes);
+    vp->stroke_w=1.0;
     vp->index = index;
     list_entry_init(&vp->current);
 
@@ -214,6 +215,7 @@ static int vector_parse_paths(object *o)
         size_t index=0;
         if(eval==NULL)
             break;
+
         if(strncasecmp("Path",eval,4))
             continue;
 
@@ -234,7 +236,7 @@ static int vector_parse_paths(object *o)
 
         string_tokenizer(&sti);
 
-        sscanf(eval+5,"%llu",&index);
+        sscanf(eval+4,"%llu",&index);
 
         for(size_t i=0; i<sti.oveclen/2; i++)
         {
@@ -262,7 +264,6 @@ static int vector_parse_paths(object *o)
                 }
                 else if(sti.buffer[start]==';')
                 {
-                    // vpt=vector_path_unknown;
                     vsc=NULL;
                     vpmt=vector_param_none;
                     param=0;
@@ -389,6 +390,29 @@ static int vector_parse_paths(object *o)
                             break;
                         case 4:
                             vl->dy=atof(pm);
+                            break;
+                        }
+                        break;
+                    }
+                    case vector_path_arc:
+                    {
+                        vector_arc *va=(vector_arc*)vpc;
+
+                        switch(param)
+                        {
+                        case 1:
+                            va->xc=atof(pm);
+                            break;
+                        case 2:
+                            va->yc=atof(pm);
+                        case 3:
+                            va->radius=atof(pm);
+                            break;
+                        case 4:
+                            va->sa=DEG2RAD(atof(pm));
+                            break;
+                        case 5:
+                            va->ea=DEG2RAD(atof(pm));
                             break;
                         }
                         break;
