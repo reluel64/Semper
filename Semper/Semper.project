@@ -37,7 +37,6 @@
       <File Name="src/sources/time_s.c"/>
       <File Name="src/sources/wifi.c"/>
       <File Name="src/sources/webget.c"/>
-      <File Name="src/sources/webget_reborn.c"/>
     </VirtualDirectory>
     <VirtualDirectory Name="3rdparty">
       <File Name="src/3rdparty/duktape.c"/>
@@ -148,6 +147,7 @@
       <VirtualDirectory Name="vector">
         <File Name="src/objects/vector/vector_clipper_glue.cpp" ExcludeProjConfig=""/>
         <File Name="src/objects/vector/vector_parser.c"/>
+        <File Name="src/objects/vector/vector_arc_path.c"/>
       </VirtualDirectory>
     </VirtualDirectory>
     <File Name="src/ancestor.c"/>
@@ -278,7 +278,7 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Debug" CompilerType="gcc.exe (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 7.1.0" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-Wall" C_Options="-g;-Wall;-Wno-pointer-sign" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-g;-Wall;-fpermissive" C_Options="-g;-Wall;-Wno-pointer-sign" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <IncludePath Value="include"/>
         <IncludePath Value="$(CompilerInclude)/pango-1.0"/>
@@ -291,6 +291,10 @@
       </Compiler>
       <Linker Options="-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,-static" Required="yes">
         <LibraryPath Value="$(CompilerLib)"/>
+        <Library Value="gsl"/>
+        <Library Value="blas"/>
+        <Library Value="cblas"/>
+        <Library Value="blas"/>
         <Library Value="Iphlpapi"/>
         <Library Value="curl"/>
         <Library Value="cairo"/>
@@ -358,6 +362,7 @@
         <Library Value="gcc"/>
         <Library Value="gcrypt"/>
         <Library Value="gpg-error"/>
+        <Library Value="gfortran"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" IntermediateDirectory="$(WorkspacePath)/build/$(ProjectName)" Command="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(WorkspacePath)/bin/$(ConfigurationName)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>

@@ -61,6 +61,16 @@ typedef struct
 typedef struct
 {
     vector_path_common vpc;
+    double xc;
+    double yc;
+    double rx;
+    double ry;
+} vector_ellipse;
+
+
+typedef struct
+{
+    vector_path_common vpc;
     double sx;
     double sy;
     double dx;
@@ -70,12 +80,15 @@ typedef struct
 typedef struct
 {
     vector_path_common vpc;
-    double xc;
-    double yc;
-    double radius;
-    double sa;
-    double ea;
-    unsigned char inv;
+    double sx;
+    double sy;
+    double ex;
+    double ey;
+    unsigned char sweep;
+    unsigned char large;
+    double angle;
+    double rx;
+    double ry;
 } vector_arc;
 
 typedef struct

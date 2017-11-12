@@ -7,6 +7,21 @@
 #include <objects/vector.h>
 
 
+extern   void *_2geom_ellipse(double xc,double yc,double rx,double ry);
+extern   void *_2geom_arc(double sx,double sy,double rx,double ry,double angle,unsigned char large,unsigned char sweep,double ex,double ey);
+extern   void *_2geom_line(double sx,double sy,double ex,double ey);
+extern   void *_2geom_rectangle(double x,double y,double w,double h);
+extern   void *_2geom_curve_quad(double sx,double sy,double cx,double cy, double ex, double ey);
+extern   void *_2geom_curve_cubic(double sx,double sy,double cx1,double cy1,double cx2,double cy2, double ex, double ey);
+/*Relative paths*/
+
+extern   void *_2geom_init_path(double x,double y);
+extern   void _2geom_curve_quad_to(void *pa,double cx,double cy, double ex, double ey);
+extern   void _2geom_curve_cubic_to(void *pa,double cx1,double cy1,double cx2,double cy2, double ex, double ey);
+extern   void _2geom_arc_to(void *pa,double rx,double ry,double angle,unsigned char large,unsigned char sweep,double ex,double ey);
+extern   void _2geom_line_to(void *pa,double ex,double ey);
+
+
 void vector_init(object *o)
 {
     o->pv=zmalloc(sizeof(vector));
@@ -26,12 +41,13 @@ int vector_update(object *o)
 }
 
 
+
 int vector_render(object *o,cairo_t *cr)
 {
 
     vector *v=o->pv;
     vector_path_common *vpc = NULL;
-    list_enum_part(vpc,&v->paths,current)
+   /* list_enum_part(vpc,&v->paths,current)
     {
         cairo_new_path(cr);
         if(vpc->vpt==vector_path_path)
@@ -76,9 +92,28 @@ int vector_render(object *o,cairo_t *cr)
             cairo_set_color(cr,vpc->stroke_color);
             cairo_stroke(cr);
         }
-    }
+    }*/
+    /*
+    cairo_set_color(cr,0xff00ff00);
+void *p1=_2geom_rectangle(20,20,200,200);
+void *p2=_2geom_rectangle(180,180,300,300);
+_2geom_path_inter(p1,p2,cr);
+*/
+vector_arc va={0};
+static double i=0;
+va.ex=316;
+va.ey=100;
+va.sx=316;
+va.sy=101;
+va.rx=30;
+va.ry=30;
+va.sweep=1;
+va.large=1;
+va.angle=359;
 
-
+vector_arc_path(cr,&va);
+cairo_set_color(cr,0xff00ff00);
+cairo_fill(cr);
     /*
         void *clipper=vector_init_clipper();
         void *paths=vector_init_paths();

@@ -693,6 +693,7 @@ void webget_destroy(void **spv)
     sfree((void**)&w->dwl_fail);
     sfree((void**)&w->connect_fail);
     sfree((void**)&w->srf_dir);
+
     if(linked_list_empty(&w->current)==0)
         linked_list_remove(&w->current);
 

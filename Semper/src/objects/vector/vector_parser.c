@@ -374,6 +374,27 @@ static int vector_parse_paths(object *o)
                         }
                         break;
                     }
+                     case vector_path_ellipse:
+                    {
+                        vector_ellipse *ve=(vector_ellipse*)vpc;
+
+                        switch(param)
+                        {
+                        case 1:
+                            ve->xc=atof(pm);
+                            break;
+                        case 2:
+                            ve->yc=atof(pm);
+                            break;
+                        case 3:
+                            ve->ry=ve->rx=atof(pm);
+                            break;
+                        case 4:
+                            ve->ry=atof(pm);
+                            break;
+                        }
+                        break;
+                    }
                     case vector_path_line:
                     {
                         vector_line *vl=(vector_line*)vpc;
@@ -401,18 +422,18 @@ static int vector_parse_paths(object *o)
                         switch(param)
                         {
                         case 1:
-                            va->xc=atof(pm);
+                            va->sx=atof(pm);
                             break;
                         case 2:
-                            va->yc=atof(pm);
+                            va->sy=atof(pm);
                         case 3:
-                            va->radius=atof(pm);
+                            va->ex=atof(pm);
                             break;
                         case 4:
-                            va->sa=DEG2RAD(atof(pm));
+                            va->ey=atof(pm);
                             break;
                         case 5:
-                            va->ea=DEG2RAD(atof(pm));
+                            va->rx=atof(pm);
                             break;
                         }
                         break;
