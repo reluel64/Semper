@@ -518,7 +518,6 @@ COMMAND_HANDLER(handler_change_variable)
 
 COMMAND_HANDLER(handler_switch_source)
 {
-
     unsigned char ns = 0;
     source* s = NULL;
     if(ap->plength >= 1)
@@ -565,7 +564,6 @@ COMMAND_HANDLER(handler_source_command)
 
 COMMAND_HANDLER(handler_unload_surface)
 {
-
     if(ap->plength)
     {
         sd = surface_by_name(sd->cd, ap->pms[0]);

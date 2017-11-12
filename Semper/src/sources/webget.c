@@ -318,6 +318,7 @@ static int webget_curl_download(unsigned char *link,webget_worker *ww)
     ret=(ret==0)?curl_easy_setopt(c_state, CURLOPT_MAXREDIRS,4096):1;
     ret=(ret==0)?curl_easy_setopt(c_state, CURLOPT_SSL_VERIFYPEER, 0):ret;
 
+    /*Query download  size*/
     ww->dwl_mode=DOWNLOAD_TO_BUFFER;
     ret=(ret==0)?curl_easy_setopt(c_state, CURLOPT_HEADER,1):ret;
     ret=(ret==0)?curl_easy_setopt(c_state, CURLOPT_NOBODY,1):ret;
@@ -637,21 +638,29 @@ double webget_update(void *spv)
 
     if(w->worker==0&&w->address&&(w->c_rate==0||w->update))
     {
-        w->work=1;
+
+        int status=0;
         pthread_attr_t th_att= {0};
         pthread_attr_init(&th_att);
         pthread_attr_setdetachstate(&th_att,PTHREAD_CREATE_JOINABLE);
-        pthread_create(&w->worker, NULL, webget_worker_thread, w);
+        status=pthread_create(&w->worker, NULL, webget_worker_thread, w);
         pthread_attr_destroy(&th_att);
-        while(w->work==1)
+
+        if(status)
         {
-            sched_yield();
+            diag_crit("%s %d Failed to start webget_worker_thread. Status %x",__FUNCTION__,__LINE__,status);
+        }
+        else
+        {
+            w->work=1;
+            while(w->work==1)
+            {
+                sched_yield();
+            }
+            if(w->c_rate)
+                w->c_rate--;
         }
     }
-
-    if(w->c_rate)
-        w->c_rate--;
-
     return(0.0);
 }
 

@@ -441,7 +441,6 @@ int image_cache_init(control_data *cd)
         cd->ich = zmalloc(sizeof(image_cache));
         list_entry_init(&((image_cache*)cd->ich)->images);
     }
-
     return (0);
 }
 
