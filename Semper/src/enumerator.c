@@ -9,9 +9,9 @@
  * Think of it as a combination of skeleton_first_key/skeleton_next_key with the ability to also obtain the keys from
  *ancestors.
  */
+
 #include <skeleton.h>
 #include <ancestor.h>
-
 #include <mem.h>
 #include <surface.h>
 #include <xpander.h>

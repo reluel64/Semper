@@ -42,9 +42,11 @@ typedef struct
     unsigned char* kn;
     unsigned char sect_found;
     unsigned char key_found;
+    unsigned char has_content;
     size_t sect_off;
     size_t sect_end_off;
     size_t new_lines;
+
 } semper_write_key_data;
 
 static int semper_skeleton_ini_handler(unsigned char* sn, unsigned char* kn, unsigned char* kv, unsigned char* comm, void* pv)
@@ -174,11 +176,16 @@ static int ini_handler(semper_write_key_handler)
     /*Just treat the new line*/
     if(!kn && !kv && !sn && !com)
     {
-        swkd->new_lines++;
-        fprintf(swkd->nf, "\n");
+        size_t pos=ftell(swkd->nf);
+        if(pos>3)
+        {
+            swkd->new_lines++;
+            fprintf(swkd->nf, "\n");
+        }
         return (0);
-    }
 
+    }
+    swkd->has_content=1;
     /*The section is about to change so we get the ending offset*/
 
     if(swkd->sect_off > swkd->sect_end_off && strcasecmp(sn, swkd->sn))
@@ -260,7 +267,14 @@ int semper_write_key(unsigned char* file, unsigned char* sn, unsigned char* kn, 
 
     if(swkd.sect_off == 0) /*section was not found*/
     {
-        fprintf(swkd.nf, "\n[%s]\n%s=%s", sn, kn, kv);
+        if(swkd.has_content)
+        {
+            fprintf(swkd.nf, "\n[%s]\n%s=%s", sn, kn, kv);
+        }
+        else
+        {
+            fprintf(swkd.nf, "[%s]\n%s=%s", sn, kn, kv);
+        }
     }
     else if(swkd.key_found == 0 &&
             swkd.sect_end_off < swkd.sect_off) /*this should happen if it is at the end of file*/
@@ -637,9 +651,6 @@ static int semper_desktop_checker(control_data *cd)
 
 int main(void)
 {
-
-
-    // while(1);
     control_data* cd = zmalloc(sizeof(control_data));
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
@@ -697,4 +708,3 @@ int main(void)
 #endif
 
 //---------------------------------------------------------------------------
-

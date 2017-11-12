@@ -91,13 +91,12 @@ static void diag_open_file(diag_status *ds)
             if(check_bom!=utf8_bom)
             {
                 fwrite(&utf8_bom,1,3,ds->fh);
-                fwrite(ts,1,date_len,ds->fh);
             }
             else
             {
                 fputc('\n',ds->fh);
                 fputc('\n',ds->fh);
-                fputc('\n',ds->fh);
+            }
                 for(size_t i=0; i<32; i++)
                 {
                     if(i==16)
@@ -108,8 +107,6 @@ static void diag_open_file(diag_status *ds)
                 }
 
                 fputc('\n',ds->fh);
-            }
-
         }
     }
 }

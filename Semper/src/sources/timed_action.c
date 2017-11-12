@@ -445,12 +445,19 @@ void timed_action_command(void *spv,unsigned char *command)
                         {
                             break;
                         }
+                        int status=0;
                         pthread_attr_t th_att= {0};
                         pthread_t dtid;
                         pthread_attr_init(&th_att);
                         pthread_attr_setdetachstate(&th_att,PTHREAD_CREATE_DETACHED);
-                        pthread_create(&dtid,&th_att,timed_action_exec,tl);
+                        if((status=pthread_create(&dtid,&th_att,timed_action_exec,tl))!=0)
+                        {
+                             diag_crit("%s %d Failed to start timed_action_exec. Status %x",__FUNCTION__,__LINE__,status);
+                        }
                         pthread_attr_destroy(&th_att);
+
+
+
                         break;
                     }
                 }

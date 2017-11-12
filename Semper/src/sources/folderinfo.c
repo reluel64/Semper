@@ -234,7 +234,8 @@ double folderinfo_update(void* spv)
     folderinfo* fi = spv;
     if(fi->working==0&&fi->parent == NULL && fi->th == 0)
     {
-        fi->working = 1;
+        int status=0;
+
 #ifdef WIN32
         pthread_attr_t th_att= {0};
         pthread_attr_init(&th_att);
@@ -243,6 +244,12 @@ double folderinfo_update(void* spv)
 
         pthread_attr_destroy(&th_att);
 #endif
+        fi->working=(status==0);
+
+        if(status)
+        {
+            diag_crit("%s %d Failed to start folderinfo_collect_thread. Status %x",__FUNCTION__,__LINE__,status);
+        }
     }
 
     if(fi->working == 0&&fi->th)

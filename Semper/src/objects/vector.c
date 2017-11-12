@@ -6,22 +6,6 @@
 
 #include <objects/vector.h>
 
-
-extern   void *_2geom_ellipse(double xc,double yc,double rx,double ry);
-extern   void *_2geom_arc(double sx,double sy,double rx,double ry,double angle,unsigned char large,unsigned char sweep,double ex,double ey);
-extern   void *_2geom_line(double sx,double sy,double ex,double ey);
-extern   void *_2geom_rectangle(double x,double y,double w,double h);
-extern   void *_2geom_curve_quad(double sx,double sy,double cx,double cy, double ex, double ey);
-extern   void *_2geom_curve_cubic(double sx,double sy,double cx1,double cy1,double cx2,double cy2, double ex, double ey);
-/*Relative paths*/
-
-extern   void *_2geom_init_path(double x,double y);
-extern   void _2geom_curve_quad_to(void *pa,double cx,double cy, double ex, double ey);
-extern   void _2geom_curve_cubic_to(void *pa,double cx1,double cy1,double cx2,double cy2, double ex, double ey);
-extern   void _2geom_arc_to(void *pa,double rx,double ry,double angle,unsigned char large,unsigned char sweep,double ex,double ey);
-extern   void _2geom_line_to(void *pa,double ex,double ey);
-
-
 void vector_init(object *o)
 {
     o->pv=zmalloc(sizeof(vector));
@@ -101,19 +85,20 @@ _2geom_path_inter(p1,p2,cr);
 */
 vector_arc va={0};
 static double i=0;
-va.ex=316;
-va.ey=100;
-va.sx=316;
-va.sy=101;
-va.rx=30;
-va.ry=30;
-va.sweep=1;
-va.large=1;
-va.angle=359;
+cairo_translate(cr,0.0,200.0);
+va.sx=250.0;
+va.sy=100.0;
+va.ex=40.0;
+va.ey=108.0;
+va.rx=41.0;
+va.ry=134.0;
+va.sweep=0;
+va.large=0;
+va.angle=0;
 
 vector_arc_path(cr,&va);
 cairo_set_color(cr,0xff00ff00);
-cairo_fill(cr);
+cairo_stroke(cr);
     /*
         void *clipper=vector_init_clipper();
         void *paths=vector_init_paths();

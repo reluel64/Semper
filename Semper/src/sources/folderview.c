@@ -329,23 +329,30 @@ double folderview_update(void *spv)
         }
         if(fp->work==0&&fp->update&&fp->thread==0)
         {
-            fp->work=1;
+            int status=0;
             pthread_attr_t th_att= {0};
             pthread_attr_init(&th_att);
             pthread_attr_setdetachstate(&th_att,PTHREAD_CREATE_JOINABLE);
-            pthread_create(&fp->thread, NULL, folderview_collect_thread, fp);
+            status=pthread_create(&fp->thread, NULL, folderview_collect_thread, fp);
             pthread_attr_destroy(&th_att);
+            fp->work=(status==0);
 
-            /*Because the update process is fast and the
-             * collector thread does not have the occasion
-             * to pend for the mutex, we're giving the
-             * chance for it to start by polling the
-             * work variable until is no longer 1
-             */
-
-            while(fp->work==1)
+            if(fp->work==0)
             {
-                sched_yield(); //don't be greedy, give some time to other threads
+                diag_crit("%s %d Failed to start folderview_collect_thread. Status %x",__FUNCTION__,__LINE__,status);
+            }
+            else
+            {
+                /*Because the update process is fast and the
+                * collector thread does not have the occasion
+                * to pend for the mutex, we're giving the
+                * chance for it to start by polling the
+                * work variable until is no longer 1
+                */
+                while(fp->work==1)
+                {
+                    sched_yield(); //don't be greedy, give some time to other threads
+                }
             }
         }
 

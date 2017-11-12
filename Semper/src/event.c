@@ -212,9 +212,9 @@ event* event_push(event_queue* eq, event_handler handler, void* pv, size_t timeo
 
     pthread_mutex_lock(&eq->mutex);
 
-    if(eq->ce&&flags==0)
+    if(eq->ce && flags==0)
     {
-        if(eq->ce->handler==handler&&eq->ce->pv==pv) //defer the event until the next cycle
+        if(eq->ce->handler==handler&&eq->ce->pv==pv) //defer the event until the next cycle to avoid a busyloop
         {
             flags|=EVENT_PUSH_TAIL;
         }
