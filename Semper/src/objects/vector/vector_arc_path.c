@@ -1,7 +1,7 @@
 #include <cairo/cairo.h>
 #include <objects/vector.h>
 
-
+/*Adapted from librsvg*/
 typedef enum
 {
     Negative,
@@ -9,12 +9,11 @@ typedef enum
 } Sweep;
 
 
-
 static void
-rsvg_path_arc_segment (cairo_t *builder,
-                       double xc, double yc,
-                       double th0, double th1, double rx, double ry,
-                       double x_axis_rotation)
+vector_arc_path_segment (cairo_t *cr,
+                         double xc, double yc,
+                         double th0, double th1, double rx, double ry,
+                         double x_axis_rotation)
 {
     double x1, y1, x2, y2, x3, y3;
     double t;
@@ -34,7 +33,7 @@ rsvg_path_arc_segment (cairo_t *builder,
     x2 = x3 + rx*(t * sin (th1));
     y2 = y3 + ry*(-t * cos (th1));
 
-    cairo_curve_to (builder,
+    cairo_curve_to (cr,
                     xc + cosf*x1 - sinf*y1,
                     yc + sinf*x1 + cosf*y1,
                     xc + cosf*x2 - sinf*y2,
@@ -43,62 +42,54 @@ rsvg_path_arc_segment (cairo_t *builder,
                     yc + sinf*x3 + cosf*y3);
 }
 
-/**
- * rsvg_path_builder_arc:
- * @builder: Path builder.
- * @x1: Starting x coordinate
- * @y1: Starting y coordinate
- * @rx: Radius in x direction (before rotation).
- * @ry: Radius in y direction (before rotation).
- * @x_axis_rotation: Rotation angle for axes.
- * @large_arc_flag: 0 for arc length <= 180, 1 for arc >= 180.
- * @sweep_flag: 0 for "negative angle", 1 for "positive angle".
- * @x2: Ending x coordinate
- * @y2: Ending y coordinate
- *
- * Add an RSVG arc to the path context.
- **/
+
 void
-rsvg_path_builder_arc (cairo_t  *builder,
-                       double x1, double y1,
-                       double rx, double ry,
-                       double x_axis_rotation,
-                       unsigned char large_arc_flag, unsigned char sweep_flag,
-                       double x2, double y2)
+vector_arc_path (cairo_t *cr, vector_arc *va)
 {
 
-    /* See Appendix F.6 Elliptical arc implementation notes
-       http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes */
+    double sinf=0.0;
+    double cosf=0.0;
+    double x1_=0.0;
+    double y1_=0.0;
+    double cx_=0.0;
+    double cy_=0.0;
+    double cx=0.0;
+    double cy=0.0;
+    double gamma=0.0;
+    double theta1=0.0;
+    double delta_theta=0.0;
+    double k1=0.0;
+    double k2=0.0;
+    double k3=0.0;
+    double k4=0.0;
+    double k5=0.0;
+    double rx=0.0;
+    double ry=0.0;
+    int i=0;
+    int n_segs=0;
 
-    double f, sinf, cosf;
-    double x1_, y1_;
-    double cx_, cy_, cx, cy;
-    double gamma;
-    double theta1, delta_theta;
-    double k1, k2, k3, k4, k5;
-
-    int i, n_segs;
-
-
+    if (va->sx == va->ex && va->sy == va->ey)
+        return;
 
     /* X-axis */
-    f = x_axis_rotation * M_PI / 180.0;
-    sinf = sin (f);
-    cosf = cos (f);
 
-    rx = fabs (rx);
-    ry = fabs (ry);
+    sinf = sin (va->angle);
+    cosf = cos (va->angle);
+
+    rx = fabs (va->rx);
+    ry = fabs (va->ry);
 
     /* Check the radius against floading point underflow.
        See http://bugs.debian.org/508443 */
-    if ((rx < 0.01) || (ry < 0.01))
+    if ((rx < 0.001) || (ry < 0.001))
     {
-        cairo_line_to (builder, x2, y2);
+        cairo_move_to(cr,va->sx,va->sy);
+        cairo_line_to (cr, va->ex, va->ey);
         return;
     }
 
-    k1 = (x1 - x2) / 2;
-    k2 = (y1 - y2) / 2;
+    k1 = (va->sx - va->ex) / 2;
+    k2 = (va->sy - va->ey) / 2;
 
     x1_ = cosf * k1 + sinf * k2;
     y1_ = -sinf * k1 + cosf * k2;
@@ -117,14 +108,14 @@ rsvg_path_builder_arc (cairo_t  *builder,
         return;
 
     k1 = sqrt (fabs ((rx * rx * ry * ry) / k1 - 1));
-    if (sweep_flag == large_arc_flag)
+    if (va->sweep ==va->large)
         k1 = -k1;
 
     cx_ = k1 * rx * y1_ / ry;
     cy_ = -k1 * ry * x1_ / rx;
 
-    cx = cosf * cx_ - sinf * cy_ + (x1 + x2) / 2;
-    cy = sinf * cx_ + cosf * cy_ + (y1 + y2) / 2;
+    cx = cosf * cx_ - sinf * cy_ + (va->sx + va->ex) / 2;
+    cy = sinf * cx_ + cosf * cy_ + (va->sy+ va->ey) / 2;
 
     /* Compute start angle */
 
@@ -155,9 +146,9 @@ rsvg_path_builder_arc (cairo_t  *builder,
     if (k1 * k4 - k3 * k2 < 0)
         delta_theta = -delta_theta;
 
-    if (sweep_flag && delta_theta < 0)
+    if (va->sweep && delta_theta < 0)
         delta_theta += M_PI * 2;
-    else if (!sweep_flag && delta_theta > 0)
+    else if (!va->sweep && delta_theta > 0)
         delta_theta -= M_PI * 2;
 
     /* Now draw the arc */
@@ -165,13 +156,15 @@ rsvg_path_builder_arc (cairo_t  *builder,
     n_segs = ceil (fabs (delta_theta / (M_PI * 0.5 + 0.001)));
 
     for (i = 0; i < n_segs; i++)
-        rsvg_path_arc_segment (builder, cx, cy,
-                               theta1 + i * delta_theta / n_segs,
-                               theta1 + (i + 1) * delta_theta / n_segs,
-                               rx, ry, x_axis_rotation);
+    {
+        vector_arc_path_segment (cr, cx, cy,
+                                 theta1 + i * delta_theta / n_segs,
+                                 theta1 + (i + 1) * delta_theta / n_segs,
+                                 rx, ry, va->angle);
+    }
 }
 
-
+/*
 int vector_arc_path(cairo_t *cr,vector_arc *va)
 {
     double sinf=0.0;
@@ -191,13 +184,16 @@ int vector_arc_path(cairo_t *cr,vector_arc *va)
     double dtheta=0.0;
     double vlen=0.0;
     double dp=0.0;
+    double gamma=0.0;
+    double rx=va->rx;
+    double ry=va->ry;
 
-    rsvg_path_builder_arc(cr,va->sx,va->sy,va->rx,va->ry,va->angle,va->large,va->sweep,va->ex,va->ey);
-    return(0);
     if(va->sx==va->ex&&va->sy==va->ey)
     {
         return(0);
     }
+
+
 
     if(va->rx==0.0||va->ry==0.0)
     {
@@ -206,38 +202,56 @@ int vector_arc_path(cairo_t *cr,vector_arc *va)
         return(0);
     }
 
-    rx2=pow(va->rx,2);
-    ry2=pow(va->ry,2);
+
+
+    rx=fabs(va->rx);
+    ry=fabs(va->ry);
+
+    rx2=pow(rx,2);
+    ry2=pow(ry,2);
+
 
     sinf=sin(va->angle);
     cosf=cos(va->angle);
     _x1=cosf*((va->sx-va->ex)/2.0)+sinf*((va->sy-va->ey)/2.0);
     _y1=-sinf*((va->sx-va->ex)/2.0)+cosf*((va->sy-va->ey)/2.0);
+
+    gamma=(pow(_x1,2)/rx2)+(pow(_y1,2)/ry2);
+    if(gamma>1.0)
+    {
+        rx=sqrt(gamma)*rx;
+        ry=sqrt(gamma)*ry;
+    }
+    rx2=pow(rx,2);
+    ry2=pow(ry,2);
     _x2=pow(_x1,2);
     _y2=pow(_y1,2);
-    sq=(sqrt((rx2*ry2-rx2*_y2-ry2*_x2)/(rx2*_y2+ry2*_x2)));
+    sq=(sqrt(fabs((rx2*ry2-rx2*_y2-ry2*_x2)/(rx2*_y2+ry2*_x2))));
 
-    _cx=(va->sweep==va->large?-sq:sq)*((va->rx*_y1)/va->ry);
-    _cy=(va->sweep==va->large?-sq:sq)*-((va->ry*_x1)/va->rx);
+    _cx=(va->sweep==va->large?-sq:sq)*((rx*_y1)/ry);
+    _cy=(va->sweep==va->large?-sq:sq)*-((ry*_x1)/rx);
 
     cx=cosf*_cx-sinf*_cy+(va->sx+va->ex)/2;
-    cx=sinf*_cx+cosf*_cy+(va->sy+va->ey)/2;
+    cy=sinf*_cx+cosf*_cy+(va->sy+va->ey)/2;
 
-    /*Caluclate theta*/
 
-    vlen=sqrt(pow((_x1-_cx)/va->rx,2)+pow((_y1-_cy)/va->ry,2));
+
+    vlen=sqrt(pow((_x1-_cx)/rx,2)+pow((_y1-_cy)/ry,2));
 
     if(vlen==0.0)
     {
         return(-1);
     }
 
-    dp=(_x1-_cx)/va->rx;
-    theta=acos(CLAMP(dp/vlen,-1,1));
+    dp=(_x1-_cx)/rx;
+
+
+    theta=(((_y1-_cy)/rx)>=0.0)?acos(CLAMP(dp/vlen,-1,1)):-acos(CLAMP(dp/vlen,-1,1));
+
 
     vlen=sqrt(
-             (pow((_x1-_cx)/va->rx,2)+pow((_y1-_cy)/va->ry,2))  *
-             (pow((-_x1-_cx)/va->rx,2)+pow((-_y1-_cy)/va->ry,2))
+             (pow((_x1-_cx)/rx,2)+pow((_y1-_cy)/ry,2))  *
+             (pow((-_x1-_cx)/rx,2)+pow((-_y1-_cy)/ry,2))
          );
 
     if(vlen==0.0)
@@ -245,12 +259,20 @@ int vector_arc_path(cairo_t *cr,vector_arc *va)
         return(-1);
     }
 
-    dp=(((_x1-_cx)/va->rx)*((-_x1-_cx)/va->rx))+(((_y1-_cy)/va->ry)*((-_y1-_cy)/va->ry));
+    dp=(((_x1-_cx)/rx)*((-_x1-_cx)/rx))+(((_y1-_cy)/ry)*((-_y1-_cy)/ry));
 
-    dtheta=acos(CLAMP(dp/vlen,-1,1));
+    dtheta=((((_x1-_cx)/va->rx)*((-_y1-_cy)/va->ry))-
+            (((_y1-_cy)/va->ry)*((-_x1-_cx)/va->rx))) >=0.0 ?acos(CLAMP(dp/vlen,-1,1)):-acos(CLAMP(dp/vlen,-1,1));
 
 
-
+    int n_segs = 2;
+    cairo_move_to(cr,va->sx,va->sy);
+    for (int i = 0; i < n_segs; i++)
+        rsvg_path_arc_segment (cr, cx, cy,
+                               theta + i * dtheta / n_segs,
+                               theta + (i + 1) * dtheta / n_segs,
+                               rx, ry, va->angle);
 
     return(0);
 }
+*/
