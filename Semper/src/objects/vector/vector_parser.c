@@ -5,13 +5,15 @@
 #include <xpander.h>
 #include <mem.h>
 #include <parameter.h>
-#if 1
+
 typedef struct
 {
     size_t op;
     size_t quotes;
     unsigned char quote_type;
 } string_parser_status;
+
+static int vector_parse_shared_attrib(object *o,unsigned char *val, vector_path_common *vpc,unsigned char *lvl);
 
 static int vector_parse_filter(string_tokenizer_status *pi, void* pv)
 {
@@ -200,9 +202,8 @@ static void *vector_fill_base_paths(vector *v,unsigned char *str,size_t index)
 }
 
 
-static void vector_parse_common_attrib(vector_path_common *vpc, vector_param_type *vpmt,unsigned char *s,size_t len,unsigned char param)
+static void vector_parse_common_attrib(object *o,vector_path_common *vpc, vector_param_type *vpmt,unsigned char *s,size_t len,unsigned char param,unsigned char *lvl)
 {
-
     switch(*vpmt)
     {
     default:
@@ -221,8 +222,13 @@ static void vector_parse_common_attrib(vector_path_common *vpc, vector_param_typ
 
         else if(!strncasecmp(s,"LineCap",7))
             *vpmt=vector_param_cap;
+
+        else if(!strncasecmp(s,"Attributes",10))
+            *vpmt=vector_param_shared;
+
         else
             *vpmt=vector_param_done;
+
         break;
     case vector_param_stroke_width:
         vpc->stroke_w=atof(s);
@@ -254,16 +260,27 @@ static void vector_parse_common_attrib(vector_path_common *vpc, vector_param_typ
             vpc->cap=CAIRO_LINE_CAP_SQUARE;
         *vpmt=vector_param_done;
         break;
+    case vector_param_shared:
+    {
+        unsigned char *tval=parameter_string(o,s,NULL,XPANDER_OBJECT);
+        if(tval)
+        {
+            vector_parse_shared_attrib(o,tval,vpc,lvl);
+            sfree((void**)&tval);
+        }
+    }
     }
 }
 
-static int vector_parse_shared_attrib(object *o,unsigned char *val, vector_path_common *vpc)
+static int vector_parse_shared_attrib(object *o,unsigned char *val, vector_path_common *vpc,unsigned char *lvl)
 {
     vector *v=o->pv;
     vector_param_type vpmt=vector_param_none;
     string_parser_status spa= {0};
     unsigned char param=0;
 
+    if(lvl&&*lvl+1>2)
+        return(-1);
 
     string_tokenizer_info    sti=
     {
@@ -326,67 +343,17 @@ static int vector_parse_shared_attrib(object *o,unsigned char *val, vector_path_
 
         if(param==0)
         {
-
-            if(!strncasecmp(str,"StrokeWidth",11))
-                vpmt=vector_param_stroke_width;
-
-            else if(!strncasecmp(str,"Stroke",6))
-                vpmt=vector_param_stroke;
-
-            else if(!strncasecmp(str,"Fill",4))
-                vpmt=vector_param_fill;
-
-            else if(!strncasecmp(str,"LineJoin",8))
-                vpmt=vector_param_join;
-
-            else if(!strncasecmp(str,"LineCap",7))
-                vpmt=vector_param_cap;
-
+            vector_parse_common_attrib(o,vpc,&vpmt,str,len,0,lvl);
         }
         else if(start<end) //let's handle the parameters
         {
             unsigned char pm[256]= {0};
             strncpy(pm,sti.buffer+start,min(end-start,255));
-
-
-            switch(vpmt)
-            {
-            default:
-                break;
-            case vector_param_stroke_width:
-                vpc->stroke_w=atof(pm);
-                vpmt=vector_param_done;
-                break;
-
-            case vector_param_stroke:
-                vpc->stroke_color=string_to_color(pm);
-                vpmt=vector_param_done;
-                break;
-
-            case vector_param_fill:
-                vpc->fill_color=string_to_color(pm);
-                vpmt=vector_param_done;
-                break;
-
-            case vector_param_join:
-                if(!strncasecmp(pm,"Round",5))
-                    vpc->join=CAIRO_LINE_JOIN_ROUND;
-                else if(!strncasecmp(pm,"Bevel",5))
-                    vpc->join=CAIRO_LINE_JOIN_BEVEL;
-                vpmt=vector_param_done;
-                break;
-
-            case vector_param_cap:
-                if(!strncasecmp(pm,"ROUND",5))
-                    vpc->cap=CAIRO_LINE_CAP_ROUND;
-                else if(!strncasecmp(pm,"SQUARE",6))
-                    vpc->cap=CAIRO_LINE_CAP_SQUARE;
-                vpmt=vector_param_done;
-                break;
-            }
+            *lvl+=1;
+            vector_parse_common_attrib(o,vpc,&vpmt,str,len,param,lvl);
+             *lvl-=1;
         }
     }
-    sfree((void**)&val);
     sfree((void**)&sti.ovecoff);
     sti.buffer=NULL;
     return(0);
@@ -517,7 +484,7 @@ static int vector_parse_paths(object *o)
                     }
                     else
                     {
-                        vector_parse_common_attrib(vpc,&vpmt,str,len,0);
+                        vector_parse_common_attrib(o,vpc,&vpmt,str,len,0,NULL);
                     }
                 }
             }
@@ -625,7 +592,8 @@ static int vector_parse_paths(object *o)
                 }
                 else
                 {
-                    vector_parse_common_attrib(vpc,&vpmt,pm,len,param);
+                    unsigned char lvl=0;
+                    vector_parse_common_attrib(o,vpc,&vpmt,pm,len,param,&lvl);
                 }
             }
         }
@@ -638,10 +606,6 @@ static int vector_parse_paths(object *o)
     enumerator_finish(&es);
     return(0);
 }
-#endif
-
-
-
 
 
 int vector_parser_init(object *o)

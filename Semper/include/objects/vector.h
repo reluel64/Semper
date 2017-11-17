@@ -26,6 +26,7 @@ typedef enum
 {
     vector_param_none=vector_subpath_curve_to+1,
     vector_param_done,
+    vector_param_shared,
     vector_param_stroke_width,
     vector_param_stroke,
     vector_param_fill,
