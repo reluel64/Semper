@@ -32,7 +32,10 @@ typedef enum
     vector_param_fill,
     vector_param_join,
     vector_param_cap,
-    vector_param_matrix
+    vector_param_rotate,
+    vector_param_scale,
+    vector_param_skew,
+    vector_param_offset
 } vector_param_type;
 
 

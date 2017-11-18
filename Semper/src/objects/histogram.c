@@ -19,7 +19,6 @@
 void histogram_reset(object* o)
 {
     histogram_object* ho = o->pv;
-    //surface_data *sd=o->sd;
     ho->hist_color = parameter_color(o, "HistogramColor", 0xff00ff00, XPANDER_OBJECT);
     ho->hist_2_color = parameter_color(o, "HistogramColor2", 0xffff0000, XPANDER_OBJECT);
     ho->hist_over_color = parameter_color(o, "HistogramColorOverlap", 0xffffff00, XPANDER_OBJECT);

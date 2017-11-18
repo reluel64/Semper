@@ -53,7 +53,6 @@ static int vector_parse_filter(string_tokenizer_status *pi, void* pv)
     return (0);
 }
 
-
 static void *vector_alloc_index(list_entry *head, size_t index,size_t bytes)
 {
     vector_path_common *vp = NULL;
@@ -74,6 +73,7 @@ static void *vector_alloc_index(list_entry *head, size_t index,size_t bytes)
     vp = zmalloc(bytes);
     vp->stroke_w=1.0;
     vp->index = index;
+    cairo_matrix_init_identity(&vp->mtx);
     list_entry_init(&vp->current);
 
     if(n == NULL)
@@ -91,9 +91,6 @@ static void *vector_alloc_index(list_entry *head, size_t index,size_t bytes)
 
     return (vp);
 }
-
-
-
 
 static int vector_subpath_fill(vector_subpath_common *vsc,unsigned char *pm,unsigned char param)
 {
@@ -226,6 +223,18 @@ static void vector_parse_common_attrib(object *o,vector_path_common *vpc, vector
         else if(!strncasecmp(s,"Attributes",10))
             *vpmt=vector_param_shared;
 
+        else if(!strncasecmp(s,"Skew",4))
+            *vpmt=vector_param_skew;
+
+        else if(!strncasecmp(s,"Rotate",6))
+            *vpmt=vector_param_rotate;
+
+        else if(!strncasecmp(s,"Scale",5))
+            *vpmt=vector_param_scale;
+
+        else if(!strncasecmp(s,"Offset",6))
+            *vpmt=vector_param_offset;
+
         else
             *vpmt=vector_param_done;
 
@@ -351,7 +360,7 @@ static int vector_parse_shared_attrib(object *o,unsigned char *val, vector_path_
             strncpy(pm,sti.buffer+start,min(end-start,255));
             *lvl+=1;
             vector_parse_common_attrib(o,vpc,&vpmt,str,len,param,lvl);
-             *lvl-=1;
+            *lvl-=1;
         }
     }
     sfree((void**)&sti.ovecoff);
@@ -368,11 +377,11 @@ static int vector_parse_paths(object *o)
     {
         vector_param_type vpmt=vector_param_none;
         vector_path_common *vpc=NULL;
-
         vector_subpath_common *vsc=NULL;
         string_parser_status spa= {0};
         unsigned char param=0;
         size_t index=0;
+
         if(eval==NULL)
             break;
 

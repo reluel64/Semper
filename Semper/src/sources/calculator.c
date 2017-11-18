@@ -10,7 +10,7 @@
 #include <sources/source.h>
 #include <stddef.h>
 #include <math_parser.h>
-/************RANDOM NUMBER GENERATOR*************/
+
 
 typedef struct _random_generator
 {
@@ -125,7 +125,32 @@ static inline unsigned short calculator_random(calculator* c)
     }
     return (c->rg.rnum);
 }
-/********CALCULATOR SOURCE**********/
+
+static int calculator_math_parser(unsigned char *vn,size_t len,double *v,void *pv)
+{
+    calculator *c=pv;
+    if(strncasecmp("Random",vn,len)==0)
+    {
+        calculator_random(c);
+        *v=(double)c->rg.rnum;
+        return(0);
+    }
+    else if(strncasecmp("SurfaceCycle",vn,len)==0)
+    {
+        *v=(double)((surface_data*)c->sd)->cycle;
+        return(0);
+    }
+    else
+    {
+        source *s=source_by_name(c->sd,vn,len);
+        if(s)
+        {
+            *v=(double)s->d_info;
+            return(0);
+        }
+    }
+    return(-1);
+}
 
 void calculator_init(void** spv, void* ip)
 {
@@ -163,32 +188,6 @@ void calculator_reset(void* spv, void* ip)
     {
         c->rg.update = 1;
     }
-}
-
-static int calculator_math_parser(unsigned char *vn,size_t len,double *v,void *pv)
-{
-    calculator *c=pv;
-    if(strncasecmp("Random",vn,len)==0)
-    {
-        calculator_random(c);
-        *v=(double)c->rg.rnum;
-        return(0);
-    }
-    else if(strncasecmp("SurfaceCycle",vn,len)==0)
-    {
-        *v=(double)((surface_data*)c->sd)->cycle;
-        return(0);
-    }
-    else
-    {
-        source *s=source_by_name(c->sd,vn,len);
-        if(s)
-        {
-            *v=(double)s->d_info;
-            return(0);
-        }
-    }
-    return(-1);
 }
 
 double calculator_update(void* spv)

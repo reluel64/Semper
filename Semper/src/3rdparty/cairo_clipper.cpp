@@ -14,7 +14,7 @@
 
 #include <stdexcept>
 #include <cmath>
-#include <cairo.h>
+#include <cairo/cairo.h>
 #include <3rdparty/clipper.hpp>
 #include <3rdparty/cairo_clipper.hpp>
 

@@ -85,7 +85,8 @@ _2geom_path_inter(p1,p2,cr);
 */
 vector_arc va={0};
 static double i=0;
-cairo_translate(cr,0.0,300.0);
+/*cairo_translate(cr,0.0,300.0);
+
 va.sx=250.0;
 va.sy=100.0;
 va.ex=40.0;
@@ -97,7 +98,9 @@ va.large=0;
 cairo_set_line_width(cr,5.0);
 va.angle=DEG2RAD(i+=10.0);
 cairo_move_to(cr,va.sx,va.sy);
-vector_arc_path(cr,&va);
+vector_arc_path(cr,&va);*/
+cairo_rectangle(cr,2,2,100,100);
+cairo_rectangle(cr,80,80,100,100);
 cairo_set_color(cr,0xff00ff00);
 cairo_stroke(cr);
     /*
