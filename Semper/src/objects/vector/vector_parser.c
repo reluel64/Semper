@@ -5,6 +5,10 @@
 #include <xpander.h>
 #include <mem.h>
 #include <parameter.h>
+#define PARAMS_LENGTH 10
+
+typedef struct _vector_parse_func  vector_parser_info;
+typedef  int (*param_parse_func)(vector_parser_info *pvpi);
 
 typedef struct
 {
@@ -13,7 +17,36 @@ typedef struct
     unsigned char quote_type;
 } string_parser_status;
 
-static int vector_parse_shared_attrib(object *o,unsigned char *val, vector_path_common *vpc,unsigned char *lvl);
+typedef enum
+{
+    vector_parser_path_mode,
+    vector_parser_attrib_mode,
+    vector_parser_subpath_mode
+} vector_parser_mode;
+
+struct _vector_parse_func
+{
+    cairo_matrix_t mtx;
+    vector_param_type vpmt;
+    vector_path_type   vpt;
+    unsigned char param;
+    unsigned char valid;
+    unsigned char *lvl;
+    unsigned char *pm;
+    size_t pm_len;
+    object *o;
+
+    double params[PARAMS_LENGTH];
+    param_parse_func func;
+};
+
+
+/*The parsing process should be done in the following sequence*
+ * 1) Read the matrix settings for the path
+ * 2) Read the path, validate the path
+ * 3) Read the other attributes
+ */
+
 
 static int vector_parse_filter(string_tokenizer_status *pi, void* pv)
 {
@@ -53,247 +86,13 @@ static int vector_parse_filter(string_tokenizer_status *pi, void* pv)
     return (0);
 }
 
-static void *vector_alloc_index(list_entry *head, size_t index,size_t bytes)
+
+static int vector_parse_option(vector_parser_info *vpi)
 {
-    vector_path_common *vp = NULL;
-    vector_path_common *p=NULL;
-    vector_path_common *n=NULL;
-    list_enum_part(vp, head, current)
-    {
-        if(vp->index < index)
-            p = vp;
-        if(vp->index > index)
-            n = vp;
-        if(n && p)
-            break;
-        if(vp->index == index)
-            return (NULL);
-    }
-
-    vp = zmalloc(bytes);
-    vp->stroke_w=1.0;
-    vp->index = index;
-    cairo_matrix_init_identity(&vp->mtx);
-    list_entry_init(&vp->current);
-
-    if(n == NULL)
-    {
-        linked_list_add_last(&vp->current, head);
-    }
-    else if(p == NULL)
-    {
-        linked_list_add(&vp->current, head);
-    }
-    else
-    {
-        _linked_list_add(&p->current, &vp->current, &n->current);
-    }
-
-    return (vp);
-}
-
-static int vector_subpath_fill(vector_subpath_common *vsc,unsigned char *pm,unsigned char param)
-{
-    if(vsc == NULL)
-        return(-1);
-    switch(vsc->vpt)
-    {
-    case vector_subpath_arc_to:
-    {
-        vector_path_arc_to *vpat=(vector_path_arc_to*)vsc;
-        switch(param)
-        {
-        case 1:
-            vpat->radius=atof(pm);
-            break;
-        case 2:
-            vpat->start_angle=atof(pm);
-            break;
-        case 3:
-            vpat->end_angle=atof(pm);
-            break;
-        }
-        break;
-    }
-    case vector_subpath_line_to:
-    {
-        vector_path_line_to *vplt=(vector_path_line_to*)vsc;
-
-        switch(param)
-        {
-        case 1:
-            vplt->dx=atof(pm);
-            break;
-        case 2:
-            vplt->dy=atof(pm);
-            break;
-        }
-        break;
-    }
-    case vector_subpath_curve_to:
-    {
-        vector_path_curve_to *vpct=(vector_path_curve_to*)vsc;
-        switch(param)
-        {
-        case 1:
-            vpct->dx1=atof(pm);
-            break;
-        case 2:
-            vpct->dy1=atof(pm);
-            break;
-        case 3:
-            vpct->dx2=atof(pm);
-            break;
-        case 4:
-            vpct->dy2=atof(pm);
-            break;
-        case 5:
-            vpct->dx3=atof(pm);
-            break;
-        case 6:
-            vpct->dy3=atof(pm);
-            break;
-        }
-        break;
-    }
-    default:
-        break;
-    }
-    return(0);
-}
-
-static void *vector_fill_base_paths(vector *v,unsigned char *str,size_t index)
-{
-    vector_path_common *vpc=NULL;
-
-    if(!strncasecmp(str,"Arc",3)&&strncasecmp(str,"ArcTo",5))
-    {
-        if((vpc=vector_alloc_index(&v->paths,index+1,sizeof(vector_line)))!=NULL)
-        {
-            vpc->vpt=vector_path_arc;
-        }
-    }
-    else if(!strncasecmp(str,"Line",4)&&strncasecmp(str,"LineTo",6))
-    {
-        if((vpc=vector_alloc_index(&v->paths,index+1,sizeof(vector_line)))!=NULL)
-        {
-            vpc->vpt=vector_path_line;
-        }
-    }
-    else if(!strncasecmp(str,"Rect",4))
-    {
-        if((vpc=vector_alloc_index(&v->paths,index+1,sizeof(vector_rectangle)))!=NULL)
-        {
-            vpc->vpt=vector_path_rectangle;
-        }
-    }
-    else if(!strncasecmp(str,"PathSet",7))
-    {
-        if((vpc=vector_alloc_index(&v->paths,index+1,sizeof(vector_path)))!=NULL)
-        {
-            vpc->vpt=vector_path_path;
-            list_entry_init(&((vector_path*)vpc)->paths);
-        }
-    }
-    return(vpc);
-}
-
-
-static void vector_parse_common_attrib(object *o,vector_path_common *vpc, vector_param_type *vpmt,unsigned char *s,size_t len,unsigned char param,unsigned char *lvl)
-{
-    switch(*vpmt)
-    {
-    default:
-
-        if(!strncasecmp(s,"StrokeWidth",11))
-            *vpmt=vector_param_stroke_width;
-
-        else if(!strncasecmp(s,"Stroke",6))
-            *vpmt=vector_param_stroke;
-
-        else if(!strncasecmp(s,"Fill",4))
-            *vpmt=vector_param_fill;
-
-        else if(!strncasecmp(s,"LineJoin",8))
-            *vpmt=vector_param_join;
-
-        else if(!strncasecmp(s,"LineCap",7))
-            *vpmt=vector_param_cap;
-
-        else if(!strncasecmp(s,"Attributes",10))
-            *vpmt=vector_param_shared;
-
-        else if(!strncasecmp(s,"Skew",4))
-            *vpmt=vector_param_skew;
-
-        else if(!strncasecmp(s,"Rotate",6))
-            *vpmt=vector_param_rotate;
-
-        else if(!strncasecmp(s,"Scale",5))
-            *vpmt=vector_param_scale;
-
-        else if(!strncasecmp(s,"Offset",6))
-            *vpmt=vector_param_offset;
-
-        else
-            *vpmt=vector_param_done;
-
-        break;
-    case vector_param_stroke_width:
-        vpc->stroke_w=atof(s);
-        *vpmt=vector_param_done;
-        break;
-
-    case vector_param_stroke:
-        vpc->stroke_color=string_to_color(s);
-        *vpmt=vector_param_done;
-        break;
-
-    case vector_param_fill:
-        vpc->fill_color=string_to_color(s);
-        *vpmt=vector_param_done;
-        break;
-
-    case vector_param_join:
-        if(!strncasecmp(s,"Round",5))
-            vpc->join=CAIRO_LINE_JOIN_ROUND;
-        else if(!strncasecmp(s,"Bevel",5))
-            vpc->join=CAIRO_LINE_JOIN_BEVEL;
-        *vpmt=vector_param_done;
-        break;
-
-    case vector_param_cap:
-        if(!strncasecmp(s,"ROUND",5))
-            vpc->cap=CAIRO_LINE_CAP_ROUND;
-        else if(!strncasecmp(s,"SQUARE",6))
-            vpc->cap=CAIRO_LINE_CAP_SQUARE;
-        *vpmt=vector_param_done;
-        break;
-    case vector_param_shared:
-    {
-        unsigned char *tval=parameter_string(o,s,NULL,XPANDER_OBJECT);
-        if(tval)
-        {
-            vector_parse_shared_attrib(o,tval,vpc,lvl);
-            sfree((void**)&tval);
-        }
-    }
-    }
-}
-
-static int vector_parse_shared_attrib(object *o,unsigned char *val, vector_path_common *vpc,unsigned char *lvl)
-{
-    vector *v=o->pv;
-    vector_param_type vpmt=vector_param_none;
     string_parser_status spa= {0};
-    unsigned char param=0;
-
-    if(lvl&&*lvl+1>2)
-        return(-1);
-
     string_tokenizer_info    sti=
     {
-        .buffer                  = val, //store the string address here
+        .buffer                  = vpi->pm,
         .filter_data             = &spa,
         .string_tokenizer_filter = vector_parse_filter,
         .ovecoff                 = NULL,
@@ -304,7 +103,6 @@ static int vector_parse_shared_attrib(object *o,unsigned char *val, vector_path_
 
     for(size_t i=0; i<sti.oveclen/2; i++)
     {
-
         size_t start = sti.ovecoff[2*i];
         size_t end   = sti.ovecoff[2*i+1];
 
@@ -312,6 +110,7 @@ static int vector_parse_shared_attrib(object *o,unsigned char *val, vector_path_
         {
             continue;
         }
+
         /*Clean spaces*/
 
         if(string_strip_space_offsets(sti.buffer,&start,&end)==0)
@@ -319,17 +118,19 @@ static int vector_parse_shared_attrib(object *o,unsigned char *val, vector_path_
             if(sti.buffer[start]=='(')
             {
                 start++;
-                param=1;
+                vpi->param=1;
             }
             else if(sti.buffer[start]==',')
             {
                 start++;
-                param++;
+                vpi->param++;
             }
             else if(sti.buffer[start]==';')
             {
-                vpmt=vector_param_none;
-                param=0;
+                vpi->pm=NULL;
+                vpi->func(vpi);
+                vpi->vpmt=vector_param_none;
+                vpi->vpt=vector_path_unknown;
                 start++;
             }
             if(sti.buffer[end-1]==')')
@@ -347,41 +148,222 @@ static int vector_parse_shared_attrib(object *o,unsigned char *val, vector_path_
                 end--;
         }
 
-        unsigned char *str=sti.buffer+start;
-        size_t len=end-start;
+        vpi->pm=sti.buffer+start;
+        vpi->pm_len=end-start;
 
-        if(param==0)
+        if(start<end)
         {
-            vector_parse_common_attrib(o,vpc,&vpmt,str,len,0,lvl);
+            if(vpi->param==0)
+            {
+                vpi->func(vpi);
+            }
+            else //let's handle the parameters
+            {
+                vpi->func(vpi);
+            }
         }
-        else if(start<end) //let's handle the parameters
+
+        if(i+1==sti.oveclen/2)
         {
-            unsigned char pm[256]= {0};
-            strncpy(pm,sti.buffer+start,min(end-start,255));
-            *lvl+=1;
-            vector_parse_common_attrib(o,vpc,&vpmt,str,len,param,lvl);
-            *lvl-=1;
+            vpi->pm=NULL;
+            vpi->func(vpi);
         }
     }
     sfree((void**)&sti.ovecoff);
-    sti.buffer=NULL;
+    vpi->pm=sti.buffer; //restore the buffer state
+
     return(0);
 }
 
-static int vector_parse_paths(object *o)
+
+static int vector_parse_matrix(vector_parser_info *vpi)
+{
+    if(vpi->param==0)
+    {
+        memset(&vpi->params,0,sizeof(vpi->params));
+
+        if(!strncasecmp(vpi->pm,"Skew",4))
+            vpi->vpmt=vector_param_skew;
+
+        else if(!strncasecmp(vpi->pm,"Rotate",6))
+            vpi->vpmt=vector_param_rotate;
+
+        else if(!strncasecmp(vpi->pm,"Scale",5))
+            vpi->vpmt=vector_param_scale;
+
+        else if(!strncasecmp(vpi->pm,"Offset",6))
+            vpi->vpmt=vector_param_offset;
+    }
+    else if(vpi->pm && vpi->param>1&&vpi->param<=PARAMS_LENGTH)
+    {
+        unsigned char lpm[256]= {0};
+        strncpy(lpm,vpi->pm,min(vpi->pm_len,255));
+        vpi->params[vpi->param-1]=atof(lpm);
+    }
+    else if(vpi->pm==NULL)
+    {
+#warning "Implement check"
+        switch(vpi->vpmt)
+        {
+        case vector_param_offset:
+            if(vpi->param>3)
+                cairo_matrix_translate(&vpi->mtx,vpi->params[0],vpi->params[1]);
+            break;
+        }
+    }
+}
+
+static int vector_parse_path_set(vector_parser_info *vpi)
+{
+    if(vpi->param==0)
+    {
+        memset(&vpi->params,0,sizeof(vpi->params));
+
+        if(!strncasecmp(vpi->pm,"ArcTo",4))
+            vpi->vpt=vector_path_set_arc_to;
+
+        else if(!strncasecmp(vpi->pm,"CurveTo",6))
+            vpi->vpt=vector_path_set_curve_to;
+
+        else if(!strncasecmp(vpi->pm,"LineTo",5))
+            vpi->vpt=vector_path_set_line_to;
+    }
+    else if(vpi->pm && vpi->param>1&&vpi->param<=PARAMS_LENGTH)
+    {
+        unsigned char lpm[256]= {0};
+        strncpy(lpm,vpi->pm,min(vpi->pm_len,255));
+        vpi->params[vpi->param-1]=atof(lpm);
+    }
+    else if(vpi->pm==NULL)
+    {
+#warning "Implement check"
+    }
+}
+
+static int vector_parse_paths(vector_parser_info *vpi)
+{
+    if(vpi->param==0)
+    {
+        memset(&vpi->params,0,sizeof(vpi->params));
+
+        if(!strncasecmp(vpi->pm,"Rect",4))
+            vpi->vpt=vector_path_rectangle;
+
+        else if(!strncasecmp(vpi->pm,"Arc",6))
+            vpi->vpt=vector_path_arc;
+
+        else if(!strncasecmp(vpi->pm,"Line",5))
+            vpi->vpt=vector_path_line;
+
+        else if(!strncasecmp(vpi->pm,"Ellipse",6))
+            vpi->vpt=vector_path_ellipse;
+
+        else if(!strncasecmp(vpi->pm,"PathSet",7))
+            vpi->vpt=vector_path_set;
+    }
+    else if(vpi->pm && vpi->param>1&&vpi->param<=PARAMS_LENGTH)
+    {
+        unsigned char lpm[256]= {0};
+        strncpy(lpm,vpi->pm,min(vpi->pm_len,255));
+
+        if(vpi->vpt==vector_path_set&&vpi->param==3)
+        {
+            vector_parser_info lvpi= {0};
+            unsigned char *lval=parameter_string(vpi->o,lpm,NULL,XPANDER_OBJECT);
+
+            if(lval)
+            {
+                lvpi.pm=lval;
+                lvpi.o=vpi->o;
+                lvpi.func=vector_parse_path_set;
+                vector_parse_option(&lvpi);
+                sfree((void**)&lval);
+            }
+        }
+        else
+        {
+            vpi->params[vpi->param-1]=atof(lpm);
+        }
+    }
+    else if(vpi->pm==NULL)
+    {
+#warning "Implement check"
+    }
+}
+
+
+static int vector_parse_attributes(vector_parser_info *vpi)
+{
+    if(vpi->param==0)
+    {
+        memset(&vpi->params,0,sizeof(vpi->params));
+
+        if(!strncasecmp(vpi->pm,"StrokeWidth",11))
+            vpi->vpmt=vector_param_stroke_width;
+
+        else if(!strncasecmp(vpi->pm,"Stroke",6))
+            vpi->vpmt=vector_param_stroke;
+
+        else if(!strncasecmp(vpi->pm,"Fill",4))
+            vpi->vpmt=vector_param_fill;
+
+        else if(!strncasecmp(vpi->pm,"LineJoin",8))
+            vpi->vpmt=vector_param_join;
+
+        else if(!strncasecmp(vpi->pm,"LineCap",7))
+            vpi->vpmt=vector_param_cap;
+
+        else if(!strncasecmp(vpi->pm,"Attributes",10))
+            vpi->vpmt=vector_param_shared;
+
+    }
+    else if(vpi->pm && vpi->param>1&&vpi->param<=PARAMS_LENGTH)
+    {
+        unsigned char lpm[256]= {0};
+        strncpy(lpm,vpi->pm,min(vpi->pm_len,255));
+
+        if(vpi->vpt==vector_path_set&&vpi->param==3)
+        {
+            vector_parser_info lvpi= {0};
+            unsigned char *lval=parameter_string(vpi->o,lpm,NULL,XPANDER_OBJECT);
+
+            if(lval)
+            {
+                lvpi.pm=lval;
+                lvpi.o=vpi->o;
+                lvpi.func=vector_parse_path_set;
+                vector_parse_option(&lvpi);
+                sfree((void**)&lval);
+            }
+        }
+        else
+        {
+            vpi->params[vpi->param-1]=atof(lpm);
+        }
+    }
+    else if(vpi->pm==NULL)
+    {
+#warning "Implement check"
+    }
+}
+
+
+
+int vector_parser_init(object *o)
 {
     void *es=NULL;
     unsigned char *eval=enumerator_first_value(o,ENUMERATOR_OBJECT,&es);
-    vector *v=o->pv;
+    static param_parse_func ppf[] =
+    {
+        vector_parse_paths,
+        vector_parse_matrix,
+        vector_parse_attributes
+    };
+
     do
     {
-        vector_param_type vpmt=vector_param_none;
-        vector_path_common *vpc=NULL;
-        vector_subpath_common *vsc=NULL;
-        string_parser_status spa= {0};
-        unsigned char param=0;
-        size_t index=0;
-
+        vector_parser_info vpi= {0};
+        cairo_matrix_init_identity(&vpi.mtx);
         if(eval==NULL)
             break;
 
@@ -393,231 +375,19 @@ static int vector_parse_paths(object *o)
         if(val==NULL)
             continue;
 
-        string_tokenizer_info    sti=
+        vpi.pm=val;
+        vpi.o=o;
+
+        for(unsigned char i=0; i<sizeof(ppf)/sizeof(param_parse_func); i++)
         {
-            .buffer                  = val, //store the string address here
-            .filter_data             = &spa,
-            .string_tokenizer_filter = vector_parse_filter,
-            .ovecoff                 = NULL,
-            .oveclen                 = 0
-        };
-
-
-        string_tokenizer(&sti);
-
-        sscanf(eval+4,"%llu",&index);
-
-        for(size_t i=0; i<sti.oveclen/2; i++)
-        {
-
-            size_t start = sti.ovecoff[2*i];
-            size_t end   = sti.ovecoff[2*i+1];
-
-            if(start==end)
-            {
-                continue;
-            }
-            /*Clean spaces*/
-
-            if(string_strip_space_offsets(sti.buffer,&start,&end)==0)
-            {
-                if(sti.buffer[start]=='(')
-                {
-                    start++;
-                    param=1;
-                }
-                else if(sti.buffer[start]==',')
-                {
-                    start++;
-                    param++;
-                }
-                else if(sti.buffer[start]==';')
-                {
-                    vsc=NULL;
-                    vpmt=vector_param_none;
-                    param=0;
-                    start++;
-                }
-                if(sti.buffer[end-1]==')')
-                {
-                    end--;
-                }
-            }
-
-            if(string_strip_space_offsets(sti.buffer,&start,&end)==0)
-            {
-                if(sti.buffer[start]=='"'||sti.buffer[start]=='\'')
-                    start++;
-
-                if(sti.buffer[end-1]=='"'||sti.buffer[end-1]=='\'')
-                    end--;
-            }
-
-            unsigned char *str=sti.buffer+start;
-            size_t len=end-start;
-
-            if(param==0)
-            {
-                if(!vpc)
-                {
-                    if((vpc=vector_fill_base_paths(v,str,index))==NULL)
-                    {
-                        continue;
-                    }
-                }
-                else if(vpc) //handle the possible parameters
-                {
-                    if(vpc->vpt==vector_path_path&&!strncasecmp(str,"ArcTo",5))
-                    {
-                        vsc=zmalloc(sizeof(vector_path_arc_to));
-                        list_entry_init(&vsc->current);
-                        linked_list_add(&vsc->current,&((vector_path*)vpc)->paths);
-                        vsc->vpt=vector_subpath_arc_to;
-
-                    }
-                    else if(vpc->vpt==vector_path_path&&!strncasecmp(str,"LineTo",6))
-                    {
-                        vsc=zmalloc(sizeof(vector_path_line_to));
-                        list_entry_init(&vsc->current);
-                        linked_list_add(&vsc->current,&((vector_path*)vpc)->paths);
-                        vsc->vpt=vector_subpath_line_to;
-
-                    }
-                    else if(vpc->vpt==vector_path_path&&!strncasecmp(str,"CurveTo",7))
-                    {
-                        vsc=zmalloc(sizeof(vector_path_curve_to));
-                        list_entry_init(&vsc->current);
-                        linked_list_add(&vsc->current,&((vector_path*)vpc)->paths);
-                        vsc->vpt=vector_subpath_curve_to;
-
-                    }
-                    else
-                    {
-                        vector_parse_common_attrib(o,vpc,&vpmt,str,len,0,NULL);
-                    }
-                }
-            }
-            else if(vpc&&start<end) //let's handle the parameters
-            {
-                unsigned char pm[256]= {0};
-                strncpy(pm,sti.buffer+start,min(end-start,255));
-                if(vpmt==vector_param_none)
-                {
-                    switch(vpc->vpt)
-                    {
-                    default:
-                        break;
-                    case vector_path_path:
-                    {
-                        vector_subpath_fill(vsc,pm,param);
-                        break;
-                    }
-                    case vector_path_rectangle:
-                    {
-                        vector_rectangle *vr=(vector_rectangle*)vpc;
-
-                        switch(param)
-                        {
-                        case 1:
-                            vr->x=atof(pm);
-                            break;
-                        case 2:
-                            vr->y=atof(pm);
-                            break;
-                        case 3:
-                            vr->w=atof(pm);
-                            break;
-                        case 4:
-                            vr->h=atof(pm);
-                            break;
-                        }
-                        break;
-                    }
-                    case vector_path_ellipse:
-                    {
-                        vector_ellipse *ve=(vector_ellipse*)vpc;
-
-                        switch(param)
-                        {
-                        case 1:
-                            ve->xc=atof(pm);
-                            break;
-                        case 2:
-                            ve->yc=atof(pm);
-                            break;
-                        case 3:
-                            ve->ry=ve->rx=atof(pm);
-                            break;
-                        case 4:
-                            ve->ry=atof(pm);
-                            break;
-                        }
-                        break;
-                    }
-                    case vector_path_line:
-                    {
-                        vector_line *vl=(vector_line*)vpc;
-
-                        switch(param)
-                        {
-                        case 1:
-                            vl->sx=atof(pm);
-                            break;
-                        case 2:
-                            vl->sy=atof(pm);
-                        case 3:
-                            vl->dx=atof(pm);
-                            break;
-                        case 4:
-                            vl->dy=atof(pm);
-                            break;
-                        }
-                        break;
-                    }
-                    case vector_path_arc:
-                    {
-                        vector_arc *va=(vector_arc*)vpc;
-
-                        switch(param)
-                        {
-                        case 1:
-                            va->sx=atof(pm);
-                            break;
-                        case 2:
-                            va->sy=atof(pm);
-                        case 3:
-                            va->ex=atof(pm);
-                            break;
-                        case 4:
-                            va->ey=atof(pm);
-                            break;
-                        case 5:
-                            va->rx=atof(pm);
-                            break;
-                        }
-                        break;
-                    }
-                    }
-                }
-                else
-                {
-                    unsigned char lvl=0;
-                    vector_parse_common_attrib(o,vpc,&vpmt,pm,len,param,&lvl);
-                }
-            }
+            vpi.func=ppf[i];
+            vector_parse_option(&vpi);
         }
+
         sfree((void**)&val);
-        sfree((void**)&sti.ovecoff);
-        sti.buffer=NULL;
+
     }
     while((eval=enumerator_next_value(es))!=NULL);
 
     enumerator_finish(&es);
-    return(0);
-}
-
-
-int vector_parser_init(object *o)
-{
-    vector_parse_paths(o);
 }

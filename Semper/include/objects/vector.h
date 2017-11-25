@@ -15,16 +15,15 @@ typedef enum
     vector_path_ellipse,
     vector_path_arc,
     vector_path_rectangle,
-    vector_path_path,
-    vector_subpath_none,
-    vector_subpath_arc_to,
-    vector_subpath_line_to,
-    vector_subpath_curve_to
+    vector_path_set,
+    vector_path_set_arc_to,
+    vector_path_set_line_to,
+    vector_path_set_curve_to
 } vector_path_type;
 
 typedef enum
 {
-    vector_param_none=vector_subpath_curve_to+1,
+    vector_param_none=vector_path_set_curve_to+1,
     vector_param_done,
     vector_param_shared,
     vector_param_stroke_width,
@@ -142,7 +141,6 @@ typedef struct
 typedef struct
 {
     vector_path_type vpt;
-    size_t index;
     list_entry current;
 } vector_paths;
 
