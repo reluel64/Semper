@@ -160,9 +160,11 @@ void folderview_reset(void *spv,void *ip)
     {
         fc->parent=NULL; //assume  the child is oprhan
     }
+
     if((parent&&fh->type==_none)||fh->type==_child)
     {
         void *pv=extension_private(parent);
+
         if(fp==NULL)
         {
             if(((folderview_holder*)pv)->type==_parent)
@@ -201,6 +203,7 @@ void folderview_reset(void *spv,void *ip)
             fp->update=UPDATE_FILE_LIST;
             fc->parent=fp;
         }
+
         fh->data=fc;
 
         fh->type=_child;
@@ -219,6 +222,7 @@ void folderview_reset(void *spv,void *ip)
         surface_data *sd=s->sd;
         pthread_mutex_t empty_mtx;
         memset(&empty_mtx,0,sizeof(pthread_mutex_t));
+
         //this was a child so we will make it a parent by destroying its previous structure and re-creating it
         if(fc)
         {
@@ -226,10 +230,13 @@ void folderview_reset(void *spv,void *ip)
                 pthread_mutex_lock(&fc->parent->mutex);
 
             sfree((void**)&fc->icon_path);
+
             if(fc->current.next)
                 linked_list_remove(&fc->current);
+
             sfree((void**)&fc->str_val);
             sfree((void**)&fh->data);
+
             if(fc->parent)
                 pthread_mutex_unlock(&fc->parent->mutex);
         }
@@ -243,8 +250,10 @@ void folderview_reset(void *spv,void *ip)
         else
         {
             fp->stop=1;
+
             if(fp->thread)
                 pthread_join(fp->thread,NULL);
+
             fp->stop=0;
         }
 
@@ -278,6 +287,7 @@ void folderview_reset(void *spv,void *ip)
                 fp->stype=s_date_creat;
             else if(!strcasecmp(temp,"DateModified"))
                 fp->stype=s_date_mod;
+
             if(!strcasecmp(temp,"Size"))
                 fp->stype=s_size;
         }
@@ -295,6 +305,7 @@ void folderview_reset(void *spv,void *ip)
             else if(!strcasecmp(temp,"FileCount"))
                 fp->ptype=pt_file_cnt;
         }
+
         fp->s_desc=extension_bool("SortDescending",ip,0);
 
         if(memcmp(&fp->mutex,&empty_mtx,sizeof(pthread_mutex_t))==0)
@@ -305,6 +316,7 @@ void folderview_reset(void *spv,void *ip)
             pthread_mutex_init(&fp->mutex,&mutex_attr);
             pthread_mutexattr_destroy(&mutex_attr);
         }
+
         fp->icon_root=sd->sp.surface_dir;
     }
 }
@@ -315,11 +327,14 @@ double folderview_update(void *spv)
     folderview_child  *fc=fh->type==_child?fh->data:NULL;
     folderview_parent *fp=fh->type==_parent?fh->data: (fc!=NULL?fc->parent:NULL);
     double ret=0.0;
+
     if(fp==NULL)
     {
         return(ret);
     }
+
     pthread_mutex_lock(&fp->mutex);
+
     if(fh->type==_parent)
     {
         if(fp->work==0&&fp->thread)
@@ -327,6 +342,7 @@ double folderview_update(void *spv)
             pthread_join(fp->thread,NULL);
             fp->thread=0;
         }
+
         if(fp->work==0&&fp->update&&fp->thread==0)
         {
             int status=0;
@@ -367,6 +383,7 @@ double folderview_update(void *spv)
                 ret=(double)fc->item->size;
         }
     }
+
     pthread_mutex_unlock(&fp->mutex);
     return(ret);
 }
@@ -424,6 +441,7 @@ void folderview_command(void* spv, unsigned char* command)
     if(fp->work==0)
     {
         pthread_mutex_lock(&fp->mutex);
+
         if(fc&&fp->start&&command&&fc->index<fp->child_count&&fc->item)
         {
             if(strcasecmp("Open",command)==0)
@@ -439,10 +457,12 @@ void folderview_command(void* spv, unsigned char* command)
 #ifdef WIN32
                     windows_slahses(temp);
 #endif
+
                     if(fp->path!=fp->base_path)
                     {
                         sfree((void**)&fp->path);
                     }
+
                     fp->path=temp;
                     fp->update=UPDATE_FILE_LIST;
                 }
@@ -467,6 +487,7 @@ void folderview_command(void* spv, unsigned char* command)
                         sfree((void**)&s);
                     else
                         sfree((void**)&d);
+
 #endif
                 }
             }
@@ -476,6 +497,7 @@ void folderview_command(void* spv, unsigned char* command)
             if(strcasecmp("Back",command)==0&&strcasecmp(fp->path,fp->base_path))
             {
                 unsigned char *lo=strrchr(fp->path,'/');
+
                 if(lo==NULL)
                     lo=strrchr(fp->path,'\\');
 
@@ -489,6 +511,7 @@ void folderview_command(void* spv, unsigned char* command)
                 {
                     lo[0]=0;
                 }
+
                 fp->update=UPDATE_FILE_LIST;
 
             }
@@ -511,11 +534,13 @@ void folderview_command(void* spv, unsigned char* command)
                         {
                             fp->start= element_of(fp->start->current.next,folderview_item,current);
                         }
+
                         fp->update=UPDATE_SYNC;
                     }
                 }
             }
         }
+
         pthread_mutex_unlock(&fp->mutex);
     }
 
@@ -538,6 +563,7 @@ void folderview_destroy(void **spv)
 {
     folderview_holder *fh=*spv;
     folderview_parent *fp=NULL;
+
     if(fh->type==_parent) //clean the parent and any references to it
     {
         fp =fh->data;
@@ -558,8 +584,10 @@ void folderview_destroy(void **spv)
             linked_list_remove(&fc->current);
             fc->parent=NULL;
         }
+
         if(fp->path!=fp->base_path)
             sfree((void**)&fp->path);
+
         sfree((void**)&fp->base_path);
         sfree((void**)&fp->qcomplete_act);
         pthread_mutex_destroy(&fp->mutex);
@@ -570,15 +598,19 @@ void folderview_destroy(void **spv)
     {
         folderview_child *fc=fh->data;
         folderview_parent *fp=fc->parent;
+
         if(fp)
             pthread_mutex_lock(&fp->mutex);
 
         sfree((void**)&fc->icon_path);
+
         if(fc->current.next)
             linked_list_remove(&fc->current);
+
         sfree((void**)&fc->str_val);
         sfree((void**)&fh->data);
         sfree(spv);
+
         if(fp)
             pthread_mutex_unlock(&fp->mutex);
     }
@@ -669,6 +701,7 @@ static int folderview_collect(unsigned char *root,folderview_parent *f,foldervie
 
             struct dirent *dat=(dh?readdir(dh):NULL);
 #endif
+
             do
             {
 
@@ -684,19 +717,23 @@ static int folderview_collect(unsigned char *root,folderview_parent *f,foldervie
                 hidden=(wfd.dwFileAttributes&FILE_ATTRIBUTE_HIDDEN)!=0;
                 sys=(wfd.dwFileAttributes&FILE_ATTRIBUTE_SYSTEM)!=0;
 #elif __linux__
+
                 if(dat==NULL)
                     break;
 
                 dir=(dat->d_type == DT_DIR);
 #endif
 #ifdef WIN32
+
                 if(f->stop||fh==INVALID_HANDLE_VALUE)
                 {
                     break;
                 }
+
 #endif
                 unsigned char* temp=NULL;
 #ifdef WIN32
+
                 if((dir==1&&f->show_folders==0)||(dir==0&&f->show_files==0)||(sys&&f->sys==0)||(hidden&&f->hidden==0))
                     continue;
 
@@ -706,6 +743,7 @@ static int folderview_collect(unsigned char *root,folderview_parent *f,foldervie
 
                 temp=clone_string(dat->d_name);
 #endif
+
                 if(temp==NULL)
                     break;
 
@@ -717,12 +755,14 @@ static int folderview_collect(unsigned char *root,folderview_parent *f,foldervie
                 }
 
                 pthread_mutex_lock(&f->mutex);
+
                 if(f->ptype==pt_folder_sz&&dir==0)
                     f->items+=size;
                 else if(f->ptype==pt_file_cnt&&dir==0)
                     f->items++;
                 else if(f->ptype==pt_folder_cnt&&dir)
                     f->items++;
+
                 pthread_mutex_unlock(&f->mutex);
 
                 if((f->collect_mode==2&&dir==0)||(f->collect_mode==1&&fi==NULL)||f->collect_mode==0)
@@ -741,12 +781,15 @@ static int folderview_collect(unsigned char *root,folderview_parent *f,foldervie
 #elif __linux__
                     unix_slashes(fi->file_path);
 #endif
+
                     if(dir==0&&f->hide_ext)
                     {
                         unsigned char *dot=strrchr(temp,'.');
+
                         if(dot)
                             dot[0]=0;
                     }
+
                     uniform_slashes(fi->file_path);
                     fi->dir=dir;
 #ifdef WIN32
@@ -790,9 +833,13 @@ static int folderview_collect(unsigned char *root,folderview_parent *f,foldervie
             }
 
 #ifdef WIN32
+
             while(f->stop==0&&FindNextFileW(fh, &wfd));
+
 #elif __linux__
+
             while((dat=readdir(dh))!=NULL);
+
 #endif
 
 #ifdef WIN32
@@ -802,11 +849,13 @@ static int folderview_collect(unsigned char *root,folderview_parent *f,foldervie
             dh?closedir(dh):0;
 #endif
         }
+
         //pop a direcotry from the queue
         if(root!=file)
         {
             sfree((void**)&file);
         }
+
         if(linked_list_empty(&qbase)==0)
         {
             folderview_dir_list *fdl=element_of(qbase.prev,folderview_dir_list,current);
@@ -820,6 +869,7 @@ static int folderview_collect(unsigned char *root,folderview_parent *f,foldervie
             break;
         }
     }
+
     return (0);
 }
 
@@ -834,6 +884,7 @@ static cairo_status_t folderview_writer(void *pv,const unsigned char *data,unsig
 {
     png_writer *pw=pv;
     void *nbuf=realloc(pw->buf,pw->csz+length);
+
     if(nbuf)
     {
         pw->buf=nbuf;
@@ -846,6 +897,7 @@ static cairo_status_t folderview_writer(void *pv,const unsigned char *data,unsig
         memset(pw,0,sizeof(png_writer));
         return(CAIRO_STATUS_NO_MEMORY);
     }
+
     return(CAIRO_STATUS_SUCCESS);
 }
 
@@ -932,15 +984,18 @@ static void folderview_item_child_sync(folderview_parent *fp,unsigned char flag)
 
             if(flag&SYNC_ICONS)
                 sfree((void**)&fc->icon_path);
+
             if(flag&SYNC_CHILDREN)
                 fc->item=NULL;
         }
     }
+
     if(flag&SYNC_RSYNC)
     {
         if(linked_list_empty(&fp->files)==0&&fp->start&&(flag&SYNC_CHILDREN))
         {
             folderview_item *fi=fp->start;
+
             for(size_t i=0; i<=fp->child_count; i++)
             {
                 if(fp->stop)
@@ -957,8 +1012,10 @@ static void folderview_item_child_sync(folderview_parent *fp,unsigned char flag)
                         }
                     }
                 }
+
                 if(fi->current.next==&fp->files)
                     break;
+
                 fi=element_of(fi->current.next,folderview_item,current);
             }
         }
@@ -987,6 +1044,7 @@ static void *folderview_collect_thread(void* vfi)
     folderview_parent *fp = vfi;
 
     fp->work=2; //set this to a non-1 value to allow the main thread to continue
+
     if(fp->update&UPDATE_SYNC)
     {
         pthread_mutex_lock(&fp->mutex);
@@ -1010,6 +1068,7 @@ static void *folderview_collect_thread(void* vfi)
         pthread_mutex_unlock(&fp->mutex);
 
         folderview_collect(fp->path,fp,NULL,&new_head); //get the file list
+
         if(fp->stop==0&&linked_list_empty(&new_head)==0)
         {
             if(fp->collect_mode==1)
@@ -1019,6 +1078,7 @@ static void *folderview_collect_thread(void* vfi)
                 {
                     if(fp->stop)
                         break;
+
                     if(fi->dir)
                         folderview_collect(fi->file_path,fp,fi,NULL);
                 }
@@ -1044,10 +1104,13 @@ static void *folderview_collect_thread(void* vfi)
             folderview_destroy_list(&new_head);
         }
     }
+
     pthread_mutex_lock(&fp->mutex);
     fp->work=0;
     pthread_mutex_unlock(&fp->mutex);
+
     if(fp->qcomplete_act)
         extension_send_command(fp->ip,fp->qcomplete_act);
+
     return(NULL);
 }

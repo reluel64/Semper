@@ -59,22 +59,29 @@ static unsigned char *wifi_get_chiper_algorithm(DOT11_CIPHER_ALGORITHM value)
 {
     switch (value)
     {
-    case DOT11_CIPHER_ALGO_NONE:
-        return "NONE";
-    case DOT11_CIPHER_ALGO_WEP40:
-        return "WEP40";
-    case DOT11_CIPHER_ALGO_TKIP:
-        return "TKIP";
-    case DOT11_CIPHER_ALGO_CCMP:
-        return "AES";
-    case DOT11_CIPHER_ALGO_WEP104:
-        return "WEP104";
-    case DOT11_CIPHER_ALGO_WPA_USE_GROUP:
-        return "WPA-GROUP";
-    case DOT11_CIPHER_ALGO_WEP:
-        return "WEP";
-    default:
-        return "N/A";
+        case DOT11_CIPHER_ALGO_NONE:
+            return "NONE";
+
+        case DOT11_CIPHER_ALGO_WEP40:
+            return "WEP40";
+
+        case DOT11_CIPHER_ALGO_TKIP:
+            return "TKIP";
+
+        case DOT11_CIPHER_ALGO_CCMP:
+            return "AES";
+
+        case DOT11_CIPHER_ALGO_WEP104:
+            return "WEP104";
+
+        case DOT11_CIPHER_ALGO_WPA_USE_GROUP:
+            return "WPA-GROUP";
+
+        case DOT11_CIPHER_ALGO_WEP:
+            return "WEP";
+
+        default:
+            return "N/A";
     }
 }
 
@@ -82,22 +89,29 @@ static unsigned char *wifi_get_auth_algorithm(DOT11_AUTH_ALGORITHM value)
 {
     switch (value)
     {
-    case DOT11_AUTH_ALGO_80211_OPEN:
-        return "Open";
-    case DOT11_AUTH_ALGO_80211_SHARED_KEY:
-        return "Shared";
-    case DOT11_AUTH_ALGO_WPA:
-        return "WPA-Enterprise";
-    case DOT11_AUTH_ALGO_WPA_PSK:
-        return "WPA-Personal";
-    case DOT11_AUTH_ALGO_WPA_NONE:
-        return "WPA-NONE";
-    case DOT11_AUTH_ALGO_RSNA:
-        return "WPA2-Enterprise";
-    case DOT11_AUTH_ALGO_RSNA_PSK:
-        return "WPA2-Personal";
-    default:
-        return "N/A";
+        case DOT11_AUTH_ALGO_80211_OPEN:
+            return "Open";
+
+        case DOT11_AUTH_ALGO_80211_SHARED_KEY:
+            return "Shared";
+
+        case DOT11_AUTH_ALGO_WPA:
+            return "WPA-Enterprise";
+
+        case DOT11_AUTH_ALGO_WPA_PSK:
+            return "WPA-Personal";
+
+        case DOT11_AUTH_ALGO_WPA_NONE:
+            return "WPA-NONE";
+
+        case DOT11_AUTH_ALGO_RSNA:
+            return "WPA2-Enterprise";
+
+        case DOT11_AUTH_ALGO_RSNA_PSK:
+            return "WPA2-Personal";
+
+        default:
+            return "N/A";
     }
 }
 
@@ -107,24 +121,32 @@ static unsigned char* wifi_get_phy(I_DOT11_PHY_TYPE value)
 {
     switch (value)
     {
-    case _dot11_phy_type_fhss:
-        return "FHSS";
-    case _dot11_phy_type_dsss:
-        return "DSSS";
-    case _dot11_phy_type_irbaseband:
-        return "IR-Band";
-    case _dot11_phy_type_ofdm:
-        return "802.11a";
-    case _dot11_phy_type_hrdsss:
-        return "802.11b";
-    case _dot11_phy_type_erp:
-        return "802.11g";
-    case _dot11_phy_type_ht:
-        return "802.11n";
-    case _dot11_phy_type_vht:
-        return "802.11ac";
-    default:
-        return "N/A";
+        case _dot11_phy_type_fhss:
+            return "FHSS";
+
+        case _dot11_phy_type_dsss:
+            return "DSSS";
+
+        case _dot11_phy_type_irbaseband:
+            return "IR-Band";
+
+        case _dot11_phy_type_ofdm:
+            return "802.11a";
+
+        case _dot11_phy_type_hrdsss:
+            return "802.11b";
+
+        case _dot11_phy_type_erp:
+            return "802.11g";
+
+        case _dot11_phy_type_ht:
+            return "802.11n";
+
+        case _dot11_phy_type_vht:
+            return "802.11ac";
+
+        default:
+            return "N/A";
     }
 }
 #endif
@@ -196,6 +218,7 @@ double wifi_update(void *spv)
     unsigned long nver=0;
     sfree((void**)&wd->str_val);
 #ifdef WIN32
+
     if(wd->wifi_handle==NULL&&WlanOpenHandle(2,NULL,&nver,&wd->wifi_handle)!=ERROR_SUCCESS)
     {
         return(-1.0);
@@ -219,30 +242,36 @@ double wifi_update(void *spv)
     {
         WLAN_CONNECTION_ATTRIBUTES *attr=NULL;
         size_t sz=0;
+
         if(if_info->isState==1&&
                 WlanQueryInterface(wd->wifi_handle,&if_info->InterfaceGuid,wlan_intf_opcode_current_connection,NULL,(unsigned long*)&sz,(void**)&attr,NULL)==ERROR_SUCCESS)
         {
 
             switch(wd->inf)
             {
-            case quality:
-                ret=(double)attr->wlanAssociationAttributes.wlanSignalQuality;
-                break;
-            case ssid:
-                wd->str_val=zmalloc(attr->wlanAssociationAttributes.dot11Ssid.uSSIDLength+1);
-                strncpy(wd->str_val,attr->wlanAssociationAttributes.dot11Ssid.ucSSID,attr->wlanAssociationAttributes.dot11Ssid.uSSIDLength);
-                break;
-            case phy:
-                wd->str_val=clone_string(wifi_get_phy(attr->wlanAssociationAttributes.dot11PhyType));
-                break;
-            case encryption:
-                wd->str_val=clone_string(wifi_get_chiper_algorithm(attr->wlanSecurityAttributes.dot11CipherAlgorithm));
-                break;
-            case auth:
-                wd->str_val=clone_string(wifi_get_auth_algorithm(attr->wlanSecurityAttributes.dot11AuthAlgorithm));
-                break;
-            default:
-                wd->str_val=clone_string("Unknown Option");
+                case quality:
+                    ret=(double)attr->wlanAssociationAttributes.wlanSignalQuality;
+                    break;
+
+                case ssid:
+                    wd->str_val=zmalloc(attr->wlanAssociationAttributes.dot11Ssid.uSSIDLength+1);
+                    strncpy(wd->str_val,attr->wlanAssociationAttributes.dot11Ssid.ucSSID,attr->wlanAssociationAttributes.dot11Ssid.uSSIDLength);
+                    break;
+
+                case phy:
+                    wd->str_val=clone_string(wifi_get_phy(attr->wlanAssociationAttributes.dot11PhyType));
+                    break;
+
+                case encryption:
+                    wd->str_val=clone_string(wifi_get_chiper_algorithm(attr->wlanSecurityAttributes.dot11CipherAlgorithm));
+                    break;
+
+                case auth:
+                    wd->str_val=clone_string(wifi_get_auth_algorithm(attr->wlanSecurityAttributes.dot11AuthAlgorithm));
+                    break;
+
+                default:
+                    wd->str_val=clone_string("Unknown Option");
             }
 
             WlanFreeMemory(attr);
@@ -309,10 +338,12 @@ double wifi_update(void *spv)
                 wd->str_val[buf_pos++]='\n';
 
             }
+
             if(wd->str_val&&buf_pos)
             {
                 wd->str_val[buf_pos-1]=0;
             }
+
             WlanFreeMemory(av_lis);
         }
     }
@@ -322,6 +353,7 @@ double wifi_update(void *spv)
     {
         WlanFreeMemory(if_list);
     }
+
 #endif
     return(ret);
 }
@@ -337,10 +369,12 @@ void wifi_destroy(void **spv)
     wifi_data *wd=*spv;
     sfree((void**)&wd->str_val);
 #ifdef WIN32
+
     if(wd->wifi_handle)
     {
         WlanCloseHandle(wd->wifi_handle,NULL);
     }
+
 #endif
     sfree(spv);
 }

@@ -67,6 +67,7 @@ void bar_reset(object* o)
     {
         image_cache_image_parameters(o, &bo->b1ia, XPANDER_OBJECT, "Bar");
     }
+
     if(bo->b2ia.path)
     {
         image_cache_image_parameters(o, &bo->b2ia, XPANDER_OBJECT, "Bar2");
@@ -96,6 +97,7 @@ int bar_update(object* o)
         bind_update_numeric(o, &bn_2);
         bo->percents_2 = bind_percentual_value(bn_2.val, bn_2.min, bn_2.max);
     }
+
     /*
         image_cache_unref_image(sd->cd->ich, &bo->b1ia,0);
         image_cache_unref_image(sd->cd->ich, &bo->b2ia,0);
@@ -221,6 +223,7 @@ int bar_render(object* o, cairo_t* cr)
             image_surface = cairo_image_surface_create_for_data(  px, CAIRO_FORMAT_ARGB32, o->w,o->h, stride);
             cairo_set_source_surface(cr, image_surface, 0.0, 0.0);
         }
+
         cairo_rectangle(cr, rx, ry, rw, rh);
         cairo_fill(cr);
 
@@ -230,6 +233,7 @@ int bar_render(object* o, cairo_t* cr)
             image_surface = NULL;
         }
     }
+
     image_cache_unref_image(sd->cd->ich, &bo->b1ia,0);
     image_cache_unref_image(sd->cd->ich, &bo->b2ia,0);
     image_cache_unref_image(sd->cd->ich, &bo->bcia,0);

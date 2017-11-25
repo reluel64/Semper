@@ -84,6 +84,7 @@ static size_t processor_core_count(void)
     unsigned char buf[256]= {0};
     FILE *f=fopen("/proc/cpuinfo","r");
     size_t c_count=0;
+
     if(f!=NULL)
     {
         while(fgets(buf,255,f))
@@ -93,8 +94,10 @@ static size_t processor_core_count(void)
                 c_count++;
             }
         }
+
         fclose(f);
     }
+
     return(c_count);
 }
 
@@ -105,11 +108,13 @@ static double processor_frequency_linux(processor *p,unsigned char max)
     snprintf(buf,256,"/sys/devices/system/cpu/cpu%lu/cpufreq/%s",p->freq_cpu_no,max?"cpuinfo_max_freq":"cpuinfo_cur_freq");
     FILE *f=fopen(buf,"r");
     double val=0.0;
+
     if(f!=NULL)
     {
         fscanf(f,"%lf",&val);
         fclose(f);
     }
+
     return(val);
 }
 /*
@@ -168,6 +173,7 @@ void processor_reset(void* spv, void* ip)
     sfree((void**)&p->process_name);
     unsigned char* inf_type = extension_string("Processor", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "Usage");
     p->total = extension_bool("Total", ip, 0);
+
     if(inf_type)
     {
         if(!strcasecmp(inf_type, "Usage"))
@@ -239,6 +245,7 @@ static double processor_usage(processor* p)
     size_t buf_sz = sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * p->core_count;
     size_t out_buf = 0;
     SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION* sppi = zmalloc(buf_sz);
+
     while(--attempt)
     {
         if(p->NtQuerySystemInformation(8, sppi, buf_sz, &out_buf))
@@ -250,11 +257,13 @@ static double processor_usage(processor* p)
         else
             break;
     }
+
     if(attempt == 0)
     {
         sfree((void**)&sppi);
         return (0.0);
     }
+
     if(p->usage_cpu_no)
     {
         ret = processor_usage_calculate_win32(p, sppi[p->usage_cpu_no - 1].IdleTime.QuadPart,
@@ -266,14 +275,17 @@ static double processor_usage(processor* p)
         size_t idle=0;
         size_t kernel=0;
         size_t user=0;
+
         for(size_t i=0; i<p->core_count; i++)
         {
             idle+= sppi[i].IdleTime.QuadPart;
             kernel+= sppi[i].KernelTime.QuadPart ;
             user+=sppi[i].UserTime.QuadPart;
         }
+
         ret = processor_usage_calculate_win32(p, idle,kernel+user);
     }
+
     sfree((void**)&sppi);
 #elif __linux__
     size_t used_cpu=0;
@@ -285,10 +297,12 @@ static double processor_usage(processor* p)
 
     cpul=snprintf(cpu,32,usage_cpu_no?"cpu%lu":"cpu",usage_cpu_no-1);
     FILE *f=fopen("/proc/stat","r");
+
     if(f==NULL)
     {
         return(0.0);
     }
+
     while(fgets(row,255,f))
     {
         if(strncasecmp(cpu,row,cpul)==0)
@@ -355,11 +369,14 @@ static size_t processor_process_count(processor *p)
             unsigned char found=0;
             UNICODE_STRING *us=(UNICODE_STRING*)(((unsigned char*)sppi)+0x38);
             unsigned char *proc=ucs_to_utf8(us->Buffer,NULL,0);
+
             if(proc&&p->process_name&&!strcasecmp(proc,p->process_name))
             {
                 found=1;
             }
+
             sfree((void**)&proc);
+
             if(found==1)
             {
                 processes=1;
@@ -373,16 +390,19 @@ static size_t processor_process_count(processor *p)
 
         sppi = (SYSTEM_PROCESS_INFORMATION*)((unsigned char*)sppi + sppi->NextEntryOffset);
     }
+
     sfree((void**)&spi);
 
 #elif __linux__
     DIR *dh=opendir("/proc");
     struct dirent *ent=NULL;
+
     if(dh)
     {
         while((ent=readdir(dh))!=NULL)
         {
             unsigned char is_pid=1; //assume that this is a PID
+
             for(size_t i=0; i<256&&ent->d_name[i]; i++)
             {
                 if(ent->d_name[i]<'0'||ent->d_name[i]>'9')
@@ -391,11 +411,14 @@ static size_t processor_process_count(processor *p)
                     break;
                 }
             }
+
             if(is_pid)
                 processes++;
         }
+
         closedir(dh);
     }
+
 #endif
 
     return (processes);
@@ -428,17 +451,20 @@ static double processor_frequency(processor* p, unsigned char max)
             }
         }
     }
+
     return (val);
 #elif __linux__
     unsigned char buf[256]= {0};
     snprintf(buf,256,"/sys/devices/system/cpu/cpu%lu/cpufreq/%s",p->freq_cpu_no,max?"scaling_max_freq":"scaling_cur_freq");
     FILE *f=fopen(buf,"r");
     double val=0.0;
+
     if(f!=NULL)
     {
         fscanf(f,"%lf",&val);
         fclose(f);
     }
+
     return(val/1000);
 #endif
 }
@@ -449,18 +475,23 @@ double processor_update(void* spv)
 
     switch(p->inf_type)
     {
-    case 1:
-        return ((double)processor_process_count(spv));
-    case 2:
-        return ((double)p->core_count);
-    case 3:
-        return (processor_frequency(p, p->total));
-    case 4:
-        return((double)processor_process_count(spv));
-    default:
-        return (processor_usage(spv));
+        case 1:
+            return ((double)processor_process_count(spv));
+
+        case 2:
+            return ((double)p->core_count);
+
+        case 3:
+            return (processor_frequency(p, p->total));
+
+        case 4:
+            return((double)processor_process_count(spv));
+
+        default:
+            return (processor_usage(spv));
 
     }
+
     return (0.0);
 }
 

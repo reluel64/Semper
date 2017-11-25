@@ -99,13 +99,16 @@ static int xpander_section_variables(xpander_section_variable_info *xsvi)
         {
             size_t index=0;
             unsigned char val=0;
+
             if(strncasecmp("Value",req_var_start+6,5)==0)
             {
                 req_var_start+=5;
                 val=1;
             }
+
             sscanf(req_var_start+6,"%llu",&index);
             unsigned char *sn=bind_source_name(o,index);
+
             if(sn)
             {
                 if(val==0)
@@ -166,12 +169,14 @@ static int xpander_var_token_filter(string_tokenizer_status *sts,void *pv)
     {
         return(1);
     }
+
     return(0);
 }
 
 static int xpander_src_token_filter(string_tokenizer_status *sts,void *pv)
 {
     size_t *sym=pv;
+
     if(sts->buf[sts->pos]=='[')
     {
         if((*sym)==0)
@@ -188,6 +193,7 @@ static int xpander_src_token_filter(string_tokenizer_status *sts,void *pv)
             return(1);
         }
     }
+
     return(0);
 }
 
@@ -212,24 +218,26 @@ int xpander(xpander_request *xr)
 
     switch(xr->req_type & 0x1C)
     {
-    case XPANDER_REQUESTOR_OBJECT:
-    {
-        sd=((object*)xr->requestor)->sd;
-        sect=((object*)xr->requestor)->os;
-        break;
-    }
-    case XPANDER_REQUESTOR_SOURCE:
-    {
-        sd = ((source*)xr->requestor)->sd;
-        sect=((source*)xr->requestor)->cs;
-        break;
-    }
-    case XPANDER_REQUESTOR_SURFACE:
-    {
-        sd=xr->requestor;
-        sect=sd->spm;
-        break;
-    }
+        case XPANDER_REQUESTOR_OBJECT:
+        {
+            sd=((object*)xr->requestor)->sd;
+            sect=((object*)xr->requestor)->os;
+            break;
+        }
+
+        case XPANDER_REQUESTOR_SOURCE:
+        {
+            sd = ((source*)xr->requestor)->sd;
+            sect=((source*)xr->requestor)->cs;
+            break;
+        }
+
+        case XPANDER_REQUESTOR_SURFACE:
+        {
+            sd=xr->requestor;
+            sect=sd->spm;
+            break;
+        }
     }
 
     cd=sd->cd;
@@ -329,6 +337,7 @@ int xpander(xpander_request *xr)
                             start=0;
                             found=1;
                             has_var=1;
+
                             if(tbl[i].conv_func)
                             {
                                 alloc=1;
@@ -342,6 +351,7 @@ int xpander(xpander_request *xr)
                             }
                         }
                     }
+
                     //try to match a surface variable
                     if(found==0)
                     {
@@ -356,6 +366,7 @@ int xpander(xpander_request *xr)
                             end=string_length(buf_start);
                         }
                     }
+
                     if(found==0)
                     {
                         start--;
@@ -370,6 +381,7 @@ int xpander(xpander_request *xr)
                     start++;
 
                     source *s=source_by_name(sd,wbuf+start,end-start);
+
                     //try a source
                     if(s)
                     {
@@ -378,6 +390,7 @@ int xpander(xpander_request *xr)
                         found=1;
                         has_var=1;
                     }
+
                     //no source? try then a section variable
                     if(found==0)
                     {
@@ -401,6 +414,7 @@ int xpander(xpander_request *xr)
                             alloc=1;
                         }
                     }
+
                     //still unlucky?
                     if(found==0)
                     {
@@ -408,6 +422,7 @@ int xpander(xpander_request *xr)
                         end++;
                     }
                 }
+
                 void *tmp=realloc(new_buf,new_len+(end-start)+1);
 
                 if(tmp)
@@ -444,6 +459,7 @@ int xpander(xpander_request *xr)
                 sfree((void**)&wbuf);
                 wbuf=new_buf;
             }
+
             xr->es=new_buf;
         }
         while(has_var);
@@ -464,6 +480,7 @@ int xpander(xpander_request *xr)
                     xr->es[j] = xr->es[j + 1];
                 }
             }
+
             if(p2)
             {
                 for(size_t j = i; xr->es[j]; j++)

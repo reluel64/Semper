@@ -21,10 +21,12 @@ static unsigned char* remove_trailing_spaces(unsigned char* s)
 {
     size_t sz = string_length(s);
     unsigned char* p = s + sz;
+
     while(p > s && isspace(*--p))
     {
         *p = 0;
     }
+
     return (s);
 }
 
@@ -34,6 +36,7 @@ static unsigned char* remove_heading_spaces(unsigned char* s)
     {
         s++;
     }
+
     return (s);
 }
 
@@ -41,6 +44,7 @@ static unsigned char* ini_find_chars(unsigned char* s, unsigned char* cs)
 {
     int space = 0;
     unsigned long i = 0;
+
     for(; s[i]; i++)
     {
         if((cs == NULL || !strchr(cs, s[i])) && !(space && strchr("#;", s[i])))
@@ -52,6 +56,7 @@ static unsigned char* ini_find_chars(unsigned char* s, unsigned char* cs)
             break;
         }
     }
+
     return (s + i);
 }
 
@@ -67,6 +72,7 @@ static inline char* ucs2_line_get(unsigned char* buf, size_t buf_sz, ini_ucs2* i
         sfree((void**)&str);
         return (buf);
     }
+
     sfree((void**)&wline);
     return (NULL);
 }
@@ -99,6 +105,7 @@ int ini_parser_parse_stream(ini_reader ir, void* data, ini_handler ih, void* pv)
     unsigned char* sn = zmalloc(INI_PARSER_MAX_LINE + 1);
     // unsigned char *com=zmalloc(INI_PARSER_MAX_LINE+1);
     int ret = 0;
+
     if(buf == NULL || sn == NULL)
     {
         sfree((void**)&buf);
@@ -107,6 +114,7 @@ int ini_parser_parse_stream(ini_reader ir, void* data, ini_handler ih, void* pv)
     }
 
     size_t cline = 0;
+
     while(ir(buf, INI_PARSER_MAX_LINE, data))
     {
         size_t offset = 0;
@@ -143,6 +151,7 @@ int ini_parser_parse_stream(ini_reader ir, void* data, ini_handler ih, void* pv)
             {
                 continue;
             }
+
             memset(sn, 0, INI_PARSER_MAX_LINE);
             strncpy(sn, line + 1, (se - line) - 1);
             line = remove_heading_spaces(se + 1);
@@ -156,6 +165,7 @@ int ini_parser_parse_stream(ini_reader ir, void* data, ini_handler ih, void* pv)
         else if(*line)
         {
             unsigned char* delim = ini_find_chars(line, "=:");
+
             if(*delim == '=' || *delim == ':')
             {
                 *delim = 0;
@@ -163,11 +173,13 @@ int ini_parser_parse_stream(ini_reader ir, void* data, ini_handler ih, void* pv)
                 unsigned char* key_name = remove_trailing_spaces(line);
                 unsigned char* key_value = remove_heading_spaces(delim + 1);
                 unsigned char* in_comm = ini_find_chars(key_value, NULL);
+
                 //*in_comm=0;
                 if(isspace(*(in_comm - 1)))
                 {
                     *(in_comm - 1) = 0;
                 }
+
                 remove_trailing_spaces(key_value);
                 remove_trailing_spaces(in_comm);
 
@@ -182,10 +194,12 @@ int ini_parser_parse_stream(ini_reader ir, void* data, ini_handler ih, void* pv)
             {
                 unsigned char* key_value = remove_heading_spaces(line);
                 unsigned char* in_comm = ini_find_chars(key_value, NULL);
+
                 if(isspace(*(in_comm - 1)))
                 {
                     *(in_comm - 1) = 0;
                 }
+
                 remove_trailing_spaces(key_value);
                 remove_end_begin_quotes(key_value);
                 remove_trailing_spaces(in_comm);
@@ -209,6 +223,7 @@ int ini_parser_parse_stream(ini_reader ir, void* data, ini_handler ih, void* pv)
             break;
         }
     }
+
     sfree((void**)&buf);
     sfree((void**)&sn);
     return (ret);
@@ -232,6 +247,7 @@ int ini_parser_parse_file(unsigned char* fn, ini_handler ih, void* pv)
     {
         return (-1);
     }
+
     encoding enc = ini_detect_encoding(fh);
 
     if(enc != ucs2 && enc != ucs2_be)

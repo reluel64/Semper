@@ -56,6 +56,7 @@ double surfaces_collector_update(void* spv)
     control_data* cd = scd->cd;
     surface_data* sd = NULL;
     scd->count = 0;
+
     if(scd->parent)
         return ((scd->parent->base + scd->index < scd->parent->count));
 
@@ -95,6 +96,7 @@ unsigned char* surfaces_collector_string(void* spv)
         scd->name = clone_string(sd->sp.surface_rel_dir);
     else
         return("");
+
     return (scd->name);
 }
 
@@ -109,6 +111,7 @@ void surfaces_collector_command(void* spv, unsigned char* command)
 {
 
     surfaces_collector_data* scd = spv;
+
     if(command && !scd->parent)
     {
         if(!strcasecmp("IndexUp", command) && scd->base + 1 < scd->count)

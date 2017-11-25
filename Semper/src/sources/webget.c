@@ -82,12 +82,16 @@ typedef struct webget
 static FILE *webget_create_file(unsigned char *fp)
 {
     FILE *fd=NULL;
+
     if(fp==NULL)
         return(NULL);
+
 #ifdef WIN32
     unsigned short *uc=utf8_to_ucs(fp);
+
     if(uc)
         fd=_wfopen(uc,L"wb");
+
     sfree((void**)&uc);
 #elif __linux__
     fd=fopen(fp,"wb");
@@ -101,11 +105,14 @@ static int webget_rename_file(unsigned char *on,unsigned char *nn)
 {
     if(on==NULL||nn==NULL)
         return(-1);
+
 #ifdef WIN32
     unsigned short *ucon=utf8_to_ucs(on);
     unsigned short *ucnn=utf8_to_ucs(nn);
+
     if(ucon&&ucnn)
         _wrename(ucon,ucnn);
+
     sfree((void**)&ucon);
     sfree((void**)&ucnn);
 #elif __linux__
@@ -118,10 +125,13 @@ static int webget_remove_file(unsigned char *fp)
 {
     if(fp==NULL)
         return(-1);
+
 #ifdef WIN32
     unsigned short *uc=utf8_to_ucs(fp);
+
     if(uc)
         _wremove(uc);
+
     sfree((void**)&uc);
 #elif __linux__
     remove(fp);
@@ -132,12 +142,16 @@ static int webget_remove_file(unsigned char *fp)
 static int webget_mkdir(unsigned char *fp)
 {
     int ret=-1;
+
     if(fp==NULL)
         return(-1);
+
 #ifdef WIN32
     unsigned short *uc=utf8_to_ucs(fp);
+
     if(uc)
         ret=_wmkdir(uc);
+
     sfree((void**)&uc);
 #elif __linux__
     ret=mkdir(fp,640);
@@ -197,6 +211,7 @@ void webget_reset(void *spv,void *ip)
     if((pip=extension_get_parent(temp,ip))!=NULL&&w->parent==NULL)
     {
         w->parent=extension_private(pip);
+
         if(linked_list_empty(&w->current))
             linked_list_add_last(&w->current,&w->parent->children);
     }
@@ -245,6 +260,7 @@ static int webget_apply_regexp(unsigned char *buffer,size_t buf_sz,unsigned char
         *match_count=0;
         return (-3);
     }
+
     return(0);
 }
 
@@ -254,6 +270,7 @@ static size_t webget_curl_worker_callback(char *buf, size_t size, size_t nmemb, 
     unsigned char *temp=NULL;
     size_t nb=size*nmemb;
     unsigned char err=0;
+
 //------------------------------
     if(*ww->stop==1||ww->dwl_mode==0)
         return(0);
@@ -295,6 +312,7 @@ static size_t webget_curl_worker_callback(char *buf, size_t size, size_t nmemb, 
         ww->buf_pos=0;
         return(0);
     }
+
     return(nb);
 
 }
@@ -307,10 +325,12 @@ static int webget_curl_download(unsigned char *link,webget_worker *ww)
     unsigned char fn[256]= {0};
     unsigned char *fp=NULL;
     CURL *c_state=curl_easy_init();
+
     if(c_state==NULL)
     {
         return(0);
     }
+
     ret=curl_easy_setopt(c_state, CURLOPT_URL,link);
     ret=(ret==0)?curl_easy_setopt(c_state, CURLOPT_WRITEFUNCTION,webget_curl_worker_callback):ret;
     ret=(ret==0)?curl_easy_setopt(c_state, CURLOPT_WRITEDATA,ww):ret;
@@ -331,11 +351,13 @@ static int webget_curl_download(unsigned char *link,webget_worker *ww)
         {
             unsigned char *fn_beg=strstr(ww->buf,"filename=");
             unsigned char *fn_end=NULL;
+
             if(fn_beg)
             {
                 fn_end=strstr(fn_beg,"\r\n");
                 fn_beg+=sizeof("filename=");
             }
+
             if(fn_beg&&fn_end)
             {
                 size_t len=min(fn_end-fn_beg-1,255);
@@ -347,9 +369,11 @@ static int webget_curl_download(unsigned char *link,webget_worker *ww)
                 clock_gettime(CLOCK_REALTIME,&ts);
                 snprintf(fn,256,"%llu-%lu",ts.tv_sec,ts.tv_nsec);
             }
+
             sfree((void**)&ww->buf);
 
         }
+
         ww->buf_pos=0;
         ww->buf_sz=0;
         unsigned char *tmp_path=ww->save_root_dir;
@@ -396,21 +420,26 @@ static int webget_curl_download(unsigned char *link,webget_worker *ww)
         ww->f?fclose(ww->f):0;
         ww->f=NULL;
         webget_encoding enc= webget_check_text_encoding(ww->buf,ww->buf_pos);
+
         if(enc!=enc_utf8)
         {
             ww->buf_pos=0;
             unsigned char *temp=ucs_to_utf8((unsigned short*)(ww->buf+2),&ww->buf_pos,enc==enc_ucs_be);
             sfree((void**)&ww->buf);
+
             if(temp)
                 ww->buf=temp;
             else
                 ww->buf_pos=0;
         }
+
         if(fp)
         {
             size_t tmp_len= string_length(fp);
+
             if(tmp_len<4)
                 tmp_len=4;
+
             unsigned char *true_name=zmalloc(tmp_len-3);
             strncpy(true_name,fp,tmp_len-4);
             webget_remove_file(ww->old_fp);
@@ -419,6 +448,7 @@ static int webget_curl_download(unsigned char *link,webget_worker *ww)
             ww->fp=true_name;
         }
     }
+
     return(ret);
 }
 
@@ -435,8 +465,10 @@ static void *webget_worker_thread(void *p)
     ww->stop=&w->stop;
     ww->dwl_mode=(w->dwl==0&&w->parent==NULL)?DOWNLOAD_TO_BUFFER:w->dwl;
     ww->old_fp=clone_string(w->result); //assume that the result has the old filename
+
     if(ww->dwl_mode&DOWNLOAD_TO_FILE)
         ww->save_root_dir=(w->dwl_local?clone_string(w->srf_dir):expand_env_var("%temp%"));
+
     address=w->address;
     w->address=NULL;
     pthread_mutex_unlock(&w->mutex);
@@ -468,13 +500,14 @@ static void *webget_worker_thread(void *p)
 
     switch(ret)
     {
-    case CURLE_COULDNT_CONNECT:
-    case CURLE_UNSUPPORTED_PROTOCOL:
-        extension_send_command(w->ip,w->connect_fail);
-        break;
-    case CURLE_URL_MALFORMAT:
-        extension_send_command(w->ip,w->dwl_fail);
-        break;
+        case CURLE_COULDNT_CONNECT:
+        case CURLE_UNSUPPORTED_PROTOCOL:
+            extension_send_command(w->ip,w->connect_fail);
+            break;
+
+        case CURLE_URL_MALFORMAT:
+            extension_send_command(w->ip,w->dwl_fail);
+            break;
 
     }
 
@@ -579,12 +612,14 @@ static int webget_post_worker_update(webget *w)
                 c->result=zmalloc(len+1);
                 strncpy(c->result,c->temp+ovector2[c->sec_index*2],len);
             }
+
             if(c->dwl)
             {
                 c->update=2;
                 c->address=c->result;
                 c->result=NULL;
             }
+
             if(linked_list_empty(&c->children))
             {
                 sfree((void**)&c->temp);
@@ -595,6 +630,7 @@ static int webget_post_worker_update(webget *w)
             ret=1;
             extension_send_command(c->ip,c->parse_fail_act);
         }
+
         pthread_mutex_unlock(&c->mutex);
     }
 
@@ -610,6 +646,7 @@ static int webget_post_worker_update(webget *w)
 
     if(w->update)
         w->update--;
+
     return(ret);
 }
 
@@ -626,6 +663,7 @@ double webget_update(void *spv)
             memset(&w->worker,0,sizeof(pthread_t));
             w->c_rate=w->u_rate;
         }
+
         int ret=webget_post_worker_update(w); //do the update of the parent and its children
 
         if(w->ww)
@@ -653,14 +691,17 @@ double webget_update(void *spv)
         else
         {
             w->work=1;
+
             while(w->work==1)
             {
                 sched_yield();
             }
+
             if(w->c_rate)
                 w->c_rate--;
         }
     }
+
     return(0.0);
 }
 
@@ -675,6 +716,7 @@ void webget_destroy(void **spv)
 {
     webget *w=*spv;
     webget *wc=NULL;
+
     if(w->work)
     {
         w->stop=1;
@@ -685,8 +727,10 @@ void webget_destroy(void **spv)
     {
         sfree((void**)&w->ww->buf);
         sfree((void**)&w->ww->fp);
+
         if(w->ww->f)
             fclose(w->ww->f);
+
         sfree((void**)&w->ww);
     }
 

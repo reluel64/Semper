@@ -102,8 +102,10 @@ void luaE_setdebt (global_State *g, l_mem debt)
 {
     l_mem tb = gettotalbytes(g);
     lua_assert(tb > 0);
+
     if (debt < tb - MAX_LMEM)
         debt = tb - MAX_LMEM;  /* will make 'totalbytes == MAX_LMEM' */
+
     g->totalbytes = tb - debt;
     g->GCdebt = debt;
 }
@@ -129,6 +131,7 @@ void luaE_freeCI (lua_State *L)
     CallInfo *ci = L->ci;
     CallInfo *next = ci->next;
     ci->next = NULL;
+
     while ((ci = next) != NULL)
     {
         next = ci->next;
@@ -145,6 +148,7 @@ void luaE_shrinkCI (lua_State *L)
 {
     CallInfo *ci = L->ci;
     CallInfo *next2;  /* next's next */
+
     /* while there are two nexts */
     while (ci->next != NULL && (next2 = ci->next->next) != NULL)
     {
@@ -164,8 +168,10 @@ static void stack_init (lua_State *L1, lua_State *L)
     /* initialize stack array */
     L1->stack = luaM_newvector(L, BASIC_STACK_SIZE, TValue);
     L1->stacksize = BASIC_STACK_SIZE;
+
     for (i = 0; i < BASIC_STACK_SIZE; i++)
         setnilvalue(L1->stack + i);  /* erase new stack */
+
     L1->top = L1->stack;
     L1->stack_last = L1->stack + L1->stacksize - EXTRA_STACK;
     /* initialize first ci */
@@ -183,6 +189,7 @@ static void freestack (lua_State *L)
 {
     if (L->stack == NULL)
         return;  /* stack not completely built yet */
+
     L->ci = &L->base_ci;  /* free the entire 'ci' list */
     luaE_freeCI(L);
     lua_assert(L->nci == 0);
@@ -259,8 +266,10 @@ static void close_state (lua_State *L)
     global_State *g = G(L);
     luaF_close(L, L->stack);  /* close all upvalues for this thread */
     luaC_freeallobjects(L);  /* collect all objects */
+
     if (g->version)  /* closing a fully built state? */
         luai_userstateclose(L);
+
     luaM_freearray(L, G(L)->strt.hash, G(L)->strt.size);
     freestack(L);
     lua_assert(gettotalbytes(g) == sizeof(LG));
@@ -316,7 +325,9 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud)
     lua_State *L;
     global_State *g;
     LG *l = cast(LG *, (*f)(ud, NULL, LUA_TTHREAD, sizeof(LG)));
+
     if (l == NULL) return NULL;
+
     L = &l->l.l;
     g = &l->g;
     L->next = NULL;
@@ -347,13 +358,16 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud)
     g->gcfinnum = 0;
     g->gcpause = LUAI_GCPAUSE;
     g->gcstepmul = LUAI_GCMUL;
+
     for (i=0; i < LUA_NUMTAGS; i++) g->mt[i] = NULL;
+
     if (luaD_rawrunprotected(L, f_luaopen, NULL) != LUA_OK)
     {
         /* memory allocation error: free partial state */
         close_state(L);
         L = NULL;
     }
+
     return L;
 }
 

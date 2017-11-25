@@ -114,12 +114,14 @@ static int input_get_command(input_text *it)
                 it->wcommand=it->start_command;
             }
         }
+
         list_enum_part(itc,&it->commands,current)
         {
             if(it->ovec_pos>=it->esti.oveclen/2)
             {
                 extension_tokenize_string_free(&it->esti);
             }
+
             if(itc->index== it->wcommand)
             {
                 if(it->ovec_pos>=it->esti.oveclen/2)
@@ -146,6 +148,7 @@ static int input_get_command(input_text *it)
                     for(size_t i=it->esti.ovecoff[it->ovec_pos*2]; it->esti.ovecoff[it->ovec_pos*2+1]-i>=11; i++)
                     {
                         unsigned char *str=it->current_command+i;
+
                         if(strncasecmp(str,"$TextInput$",11)==0)
                         {
                             /*Found a string that has $TextInput$*/
@@ -153,6 +156,7 @@ static int input_get_command(input_text *it)
                             break;
                         }
                     }
+
                     if(found)
                     {
                         break;
@@ -172,6 +176,7 @@ static int input_get_command(input_text *it)
             }
 
         }
+
         if(found)
             break;
 
@@ -181,6 +186,7 @@ static int input_get_command(input_text *it)
             break;
         }
     }
+
     return(found);
 }
 
@@ -203,12 +209,15 @@ static void input_exec_handler(input_text *it)
 
     it->buf_pos=0;
     input_update_ret_buf(it);
+
     if(it->ovec_pos<it->esti.oveclen/2&&user_inp)
     {
         size_t start=it->esti.ovecoff[it->ovec_pos*2];
         size_t end=it->esti.ovecoff[it->ovec_pos*2+1];
+
         if(it->current_command[start]==';')
             start++;
+
         size_t len=end-start;
         unsigned char *temp=zmalloc(len+1);
         strncpy(temp,it->current_command+start,len);
@@ -260,8 +269,10 @@ static void input_populate_list(input_text *it)
     {
         if(ev==NULL)
             break;
+
         if(strncasecmp("Command",ev,7))
             continue;
+
         input_text_command *itc=zmalloc(sizeof(input_text_command));
         itc->command=clone_string(extension_string(ev,EXTENSION_XPAND_ALL,it->ip,NULL));
         //printf("%s\n",itc->command);
@@ -357,6 +368,7 @@ void input_reset(void *spv,void *ip)
 
     extension_tokenize_string_free(&it->esti);
     it->ovec_pos=0;
+
     if(it->buf_lim)
     {
         it->buf=zmalloc((it->buf_lim+1)*sizeof(unsigned int));
@@ -379,6 +391,7 @@ double input_update(void *spv)
         else
             it->ret_str[it->ret_str_len]= (it->ret_str[it->ret_str_len]=='|'?0:'|');
     }
+
     return(-1.0);
 }
 
@@ -407,6 +420,7 @@ void input_command(void *spv,unsigned char *comm)
                 {
                     it->end_command=it->start_command+1;
                 }
+
                 if(input_get_command(it)>0)
                     crosswin_set_kbd_handler(it->w,input_kbd_handler,spv);
             }
@@ -434,9 +448,11 @@ void input_destroy(void **spv)
     sfree((void**)&it->buf);
     extension_tokenize_string_free(&it->esti);
     input_destroy_list(it);
+
     if(it->w->kb_data==it)
     {
         crosswin_set_kbd_handler(it->w,NULL,NULL);
     }
+
     sfree(spv);
 }

@@ -124,26 +124,30 @@ static inline unsigned char* surface_builtin_code(size_t* size,surface_builtin_t
         "UpdateAction=Update(Background);ForceDraw()\n"
     };
 #endif
+
     if(size)
     {
         switch(tp)
         {
-        default:
-        {
-            return(NULL);
-        }
-        case catalog:
-        {
-            *size=sizeof(catalog_code);
-            return(catalog_code);
-        }
-        case tooltip:
-        {
-            *size=sizeof(tooltip_code);
-            return(tooltip_code);
-        }
+            default:
+            {
+                return(NULL);
+            }
+
+            case catalog:
+            {
+                *size=sizeof(catalog_code);
+                return(catalog_code);
+            }
+
+            case tooltip:
+            {
+                *size=sizeof(tooltip_code);
+                return(tooltip_code);
+            }
         }
     }
+
     return (NULL);
 }
 
@@ -158,48 +162,54 @@ int surface_builtin_init(void *holder,surface_builtin_type tp)
 
     switch(tp)
     {
-    case catalog:
-    {
-        control_data *cd=holder;
-        if(cd->srf_reg == NULL)
+        case catalog:
         {
-            long w = 0;
-            long h = 0;
-            size_t buf_sz=0;
-            unsigned char *buf=surface_builtin_code(&buf_sz,tp);
-            surface_data* sd =surface_load_memory(cd,buf,buf_sz,NULL);
-            crosswin_monitor_resolution(&cd->c, &w, &h);
-            crosswin_set_position(sd->sw, w / 2 - sd->w / 2, h / 2 - sd->h / 2);
-            cd->srf_reg = sd;
-            return(0);
-        }
-        break;
+            control_data *cd=holder;
 
-    }
-    case tooltip:
-    {
-        object *o=holder;
-        surface_data *osd=o->sd;
-        control_data *cd=osd->cd;
-        if(o->ttip == NULL&&(o->ttip_text||o->ttip_title))
+            if(cd->srf_reg == NULL)
+            {
+                long w = 0;
+                long h = 0;
+                size_t buf_sz=0;
+                unsigned char *buf=surface_builtin_code(&buf_sz,tp);
+                surface_data* sd =surface_load_memory(cd,buf,buf_sz,NULL);
+                crosswin_monitor_resolution(&cd->c, &w, &h);
+                crosswin_set_position(sd->sw, w / 2 - sd->w / 2, h / 2 - sd->h / 2);
+                cd->srf_reg = sd;
+                return(0);
+            }
+
+            break;
+
+        }
+
+        case tooltip:
         {
+            object *o=holder;
+            surface_data *osd=o->sd;
+            control_data *cd=osd->cd;
 
-            size_t buf_sz=0;
-            unsigned char *buf=surface_builtin_code(&buf_sz,tp);
-            surface_data* sd =surface_load_memory(cd,buf,buf_sz,NULL);
+            if(o->ttip == NULL&&(o->ttip_text||o->ttip_title))
+            {
 
-            crosswin_set_position(sd->sw, (o->x+osd->x),  o->y+o->h+osd->y);
+                size_t buf_sz=0;
+                unsigned char *buf=surface_builtin_code(&buf_sz,tp);
+                surface_data* sd =surface_load_memory(cd,buf,buf_sz,NULL);
 
-            crosswin_click_through(sd->sw,1);
-            crosswin_set_window_z_order(sd->sw,crosswin_topmost);
-            o->ttip=sd;
-            object_tooltip_update(o);
+                crosswin_set_position(sd->sw, (o->x+osd->x),  o->y+o->h+osd->y);
 
-            return(0);
+                crosswin_click_through(sd->sw,1);
+                crosswin_set_window_z_order(sd->sw,crosswin_topmost);
+                o->ttip=sd;
+                object_tooltip_update(o);
+
+                return(0);
+            }
+
+            break;
         }
-        break;
     }
-    }
+
     return (-1);
 }
 
@@ -251,18 +261,22 @@ int surface_registry_file_to_string(unsigned char* s, unsigned char* d)
                 fwrite(&buf, 1, 1, df);
             }
         }
+
         fputc('"', df);
         fclose(sf);
         fclose(df);
         return (0);
     }
+
     if(sf)
     {
         fclose(sf);
     }
+
     if(df)
     {
         fclose(df);
     }
+
     return (-1);
 }

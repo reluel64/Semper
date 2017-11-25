@@ -24,6 +24,7 @@ static int team_filter(string_tokenizer_status *sts, void* pv)
     {
         return (1);
     }
+
     return (0);
 }
 
@@ -59,6 +60,7 @@ unsigned char team_member(unsigned char *members,unsigned char *rmember)
                 start++;
             }
         }
+
         if(string_strip_space_offsets(members,&start,&end)==0)
         {
             if(members[start]=='"'||members[start]=='\'')

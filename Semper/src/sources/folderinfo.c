@@ -51,6 +51,7 @@ void folderinfo_reset(void* spv, void* ip)
     folderinfo* fi = spv;
     sfree((void**)&fi->path);
     fi->parent = NULL;
+
     if(fi->th)
     {
         fi->stop=1;
@@ -95,11 +96,13 @@ static int folderinfo_collect(unsigned char* root, folderinfo* fi)
     unsigned char *file=root;
     list_entry qbase= {0};
     list_entry_init(&qbase);
+
     while(file)
     {
         size_t fpsz =0;
         WIN32_FIND_DATAW wfd = { 0 };
         void* fh =NULL;
+
         if(fi->stop==0)
         {
             fpsz= string_length(file);
@@ -112,6 +115,7 @@ static int folderinfo_collect(unsigned char* root, folderinfo* fi)
             fh= FindFirstFileExW(filtered_uni,FindExInfoBasic, &wfd,FindExSearchNameMatch,NULL,2);
             sfree((void**)&filtered_uni);
         }
+
         do
         {
             if(fi->stop||fh==INVALID_HANDLE_VALUE)
@@ -208,6 +212,7 @@ static int folderinfo_collect(unsigned char* root, folderinfo* fi)
             break;
         }
     }
+
     return(0);
 }
 
@@ -232,6 +237,7 @@ double folderinfo_update(void* spv)
 {
 
     folderinfo* fi = spv;
+
     if(fi->working==0&&fi->parent == NULL && fi->th == 0)
     {
         int status=0;
@@ -264,14 +270,17 @@ double folderinfo_update(void* spv)
         fi->ofolder_count = fi->parent->ofolder_count;
         fi->osize = fi->parent->osize;
     }
+
     switch(fi->type)
     {
-    case 0:
-        return ((double)fi->ofile_count);
-    case 1:
-        return ((double)fi->ofolder_count);
-    case 2:
-        return ((double)fi->osize);
+        case 0:
+            return ((double)fi->ofile_count);
+
+        case 1:
+            return ((double)fi->ofolder_count);
+
+        case 2:
+            return ((double)fi->osize);
     }
 
     return (0.0);
@@ -281,10 +290,12 @@ void folderinfo_destroy(void** spv)
 {
     folderinfo* fi = *spv;
     fi->stop = 1;
+
     if(fi->th!=0)
     {
         pthread_join(fi->th,NULL);
     }
+
     sfree((void**)&fi->path);
     sfree(spv);
 }

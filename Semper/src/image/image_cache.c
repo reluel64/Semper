@@ -50,6 +50,7 @@ static int image_cache_adjust_color_matrix(image_cache_decoded* icd, image_attri
     matrix[1][1] *= (tint_color_buf[1] / 255.0);
     matrix[2][2] *= (tint_color_buf[0] / 255.0);
     matrix[3][3] *= (tint_color_buf[3] / 255.0);
+
     /*Do grayscale*/
     if(ia->grayscale||ia->inv)
     {
@@ -73,6 +74,7 @@ static int image_cache_adjust_color_matrix(image_cache_decoded* icd, image_attri
                 }
             }
         }
+
         if(ia->inv)
         {
             matrix[4][0] = 1.0;
@@ -118,6 +120,7 @@ static int image_cache_adjust_color_matrix(image_cache_decoded* icd, image_attri
                 else
                     channels[i]=res;
             }
+
             ((unsigned char*)&px)[0] = (channels[2] * channels[3]) >> 8;
             ((unsigned char*)&px)[1] = (channels[1] * channels[3]) >> 8;
             ((unsigned char*)&px)[2] = (channels[0] * channels[3]) >> 8;
@@ -125,6 +128,7 @@ static int image_cache_adjust_color_matrix(image_cache_decoded* icd, image_attri
             ((unsigned int*)icd->image_px)[icd->width * h + w] = px;
         }
     }
+
     return (1);
 }
 
@@ -138,18 +142,20 @@ static void image_cache_flip(image_cache_decoded* icd, int flip)
 
     switch(flip)
     {
-    case 1:
-        cairo_translate(cr, icd->width, 0.0);
-        cairo_scale(cr, -1.0, 1.0);
-        break;
-    case 2:
-        cairo_translate(cr, 0.0, icd->height);
-        cairo_scale(cr, 1.0, -1.0);
-        break;
-    case 3:
-        cairo_translate(cr, (double)icd->width, (double)icd->height);
-        cairo_scale(cr, -1.0, -1.0);
-        break;
+        case 1:
+            cairo_translate(cr, icd->width, 0.0);
+            cairo_scale(cr, -1.0, 1.0);
+            break;
+
+        case 2:
+            cairo_translate(cr, 0.0, icd->height);
+            cairo_scale(cr, 1.0, -1.0);
+            break;
+
+        case 3:
+            cairo_translate(cr, (double)icd->width, (double)icd->height);
+            cairo_scale(cr, -1.0, -1.0);
+            break;
     }
 
     cairo_set_source_surface(cr, image, 0, 0);
@@ -169,6 +175,7 @@ static int image_cache_adjust_opacity(image_cache_decoded* icd, unsigned char op
     {
         return (-1);
     }
+
     int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, icd->width);
 
     cairo_surface_t* image = cairo_image_surface_create_for_data(icd->image_px, CAIRO_FORMAT_ARGB32, icd->width, icd->height, stride);
@@ -196,6 +203,7 @@ static int image_cache_tile(image_cache_decoded* icd, long tw, long th)
     {
         return (-1);
     }
+
     float nh = fmax((float)th, (float)icd->height);
     float nw = fmax((float)tw, (float)icd->width);
     int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, icd->width);
@@ -241,6 +249,7 @@ static int image_cache_scale(image_cache_decoded* icd, long nw, long nh,unsigned
     {
         return (-1);
     }
+
     if(keep_ratio)
     {
         nh=nh>0?nh:(long)icd->height;
@@ -302,28 +311,33 @@ static int image_cache_crop(image_cache_decoded* icd, image_crop* itcd)
 
     switch(itcd->origin)
     {
-    case 1:
-        cropx = cx;
-        cropy = cy;
-        break;
-    case 2:
-        cropx = (icd->width) - cx - cw;
-        cropy = cy;
-        break;
-    case 3:
-        cropx = cx;
-        cropy = (icd->height) - cy - ch;
-        break;
-    case 4:
-        cropy = (icd->height) - cy - ch;
-        cropx = (icd->width) - cx - cw;
-        break;
-    case 5:
-        cropx = (icd->width / 2) + cx;
-        cropy = (icd->height / 2) + cy;
-        break;
-    default:
-        return (-1);
+        case 1:
+            cropx = cx;
+            cropy = cy;
+            break;
+
+        case 2:
+            cropx = (icd->width) - cx - cw;
+            cropy = cy;
+            break;
+
+        case 3:
+            cropx = cx;
+            cropy = (icd->height) - cy - ch;
+            break;
+
+        case 4:
+            cropy = (icd->height) - cy - ch;
+            cropx = (icd->width) - cx - cw;
+            break;
+
+        case 5:
+            cropx = (icd->width / 2) + cx;
+            cropy = (icd->height / 2) + cy;
+            break;
+
+        default:
+            return (-1);
     }
 
     int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, icd->width);
@@ -380,6 +394,7 @@ static inline image_types image_cache_detect_format(FILE *fh)
     {
         return (png);
     }
+
     return (none);
 }
 
@@ -408,20 +423,24 @@ static inline int image_cache_decode(unsigned char* path, image_cache_decoded* i
     {
         return (-1);
     }
+
     switch(image_cache_detect_format(fh))
     {
-    case jpeg:
-        ret = image_cache_decode_jpeg(fh, icd);
-        break;
-    case png:
-        ret = image_cache_decode_png(fh, icd);
-        break;
-    case bitmap:
-        ret = image_cache_decode_bmp(fh, icd);
-        break;
-    case none:
-        ret=image_cache_decode_svg(fh,icd);
-        break;
+        case jpeg:
+            ret = image_cache_decode_jpeg(fh, icd);
+            break;
+
+        case png:
+            ret = image_cache_decode_png(fh, icd);
+            break;
+
+        case bitmap:
+            ret = image_cache_decode_bmp(fh, icd);
+            break;
+
+        case none:
+            ret=image_cache_decode_svg(fh,icd);
+            break;
     }
 
     fseek(fh,0,SEEK_SET);
@@ -441,6 +460,7 @@ int image_cache_init(control_data *cd)
         cd->ich = zmalloc(sizeof(image_cache));
         list_entry_init(&((image_cache*)cd->ich)->images);
     }
+
     return (0);
 }
 
@@ -485,22 +505,24 @@ static int image_cache_load_image(image_cache_decoded *icd,image_attributes *ia)
 
     switch(ia->tile)
     {
-    case 1:
-    {
-        image_cache_tile(icd, ia->rw, ia->rh);
-        break;
-    }
-    case 2:
-    {
-        image_cache_scale(icd, ia->tpm.w, ia->tpm.h,ia->keep_ratio);
-        image_cache_tile(icd, ia->rw, ia->rh);
-        break;
-    }
-    default:
-    {
-        image_cache_scale(icd, ia->rw, ia->rh,ia->keep_ratio);
-        break;
-    }
+        case 1:
+        {
+            image_cache_tile(icd, ia->rw, ia->rh);
+            break;
+        }
+
+        case 2:
+        {
+            image_cache_scale(icd, ia->tpm.w, ia->tpm.h,ia->keep_ratio);
+            image_cache_tile(icd, ia->rw, ia->rh);
+            break;
+        }
+
+        default:
+        {
+            image_cache_scale(icd, ia->rw, ia->rh,ia->keep_ratio);
+            break;
+        }
     }
 
     if(ia->opacity != 255)
@@ -677,6 +699,7 @@ void image_cache_image_parameters(void* r, image_attributes *ia, unsigned char f
         {
             ia->flip=0;
         }
+
         sfree((void**)&temp);
     }
     else
@@ -691,30 +714,35 @@ void image_cache_image_parameters(void* r, image_attributes *ia, unsigned char f
     parameter_image_crop(r, buf, &ia->cpm, flags);
 
     snprintf(buf, sizeof(buf), "%sColorMatrix", pre);
+
     if(parameter_color_matrix(r, buf, vcm, flags))
     {
         ia->cm[0] = 1.0;
     }
 
     snprintf(buf, sizeof(buf), "%sColorMatrix1", pre);
+
     if(parameter_color_matrix(r, buf, vcm + 5, flags))
     {
         ia->cm[6] = 1.0;
     }
 
     snprintf(buf, sizeof(buf), "%sColorMatrix2", pre);
+
     if(parameter_color_matrix(r, buf, vcm + 10, flags))
     {
         ia->cm[12] = 1.0;
     }
 
     snprintf(buf, sizeof(buf), "%sColorMatrix3", pre);
+
     if(parameter_color_matrix(r, buf, vcm + 15, flags))
     {
         ia->cm[18] = 1.0;
     }
 
     snprintf(buf, sizeof(buf), "%sColorMatrix4", pre);
+
     if(parameter_color_matrix(r, buf, vcm + 20, flags))
     {
         ia->cm[24] = 1.0;
@@ -731,6 +759,7 @@ void image_cache_unref_image(void *ic,image_attributes *ia,unsigned char riz)
         {
             ie->refs--;
         }
+
         if(riz&&ie&&ie->refs==0)
         {
             image_cache_remove_entry(&ie);
@@ -744,6 +773,7 @@ int image_cache_query_image(void *ic,image_attributes *ia,unsigned char **px,lon
     {
         *px=NULL;
     }
+
     if(ic == NULL || ia == NULL)
     {
         return (-1);

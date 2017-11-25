@@ -28,11 +28,13 @@ void crosswin_init(crosswin* c)
 
     xlib_init_display(c);
     Screen *s=DefaultScreenOfDisplay(c->display);
+
     if(s)
     {
         c->sw=s->width;
         c->sh=s->height;
     }
+
 #endif
 }
 
@@ -45,11 +47,13 @@ int crosswin_update(crosswin* c)
     c->sw = GetSystemMetrics(SM_CXSCREEN);
 #elif __linux__
     Screen *s=DefaultScreenOfDisplay(c->display);
+
     if(s)
     {
         c->sw=s->width;
         c->sh=s->height;
     }
+
 #endif
     return(oh!=c->sh||ow!=c->sw);
 }
@@ -104,18 +108,22 @@ void crosswin_click_through(window* w, unsigned char state)
 void crosswin_draw(window* w)
 {
     crosswin* c = w->c;
+
     if(w->keep_on_screen == 1)
     {
         if(w->x < 0)
             w->x = 0;
         else if(w->x + w->w > c->sw)
             w->x = max(c->sw - w->w, 0);
+
         if(w->y < 0)
             w->y = 0;
         else if(w->y + w->h > c->sh)
             w->y = max(c->sh - w->h, 0);
+
         crosswin_set_position(w, w->x, w->y);
     }
+
 #ifdef WIN32
 
     win32_draw(w);

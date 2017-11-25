@@ -45,6 +45,7 @@ void histogram_reset(object* o)
         {
             if(i == 0)
                 break;
+
             linked_list_remove(&hv->current);
             sfree((void**)&hv);
             i--;
@@ -56,6 +57,7 @@ void histogram_reset(object* o)
         {
             if(i == 0)
                 break;
+
             linked_list_remove(&hv->current);
             sfree((void**)&hv);
             i--;
@@ -79,10 +81,12 @@ void histogram_reset(object* o)
     {
         image_cache_image_parameters(o, &ho->h1ia, XPANDER_OBJECT, "Histogram");
     }
+
     if(ho->h2ia.path)
     {
         image_cache_image_parameters(o, &ho->h2ia, XPANDER_OBJECT, "Histogram2");
     }
+
     if(ho->hcia.path)
     {
         image_cache_image_parameters(o, &ho->hcia, XPANDER_OBJECT, "Overlap");
@@ -93,6 +97,7 @@ void histogram_destroy(object* o)
 {
     histogram_object* ho = o->pv;
     surface_data *sd=o->sd;
+
     if(ho)
     {
         histogram_value* hv = NULL;
@@ -148,6 +153,7 @@ int histogram_update(object* o)
     {
         ho->max_val_1 = bn.max;
     }
+
     if(bn.min < ho->min_val_1)
     {
         ho->min_val_1 = bn.min;
@@ -298,6 +304,7 @@ int histogram_render(object* o, cairo_t* cr)
                 cx = 0.0;
                 cw = -cw;
             }
+
             if(ho->reverse_origin)
             {
                 cy = i;
@@ -362,6 +369,7 @@ int histogram_render(object* o, cairo_t* cr)
                     cx = o->w * common;
                     cw = -cw;
                 }
+
                 if(ho->reverse_origin)
                 {
                     cy = i;
@@ -394,6 +402,7 @@ int histogram_render(object* o, cairo_t* cr)
             image_surface = NULL;
         }
     }
+
     image_cache_unref_image(sd->cd->ich, &ho->h1ia,0);
     image_cache_unref_image(sd->cd->ich, &ho->h2ia,0);
     image_cache_unref_image(sd->cd->ich, &ho->hcia,0);

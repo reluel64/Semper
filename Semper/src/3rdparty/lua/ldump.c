@@ -85,6 +85,7 @@ static void DumpString (const TString *s, DumpState *D)
     {
         size_t size = tsslen(s) + 1;  /* include trailing '\0' */
         const char *str = getstr(s);
+
         if (size < 0xFF)
             DumpByte(cast_int(size), D);
         else
@@ -92,6 +93,7 @@ static void DumpString (const TString *s, DumpState *D)
             DumpByte(0xFF, D);
             DumpVar(size, D);
         }
+
         DumpVector(str, size - 1, D);  /* no need to save '\0' */
     }
 }
@@ -111,29 +113,36 @@ static void DumpConstants (const Proto *f, DumpState *D)
     int i;
     int n = f->sizek;
     DumpInt(n, D);
+
     for (i = 0; i < n; i++)
     {
         const TValue *o = &f->k[i];
         DumpByte(ttype(o), D);
+
         switch (ttype(o))
         {
-        case LUA_TNIL:
-            break;
-        case LUA_TBOOLEAN:
-            DumpByte(bvalue(o), D);
-            break;
-        case LUA_TNUMFLT:
-            DumpNumber(fltvalue(o), D);
-            break;
-        case LUA_TNUMINT:
-            DumpInteger(ivalue(o), D);
-            break;
-        case LUA_TSHRSTR:
-        case LUA_TLNGSTR:
-            DumpString(tsvalue(o), D);
-            break;
-        default:
-            lua_assert(0);
+            case LUA_TNIL:
+                break;
+
+            case LUA_TBOOLEAN:
+                DumpByte(bvalue(o), D);
+                break;
+
+            case LUA_TNUMFLT:
+                DumpNumber(fltvalue(o), D);
+                break;
+
+            case LUA_TNUMINT:
+                DumpInteger(ivalue(o), D);
+                break;
+
+            case LUA_TSHRSTR:
+            case LUA_TLNGSTR:
+                DumpString(tsvalue(o), D);
+                break;
+
+            default:
+                lua_assert(0);
         }
     }
 }
@@ -144,6 +153,7 @@ static void DumpProtos (const Proto *f, DumpState *D)
     int i;
     int n = f->sizep;
     DumpInt(n, D);
+
     for (i = 0; i < n; i++)
         DumpFunction(f->p[i], f->source, D);
 }
@@ -153,6 +163,7 @@ static void DumpUpvalues (const Proto *f, DumpState *D)
 {
     int i, n = f->sizeupvalues;
     DumpInt(n, D);
+
     for (i = 0; i < n; i++)
     {
         DumpByte(f->upvalues[i].instack, D);
@@ -169,14 +180,17 @@ static void DumpDebug (const Proto *f, DumpState *D)
     DumpVector(f->lineinfo, n, D);
     n = (D->strip) ? 0 : f->sizelocvars;
     DumpInt(n, D);
+
     for (i = 0; i < n; i++)
     {
         DumpString(f->locvars[i].varname, D);
         DumpInt(f->locvars[i].startpc, D);
         DumpInt(f->locvars[i].endpc, D);
     }
+
     n = (D->strip) ? 0 : f->sizeupvalues;
     DumpInt(n, D);
+
     for (i = 0; i < n; i++)
         DumpString(f->upvalues[i].name, D);
 }
@@ -188,6 +202,7 @@ static void DumpFunction (const Proto *f, TString *psource, DumpState *D)
         DumpString(NULL, D);  /* no debug info or same source as its parent */
     else
         DumpString(f->source, D);
+
     DumpInt(f->linedefined, D);
     DumpInt(f->lastlinedefined, D);
     DumpByte(f->numparams, D);

@@ -2,6 +2,7 @@
 case 1017:
 case 8172:
 return 7;
+
 case 7944:
 case 7945:
 case 7946:
@@ -81,90 +82,126 @@ case 8153:
 case 8168:
 case 8169:
 return 8;
+
 case 8124:
 case 8140:
 case 8188:
 return 9;
+
 case 503:
 return 56;
+
 case 1012:
 return 60;
+
 case 8122:
 case 8123:
 return 74;
+
 case 8136:
 case 8137:
 case 8138:
 case 8139:
 return 86;
+
 case 502:
 return 97;
+
 case 8154:
 case 8155:
 return 100;
+
 case 8170:
 case 8171:
 return 112;
+
 case 376:
 return 121;
+
 case 8186:
 case 8187:
 return 126;
+
 case 8184:
 case 8185:
 return 128;
+
 case 544:
 case 1021:
 case 1022:
 case 1023:
 return 130;
+
 case 573:
 return 163;
+
 case 579:
 return 195;
+
 case 304:
 return 199;
+
 case 11363:
 return 3814;
+
 case 8486:
 return 7517;
+
 case 7838:
 return 7615;
+
 case 8491:
 return 8262;
+
 case 8490:
 return 8383;
+
 case 11364:
 return 10727;
+
 case 11362:
 return 10743;
+
 case 11374:
 return 10749;
+
 case 11373:
 return 10780;
+
 case 11376:
 return 10782;
+
 case 11375:
 return 10783;
+
 case 11390:
 case 11391:
 return 10815;
+
 case 42877:
 return 35332;
+
 case 42928:
 return 42258;
+
 case 42893:
 return 42280;
+
 case 42929:
 return 42282;
+
 case 42925:
 return 42305;
+
 case 42922:
 return 42308;
+
 case 42924:
 return 42315;
+
 case 42923:
 return 42319;
+
 case 65:
 case 66:
 case 67:
@@ -338,6 +375,7 @@ case 71869:
 case 71870:
 case 71871:
 return -32;
+
 case 256:
 case 258:
 case 260:
@@ -868,68 +906,94 @@ case 42916:
 case 42918:
 case 42920:
 return -1;
+
 case 385:
 return -210;
+
 case 390:
 return -206;
+
 case 393:
 case 394:
 case 403:
 return -205;
+
 case 398:
 return -79;
+
 case 399:
 return -202;
+
 case 400:
 return -203;
+
 case 404:
 return -207;
+
 case 406:
 case 412:
 return -211;
+
 case 407:
 return -209;
+
 case 413:
 return -213;
+
 case 415:
 return -214;
+
 case 422:
 case 425:
 case 430:
 return -218;
+
 case 433:
 case 434:
 return -217;
+
 case 439:
 return -219;
+
 case 452:
 case 455:
 case 458:
 case 497:
 return -2;
+
 case 570:
 return -10795;
+
 case 574:
 return -10792;
+
 case 580:
 return -69;
+
 case 581:
 return -71;
+
 case 895:
 return -116;
+
 case 902:
 return -38;
+
 case 904:
 case 905:
 case 906:
 return -37;
+
 case 908:
 return -64;
+
 case 910:
 case 911:
 return -63;
+
 case 975:
 return -8;
+
 case 1024:
 case 1025:
 case 1026:
@@ -947,8 +1011,10 @@ case 1037:
 case 1038:
 case 1039:
 return -80;
+
 case 1216:
 return -15;
+
 case 1329:
 case 1330:
 case 1331:
@@ -1035,6 +1101,7 @@ case 11308:
 case 11309:
 case 11310:
 return -48;
+
 case 4256:
 case 4257:
 case 4258:
@@ -1076,8 +1143,10 @@ case 4293:
 case 4295:
 case 4301:
 return -7264;
+
 case 8498:
 return -28;
+
 case 8544:
 case 8545:
 case 8546:
@@ -1095,6 +1164,7 @@ case 8557:
 case 8558:
 case 8559:
 return -16;
+
 case 9398:
 case 9399:
 case 9400:
@@ -1122,6 +1192,7 @@ case 9421:
 case 9422:
 case 9423:
 return -26;
+
 case 66560:
 case 66561:
 case 66562:

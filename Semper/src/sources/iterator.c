@@ -63,10 +63,12 @@ void iterator_command(void* spv, unsigned char* command)
     if(command && spv)
     {
         iterator_info* ii = spv;
+
         if(strcasecmp(command, "Start") == 0)
         {
             ii->stop = 0;
         }
+
         if(strcasecmp(command, "Stop") == 0)
         {
             ii->stop = 1;

@@ -19,36 +19,42 @@ static inline section parameter_dispatch_section(void* r, section* shead, unsign
     {
         return (NULL);
     }
+
     switch(flag & 0x1C)
     {
-    case XPANDER_REQUESTOR_OBJECT:
-    {
-        object* ro = r;
-        surface_data* sd = ro->sd;
-        *shead = &sd->skhead;
-        return (ro->os);
-    }
-    case XPANDER_REQUESTOR_SOURCE:
-    {
-        source* rs = r;
-        surface_data* sd = rs->sd;
-        *shead = &sd->skhead;
-        return (rs->cs);
-    }
-    case XPANDER_REQUESTOR_SURFACE:
-    {
-
-        surface_data* sd = r;
-        *shead = &sd->skhead;
-        if(flag & 0x20)
+        case XPANDER_REQUESTOR_OBJECT:
         {
-            *shead = &sd->cd->shead;
-            return (sd->scd);
+            object* ro = r;
+            surface_data* sd = ro->sd;
+            *shead = &sd->skhead;
+            return (ro->os);
         }
-        return (sd->spm);
-    }
-    default:
-        return (NULL);
+
+        case XPANDER_REQUESTOR_SOURCE:
+        {
+            source* rs = r;
+            surface_data* sd = rs->sd;
+            *shead = &sd->skhead;
+            return (rs->cs);
+        }
+
+        case XPANDER_REQUESTOR_SURFACE:
+        {
+
+            surface_data* sd = r;
+            *shead = &sd->skhead;
+
+            if(flag & 0x20)
+            {
+                *shead = &sd->cd->shead;
+                return (sd->scd);
+            }
+
+            return (sd->spm);
+        }
+
+        default:
+            return (NULL);
     }
 }
 
@@ -62,6 +68,7 @@ double parameter_double(void* req, unsigned char* npm, double def, unsigned char
     {
         return (ret);
     }
+
     xpander_request xr;
     memset(&xr, 0, sizeof(xpander_request));
     xr.req_type = xpander_flags;
@@ -100,6 +107,7 @@ size_t parameter_size_t(void* req, unsigned char* npm, size_t def, unsigned char
     {
         return (ret);
     }
+
     xpander_request xr;
     memset(&xr, 0, sizeof(xpander_request));
     xr.req_type = xpander_flags;
@@ -148,6 +156,7 @@ unsigned char* parameter_string(void* req, unsigned char* npm, unsigned char* de
     unsigned char* ret = NULL;
     section shead = NULL;
     section s = parameter_dispatch_section(req, &shead, xpander_flags);
+
     if(!npm || !s)
     {
         return (clone_string(def));
@@ -165,10 +174,12 @@ unsigned char* parameter_string(void* req, unsigned char* npm, unsigned char* de
     {
         xr.os = ancestor(req, npm, xpander_flags);
     }
+
     if(xr.os == NULL)
     {
         return (clone_string(def));
     }
+
     if(xpander(&xr))
     {
         ret = xr.es;
@@ -177,6 +188,7 @@ unsigned char* parameter_string(void* req, unsigned char* npm, unsigned char* de
     {
         ret = clone_string(xr.os);
     }
+
     xr.os = NULL;
     return (ret);
 }
@@ -187,10 +199,12 @@ unsigned int parameter_color(void* req, unsigned char* npm, unsigned int def, un
 
     section shead = NULL;
     section s = parameter_dispatch_section(req, &shead, xpander_flags);
+
     if(!npm || !s)
     {
         return (def);
     }
+
     xpander_request xr;
     memset(&xr, 0, sizeof(xpander_request));
     xr.req_type = xpander_flags;
@@ -203,6 +217,7 @@ unsigned int parameter_color(void* req, unsigned char* npm, unsigned int def, un
     {
         xr.os = ancestor(req, npm, xpander_flags);
     }
+
     if(xpander(&xr))
     {
         ret = string_to_color(xr.es);
@@ -212,6 +227,7 @@ unsigned int parameter_color(void* req, unsigned char* npm, unsigned int def, un
     {
         ret = string_to_color(xr.os);
     }
+
     xr.os = NULL;
     return (ret);
 }
@@ -221,10 +237,12 @@ int parameter_image_tile(void* req, unsigned char* npm, image_tile* param, unsig
     int ret = 1;
     section shead = NULL;
     section s = parameter_dispatch_section(req, &shead, xpander_flags);
+
     if(!npm || !param || !s)
     {
         return (0);
     }
+
     xpander_request xr;
     memset(&xr, 0, sizeof(xpander_request));
     xr.req_type = xpander_flags;
@@ -233,10 +251,12 @@ int parameter_image_tile(void* req, unsigned char* npm, image_tile* param, unsig
     memset(param, 0, sizeof(image_tile));
     key k = skeleton_get_key(s, npm);
     xr.os = skeleton_key_value(k);
+
     if(xr.os == NULL)
     {
         xr.os = ancestor(req, npm, xpander_flags);
     }
+
     if(xpander(&xr))
     {
         string_to_image_tile(xr.es, param);
@@ -246,6 +266,7 @@ int parameter_image_tile(void* req, unsigned char* npm, image_tile* param, unsig
     {
         string_to_image_tile(xr.os, param);
     }
+
     xr.os = NULL;
     return (ret);
 }
@@ -255,10 +276,12 @@ int parameter_object_padding(void* req, unsigned char* npm, object_padding* para
     int ret = -1;
     section shead = NULL;
     section s = parameter_dispatch_section(req, &shead, xpander_flags);
+
     if(!npm || !param || !s)
     {
         return (0);
     }
+
     xpander_request xr;
     memset(&xr, 0, sizeof(xpander_request));
     xr.req_type = xpander_flags;
@@ -267,10 +290,12 @@ int parameter_object_padding(void* req, unsigned char* npm, object_padding* para
     memset(param, 0, sizeof(object_padding));
     key k = skeleton_get_key(s, npm);
     xr.os = skeleton_key_value(k);
+
     if(xr.os == NULL)
     {
         xr.os = ancestor(req, npm, xpander_flags);
     }
+
     if(xpander(&xr))
     {
         string_to_padding(xr.es, param);
@@ -282,6 +307,7 @@ int parameter_object_padding(void* req, unsigned char* npm, object_padding* para
         string_to_padding(xr.os, param);
         ret = 0;
     }
+
     xr.os = NULL;
     return (ret);
 }
@@ -291,10 +317,12 @@ int parameter_image_crop(void* req, unsigned char* npm, image_crop* param, unsig
     int ret = -1;
     section shead = NULL;
     section s = parameter_dispatch_section(req, &shead, xpander_flags);
+
     if(!npm || !param || !s)
     {
         return (0);
     }
+
     xpander_request xr;
     memset(&xr, 0, sizeof(xpander_request));
     xr.req_type = xpander_flags;
@@ -308,6 +336,7 @@ int parameter_image_crop(void* req, unsigned char* npm, image_crop* param, unsig
     {
         xr.os = ancestor(req, npm, xpander_flags);
     }
+
     if(xpander(&xr))
     {
         string_to_image_crop(xr.es, param);
@@ -319,6 +348,7 @@ int parameter_image_crop(void* req, unsigned char* npm, image_crop* param, unsig
         string_to_image_crop(xr.os, param);
         ret = 0;
     }
+
     xr.os = NULL;
     return (ret);
 }
@@ -328,10 +358,12 @@ int parameter_color_matrix(void* req, unsigned char* npm, double* cm, unsigned c
     int ret = -1;
     section shead = NULL;
     section s = parameter_dispatch_section(req, &shead, xpander_flags);
+
     if(!npm || !cm || !s)
     {
         return (0);
     }
+
     xpander_request xr;
     memset(&xr, 0, sizeof(xpander_request));
     xr.req_type = xpander_flags;
@@ -346,6 +378,7 @@ int parameter_color_matrix(void* req, unsigned char* npm, double* cm, unsigned c
     {
         xr.os = ancestor(req, npm, xpander_flags);
     }
+
     if(xpander(&xr))
     {
         string_to_color_matrix(xr.es, cm);
@@ -367,10 +400,12 @@ unsigned int parameter_self_scaling(void* req, unsigned char* npm, unsigned int 
     unsigned int ret = def;
     section shead = NULL;
     section s = parameter_dispatch_section(req, &shead, xpander_flags);
+
     if(!npm || !s)
     {
         return (def);
     }
+
     xpander_request xr;
     memset(&xr, 0, sizeof(xpander_request));
     xr.req_type = xpander_flags;
@@ -383,6 +418,7 @@ unsigned int parameter_self_scaling(void* req, unsigned char* npm, unsigned int 
     {
         xr.os = ancestor(req, npm, xpander_flags);
     }
+
     if(xpander(&xr))
     {
 
@@ -405,6 +441,7 @@ unsigned int parameter_self_scaling(void* req, unsigned char* npm, unsigned int 
                 ret = 4;
             }
         }
+
         sfree((void**)&xr.es);
     }
     else if(xr.os)
@@ -426,6 +463,7 @@ unsigned int parameter_self_scaling(void* req, unsigned char* npm, unsigned int 
             ret = 4;
         }
     }
+
     xr.os = NULL;
     return (ret);
 }

@@ -77,21 +77,24 @@ void string_reset(object* o)
     {
         string_attr_update(so);
     }
+
     /*Set the layout attributes*/
     pango_layout_set_wrap(so->layout,PANGO_WRAP_WORD_CHAR);
     pango_layout_set_ellipsize(so->layout, so->ellipsize?PANGO_ELLIPSIZE_END:PANGO_ELLIPSIZE_NONE);
 
     switch(so->align)
     {
-    case 1:
-        pango_layout_set_alignment(so->layout, PANGO_ALIGN_RIGHT);
-        break;
-    case 2:
-        pango_layout_set_alignment(so->layout, PANGO_ALIGN_CENTER);
-        break;
-    default:
-        pango_layout_set_alignment(so->layout, PANGO_ALIGN_LEFT);
-        break;
+        case 1:
+            pango_layout_set_alignment(so->layout, PANGO_ALIGN_RIGHT);
+            break;
+
+        case 2:
+            pango_layout_set_alignment(so->layout, PANGO_ALIGN_CENTER);
+            break;
+
+        default:
+            pango_layout_set_alignment(so->layout, PANGO_ALIGN_LEFT);
+            break;
     }
 }
 
@@ -117,6 +120,7 @@ int string_update(object* o)
     {
         sfree((void**)&(so)->bind_string);
     }
+
     so->bind_string=NULL;
 
     sb.decimals = so->decimals;
@@ -144,6 +148,7 @@ int string_update(object* o)
     {
         pango_layout_set_width(so->layout, -1);
     }
+
     if(o->h < 0)
     {
         pango_layout_set_height(so->layout, -1);
@@ -202,6 +207,7 @@ int string_render(object* o, cairo_t* cr)
         };
         pango_attr_list_filter(so->attr_list,string_attr_color_handler,(void*)pm);
     }
+
     so->was_outlined=0;
     cairo_translate(cr, -PADDING_W / 2.0, -PADDING_H / 2.0 );
     return (0);
@@ -223,6 +229,7 @@ void string_destroy(object* o)
         {
             sfree((void**)&(so)->bind_string);
         }
+
         so->bind_string=NULL;
         sfree((void**)&(so)->string);
         sfree((void**)&o->pv);

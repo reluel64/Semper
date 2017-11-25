@@ -70,6 +70,7 @@ static line_data* line_data_alloc(line_object* lo, size_t index)
         {
             return (ld);
         }
+
         if(n && p)
         {
             break;
@@ -93,6 +94,7 @@ static line_data* line_data_alloc(line_object* lo, size_t index)
     {
         _linked_list_add(&p->current, &ld->current, &n->current);
     }
+
     return (ld);
 }
 
@@ -109,10 +111,12 @@ static int line_cleanup_invalid_entries(object* o)
 
         snprintf(buf, sizeof(buf), (unsigned char*)(ld->index > 0 ? "LineColor%llu" : "LineColor"), ld->index);
         unsigned char* p = parameter_string(o, buf, NULL, XPANDER_OBJECT);
+
         if(p == NULL)
         {
             line_data_destroy(&ld);
         }
+
         sfree((void**)&p);
     }
     return (0);
@@ -196,6 +200,7 @@ void line_reset(object* o)
             }
         }
     }
+
     lo->v_count = lo->max_pts;
 }
 
@@ -214,10 +219,12 @@ int line_update(object* o)
         {
             ld->max = bn.max;
         }
+
         if(ld->min > bn.min)
         {
             ld->min = bn.min;
         }
+
         line_value* lv = zmalloc(sizeof(line_value));
         lv->value = bn.val;
         list_entry_init(&lv->current);
@@ -259,6 +266,7 @@ int line_render(object* o, cairo_t* cr)
             {
                 x = i;
             }
+
             if(lo->flip)
             {
                 y = height * p;
@@ -268,15 +276,18 @@ int line_render(object* o, cairo_t* cr)
             {
                 y = height - i;
                 x = width - width * p;
+
                 if(lo->reverse)
                 {
                     y = i;
                 }
+
                 if(lo->flip)
                 {
                     x = width * p;
                 }
             }
+
             i++;
             cairo_line_to(cr, x, y);
         }

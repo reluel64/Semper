@@ -39,6 +39,7 @@ SEMPER_API double extension_double(unsigned char* pn, void* ip, double def)
     {
         return (def);
     }
+
     source* s = ip;
 
     return (parameter_double(s, pn, def, XPANDER_SOURCE));
@@ -58,6 +59,7 @@ SEMPER_API size_t extension_size_t(unsigned char* pn, void* ip, size_t def)
 SEMPER_API int extension_set_max(double val, void* ip, unsigned char force, unsigned char hold)
 {
     source* s = ip;
+
     if(s)
     {
         if(force || val > s->max_val)
@@ -67,6 +69,7 @@ SEMPER_API int extension_set_max(double val, void* ip, unsigned char force, unsi
             return (1);
         }
     }
+
     return (0);
 }
 SEMPER_API int extension_set_min(double val, void* ip, unsigned char force, unsigned char hold)
@@ -82,6 +85,7 @@ SEMPER_API int extension_set_min(double val, void* ip, unsigned char force, unsi
             return (1);
         }
     }
+
     return (0);
 }
 
@@ -123,16 +127,19 @@ SEMPER_API void* extension_by_name(unsigned char* name, void* ip)
     {
         return (source_by_name(s->sd, name,-1));
     }
+
     return (NULL);
 }
 
 SEMPER_API void* extension_private(void* ip)
 {
     source* s = ip;
+
     if(s)
     {
         return (s->pv);
     }
+
     return (NULL);
 }
 
@@ -140,6 +147,7 @@ SEMPER_API int extension_parent_candidate(void* pc, void* ip)
 {
     source* s = ip;
     source* sp = pc;
+
     if(sp && s)
     {
         if(s->type==sp->type)
@@ -152,9 +160,11 @@ SEMPER_API int extension_parent_candidate(void* pc, void* ip)
             {
                 return(0);
             }
+
             return(1);
         }
     }
+
     return (0);
 }
 
@@ -164,6 +174,7 @@ static int extension_command_handler(extension_command* ec)
     {
         return (-1);
     }
+
     command(ec->sd, &ec->comm);
     sfree((void**)&ec->comm);
     sfree((void**)&ec);
@@ -193,6 +204,7 @@ SEMPER_API int extension_has_parent(unsigned char* str)
     {
         return (1);
     }
+
     return (0);
 }
 
@@ -209,11 +221,13 @@ SEMPER_API void* extension_get_parent(unsigned char* str, void* ip)
     {
         source* s = ip;
         source* p = source_by_name(s->sd, str + 1,strl-2);
+
         if(extension_parent_candidate(p, s))
         {
             return (p);
         }
     }
+
     return (NULL);
 }
 
@@ -224,6 +238,7 @@ SEMPER_API int extension_tokenize_string(extension_string_tokenizer_info *esti)
     {
         return (-1);
     }
+
     return (string_tokenizer((string_tokenizer_info*)esti));
 }
 
@@ -245,20 +260,20 @@ SEMPER_API unsigned char *extension_get_path(void *ip,unsigned char pth)
 
     switch(pth)
     {
-    default:
-        return(NULL);
+        default:
+            return(NULL);
 
-    case EXTENSION_PATH_SEMPER:
-        return(cd->root_dir);
+        case EXTENSION_PATH_SEMPER:
+            return(cd->root_dir);
 
-    case EXTENSION_PATH_EXTENSIONS:
-        return(cd->ext_dir);
+        case EXTENSION_PATH_EXTENSIONS:
+            return(cd->ext_dir);
 
-    case EXTENSION_PATH_SURFACE:
-        return(sd->sp.surface_dir);
+        case EXTENSION_PATH_SURFACE:
+            return(sd->sp.surface_dir);
 
-    case EXTENSION_PATH_SURFACES:
-        return(cd->surface_dir);
+        case EXTENSION_PATH_SURFACES:
+            return(cd->surface_dir);
     }
 }
 
@@ -278,25 +293,28 @@ SEMPER_API unsigned char *extension_absolute_path(void *ip,unsigned char *rp,uns
 
     switch(pth)
     {
-    default:
-        return(NULL);
+        default:
+            return(NULL);
 
-    case EXTENSION_PATH_SEMPER:
-        root=cd->root_dir;
-        rootl=cd->root_dir_length;
-        break;
-    case EXTENSION_PATH_EXTENSIONS:
-        root=cd->ext_dir;
-        rootl=cd->ext_dir_length;
-        break;
-    case EXTENSION_PATH_SURFACE:
-        root=sd->sp.surface_dir;
-        rootl=string_length(sd->sp.surface_dir);
-        break;
-    case EXTENSION_PATH_SURFACES:
-        root=cd->surface_dir;
-        rootl=cd->surface_dir_length;
-        break;
+        case EXTENSION_PATH_SEMPER:
+            root=cd->root_dir;
+            rootl=cd->root_dir_length;
+            break;
+
+        case EXTENSION_PATH_EXTENSIONS:
+            root=cd->ext_dir;
+            rootl=cd->ext_dir_length;
+            break;
+
+        case EXTENSION_PATH_SURFACE:
+            root=sd->sp.surface_dir;
+            rootl=string_length(sd->sp.surface_dir);
+            break;
+
+        case EXTENSION_PATH_SURFACES:
+            root=cd->surface_dir;
+            rootl=cd->surface_dir_length;
+            break;
     }
 
     if(root)

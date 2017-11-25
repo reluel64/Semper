@@ -66,6 +66,7 @@ static int object_routines_table(object_routine_entry **ore,unsigned char *on)
             return(i+1);
         }
     }
+
     return(0);
 }
 
@@ -150,6 +151,7 @@ int object_calculate_coordinates(object* o)
         pox = po->x;
         poy = po->y;
     }
+
     long nx=o->x;
     long ny=o->y;
     unsigned char reps[260] = { 0 };
@@ -189,6 +191,7 @@ static void object_render_internal(object* o, cairo_t* cr)
         cairo_matrix_rotate(&m, DEG2RAD(o->angle));
         cairo_matrix_translate(&m, -w / 2, -h / 2);
     }
+
     cairo_save(cr);
     cairo_set_matrix(cr, &m);
 
@@ -198,6 +201,7 @@ static void object_render_internal(object* o, cairo_t* cr)
     {
         o->object_render_rtn(o, cr);
     }
+
     cairo_restore(cr);
 }
 
@@ -236,6 +240,7 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
     object *lo=NULL;
     unsigned char found = 0;
     unsigned char mouse_ret=0;
+
     if(ms->x >= 0 && ms->y >= 0 && ms->x < sd->w && ms->y < sd->h)
     {
 
@@ -277,6 +282,7 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
                 {
                     button_mouse(o,ms);
                 }
+
                 mouse_ret=mouse_handle_button(o, MOUSE_OBJECT, ms);
                 found=1;
                 break;
@@ -291,6 +297,7 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
         cairo_destroy(ctx);
         cairo_surface_destroy(cs);
     }
+
     //trigger leave event for other objects
 
     list_enum_part(lo, &sd->objects, current)
@@ -300,10 +307,12 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
             mouse_status dms = { 0 }; // dummy mouse status to signal that other objects are not important so they should trigger  MouseLeaveAction
             dms.state = -2;
             dms.hover = 0;
+
             if(lo->object_type==9) //Button
             {
                 button_mouse(lo,&dms);
             }
+
             mouse_handle_button(lo, MOUSE_OBJECT, &dms);
         }
     }
@@ -349,6 +358,7 @@ int object_tooltip_update(object *o)
             unsigned char titfmt[]= {"Variable(Title,\"%s\")"};
             size_t fbuf=sizeof(titfmt)+string_length(titsb.s_out);
             unsigned char *buf=zmalloc(fbuf+1);
+
             if(titsb.s_out[0]!=' ')
             {
                 snprintf(buf,fbuf,titfmt,titsb.s_out);
@@ -380,6 +390,7 @@ int object_tooltip_update(object *o)
             unsigned char txtfmt[]= {"Variable(Text,\"%s\")"};
             size_t fbuf=sizeof(txtfmt)+string_length(txtsb.s_out);
             unsigned char *buf=zmalloc(fbuf+1);
+
             if(txtsb.s_out[0]!=' ')
             {
                 snprintf(buf,fbuf,txtfmt,txtsb.s_out);
@@ -399,6 +410,7 @@ int object_tooltip_update(object *o)
                                   Parameter(Text,Y,0)";
         command(o->ttip,&empty_txt);
     }
+
     surface_update(o->ttip);
     crosswin_set_position(tsd->sw, (o->x+o->w/2+sd->x)-tsd->w/2,  o->y+o->h+sd->y);
 
@@ -423,6 +435,7 @@ int object_init(section s, surface_data* sd)
     {
         return (-1);
     }
+
     o = zmalloc(sizeof(object));
 
     if(o == NULL)
@@ -506,12 +519,14 @@ int object_update(object *o)
     {
         object_reset(o);
     }
+
     if(o->enabled==0)
         return(0);
 
     if(o->object_update_rtn)
     {
         o->object_update_rtn(o);
+
         if(o->ttip&&(o->ttip_text||o->ttip_title))
         {
             object_tooltip_update(o);

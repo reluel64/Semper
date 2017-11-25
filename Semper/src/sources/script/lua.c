@@ -28,6 +28,7 @@ static int lua_engine_object_get_name(lua_State *ctx)
         lua_pushstring(ctx,sid->name);
         return(1);
     }
+
     return(0);
 }
 
@@ -41,6 +42,7 @@ static int lua_engine_object_get_x(lua_State *ctx)
         lua_pushnumber(ctx,d);
         return(1);
     }
+
     return(0);
 }
 
@@ -54,6 +56,7 @@ static int lua_engine_object_get_y(lua_State *ctx)
         lua_pushnumber(ctx,d);
         return(1);
     }
+
     return(0);
 }
 
@@ -67,6 +70,7 @@ static int lua_engine_object_get_w(lua_State *ctx)
         lua_pushnumber(ctx,d);
         return(1);
     }
+
     return(0);
 }
 
@@ -80,6 +84,7 @@ static int lua_engine_object_get_h(lua_State *ctx)
         lua_pushnumber(ctx,d);
         return(1);
     }
+
     return(0);
 }
 
@@ -93,6 +98,7 @@ static int lua_engine_object_set_x(lua_State *ctx)
     {
         return(0);
     }
+
     unsigned char buf[64]= {0};
     snprintf(buf,64,"%lf",d);
     script_set_param(sid,"X",buf);
@@ -108,6 +114,7 @@ static int lua_engine_object_set_y(lua_State *ctx)
 
     if(sid==NULL)
         return(0);
+
     unsigned char buf[64]= {0};
     snprintf(buf,64,"%lf",d);
     script_set_param(sid,"Y",buf);
@@ -138,6 +145,7 @@ static int lua_engine_object_show(lua_State *ctx)
     {
         return(0);
     }
+
     script_set_param(sid,"Hidden","0");
     return(0);
 }
@@ -150,6 +158,7 @@ static int lua_engine_object_hide(lua_State *ctx)
     {
         return(0);
     }
+
     script_set_param(sid,"Hidden","1");
     return(0);
 
@@ -164,6 +173,7 @@ static int lua_engine_object_set_w(lua_State *ctx)
     {
         return(0);
     }
+
     unsigned char buf[64]= {0};
     snprintf(buf,64,"%lf",d);
     script_set_param(sid,"W",buf);
@@ -180,6 +190,7 @@ static int lua_engine_object_param(lua_State *ctx)
     {
         return(0);
     }
+
     unsigned char *r=script_param_retrieve(sid,(unsigned char*)s,NULL,XPANDER_REQUESTOR_OBJECT);
 
     if(r)
@@ -187,6 +198,7 @@ static int lua_engine_object_param(lua_State *ctx)
         lua_pushstring(ctx,r);
         return(1);
     }
+
     return(0);
 }
 
@@ -212,6 +224,7 @@ static int lua_engine_source_get_name(lua_State *ctx)
         lua_pushstring(ctx,o);
         return(1);
     }
+
     return(0);
 }
 
@@ -224,6 +237,7 @@ static int lua_engine_source_param(lua_State *ctx)
     {
         return(0);
     }
+
     unsigned char *r=script_param_retrieve(sid,(unsigned char*)s,NULL,XPANDER_REQUESTOR_SOURCE);
 
     if(r)
@@ -231,6 +245,7 @@ static int lua_engine_source_param(lua_State *ctx)
         lua_pushstring(ctx,r);
         return(1);
     }
+
     return(0);
 }
 
@@ -242,6 +257,7 @@ static int lua_engine_source_enable(lua_State *ctx)
     {
         return(0);
     }
+
     script_set_param(sid,"Disabled","0");
     return(0);
 }
@@ -254,6 +270,7 @@ static int lua_engine_source_disable(lua_State *ctx)
     {
         return(0);
     }
+
     script_set_param(sid,"Disabled","1");
     return(0);
 }
@@ -272,6 +289,7 @@ static int lua_engine_source_get_dbl(lua_State *ctx)
             return(1);
         }
     }
+
     return(0);
 }
 
@@ -282,12 +300,14 @@ static int lua_engine_source_get_rel(lua_State *ctx)
     if(sid)
     {
         double *d=(double*)script_source_param(sid,6);
+
         if(d)
         {
             lua_pushnumber(ctx,*d);
             return(1);
         }
     }
+
     return(0);
 }
 
@@ -298,12 +318,14 @@ static int lua_engine_source_get_min(lua_State *ctx)
     if(sid)
     {
         double *d=(double*)script_source_param(sid,4);
+
         if(d)
         {
             lua_pushnumber(ctx,*d);
             return(1);
         }
     }
+
     return(0);
 }
 
@@ -314,12 +336,14 @@ static int lua_engine_source_get_max(lua_State *ctx)
     if(sid)
     {
         double *d=(double*)script_source_param(sid,3);
+
         if(d)
         {
             lua_pushnumber(ctx,*d);
             return(1);
         }
     }
+
     return(0);
 }
 
@@ -330,12 +354,14 @@ static int lua_engine_source_get_range(lua_State *ctx)
     if(sid)
     {
         double *d=(double*)script_source_param(sid,5);
+
         if(d)
         {
             lua_pushnumber(ctx,*d);
             return(1);
         }
     }
+
     return(0);
 }
 
@@ -346,12 +372,14 @@ static int lua_engine_source_get_str(lua_State *ctx)
     if(sid)
     {
         unsigned char **s=(unsigned char**)script_source_param(sid,2);
+
         if(s&&*s)
         {
             lua_pushstring(ctx,*s);
             return(1);
         }
     }
+
     return(0);
 }
 
@@ -364,6 +392,7 @@ static int lua_engine_command(lua_State *ctx)
     {
         return(0);
     }
+
     script_send_command(ip,(unsigned char*)s);
     return(0);
 }
@@ -377,6 +406,7 @@ static int lua_engine_xpand(lua_State *ctx)
     {
         return(0);
     }
+
     unsigned char *rs=script_xpand(ip,(unsigned char*)s);
 
     if(rs)
@@ -384,6 +414,7 @@ static int lua_engine_xpand(lua_State *ctx)
         lua_pushstring(ctx,rs);
         return(1);
     }
+
     return(0);
 }
 
@@ -404,6 +435,7 @@ static int lua_engine_parse_formula(lua_State *ctx)
         lua_pushnumber(ctx,d);
         return(1);
     }
+
     return(0);
 }
 
@@ -417,6 +449,7 @@ static int lua_engine_variable(lua_State *ctx)
     {
         return(0);
     }
+
     unsigned char *rs=script_variable(ip,(unsigned char*)s);
 
     if(rs)
@@ -424,6 +457,7 @@ static int lua_engine_variable(lua_State *ctx)
         lua_pushstring(ctx,rs);
         return(1);
     }
+
     return(0);
 }
 
@@ -449,6 +483,7 @@ static int lua_engine_object(lua_State *ctx)
     {
         return(0);
     }
+
     memset(sid,0,sizeof(script_item_data)); //we do not want garbge in our structure
     strncpy(sid->name,s,1023);
     sid->pv=ip;
@@ -473,6 +508,7 @@ static int lua_engine_source(lua_State *ctx)
     {
         return(0);
     }
+
     memset(sid,0,sizeof(script_item_data)); //we do not want garbge in our structure
     strncpy(sid->name,s,1023);
     sid->pv=ip;
@@ -497,6 +533,7 @@ static int lua_engine_self_source(lua_State *ctx)
     {
         return(0);
     }
+
     memset(sid,0,sizeof(script_item_data)); //we do not want garbge in our structure
     sid->pv=ip;
     sid->type=2;
@@ -520,6 +557,7 @@ static int lua_engine_surface(lua_State *ctx)
     {
         return(0);
     }
+
     memset(sid,0,sizeof(script_item_data)); //we do not want garbge in our structure
     strncpy(sid->name,s,1023);
     sid->pv=ip;
@@ -616,12 +654,14 @@ void *lua_engine_init(unsigned char *scbuf,void *ip)
     {
         return(NULL);
     }
+
     void *ctx=luaL_newstate();
 
     if(ctx)
     {
         luaL_openlibs(ctx);
         lua_engine_register(ctx,ip);
+
         if(luaL_dostring(ctx,scbuf))
         {
             lua_close(ctx);
@@ -637,6 +677,7 @@ void *lua_engine_init(unsigned char *scbuf,void *ip)
             }
         }
     }
+
     return(ctx);
 }
 
@@ -663,6 +704,7 @@ double lua_engine_call_update(void *ctx)
 
         lua_pop(ctx, 1);
     }
+
     return(r);
 }
 
@@ -676,8 +718,10 @@ unsigned char *lua_engine_call_string(void *ctx)
         {
             sr=clone_string((unsigned char*)lua_tostring(ctx,-1));
         }
+
         lua_pop(ctx, 1);
     }
+
     return(sr);
 }
 

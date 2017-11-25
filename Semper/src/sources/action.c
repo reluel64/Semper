@@ -27,6 +27,7 @@ void action_init(source* s)
     {
         s->sa = zmalloc(sizeof(source_action));
     }
+
     source_action* sa = s->sa;
 
     list_entry_init(&sa->abv);
@@ -47,10 +48,13 @@ static action* action_alloc(list_entry* head, size_t index)
 
         if(a->index == index)
             return (a);
+
         if(a->index > index)
             n = a;
+
         if(a->index < index)
             p = a;
+
         if(n && p)
             break;
     }
@@ -58,6 +62,7 @@ static action* action_alloc(list_entry* head, size_t index)
     a = zmalloc(sizeof(action));
     list_entry_init(&a->current);
     a->index = index;
+
     if(p == NULL)
         linked_list_add(&a->current, head);
     else if(n == NULL)
@@ -126,10 +131,12 @@ static int action_populate(source* s)
         if(!strncasecmp(v + 6, "Above", 5) || !strncasecmp(v + 6, "Equal", 5) || !strncasecmp(v + 6, "Below", 5))
         {
             unsigned char set_val = 0;
+
             if(strncasecmp(v + 11, "Action", 6))
             {
                 set_val = 1;
             }
+
             if(set_val)
             {
                 sscanf(v + 11, "%llu", &index);
@@ -170,10 +177,12 @@ static int action_populate(source* s)
             unsigned char type = 0;
             unsigned char _bool = 0;
             unsigned char scond = 0;
+
             if(!strncasecmp(v + 6, "Condition", 9))
             {
                 type = 1;
             }
+
             if(type)
             {
                 if(!strncasecmp(v + 15, "True", 4))
@@ -213,6 +222,7 @@ static int action_populate(source* s)
             if(scond)
             {
                 sfree((void**)(_bool ? &a->cond_t : &a->cond_f));
+
                 if(_bool)
                 {
                     sfree((void**)&a->cond_t);
@@ -232,6 +242,7 @@ static int action_populate(source* s)
         }
     }
     while((v = enumerator_next_value(es)));
+
     enumerator_finish(&es);
     return (0);
 }
@@ -269,6 +280,7 @@ static int action_match(unsigned char* str, unsigned char* pattern)
     {
         return (0);
     }
+
     int match_count = 0;
     int err_off = 0;
     const char* err = NULL;
@@ -280,6 +292,7 @@ static int action_match(unsigned char* str, unsigned char* pattern)
     {
         return (0);
     }
+
     match_count = pcre_exec(pc, NULL, (char*)str, strl, 0, 0, ovector, sizeof(ovector) / sizeof(int)); /*good explanation at http://libs.wikia.com/wiki/Pcre_exec*/
     pcre_free(pc);
 
@@ -305,22 +318,26 @@ void action_execute(source* s)
     source_action* sa = s->sa;
     list_entry* le[] = { &sa->blw, &sa->equ, &sa->abv };
     action* a = NULL;
+
     for(unsigned char i = 0; i < 3; i++)
     {
         list_enum_part(a, le[i], current)
         {
             unsigned char _bool = 0;
+
             switch(i)
             {
-            case 0:
-                _bool = a->val > s->d_info;
-                break;
-            case 1:
-                _bool = a->val == s->d_info;
-                break;
-            case 2:
-                _bool = a->val < s->d_info;
-                break;
+                case 0:
+                    _bool = a->val > s->d_info;
+                    break;
+
+                case 1:
+                    _bool = a->val == s->d_info;
+                    break;
+
+                case 2:
+                    _bool = a->val < s->d_info;
+                    break;
             }
 
             if(_bool && (a->done == 0 || s->always_do))
@@ -359,6 +376,7 @@ void action_execute(source* s)
     list_enum_part(a, &sa->match, current)
     {
         unsigned char bool_true = (unsigned char) ((s->s_info&&a->cond_e)?action_match(s->s_info, a->cond_e):0);
+
         if(bool_true && (a->done != 1 || s->always_do))
         {
             a->cond_t?command(s->sd, &a->cond_t):0;

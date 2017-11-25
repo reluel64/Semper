@@ -33,6 +33,7 @@ int image_cache_decode_jpeg(FILE *fh, image_cache_decoded* icd)
     icd->width = decomps.output_width;
     unsigned char* tbuf = zmalloc(icd->height * icd->width * decomps.output_components);
     size_t pixel = decomps.output_components;
+
     while(decomps.output_scanline < decomps.output_height)
     {
         unsigned char* start_px = (tbuf + (decomps.output_width * pixel) * decomps.output_scanline);
@@ -50,6 +51,7 @@ int image_cache_decode_jpeg(FILE *fh, image_cache_decoded* icd)
         unsigned char* tb = tbuf + (i * pixel);
         ((unsigned int*)icd->image_px)[i] = 0xff000000 | ((unsigned long)tb[0] << 16) | ((unsigned long)tb[1] << 8) | ((unsigned long)tb[2]);
     }
+
     sfree((void**)&tbuf);
     return (0);
 }

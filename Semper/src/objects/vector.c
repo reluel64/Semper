@@ -85,16 +85,21 @@ int vector_render(object *o,cairo_t *cr)
     */
 
 
+    cairo_rectangle(cr,20,20,20,20);
+    cairo_path_t *pt=cairo_copy_path(cr);
+    cairo_new_path(cr);
+
 
 
     cairo_matrix_t mtx;
     cairo_matrix_init_identity(&mtx);
-static double i=0;
-cairo_matrix_translate(&mtx,40,40);
+    static double i=0;
+    cairo_append_path(cr,pt);
+    cairo_matrix_translate(&mtx,40,40);
     cairo_matrix_rotate(&mtx,DEG2RAD(i++));
     cairo_matrix_translate(&mtx,-40,-40);
     cairo_set_matrix(cr,&mtx);
-  cairo_rectangle(cr,20,20,40,40);
+
 
 
 

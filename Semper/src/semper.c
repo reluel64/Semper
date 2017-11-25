@@ -64,12 +64,14 @@ static int semper_skeleton_ini_handler(unsigned char* sn, unsigned char* kn, uns
     {
         shd->ls = skeleton_add_section(&cd->shead, sn);
     }
+
     if(kn)
     {
         if(shd->ls == NULL)
         {
             shd->ls = skeleton_add_section(&cd->shead, NULL);
         }
+
         shd->lk = skeleton_add_key(shd->ls, kn, kv);
         sfree((void**)&shd->kv);
         shd->kv = clone_string(kv);
@@ -88,6 +90,7 @@ static int semper_skeleton_ini_handler(unsigned char* sn, unsigned char* kn, uns
         shd->lk = skeleton_add_key(shd->ls, kn, shd->kv);
         return (0);
     }
+
     return (0);
 }
 
@@ -97,11 +100,14 @@ int semper_get_file_timestamp(unsigned char *file,semper_timestamp *st)
     {
         return(-1);
     }
+
     int res = 0;
 #ifdef WIN32
     wchar_t* uni = utf8_to_ucs(file);
+
     if(uni==NULL)
         return(-1);
+
     for(size_t i = 0; uni[i]; i++)
     {
         if(uni[i] == (wchar_t)'/')
@@ -124,9 +130,11 @@ int semper_get_file_timestamp(unsigned char *file,semper_timestamp *st)
     {
         res=-1;
     }
+
     sfree((void**)&uni);
 #elif __linux__
     struct stat sts= {0};
+
     if(stat(file,&sts)==0)
     {
         st->tm1=sts.st_mtim.tv_sec;
@@ -136,6 +144,7 @@ int semper_get_file_timestamp(unsigned char *file,semper_timestamp *st)
     {
         res=-1;
     }
+
 #endif
     return (res);
 }
@@ -144,6 +153,7 @@ static size_t semper_load_surfaces(control_data* cd)
 {
     size_t srf_loaded=0;
     section s = skeleton_first_section(&cd->shead);
+
     do
     {
         unsigned char* sn = skeleton_get_section_name(s);
@@ -152,9 +162,11 @@ static size_t semper_load_surfaces(control_data* cd)
         {
             key k = skeleton_get_key(s, "Variant");
             unsigned char* kv = skeleton_key_value(k);
+
             if(k)
             {
                 size_t var = (size_t)compute_formula(kv);
+
                 if(var)
                 {
                     if(!surface_load(cd, sn, var))
@@ -166,6 +178,7 @@ static size_t semper_load_surfaces(control_data* cd)
         }
     }
     while((s = skeleton_next_section(s, &cd->shead)));
+
     return(srf_loaded);
 }
 
@@ -177,14 +190,17 @@ static int ini_handler(semper_write_key_handler)
     if(!kn && !kv && !sn && !com)
     {
         size_t pos=ftell(swkd->nf);
+
         if(pos>3)
         {
             swkd->new_lines++;
             fprintf(swkd->nf, "\n");
         }
+
         return (0);
 
     }
+
     swkd->has_content=1;
     /*The section is about to change so we get the ending offset*/
 
@@ -211,6 +227,7 @@ static int ini_handler(semper_write_key_handler)
             swkd->sect_off = ftello64(swkd->nf); /*save the offset of the section start*/
             swkd->key_found = 0;
         }
+
         return (0);
     }
 
@@ -320,6 +337,7 @@ static int semper_load_configuration(control_data* cd)
 int semper_save_configuration(control_data* cd)
 {
     section s = skeleton_first_section(&cd->shead);
+
     do
     {
         unsigned char* sn = skeleton_get_section_name(s);
@@ -353,12 +371,14 @@ static void semper_create_directory_path(control_data* cd)
     for(size_t i = mod_p_sz; i && pth[i] != '\\'; i--)
     {
         pth[i] = 0;
+
         if(pth[i - 1] == '\\')
         {
             pth[i - 1] = 0;
             break;
         }
     }
+
     SetCurrentDirectoryW(pth);
     buf = ucs_to_utf8(pth, NULL, 0);
     sfree((void**)&pth);
@@ -368,15 +388,18 @@ static void semper_create_directory_path(control_data* cd)
     buf = zmalloc(4096);
     readlink("/proc/self/exe", buf, 4095);
     size_t buf_len = string_length(buf);
+
     for(size_t i = buf_len; i && buf[i] != '/'; i--)
     {
         buf[i] = 0;
+
         if(buf[i - 1] == '/')
         {
             buf[i - 1] = 0;
             break;
         }
     }
+
 #endif
     size_t rdl = string_length(buf);
     cd->root_dir = zmalloc(rdl + 1);
@@ -434,14 +457,17 @@ static void semper_surface_watcher_init(control_data* cd)
                              FILE_FLAG_OVERLAPPED | FILE_FLAG_BACKUP_SEMANTICS, NULL);
         sfree((void**)&s_ucs);
     }
+
     if(cd->notify_buf == NULL)
     {
         cd->notify_buf = zmalloc(sizeof(FILE_NOTIFY_INFORMATION) * 256);
     }
+
     if(cd->so == NULL)
     {
         cd->so = zmalloc(sizeof(semper_overlapped));
     }
+
     cd->so->pv = cd;
 
     ReadDirectoryChangesW(cd->dh, cd->notify_buf, sizeof(FILE_NOTIFY_INFORMATION) * 256, 1,
@@ -455,10 +481,12 @@ static void semper_surface_watcher_init(control_data* cd)
 static int semper_load_local_fonts(unsigned char *path)
 {
     return(0);
+
     if(path==NULL)
     {
         return(-1);
     }
+
     size_t path_len=string_length(path);
 
 #ifdef WIN32
@@ -476,6 +504,7 @@ static int semper_load_local_fonts(unsigned char *path)
     {
         return(-1);
     }
+
 #elif __linux__
     DIR *dh=opendir(path);
 
@@ -485,6 +514,7 @@ static int semper_load_local_fonts(unsigned char *path)
     }
 
     struct dirent *dat=readdir(dh);
+
 #endif
 
 
@@ -495,6 +525,7 @@ static int semper_load_local_fonts(unsigned char *path)
 #elif __linux__
         unsigned char *temp=clone_string(dat->d_name);
 #endif
+
         if(!strcasecmp("..",temp)||!strcasecmp(".",temp))
         {
             sfree((void**)&temp);
@@ -514,6 +545,7 @@ static int semper_load_local_fonts(unsigned char *path)
 
 
 #ifdef WIN32
+
         if(wfd.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
 #elif __linux__
         if(dat->d_type==DT_DIR)
@@ -532,11 +564,16 @@ static int semper_load_local_fonts(unsigned char *path)
         sfree((void**)&ffp);
 
     }
+
 #ifdef WIN32
+
     while(FindNextFileW(p,&wfd));
+
     FindClose(p);
 #elif __linux__
+
     while((dat=readdir(dh))!=NULL);
+
     closedir(dh);
 #endif
     return(0);
@@ -561,6 +598,7 @@ void semper_surface_watcher(unsigned long err, unsigned long transferred, void *
     p.events=POLLIN;
     p.fd=cd->inotify_fd;
     poll(&p,1,0);
+
     if(p.revents)
     {
         struct inotify_event inev= {0};
@@ -572,6 +610,7 @@ void semper_surface_watcher(unsigned long err, unsigned long transferred, void *
 
         semper_reload_surfaces_if_modified(cd);
     }
+
 #endif
 }
 
@@ -636,14 +675,17 @@ static int semper_desktop_checker(control_data *cd)
             crosswin_set_window_z_order(sd->sw,crosswin_topmost); //set it temporarily to top
             crosswin_set_window_z_order(sd->sw,sd->zorder<crosswin_normal?crosswin_normal:sd->zorder); //set it to its default position
         }
+
         if(cd->srf_reg)
         {
             sd=cd->srf_reg;
             crosswin_set_window_z_order(sd->sw,crosswin_topmost);
             crosswin_set_window_z_order(sd->sw,crosswin_normal);
         }
+
         state=1;
     }
+
     return(0);
 }
 
@@ -685,6 +727,7 @@ int main(void)
 #ifdef __linux__
         semper_surface_watcher(0,0,cd);
 #endif
+
         if(crosswin_update(&cd->c))
         {
             surface_data *sd=NULL;
@@ -693,6 +736,7 @@ int main(void)
                 surface_reload(sd);
             }
         }
+
         crosswin_message_dispatch(&cd->c); // dispatch any windows message
         event_process(cd->eq);             // process the queue
 
@@ -701,6 +745,7 @@ int main(void)
             break;
         }
     }
+
     semper_save_configuration(cd);
     return (0);
 }

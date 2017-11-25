@@ -17,11 +17,13 @@ void* zmalloc(size_t bytes)
     }
 
     void* p = malloc(bytes * ALLOC_FACTOR);
+
     if(p)
     {
         memset(p, 0, bytes);
         return (p);
     }
+
     return (NULL);
 }
 
@@ -59,6 +61,7 @@ int put_file_in_memory(unsigned char* file, void** out, size_t* sz)
         fclose(f);
         return (0);
     }
+
     return (-1);
 }
 
@@ -75,6 +78,7 @@ int merge_sort(list_entry *head,int(*comp)(list_entry *l1,list_entry *l2,void *p
         list_entry *list_1=head->next; //get the first entry
         size_t merges=0;
         list_entry_init(&thead);
+
         while(list_1!=head)
         {
             list_entry *list_2=list_1;
@@ -86,19 +90,23 @@ int merge_sort(list_entry *head,int(*comp)(list_entry *l1,list_entry *l2,void *p
             {
                 h1_sz++;
                 list_2=list_2->next;
+
                 if(list_2==head) //reached the end
                     break;
             }
 
             h2_sz=group_size; //asssume the lists are equal
             merges++;
+
             while(h1_sz||(list_2!=head&&h2_sz))
             {
                 list_entry *entry=NULL;
+
                 if(h1_sz==0)
                 {
                     entry=list_2;                       //the element comes from the second half
                     list_2=list_2->next;                //go to the next entry
+
                     if(h2_sz)
                         h2_sz--;
                 }
@@ -106,6 +114,7 @@ int merge_sort(list_entry *head,int(*comp)(list_entry *l1,list_entry *l2,void *p
                 {
                     entry=list_1;                       //the element comes from the first half
                     list_1=list_1->next;                //go to the next element
+
                     if(h1_sz)
                         h1_sz--;
                 }
@@ -113,6 +122,7 @@ int merge_sort(list_entry *head,int(*comp)(list_entry *l1,list_entry *l2,void *p
                 {
                     entry=list_1;                       //the item from the first list is smaller than the element from the second
                     list_1=list_1->next;                //advance
+
                     if(h1_sz)
                         h1_sz--;
                 }
@@ -120,15 +130,19 @@ int merge_sort(list_entry *head,int(*comp)(list_entry *l1,list_entry *l2,void *p
                 {
                     entry=list_2;                       //the element from the second list is smaller than the element from the first
                     list_2=list_2->next;                //advance
+
                     if(h2_sz)
                         h2_sz--;
                 }
+
                 linked_list_remove(entry);              //remove the entry from the list
                 list_entry_init(entry);                 //reinitialize its "current" structure
                 linked_list_add_last(entry,&thead);     //add it to the temporary head
             }
+
             list_1=list_2;                              //update the position
         }
+
         linked_list_replace(&thead,head);               //update the head
 
         if(merges<=1)
@@ -136,5 +150,6 @@ int merge_sort(list_entry *head,int(*comp)(list_entry *l1,list_entry *l2,void *p
         else
             group_size*=2; //incerase the group number
     }
+
     return(0);
 }

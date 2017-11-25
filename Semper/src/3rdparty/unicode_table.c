@@ -8,8 +8,9 @@ static uint32_t uppercase_delta(uint32_t point)
     switch(point)
     {
 #include <3rdparty/upper.h>
-    default:
-        return 0;
+
+        default:
+            return 0;
     }
 }
 
@@ -23,8 +24,9 @@ static uint32_t lowercase_delta(uint32_t point)
     switch(point)
     {
 #include <3rdparty/lower.h>
-    default:
-        return 0;
+
+        default:
+            return 0;
     }
 }
 

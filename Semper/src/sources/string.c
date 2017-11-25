@@ -51,14 +51,17 @@ void string_source_reset(void* pv, void* ip)
 double string_source_update(void* pv)
 {
     string_source_info* ssi = pv;
+
     switch(ssi->option)
     {
-    case 0:
-        return ((double)ssi->len);
-    case 1:
-        return(strtod(ssi->str,NULL));
-    default:
-        return(-1.0);
+        case 0:
+            return ((double)ssi->len);
+
+        case 1:
+            return(strtod(ssi->str,NULL));
+
+        default:
+            return(-1.0);
     }
 }
 

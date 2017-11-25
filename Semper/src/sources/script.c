@@ -80,6 +80,7 @@ void script_reset(void *spv,void *ip)
     {
         size_t mem=0;
         unsigned char *tbuf=NULL;
+
         if(put_file_in_memory(s,(void**)&tbuf,&mem)==0)
         {
 
@@ -112,6 +113,7 @@ void script_reset(void *spv,void *ip)
                 sc->scode=ref;
             }
         }
+
         sfree((void**)&sc->script_name);
         sc->script_name=clone_string(s);
     }
@@ -121,16 +123,19 @@ void script_reset(void *spv,void *ip)
     {
         switch(sc->eng)
         {
-        case lua:
-            lua_engine_cleanup(&sc->ctx);
-            break;
-        case javascript:
-            js_engine_cleanup(&sc->ctx);
-            break;
-        case python:
-        case unknown:
-            break;
+            case lua:
+                lua_engine_cleanup(&sc->ctx);
+                break;
+
+            case javascript:
+                js_engine_cleanup(&sc->ctx);
+                break;
+
+            case python:
+            case unknown:
+                break;
         }
+
         sc->ctx=NULL;
     }
 
@@ -158,15 +163,17 @@ void script_reset(void *spv,void *ip)
     /*we should call the reset from the script here*/
     switch(sc->eng)
     {
-    case lua:
-        lua_engine_call_reset(sc->ctx);
-        break;
-    case javascript:
-        js_engine_call_reset(sc->ctx);
-        break;
-    case python:
-    case unknown:
-        break;
+        case lua:
+            lua_engine_call_reset(sc->ctx);
+            break;
+
+        case javascript:
+            js_engine_call_reset(sc->ctx);
+            break;
+
+        case python:
+        case unknown:
+            break;
     }
 
 }
@@ -177,14 +184,17 @@ double script_update(void *spv)
 
     switch(sc->eng)
     {
-    case lua:
-        return(lua_engine_call_update(sc->ctx));
-    case javascript:
-        return(js_engine_call_update(sc->ctx));
-    case python:
-    case unknown:
-        break;
+        case lua:
+            return(lua_engine_call_update(sc->ctx));
+
+        case javascript:
+            return(js_engine_call_update(sc->ctx));
+
+        case python:
+        case unknown:
+            break;
     }
+
     return(0.0);
 }
 
@@ -195,16 +205,19 @@ unsigned char *script_string(void *spv)
 
     switch(sc->eng)
     {
-    case lua:
-        sc->sval=lua_engine_call_string(sc->ctx);
-        break;
-    case javascript:
-        sc->sval=js_engine_call_string(sc->ctx);
-        break;
-    case python:
-    case unknown:
-        break;
+        case lua:
+            sc->sval=lua_engine_call_string(sc->ctx);
+            break;
+
+        case javascript:
+            sc->sval=js_engine_call_string(sc->ctx);
+            break;
+
+        case python:
+        case unknown:
+            break;
     }
+
     return(sc->sval);
 }
 
@@ -219,17 +232,21 @@ void script_destroy(void **spv)
 
     switch(sc->eng)
     {
-    case lua:
-        if(sc->ctx)
-            lua_engine_cleanup(&sc->ctx);
-        break;
-    case javascript:
-        if(sc->ctx)
-            js_engine_cleanup(&sc->ctx);
-        break;
-    case python:
-    case unknown:
-        break;
+        case lua:
+            if(sc->ctx)
+                lua_engine_cleanup(&sc->ctx);
+
+            break;
+
+        case javascript:
+            if(sc->ctx)
+                js_engine_cleanup(&sc->ctx);
+
+            break;
+
+        case python:
+        case unknown:
+            break;
     }
 
     sfree(spv);
@@ -238,19 +255,24 @@ void script_destroy(void **spv)
 void script_command(void *spv,unsigned char *comm)
 {
     script_data *sc=spv;
+
     switch(sc->eng)
     {
-    case lua:
-        if(sc->ctx)
-            lua_engine_call_command(sc->ctx,comm);
-        break;
-    case javascript:
-        if(sc->ctx)
-            js_engine_call_command(sc->ctx,comm);
-        break;
-    case python:
-    case unknown:
-        break;
+        case lua:
+            if(sc->ctx)
+                lua_engine_call_command(sc->ctx,comm);
+
+            break;
+
+        case javascript:
+            if(sc->ctx)
+                js_engine_call_command(sc->ctx,comm);
+
+            break;
+
+        case python:
+        case unknown:
+            break;
     }
 }
 
@@ -268,14 +290,16 @@ unsigned char *script_param_retrieve(script_item_data *sid,unsigned char *res,un
 
     switch(sid->type)
     {
-    case 1:
-        o=object_by_name(sc->sd,sid->name,-1);
-        break;
-    case 2:
-        s=source_by_name(sc->sd,sid->name,-1);
-        break;
-    default:
-        return(NULL);
+        case 1:
+            o=object_by_name(sc->sd,sid->name,-1);
+            break;
+
+        case 2:
+            s=source_by_name(sc->sd,sid->name,-1);
+            break;
+
+        default:
+            return(NULL);
     }
 
     if(o==NULL&&s==NULL&&sid->name[0])
@@ -307,6 +331,7 @@ unsigned char *script_param_retrieve(script_item_data *sid,unsigned char *res,un
             sc->ret_val=parameter_string(sc->s,res,def,XPANDER_REQUESTOR_SOURCE);
         }
     }
+
     return(sc->ret_val);
 }
 
@@ -333,14 +358,17 @@ double script_object_param(script_item_data *sid,unsigned char id) /*this should
 
     switch(id)
     {
-    case 1:
-        return((double)o->x);
-    case 2:
-        return((double)o->y);
-    case 3:
-        return((double)o->auto_w);
-    case 4:
-        return((double)o->auto_h);
+        case 1:
+            return((double)o->x);
+
+        case 2:
+            return((double)o->y);
+
+        case 3:
+            return((double)o->auto_w);
+
+        case 4:
+            return((double)o->auto_h);
     }
 
     return(-1.0);
@@ -349,8 +377,10 @@ double script_object_param(script_item_data *sid,unsigned char id) /*this should
 static inline double script_source_relative_value(double val, double min, double max)
 {
     double range = max - min;
+
     if(range == 0.0)
         return (1.0);
+
     val = min(val, max);
     val = max(val, min);
     val -= min;
@@ -367,24 +397,30 @@ void *script_source_param(script_item_data *sid,unsigned char id) /*this should 
     {
         return(NULL);
     }
+
     static double res=0;
 
     switch(id)
     {
-    case  1:
-        return(&s->d_info);
-    case 2:
-        return(&s->s_info);
-    case 3:
-        return(&s->max_val);
-    case 4:
-        return(&s->min_val);
-    case 5:
-        res=s->max_val-s->min_val;
-        return(&res);
-    case 6:
-        res=(script_source_relative_value(s->d_info,s->min_val,s->max_val));
-        return(&res);
+        case  1:
+            return(&s->d_info);
+
+        case 2:
+            return(&s->s_info);
+
+        case 3:
+            return(&s->max_val);
+
+        case 4:
+            return(&s->min_val);
+
+        case 5:
+            res=s->max_val-s->min_val;
+            return(&res);
+
+        case 6:
+            res=(script_source_relative_value(s->d_info,s->min_val,s->max_val));
+            return(&res);
     }
 
     return(NULL);
@@ -398,6 +434,7 @@ double script_math(unsigned char *frml)
     {
         return(r);
     }
+
     return(0.0);
 }
 
@@ -444,6 +481,7 @@ unsigned char *script_variable(void *pv,unsigned char *s)
     {
         sfree((void**)&sc->ret_val);
     }
+
     sfree((void**)&ts);
     return(sc->ret_val);
 }

@@ -28,8 +28,10 @@ int luaZ_fill (ZIO *z)
     lua_unlock(L);
     buff = z->reader(L, z->data, &size);
     lua_lock(L);
+
     if (buff == NULL || size == 0)
         return EOZ;
+
     z->n = size - 1;  /* discount char being returned */
     z->p = buff;
     return cast_uchar(*(z->p++));
@@ -52,6 +54,7 @@ size_t luaZ_read (ZIO *z, void *b, size_t n)
     while (n)
     {
         size_t m;
+
         if (z->n == 0)    /* no bytes in buffer? */
         {
             if (luaZ_fill(z) == EOZ)  /* try to read more */
@@ -62,6 +65,7 @@ size_t luaZ_read (ZIO *z, void *b, size_t n)
                 z->p--;
             }
         }
+
         m = (n <= z->n) ? n : z->n;  /* min. between n and z->n */
         memcpy(b, z->p, m);
         z->n -= m;
@@ -69,5 +73,6 @@ size_t luaZ_read (ZIO *z, void *b, size_t n)
         b = (char *)b + m;
         n -= m;
     }
+
     return 0;
 }

@@ -28,6 +28,7 @@ section skeleton_add_section(section shead, unsigned char* sn)
 {
     if(shead == NULL)
         return (NULL);
+
     list_entry* lh = shead;
     internal_section* is = NULL;
 
@@ -193,6 +194,7 @@ key skeleton_first_key(section s)
     {
         return (NULL);
     }
+
     internal_key* ik = element_of(is->keys.next, internal_key, current);
 
     return (ik);
@@ -204,6 +206,7 @@ key skeleton_next_key(key k, section s)
     {
         return (NULL);
     }
+
     internal_section* is = s;
     internal_key* ik = k;
 
@@ -211,6 +214,7 @@ key skeleton_next_key(key k, section s)
     {
         return (NULL);
     }
+
     internal_key* rk = element_of(ik->current.next, internal_key, current);
 
     return (rk);
@@ -222,6 +226,7 @@ unsigned char* skeleton_key_value(key k)
     {
         return (NULL);
     }
+
     internal_key* ik = k;
     return (ik->kv);
 }
@@ -232,6 +237,7 @@ unsigned char* skeleton_key_name(key k)
     {
         return (NULL);
     }
+
     internal_key* ik = k;
     return (ik->kn);
 }
@@ -274,6 +280,7 @@ int skeleton_destroy(section shead)
     {
         return(-1);
     }
+
     list_entry* sle = shead;
     list_entry* temp = NULL;
     list_entry* pos = NULL;

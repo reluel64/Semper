@@ -116,6 +116,7 @@ static int string_attr_color_draw(string_object *so,string_attributes *sa,PangoR
             double pos=(double)(i==0?i:i+1)/(double)sa->gradient_len;
             cairo_pattern_add_color_stop_rgba(background, (double)pos, red, green, blue,alpha);
         }
+
         pango_cairo_show_layout(cr,so->layout);
         cairo_pattern_destroy(background);
     }
@@ -153,10 +154,12 @@ static int string_attr_color_draw(string_object *so,string_attributes *sa,PangoR
 int string_attr_color_handler(PangoAttribute *pa,void *pv)
 {
     void **pm=(void**)pv;
+
     if(pa->klass->type!=STRING_ATTR_COLOR||((StringAttrColor*)pa)->sa==NULL)
     {
         return(0);
     }
+
     string_object *so=pm[0];
     cairo_t *cr=pm[1];
     string_attributes *sa=((StringAttrColor*)pa)->sa;
@@ -182,6 +185,7 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
 
     size_t start=pa->start_index;
     size_t end=((pa->end_index==-1)?so->bind_string_len:pa->end_index);
+
     for(size_t i=pa->start_index; i<end; i++)
     {
         PangoRectangle pr= {0};
@@ -233,6 +237,7 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
                 py=pr.y;
             }
         }
+
         pw=max((pr.width+pr.x)-px,pw);
         ph=max(pr.height,ph);
     }
@@ -249,5 +254,6 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
 
         string_attr_color_draw(so,sa,&pr,cr,(unsigned char)(size_t)(pm[2]));
     }
+
     return(0);
 }

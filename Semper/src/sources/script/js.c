@@ -14,6 +14,7 @@ static script_item_data *js_engine_item_data(duk_context *ctx,unsigned char *p)
     size_t buf_sz=0;
     script_item_data *sid=NULL;
     duk_push_this(ctx);
+
     if(duk_get_prop_string(ctx, -1, p))
     {
         sid=duk_get_buffer(ctx,-1,&buf_sz);
@@ -23,6 +24,7 @@ static script_item_data *js_engine_item_data(duk_context *ctx,unsigned char *p)
             sid=NULL;
         }
     }
+
     duk_pop_n(ctx,2);
     return(sid);
 }
@@ -42,6 +44,7 @@ static duk_ret_t js_engine_object_get_name(duk_context *ctx)
         duk_push_string(ctx,sid->name);
         return(1);
     }
+
     return(0);
 }
 
@@ -109,6 +112,7 @@ static duk_ret_t js_engine_object_param(duk_context *ctx)
     if(sid)
     {
         unsigned char *r=script_param_retrieve(sid,(unsigned char*)s,NULL,XPANDER_REQUESTOR_OBJECT);
+
         if(r)
         {
             duk_push_string(ctx,r);
@@ -128,6 +132,7 @@ static duk_ret_t js_engine_object_set_x(duk_context *ctx)
     {
         return(0);
     }
+
     unsigned char buf[64]= {0};
     snprintf(buf,64,"%lf",d);
     script_set_param(sid,"X",buf);
@@ -143,6 +148,7 @@ static duk_ret_t js_engine_object_set_y(duk_context *ctx)
     {
         return(0);
     }
+
     unsigned char buf[64]= {0};
     snprintf(buf,64,"%lf",d);
     script_set_param(sid,"Y",buf);
@@ -158,6 +164,7 @@ static duk_ret_t js_engine_object_set_w(duk_context *ctx)
     {
         return(0);
     }
+
     unsigned char buf[64]= {0};
     snprintf(buf,64,"%lf",d);
     script_set_param(sid,"W",buf);
@@ -173,6 +180,7 @@ static duk_ret_t js_engine_object_set_h(duk_context *ctx)
     {
         return(0);
     }
+
     unsigned char buf[64]= {0};
     snprintf(buf,64,"%lf",d);
     script_set_param(sid,"H",buf);
@@ -187,6 +195,7 @@ static duk_ret_t js_engine_object_show(duk_context *ctx)
     {
         return(0);
     }
+
     script_set_param(sid,"Hidden","0");
     return(0);
 }
@@ -199,6 +208,7 @@ static duk_ret_t js_engine_object_hide(duk_context *ctx)
     {
         return(0);
     }
+
     script_set_param(sid,"Hidden","1");
     return(0);
 }
@@ -221,9 +231,11 @@ static int js_engine_source_get_name(duk_context *ctx)
         {
             return(0);
         }
+
         duk_push_string(ctx,o);
         return(1);
     }
+
     return(0);
 }
 
@@ -236,6 +248,7 @@ static duk_ret_t js_engine_source_param(duk_context *ctx)
     {
         return(0);
     }
+
     unsigned char *r=script_param_retrieve(sid,(unsigned char*)s,NULL,XPANDER_REQUESTOR_SOURCE);
 
     if(r)
@@ -243,6 +256,7 @@ static duk_ret_t js_engine_source_param(duk_context *ctx)
         duk_push_string(ctx,r);
         return(1);
     }
+
     return(0);
 }
 
@@ -254,6 +268,7 @@ static duk_ret_t js_engine_source_enable(duk_context *ctx)
     {
         return(0);
     }
+
     script_set_param(sid,"Disabled","0");
     return(0);
 }
@@ -266,6 +281,7 @@ static duk_ret_t js_engine_source_disable(duk_context *ctx)
     {
         return(0);
     }
+
     script_set_param(sid,"Disabled","1");
     return(0);
 }
@@ -277,12 +293,14 @@ static duk_ret_t js_engine_source_get_dbl(duk_context *ctx)
     if(sid)
     {
         double *d=(double*)script_source_param(sid,1);
+
         if(d)
         {
             duk_push_number(ctx,*d);
             return(1);
         }
     }
+
     return(0);
 }
 
@@ -294,12 +312,14 @@ static duk_ret_t js_engine_source_get_rel(duk_context *ctx)
     if(sid)
     {
         double *d=(double*)script_source_param(sid,6);
+
         if(d)
         {
             duk_push_number(ctx,*d);
             return(1);
         }
     }
+
     return(0);
 }
 
@@ -310,12 +330,14 @@ static duk_ret_t js_engine_source_get_min(duk_context *ctx)
     if(sid)
     {
         double *d=(double*)script_source_param(sid,4);
+
         if(d)
         {
             duk_push_number(ctx,*d);
             return(1);
         }
     }
+
     return(0);
 }
 
@@ -327,12 +349,14 @@ static duk_ret_t js_engine_source_get_max(duk_context *ctx)
     if(sid)
     {
         double *d=(double*)script_source_param(sid,3);
+
         if(d)
         {
             duk_push_number(ctx,*d);
             return(1);
         }
     }
+
     return(0);
 }
 
@@ -343,12 +367,14 @@ static duk_ret_t js_engine_source_get_range(duk_context *ctx)
     if(sid)
     {
         double *d=(double*)script_source_param(sid,5);
+
         if(d)
         {
             duk_push_number(ctx,*d);
             return(1);
         }
     }
+
     return(0);
 }
 
@@ -359,12 +385,14 @@ static duk_ret_t js_engine_source_get_str(duk_context *ctx)
     if(sid)
     {
         unsigned char **s=(unsigned char**)script_source_param(sid,2);
+
         if(s&&*s)
         {
             duk_push_string(ctx,*s);
             return(1);
         }
     }
+
     return(0);
 }
 
@@ -387,6 +415,7 @@ static duk_ret_t js_engine_xpand(duk_context *ctx)
     {
         return(0);
     }
+
     unsigned char *rs=script_xpand(pv,(unsigned char*)s);
 
     if(rs)
@@ -394,6 +423,7 @@ static duk_ret_t js_engine_xpand(duk_context *ctx)
         duk_push_string(ctx,rs);
         return(1);
     }
+
     return(0);
 }
 
@@ -410,6 +440,7 @@ static duk_ret_t js_engine_variable(duk_context *ctx)
     {
         return(0);
     }
+
     unsigned char *rs=script_variable(pv,(unsigned char*)s);
 
     if(rs)
@@ -417,6 +448,7 @@ static duk_ret_t js_engine_variable(duk_context *ctx)
         duk_push_string(ctx,rs);
         return(1);
     }
+
     return(0);
 }
 
@@ -441,6 +473,7 @@ static duk_ret_t js_engine_parse_formula(duk_context *ctx)
         duk_push_number(ctx,d);
         return(1);
     }
+
     return(0);
 }
 
@@ -456,11 +489,13 @@ static duk_ret_t js_engine_command(duk_context *ctx)
     {
         return(0);
     }
+
     if(s)
     {
         script_send_command(pv,(unsigned char*)s);
         return(1);
     }
+
     return(0);
 }
 
@@ -609,10 +644,12 @@ void *js_engine_init(unsigned char *buf,void *pv)
         duk_destroy_heap(ctx);
         return(NULL);
     }
+
     if(duk_get_global_string(ctx,"script_init"))
     {
         duk_pcall(ctx, 0);
     }
+
     duk_pop(ctx);
     return(ctx);
 }
@@ -624,6 +661,7 @@ void js_engine_call_reset(duk_context *ctx)
     {
         duk_pcall(ctx, 0);
     }
+
     duk_pop(ctx);
 }
 
@@ -637,6 +675,7 @@ double js_engine_call_update(duk_context *ctx)
         duk_pcall(ctx, 0);
         ret=duk_get_number(ctx,-1);
     }
+
     duk_pop(ctx);
     return(ret);
 }
@@ -644,11 +683,13 @@ double js_engine_call_update(duk_context *ctx)
 unsigned char *js_engine_call_string(duk_context *ctx)
 {
     unsigned char *ret=NULL;
+
     if(duk_get_global_string(ctx,"script_string"))
     {
         duk_pcall(ctx, 0);
         ret=clone_string((unsigned char*)duk_safe_to_string(ctx,-1));
     }
+
     duk_pop(ctx);
     return(ret);
 }
@@ -662,8 +703,10 @@ void js_engine_call_command(duk_context *ctx,unsigned char *comm)
         {
             duk_push_string(ctx,comm);
         }
+
         duk_pcall(ctx, 1);
     }
+
     duk_pop(ctx);
 }
 
@@ -675,6 +718,7 @@ void js_engine_cleanup(duk_context **ctx)
         {
             duk_pcall(*ctx, 0);
         }
+
         duk_pop(*ctx);
         duk_destroy_heap(*ctx);
         *ctx=NULL;

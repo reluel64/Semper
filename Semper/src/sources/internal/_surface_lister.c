@@ -73,6 +73,7 @@ static int surface_lister_collect(surface_lister* sl)
 
     if(fh == INVALID_HANDLE_VALUE)
         return (-1);
+
 #elif __linux__
 
     DIR *dh=opendir(sl->path);
@@ -89,7 +90,9 @@ static int surface_lister_collect(surface_lister* sl)
         closedir(dh);
         return(-1);
     }
+
 #endif
+
     do
     {
 
@@ -101,6 +104,7 @@ static int surface_lister_collect(surface_lister* sl)
 
         temp=clone_string(dat->d_name);
 #endif
+
         if(temp==NULL)
             break;
 
@@ -110,12 +114,15 @@ static int surface_lister_collect(surface_lister* sl)
             sfree((void**)&temp);
             continue;
         }
+
         sl->items++;
         surface_lister_file_list *slfl=zmalloc(sizeof(surface_lister_file_list));
+
         if(sl->start==NULL)
         {
             sl->start=slfl;
         }
+
         list_entry_init(&slfl->current);
         linked_list_add(&slfl->current,&sl->file_list);
         slfl->display_name=temp;
@@ -126,10 +133,15 @@ static int surface_lister_collect(surface_lister* sl)
 #endif
 
     }
+
 #ifdef WIN32
+
     while(FindNextFileW(fh, &wfd));
+
 #elif __linux__
+
     while((dat=readdir(dh))!=NULL);
+
 #endif
 
 #ifdef WIN32
@@ -183,14 +195,17 @@ double surface_lister_update(void* spv)
     {
         surface_lister_file_list *slfl=sl->parent->start;
         size_t i=sl->index;
+
         for(; i; i--)
         {
             if(slfl->current.prev==&sl->parent->file_list)
             {
                 return(0.0);
             }
+
             slfl=element_of(slfl->current.prev,surface_lister_file_list,current);
         }
+
         if(i==0)
         {
             return(1.0);
@@ -201,29 +216,35 @@ double surface_lister_update(void* spv)
         surface_lister_collect(spv);
         sl->update=0;
     }
+
     return(0.0);
 }
 
 unsigned char *surface_lister_string(void* spv)
 {
     surface_lister *sl=spv;
+
     if(sl->parent&&sl->parent->start&&sl->index<sl->parent->child_count)
     {
         surface_lister_file_list *slfl=sl->parent->start;
         size_t i=sl->index;
+
         for(; i; i--)
         {
             if(slfl->current.prev==&sl->parent->file_list)
             {
                 return(NULL);
             }
+
             slfl=element_of(slfl->current.prev,surface_lister_file_list,current);
         }
+
         if(i==0)
         {
             return(slfl->display_name);
         }
     }
+
     return(NULL);
 }
 
@@ -231,6 +252,7 @@ void surface_lister_command(void* spv, unsigned char* command)
 {
 
     surface_lister *sl=spv;
+
     if(sl->parent&&sl->parent->start&&command&&sl->index<sl->parent->child_count)
     {
         surface_lister_file_list *slfl=sl->parent->start;
@@ -243,8 +265,10 @@ void surface_lister_command(void* spv, unsigned char* command)
             {
                 break;
             }
+
             slfl=element_of(slfl->current.prev,surface_lister_file_list,current);
         }
+
         if(i==0)
         {
             if(strcasecmp("Open",command)==0)
@@ -261,6 +285,7 @@ void surface_lister_command(void* spv, unsigned char* command)
                     {
                         sfree((void**)&parent->path);
                     }
+
                     parent->path=temp;
                     parent->update=1;
                 }
@@ -302,6 +327,7 @@ void surface_lister_command(void* spv, unsigned char* command)
             {
                 lo[0]=0;
             }
+
             sl->update=1;
         }
         else if(sl->start)
@@ -312,6 +338,7 @@ void surface_lister_command(void* spv, unsigned char* command)
                 {
                     if(sl->current_item)
                         sl->current_item--;
+
                     sl->start= element_of(sl->start->current.next,surface_lister_file_list,current);
                 }
             }
@@ -329,6 +356,7 @@ void surface_lister_command(void* spv, unsigned char* command)
 void surface_lister_destroy(void** spv)
 {
     surface_lister *sl=*spv;
+
     if(sl->parent==NULL)
     {
         surface_lister_file_list *slfl=NULL;
@@ -339,10 +367,12 @@ void surface_lister_destroy(void** spv)
             sfree((void**)&slfl->display_name);
             sfree((void**)&slfl);
         }
+
         if(sl->base_path!=sl->path)
         {
             sfree((void**)&sl->path);
         }
     }
+
     sfree(spv);
 }

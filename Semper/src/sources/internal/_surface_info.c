@@ -62,6 +62,7 @@ double surface_info_update(void* spv)
     surface_info* si = spv;
     surface_data* sd = surface_by_name(si->cd, si->sname);
     size_t  flags=0;
+
     if(sd == NULL)
         return (0.0);
 
@@ -82,6 +83,7 @@ double surface_info_update(void* spv)
     {
         return ((double)(si->coord?sd->y:sd->x));
     }
+
     return ((double)flags);
 }
 
@@ -96,10 +98,12 @@ unsigned char* surface_info_string(void* spv)
     {
         return(NULL);
     }
+
     if(sd==NULL)
     {
         return("");
     }
+
     if(si->data==1)
     {
         sfree((void**)&si->str);
@@ -118,6 +122,7 @@ unsigned char* surface_info_string(void* spv)
         for(unsigned char i=0; i<sizeof(name_tbl)/sizeof(void *); i++)
         {
             t=surface_info_meta(sd,name_tbl[i]);
+
             if(t)
             {
                 nm+=string_length(name_tbl[i])+string_length(t)+3; //allocate extra space for newline,space and null
@@ -136,11 +141,14 @@ unsigned char* surface_info_string(void* spv)
                 {
                     si->str[bpos++]='\n';
                 }
+
                 bpos+=snprintf(si->str+bpos,nm-bpos,"%s: %s",name_tbl[i],t);
             }
         }
+
         return (si->str);
     }
+
     return(NULL);
 }
 

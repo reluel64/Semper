@@ -74,10 +74,13 @@ static int bind_alloc_index(binding* b, size_t index)
     {
         if(bi->index < index)
             p = bi;
+
         if(bi->index > index)
             n = bi;
+
         if(n && p)
             break;
+
         if(bi->index == index)
             return (0);
     }
@@ -111,8 +114,10 @@ static void bind_populate(object* o)
     {
         if(ev == NULL)
             break;
+
         if(strncasecmp(ev, "Source", 6))
             continue;
+
         size_t index = 0;
         source* s = NULL;
 
@@ -164,6 +169,7 @@ double bind_percentual_value(double val, double min_val, double max_val)
     {
         return (1.0);
     }
+
     val = min(val, max_val);
     val = max(val, min_val);
     val -= min_val;
@@ -207,6 +213,7 @@ static void bind_invalidate(object* o)
                 {
                     bind_dealloc_index(&bi);
                 }
+
                 sfree((void**)&p);
             }
         }
@@ -235,6 +242,7 @@ void bind_unbind(surface_data* sd, unsigned char* sn)
             if(b->s)
             {
                 unsigned char* sname = skeleton_get_section_name(b->s->cs);
+
                 if(sn && sname && !strcasecmp(sn, sname))
                 {
                     bind_dealloc(&b);
@@ -255,6 +263,7 @@ static inline size_t binding_index(unsigned char* s, size_t* skip)
         *skip = (next - s) - 1;
         return (index);
     }
+
     *skip = 0;
     return (0);
 }
@@ -268,6 +277,7 @@ static inline size_t need_replacements(unsigned char* s)
             return (1);
         }
     }
+
     return (0);
 }
 
@@ -300,22 +310,29 @@ static void bind_create_strings(object* o, string_bind* sb)
         {
             switch(sb->self_scaling)
             {
-            case 1:
-                for(formula = s->d_info; formula > 1024.0; formula /= 1024.0, ++mul)
-                    ;
-                break;
-            case 2:
-                for(formula = s->d_info; formula > 1000.0; formula /= 1000.0, ++mul)
-                    ;
-                break;
-            case 3:
-                for(formula = s->d_info; formula > 1024.0 * 1024; formula /= (1024.0 * 1024), ++mul)
-                    ;
-                break;
-            case 4:
-                for(formula = s->d_info; formula > 1000.0 * 1000; formula /= (1000.0 * 1000), ++mul)
-                    ;
-                break;
+                case 1:
+                    for(formula = s->d_info; formula > 1024.0; formula /= 1024.0, ++mul)
+                        ;
+
+                    break;
+
+                case 2:
+                    for(formula = s->d_info; formula > 1000.0; formula /= 1000.0, ++mul)
+                        ;
+
+                    break;
+
+                case 3:
+                    for(formula = s->d_info; formula > 1024.0 * 1024; formula /= (1024.0 * 1024), ++mul)
+                        ;
+
+                    break;
+
+                case 4:
+                    for(formula = s->d_info; formula > 1000.0 * 1000; formula /= (1000.0 * 1000), ++mul)
+                        ;
+
+                    break;
             }
         }
 
@@ -329,14 +346,17 @@ static void bind_create_strings(object* o, string_bind* sb)
         size_t fs_sz = (string_length(out_buf) + 3);
         fs = zmalloc(fs_sz + 1);
         strcpy(fs, out_buf);
+
         if(mul < sizeof(multiples) / sizeof(unsigned char) && multiples[mul])
         {
             fs[fs_sz - 3] = ' ';
             fs[fs_sz - 2] = multiples[mul];
         }
+
         if(s->replacements)
         {
             b->bs = replace(fs, s->replacements, s->regexp);
+
             if(b->bs == NULL)
             {
                 b->bs = fs;
@@ -421,6 +441,7 @@ static inline unsigned char* bind_string(object* o, size_t index, size_t* sz)
 static inline size_t bind_query_memory(object* o, string_bind* sb)
 {
     size_t mem = 0;
+
     for(size_t i = 0; sb->s_in[i]; i++)
     {
         if(sb->s_in[i] == '%')
@@ -435,14 +456,18 @@ static inline size_t bind_query_memory(object* o, string_bind* sb)
                     mem += bsz;
                 else
                     mem += skip + 1;
+
                 i += skip;
                 continue;
             }
+
             mem++;
             continue;
         }
+
         mem++;
     }
+
     return (mem);
 }
 
@@ -451,6 +476,7 @@ size_t bind_update_string(object* o, string_bind* sb)
 
     size_t nmbl = 0;
     size_t di = 0;
+
     if(!o || !sb || !sb->s_in)
     {
         return (0);
@@ -477,6 +503,7 @@ size_t bind_update_string(object* o, string_bind* sb)
             if(skip)
             {
                 unsigned char* bs = NULL;
+
                 if((bs = bind_string(o, vi, &bsl)) != NULL)
                 {
                     strcpy(sb->s_out + di, bs);
@@ -487,12 +514,15 @@ size_t bind_update_string(object* o, string_bind* sb)
                     strncpy(sb->s_out + di, sb->s_in + i, skip + 1);
                     di += skip + 1; // skip number + '%'
                 }
+
                 i += skip; // skip number because '%' will be skipped in the next iteration
                 continue;
             }
+
             sb->s_out[di++] = sb->s_in[i];
             continue;
         }
+
         sb->s_out[di++] = sb->s_in[i];
     }
 
@@ -506,6 +536,7 @@ int bind_update_numeric(object* o, bind_numeric* bn)
     {
         return (-1);
     }
+
     bn->max = 1;
     bn->min = 0;
     bn->val = 0;
@@ -518,6 +549,7 @@ int bind_update_numeric(object* o, bind_numeric* bn)
         {
             continue;
         }
+
         bind_index* bi = NULL;
 
         list_enum_part(bi, &b->index, current)
@@ -532,10 +564,12 @@ int bind_update_numeric(object* o, bind_numeric* bn)
                 {
                     bn->max = bn->val;
                 }
+
                 if(bn->max == 0.0)
                 {
                     bn->max = 1.0;
                 }
+
                 return (0);
             }
         }

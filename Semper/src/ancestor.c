@@ -44,6 +44,7 @@ static int ancestor_filter(string_tokenizer_status *sts, void* pv)
     {
         return (1);
     }
+
     return (0);
 }
 
@@ -53,35 +54,41 @@ static inline section ancestor_dispatch_section(void* r, section* shead, unsigne
     {
         return (NULL);
     }
+
     switch(flag & 0x1C)
     {
-    case XPANDER_REQUESTOR_OBJECT:
-    {
-        object* ro = r;
-        surface_data* sd = ro->sd;
-        *shead = &sd->skhead;
-        return (ro->os);
-    }
-    case XPANDER_REQUESTOR_SOURCE:
-    {
-        source* rs = r;
-        surface_data* sd = rs->sd;
-        *shead = &sd->skhead;
-        return (rs->cs);
-    }
-    case XPANDER_REQUESTOR_SURFACE:
-    {
-        surface_data* sd = r;
-        *shead = &sd->skhead;
-        if(flag & 0x20)
+        case XPANDER_REQUESTOR_OBJECT:
         {
-            *shead = &sd->cd->shead;
-            return (sd->scd);
+            object* ro = r;
+            surface_data* sd = ro->sd;
+            *shead = &sd->skhead;
+            return (ro->os);
         }
-        return (sd->spm);
-    }
-    default:
-        return (NULL);
+
+        case XPANDER_REQUESTOR_SOURCE:
+        {
+            source* rs = r;
+            surface_data* sd = rs->sd;
+            *shead = &sd->skhead;
+            return (rs->cs);
+        }
+
+        case XPANDER_REQUESTOR_SURFACE:
+        {
+            surface_data* sd = r;
+            *shead = &sd->skhead;
+
+            if(flag & 0x20)
+            {
+                *shead = &sd->cd->shead;
+                return (sd->scd);
+            }
+
+            return (sd->spm);
+        }
+
+        default:
+            return (NULL);
     }
 }
 
@@ -91,6 +98,7 @@ int ancestor_destroy_queue(void **qh)
     {
         return(-1);
     }
+
     ancestor_queue *aq=NULL;
     ancestor_queue *taq=NULL;
 
@@ -118,6 +126,7 @@ void *ancestor_fusion(void *r,unsigned char  *npm,unsigned char xpander_flags,un
     list_entry_init(&status_stack);
 
     as->rhead = ancestor_dispatch_section(r, &shead, xpander_flags); //obtain the section of the calling item (source,object)
+
     //Retrieve the list with ancestors
     while(iter<ANCESTOR_MAX_ITER_COUNT&&as)
     {
@@ -209,6 +218,7 @@ void *ancestor_fusion(void *r,unsigned char  *npm,unsigned char xpander_flags,un
 //--------------------------------------------------------------------------------------
             key ank=skeleton_get_key(cs,"Ancestor");
             k=(gq?ank:skeleton_get_key(cs,npm));
+
 //--------------------------------------------------------------------------------------
             if(gq&&cs) //found an entry so we add it to the queue (if we're generating a queue ;) )
             {
@@ -223,6 +233,7 @@ void *ancestor_fusion(void *r,unsigned char  *npm,unsigned char xpander_flags,un
                 aq->s=cs;
                 linked_list_add(&aq->current,result);
             }
+
 //---------------------------------------------------------------------------------------
             if(gq==0&&k) //we've got our ancestor so we'll just leave
             {
@@ -255,12 +266,15 @@ void *ancestor_fusion(void *r,unsigned char  *npm,unsigned char xpander_flags,un
         {
             continue;
         }
+
         //free this context
         linked_list_remove(&as->current);
+
         if(as->must_free)
         {
             sfree((void**)&as->value);
         }
+
         sfree((void**)&as->sti.ovecoff);
         sfree((void**)&as);
 
@@ -283,10 +297,12 @@ void *ancestor_fusion(void *r,unsigned char  *npm,unsigned char xpander_flags,un
         {
             sfree((void**)&as->value);
         }
+
         linked_list_remove(&as->current);
         sfree((void**)&as->sti.ovecoff);
         sfree((void**)&as);
     }
+
     if(iter>=ANCESTOR_MAX_ITER_COUNT)
     {
         diag_verb("%s Reached the maximum ancestor count",__FUNCTION__);

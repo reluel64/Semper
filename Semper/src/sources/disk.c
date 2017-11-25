@@ -22,6 +22,7 @@ static unsigned char disk_check_removable(unsigned char *p)
     sscanf(p,"/dev/%[A-z]31s",base);
     snprintf(path,256,"/sys/block/%s/removable",base);
     FILE *f=fopen(path,"r");
+
     if(f)
     {
         removable=fgetc(f)!='0';
@@ -29,6 +30,7 @@ static unsigned char disk_check_removable(unsigned char *p)
     }
     else
         removable=2;
+
     return(removable);
 }
 #endif
@@ -51,6 +53,7 @@ void disk_reset(void* spv, void* ip)
 
 
 #ifdef WIN32
+
     if(d->total_bytes == NULL)
     {
         d->total_bytes = zmalloc(sizeof(ULARGE_INTEGER));
@@ -95,6 +98,7 @@ double disk_update(void* spv)
 
 
 #ifdef WIN32
+
     if(d->type == 0)
     {
         unsigned short* buf = utf8_to_ucs(d->name);
@@ -119,6 +123,7 @@ double disk_update(void* spv)
         sfree((void**)&buf);
         return (ret);
     }
+
 #elif __linux__
 
     if(d->type==0)
@@ -147,6 +152,7 @@ double disk_update(void* spv)
             return((double)((size_t*)d->free_bytes)[0]);
         }
     }
+
 #endif
     return (0.0);
 }

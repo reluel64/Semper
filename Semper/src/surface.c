@@ -47,11 +47,13 @@ int surface_modified(surface_data *sd)
 {
     int res=-1;
     semper_timestamp lst= {0};
+
     if(semper_get_file_timestamp(sd->sp.file_path,&lst)==0)
     {
         res=memcmp(&sd->st,&lst,sizeof(semper_timestamp))!=0;
         memmove(&sd->st,&lst,sizeof(semper_timestamp));
     }
+
     return (res);
 }
 
@@ -99,11 +101,13 @@ void surface_reset(surface_data* sd)
         {
             sd->w=(long)sd->ia.width;
         }
+
         if(sd->h<(long)sd->ia.height)
         {
             sd->h=(long)sd->ia.height;
         }
     }
+
     //set the size locks
     sd->lock_w=sd->w>0?1:0;
     sd->lock_h=sd->h>0?1:0;
@@ -143,6 +147,7 @@ static int surface_mouse_handler(window* w, mouse_status* ms)
 {
     surface_data* sd = crosswin_get_window_data(w);
     crosswin_get_position(sd->sw, &sd->x, &sd->y);
+
     if(sd->draggable&&sd->snp)
     {
         long lx=0;
@@ -168,6 +173,7 @@ static int surface_mouse_handler(window* w, mouse_status* ms)
     {
         mouse_handle_button(sd, MOUSE_SURFACE, ms);
     }
+
     sd->mouse_hover=ms->hover; //this will be used by SurfaceOverAction
 
     return (1);
@@ -215,6 +221,7 @@ void surface_destroy_structs(surface_data* sd, unsigned char destroy)
         sd->spm = NULL;
 
     }
+
     image_cache_unref_image(sd->cd->ich,&sd->ia,1);
     sfree((void**)&sd->ia.path);
     sfree((void**)&sd->team);
@@ -237,6 +244,7 @@ int surface_destroy(surface_data* sd)
         linked_list_remove(&sd->current);
         list_entry_init(&sd->current);
     }
+
     if(sd->co)
     {
 
@@ -254,6 +262,7 @@ int surface_destroy(surface_data* sd)
         crosswin_destroy((window**)&sd->sw);
         sfree((void**)&sd);
     }
+
     return (0);
 }
 
@@ -263,6 +272,7 @@ static unsigned char* surface_variant_file(unsigned char* sd, size_t variant)
     {
         return (NULL);
     }
+
     unsigned char* ret = NULL;
 #ifdef WIN32
     size_t sdl = string_length(sd);
@@ -282,6 +292,7 @@ static unsigned char* surface_variant_file(unsigned char* sd, size_t variant)
             sfree((void**)&flt);
             return (NULL);
         }
+
         if(--variant == 0)
         {
             break;
@@ -308,6 +319,7 @@ static unsigned char* surface_variant_file(unsigned char* sd, size_t variant)
 
     DIR* dh = opendir(sd);
     struct dirent* fi = NULL;
+
     if(dh == NULL)
         return (NULL);
 
@@ -360,6 +372,7 @@ size_t surface_file_variant(unsigned char* sd, unsigned char* file)
             break;
         }
     }
+
     return (ret);
 }
 
@@ -424,10 +437,12 @@ static int surface_render_background(surface_data* sd, cairo_t* cr)
 int surface_adjust_size(surface_data *sd)
 {
     object *o=NULL;
+
     if(sd->lock_w==0)
     {
         sd->w=0;
     }
+
     if(sd->lock_h==0)
     {
         sd->h=0;
@@ -455,6 +470,7 @@ int surface_adjust_size(surface_data *sd)
         if(sd->lock_h==0)
         {
             long h = (((o->h!=o->auto_h||o->h < 0)&&o->auto_h!=0) ? o->auto_h : o->h);
+
             if(sd->h < h + o->y)
             {
                 sd->h = h + o->y;
@@ -500,6 +516,7 @@ int surface_change_variant(surface_data* sd, unsigned char* vf)
         sfree((void**)&temp_name);
         surface_reload(sd);
     }
+
     return (vn);
 }
 
@@ -509,6 +526,7 @@ int surface_create_paths(control_data* cd, surface_paths* sp, size_t variant, un
     {
         return (-1);
     }
+
     sfree((void**)&sp->data_dir);
     //sfree((void**)&sp->inc);
     sfree((void**)&sp->file_path);
@@ -522,6 +540,7 @@ int surface_create_paths(control_data* cd, surface_paths* sp, size_t variant, un
     {
         return (-1);
     }
+
     /*Let's create the paths*/
 
     size_t name_len = string_length(name);
@@ -639,6 +658,7 @@ static char* surface_read_from_memory(char* str, size_t ccount, surface_reader_s
 {
     memset(str, 0, ccount);
     size_t i = 0;
+
     for(; srrs->buf[srrs->current] != '\n' && srrs->current < srrs->size; srrs->current++, i++)
     {
         str[i] = srrs->buf[srrs->current];
@@ -648,10 +668,12 @@ static char* surface_read_from_memory(char* str, size_t ccount, surface_reader_s
     {
         str[i] = srrs->buf[srrs->current++];
     }
+
     if(srrs->current == srrs->size)
     {
         return (NULL);
     }
+
     return (str);
 }
 
@@ -710,6 +732,7 @@ static int ini_handler(surface_validate_handler)
         *((int*)pv) = 1;
         return (1);
     }
+
     return (0);
 }
 
@@ -723,6 +746,7 @@ static int ini_handler(surface_create_skeleton_handler)
     {
         return(1);
     }
+
     if(!sn && !kn && !kv)
     {
         return (0);
@@ -731,6 +755,7 @@ static int ini_handler(surface_create_skeleton_handler)
     if(sn && *sn)
     {
         shd->ls = skeleton_add_section(&sd->skhead, sn);
+
         if(strcasecmp(sn,"Surface-Variables")==0)
         {
             sd->sv  = shd->ls;
@@ -752,6 +777,7 @@ static int ini_handler(surface_create_skeleton_handler)
             xr.requestor=shd->pv;
             xr.req_type=XPANDER_SURFACE;
             shd->depth++;
+
             if(xpander(&xr))
             {
                 ini_parser_parse_file(xr.es, surface_create_skeleton_handler, shd);
@@ -761,6 +787,7 @@ static int ini_handler(surface_create_skeleton_handler)
             {
                 ini_parser_parse_file(xr.os, surface_create_skeleton_handler, shd);
             }
+
             shd->depth--;
             shd->ls = ts; // restore current section
             return (0);
@@ -847,6 +874,7 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
     {
         list_entry_init(&tsd->current);
     }
+
     /*Initialize lists*/
     list_entry_init(&tsd->skhead);
     list_entry_init(&tsd->objects);
@@ -864,6 +892,7 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
      */
 
     shd.pv = tsd;
+
     if(memory==0)
     {
         ini_parser_parse_file(sp->file_path, surface_create_skeleton_handler, &shd); // we will create the skeleton
@@ -872,21 +901,25 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
     {
         ini_parser_parse_stream((ini_reader)surface_read_from_memory,pv,surface_create_skeleton_handler,&shd);
     }
+
     sfree((void**)&shd.kv);                                                      // free a small yet important to free residue
 
     tsd->snp = 1;                                                                // give the reset routine a chance to read X and Y from the skeleton
 
     tsd->spm = skeleton_get_section(&tsd->skhead, "Surface");
+
     if(sp)
     {
         tsd->scd = skeleton_get_section(&cd->shead, sp->surface_rel_dir);          // get the section from Semper.ini
     }
 
 #ifdef __linux__
+
     if(memory==0)
     {
         tsd->inotify_watch_id=inotify_add_watch( cd->inotify_fd, tsd->sp.file_path, IN_ALL_EVENTS );
     }
+
 #endif
     surface_window_init(tsd);                                                   // initialize window
     surface_reset(tsd); // set or reset the surface parameters
@@ -951,10 +984,12 @@ int surface_update(surface_data* sd)
             source_destroy(&s);
             continue;
         }
+
         if((sd->cycle%s->divider||s->disabled)&&s->vol_var==0)
         {
             continue;
         }
+
         source_update(s);
     }
 
@@ -1004,5 +1039,6 @@ int surface_update(surface_data* sd)
         // re-schedule the update by removing any potential duplicates and push a new timed event
         event_push(sd->cd->eq, (event_handler)surface_update, (void*)sd, sd->uf, EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
     }
+
     return (1);
 }

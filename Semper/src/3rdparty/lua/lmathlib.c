@@ -41,11 +41,14 @@ static int math_abs (lua_State *L)
     if (lua_isinteger(L, 1))
     {
         lua_Integer n = lua_tointeger(L, 1);
+
         if (n < 0) n = (lua_Integer)(0u - (lua_Unsigned)n);
+
         lua_pushinteger(L, n);
     }
     else
         lua_pushnumber(L, l_mathop(fabs)(luaL_checknumber(L, 1)));
+
     return 1;
 }
 
@@ -92,6 +95,7 @@ static int math_toint (lua_State *L)
 {
     int valid;
     lua_Integer n = lua_tointegerx(L, 1, &valid);
+
     if (valid)
         lua_pushinteger(L, n);
     else
@@ -99,6 +103,7 @@ static int math_toint (lua_State *L)
         luaL_checkany(L, 1);
         lua_pushnil(L);  /* value is not convertible to integer */
     }
+
     return 1;
 }
 
@@ -106,6 +111,7 @@ static int math_toint (lua_State *L)
 static void pushnumint (lua_State *L, lua_Number d)
 {
     lua_Integer n;
+
     if (lua_numbertointeger(d, &n))  /* does 'd' fit in an integer? */
         lua_pushinteger(L, n);  /* result is integer */
     else
@@ -122,6 +128,7 @@ static int math_floor (lua_State *L)
         lua_Number d = l_mathop(floor)(luaL_checknumber(L, 1));
         pushnumint(L, d);
     }
+
     return 1;
 }
 
@@ -135,6 +142,7 @@ static int math_ceil (lua_State *L)
         lua_Number d = l_mathop(ceil)(luaL_checknumber(L, 1));
         pushnumint(L, d);
     }
+
     return 1;
 }
 
@@ -144,6 +152,7 @@ static int math_fmod (lua_State *L)
     if (lua_isinteger(L, 1) && lua_isinteger(L, 2))
     {
         lua_Integer d = lua_tointeger(L, 2);
+
         if ((lua_Unsigned)d + 1u <= 1u)    /* special cases: -1 or 0 */
         {
             luaL_argcheck(L, d != 0, 2, "zero");
@@ -155,6 +164,7 @@ static int math_fmod (lua_State *L)
     else
         lua_pushnumber(L, l_mathop(fmod)(luaL_checknumber(L, 1),
                                          luaL_checknumber(L, 2)));
+
     return 1;
 }
 
@@ -180,6 +190,7 @@ static int math_modf (lua_State *L)
         /* fractional part (test needed for inf/-inf) */
         lua_pushnumber(L, (n == ip) ? l_mathop(0.0) : (n - ip));
     }
+
     return 2;
 }
 
@@ -203,12 +214,14 @@ static int math_log (lua_State *L)
 {
     lua_Number x = luaL_checknumber(L, 1);
     lua_Number res;
+
     if (lua_isnoneornil(L, 2))
         res = l_mathop(log)(x);
     else
     {
         lua_Number base = luaL_checknumber(L, 2);
 #if !defined(LUA_USE_C89)
+
         if (base == l_mathop(2.0))
             res = l_mathop(log2)(x);
         else
@@ -218,6 +231,7 @@ static int math_log (lua_State *L)
             else
                 res = l_mathop(log)(x)/l_mathop(log)(base);
     }
+
     lua_pushnumber(L, res);
     return 1;
 }
@@ -247,11 +261,13 @@ static int math_min (lua_State *L)
     int imin = 1;  /* index of current minimum value */
     int i;
     luaL_argcheck(L, n >= 1, 1, "value expected");
+
     for (i = 2; i <= n; i++)
     {
         if (lua_compare(L, i, imin, LUA_OPLT))
             imin = i;
     }
+
     lua_pushvalue(L, imin);
     return 1;
 }
@@ -263,11 +279,13 @@ static int math_max (lua_State *L)
     int imax = 1;  /* index of current maximum value */
     int i;
     luaL_argcheck(L, n >= 1, 1, "value expected");
+
     for (i = 2; i <= n; i++)
     {
         if (lua_compare(L, imax, i, LUA_OPLT))
             imax = i;
     }
+
     lua_pushvalue(L, imax);
     return 1;
 }
@@ -281,28 +299,33 @@ static int math_random (lua_State *L)
 {
     lua_Integer low, up;
     double r = (double)l_rand() * (1.0 / ((double)L_RANDMAX + 1.0));
+
     switch (lua_gettop(L))    /* check number of arguments */
     {
-    case 0:    /* no arguments */
-    {
-        lua_pushnumber(L, (lua_Number)r);  /* Number between 0 and 1 */
-        return 1;
+        case 0:    /* no arguments */
+        {
+            lua_pushnumber(L, (lua_Number)r);  /* Number between 0 and 1 */
+            return 1;
+        }
+
+        case 1:    /* only upper limit */
+        {
+            low = 1;
+            up = luaL_checkinteger(L, 1);
+            break;
+        }
+
+        case 2:    /* lower and upper limits */
+        {
+            low = luaL_checkinteger(L, 1);
+            up = luaL_checkinteger(L, 2);
+            break;
+        }
+
+        default:
+            return luaL_error(L, "wrong number of arguments");
     }
-    case 1:    /* only upper limit */
-    {
-        low = 1;
-        up = luaL_checkinteger(L, 1);
-        break;
-    }
-    case 2:    /* lower and upper limits */
-    {
-        low = luaL_checkinteger(L, 1);
-        up = luaL_checkinteger(L, 2);
-        break;
-    }
-    default:
-        return luaL_error(L, "wrong number of arguments");
-    }
+
     /* random integer in the interval [low, up] */
     luaL_argcheck(L, low <= up, 1, "interval is empty");
     luaL_argcheck(L, low >= 0 || up <= LUA_MAXINTEGER + low, 1,
@@ -335,6 +358,7 @@ static int math_type (lua_State *L)
         luaL_checkany(L, 1);
         lua_pushnil(L);
     }
+
     return 1;
 }
 

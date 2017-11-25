@@ -28,9 +28,11 @@ int image_cache_decode_svg(FILE *f,image_cache_decoded *icd)
     fread(buf,1,buf_sz,f);
 
     NSVGimage *img=nsvgParse(buf,"px",0);
+
     if(img)
     {
         NSVGrasterizer *rast=nsvgCreateRasterizer();
+
         if(rast)
         {
             if(icd->width==0||icd->height==0)
@@ -67,6 +69,7 @@ int image_cache_decode_svg(FILE *f,image_cache_decoded *icd)
                 clswp[1]=((size_t)clswp[1]*(size_t)clswp[3])>>8;
                 clswp[0]=((size_t)clswp[0]*(size_t)clswp[3])>>8;
             }
+
 #if USE_SCALE
             int stride=cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,big_w);
 
@@ -96,6 +99,7 @@ int image_cache_decode_svg(FILE *f,image_cache_decoded *icd)
 
         nsvgDelete(img);
     }
+
     sfree((void**)&buf);
 
 

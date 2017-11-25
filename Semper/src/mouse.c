@@ -26,14 +26,16 @@ static int mouse_set_actions_internal(void *pv,unsigned char tgt,unsigned char d
 
     switch(tgt)
     {
-    case MOUSE_OBJECT:
-        ma=&((object*)pv)->ma;
-        break;
-    case MOUSE_SURFACE:
-        ma=&((surface_data*)pv)->ma;
-        break;
-    case MOUSE_SURFACE|MOUSE_OBJECT:
-        ma=pv;
+        case MOUSE_OBJECT:
+            ma=&((object*)pv)->ma;
+            break;
+
+        case MOUSE_SURFACE:
+            ma=&((surface_data*)pv)->ma;
+            break;
+
+        case MOUSE_SURFACE|MOUSE_OBJECT:
+            ma=pv;
     }
 
     if(ma==NULL)
@@ -61,11 +63,13 @@ static int mouse_set_actions_internal(void *pv,unsigned char tgt,unsigned char d
     for(size_t i = 0; i < sizeof(mtbl) / sizeof(mouse_action_tbl); i++)
     {
         sfree((void**)mtbl[i].act);
+
         if(destroy==0)
         {
             (*mtbl[i].act) = parameter_string(pv, mtbl[i].name, NULL, (tgt==MOUSE_OBJECT?XPANDER_OBJECT:XPANDER_SURFACE));
         }
     }
+
     return(0);
 }
 
@@ -92,11 +96,13 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
     long h=0;
     unsigned char *fcomm=NULL;
     unsigned char tbuf[256]= {0};
+
     /****************/
     if(pv == NULL)
     {
         return (0);
     }
+
     if(mode == MOUSE_OBJECT)
     {
         object* o = pv;
@@ -130,30 +136,34 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
     {
         switch(ms->button)
         {
-        case MOUSE_LEFT_BUTTON:
-            fcomm=replace(ms->state == 0 ? ma->lcu : ma->lcd,tbuf,0);
-            break;
-        case MOUSE_MIDDLE_BUTTON:
-            fcomm=replace(ms->state == 0 ? ma->mcu : ma->mcd,tbuf,0);
-            break;
-        case MOUSE_RIGHT_BUTTON:
-            fcomm=replace(ms->state == 0 ? ma->rcu : ma->rcd,tbuf,0);
-            break;
+            case MOUSE_LEFT_BUTTON:
+                fcomm=replace(ms->state == 0 ? ma->lcu : ma->lcd,tbuf,0);
+                break;
+
+            case MOUSE_MIDDLE_BUTTON:
+                fcomm=replace(ms->state == 0 ? ma->mcu : ma->mcd,tbuf,0);
+                break;
+
+            case MOUSE_RIGHT_BUTTON:
+                fcomm=replace(ms->state == 0 ? ma->rcu : ma->rcd,tbuf,0);
+                break;
         }
     }
     else if(ms->state == 2)
     {
         switch(ms->button)
         {
-        case MOUSE_LEFT_BUTTON:
-            fcomm=replace(ma->lcdd,tbuf,0);
-            break;
-        case MOUSE_MIDDLE_BUTTON:
-            fcomm=replace(ma->mcdd,tbuf,0);
-            break;
-        case MOUSE_RIGHT_BUTTON:
-            fcomm=replace(ma->rcdd,tbuf,0);
-            break;
+            case MOUSE_LEFT_BUTTON:
+                fcomm=replace(ma->lcdd,tbuf,0);
+                break;
+
+            case MOUSE_MIDDLE_BUTTON:
+                fcomm=replace(ma->mcdd,tbuf,0);
+                break;
+
+            case MOUSE_RIGHT_BUTTON:
+                fcomm=replace(ma->rcdd,tbuf,0);
+                break;
         }
     }
     else if(ms->scroll_dir)
@@ -177,6 +187,7 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
         {
             surface_builtin_destroy(&((object*)pv)->ttip);
         }
+
         fcomm=replace( ma->nha,tbuf,0);
         ma->old_hover = ms->hover;
     }
@@ -187,5 +198,6 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
         command(sd,&fcomm);
         sfree((void**)&fcomm);
     }
+
     return (ret);
 }

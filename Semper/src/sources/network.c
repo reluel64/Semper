@@ -127,10 +127,12 @@ void network_reset(void *spv,void *ip)
         else
             n->inf=unknown;
     }
+
     n->qty=extension_bool("Quantity",ip,0);
     p=extension_string("Interface",EXTENSION_XPAND_ALL,ip,"0");
     n-> if_index=strtoul(p,&t,10);
 #ifdef WIN32
+
     if(p==(unsigned char*)t)
     {
         n->best=!strcasecmp(p,"Best");
@@ -145,6 +147,7 @@ void network_reset(void *spv,void *ip)
         n->if_index++;
         n->best=0;
     }
+
 #endif
 
 }
@@ -179,6 +182,7 @@ static size_t network_get_bytes(network *n)
                     break;
                 }
             }
+
             n->best=1; //all clear
         }
     }
@@ -188,19 +192,22 @@ static size_t network_get_bytes(network *n)
 
         switch(n->inf)
         {
-        case total:
-            c_bytes+=tbl->Table[n->if_index-1].InOctets;
-            c_bytes+=tbl->Table[n->if_index-1].OutOctets;
-            break;
-        case download:
-            c_bytes+=tbl->Table[n->if_index-1].InOctets;
-            break;
-        case upload:
-            c_bytes+=tbl->Table[n->if_index-1].OutOctets;
-            break;
-        case unknown:
-            c_bytes=0;
-            break;
+            case total:
+                c_bytes+=tbl->Table[n->if_index-1].InOctets;
+                c_bytes+=tbl->Table[n->if_index-1].OutOctets;
+                break;
+
+            case download:
+                c_bytes+=tbl->Table[n->if_index-1].InOctets;
+                break;
+
+            case upload:
+                c_bytes+=tbl->Table[n->if_index-1].OutOctets;
+                break;
+
+            case unknown:
+                c_bytes=0;
+                break;
         }
     }
 
@@ -214,19 +221,22 @@ static size_t network_get_bytes(network *n)
 
             switch(n->inf)
             {
-            case total:
-                c_bytes+=tbl->Table[i].InOctets;
-                c_bytes+=tbl->Table[i].OutOctets;
-                break;
-            case download:
-                c_bytes+=tbl->Table[i].InOctets;
-                break;
-            case upload:
-                c_bytes+=tbl->Table[i].OutOctets;
-                break;
-            case unknown:
-                c_bytes=0;
-                break;
+                case total:
+                    c_bytes+=tbl->Table[i].InOctets;
+                    c_bytes+=tbl->Table[i].OutOctets;
+                    break;
+
+                case download:
+                    c_bytes+=tbl->Table[i].InOctets;
+                    break;
+
+                case upload:
+                    c_bytes+=tbl->Table[i].OutOctets;
+                    break;
+
+                case unknown:
+                    c_bytes=0;
+                    break;
             }
         }
     }
@@ -238,6 +248,7 @@ static size_t network_get_bytes(network *n)
     unsigned char buf[512]= {0};
     size_t rx=0;
     size_t tx=0;
+
     if(dh==NULL)
         return(0);
 
@@ -252,6 +263,7 @@ static size_t network_get_bytes(network *n)
 
             snprintf(buf,512,"/sys/class/net/%s/statistics/rx_bytes",dir->d_name);
             FILE *f=fopen(buf,"r");
+
             if(f)
             {
                 fscanf(f,"%lu",&lrx);
@@ -266,8 +278,10 @@ static size_t network_get_bytes(network *n)
                 fscanf(f,"%lu",&ltx);
                 fclose(f);
             }
+
             rx+=lrx;
             tx+=ltx;
+
             if(lifindex==n->if_index-1)
                 break;
         }
@@ -307,6 +321,7 @@ double network_update(void *spv)
         n->v=(double)(new_value-n->old_bytes);
         n->qty_bytes+=(new_value-n->old_bytes);
         n->old_bytes=new_value;
+
         if(n->qty)
         {
             n->v=(double)n->qty_bytes;
@@ -332,10 +347,12 @@ static size_t network_interface_index(unsigned char *iname)
 {
 
     size_t if_index=0;
+
     if(iname==NULL)
     {
         return(0);
     }
+
 #ifdef WIN32
     MIB_IF_TABLE2 *tbl=NULL;
 
@@ -357,12 +374,14 @@ static size_t network_interface_index(unsigned char *iname)
             break;
         }
     }
+
     FreeMibTable(tbl);
     sfree((void**)&uc);
 #elif __linux__
     unsigned char buf[256]= {0};
     snprintf(buf,256,"/sys/class/net/%s/ifindex",iname);
     FILE *f=fopen(buf,"r");
+
     if(f==NULL)
     {
         return(0);
@@ -372,6 +391,7 @@ static size_t network_interface_index(unsigned char *iname)
         fscanf(f,"%lu",&if_index);
         fclose(f);
     }
+
 #endif
     return(if_index);
 }

@@ -37,7 +37,9 @@ LClosure *luaF_newLclosure (lua_State *L, int n)
     LClosure *c = gco2lcl(o);
     c->p = NULL;
     c->nupvalues = cast_byte(n);
+
     while (n--) c->upvals[n] = NULL;
+
     return c;
 }
 
@@ -47,6 +49,7 @@ LClosure *luaF_newLclosure (lua_State *L, int n)
 void luaF_initupvals (lua_State *L, LClosure *cl)
 {
     int i;
+
     for (i = 0; i < cl->nupvalues; i++)
     {
         UpVal *uv = luaM_new(L, UpVal);
@@ -64,13 +67,17 @@ UpVal *luaF_findupval (lua_State *L, StkId level)
     UpVal *p;
     UpVal *uv;
     lua_assert(isintwups(L) || L->openupval == NULL);
+
     while (*pp != NULL && (p = *pp)->v >= level)
     {
         lua_assert(upisopen(p));
+
         if (p->v == level)  /* found a corresponding upvalue? */
             return p;  /* return it */
+
         pp = &p->u.open.next;
     }
+
     /* not found: create a new upvalue */
     uv = luaM_new(L, UpVal);
     uv->refcount = 0;
@@ -78,11 +85,13 @@ UpVal *luaF_findupval (lua_State *L, StkId level)
     uv->u.open.touched = 1;
     *pp = uv;
     uv->v = level;  /* current value lives in the stack */
+
     if (!isintwups(L))    /* thread not in list of threads with upvalues? */
     {
         L->twups = G(L)->twups;  /* link it to the list */
         G(L)->twups = L;
     }
+
     return uv;
 }
 
@@ -90,10 +99,12 @@ UpVal *luaF_findupval (lua_State *L, StkId level)
 void luaF_close (lua_State *L, StkId level)
 {
     UpVal *uv;
+
     while (L->openupval != NULL && (uv = L->openupval)->v >= level)
     {
         lua_assert(upisopen(uv));
         L->openupval = uv->u.open.next;  /* remove from 'open' list */
+
         if (uv->refcount == 0)  /* no references? */
             luaM_free(L, uv);  /* free upvalue */
         else
@@ -152,14 +163,17 @@ void luaF_freeproto (lua_State *L, Proto *f)
 const char *luaF_getlocalname (const Proto *f, int local_number, int pc)
 {
     int i;
+
     for (i = 0; i<f->sizelocvars && f->locvars[i].startpc <= pc; i++)
     {
         if (pc < f->locvars[i].endpc)    /* is variable active? */
         {
             local_number--;
+
             if (local_number == 0)
                 return getstr(f->locvars[i].varname);
         }
     }
+
     return NULL;  /* not found */
 }

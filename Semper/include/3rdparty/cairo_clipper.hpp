@@ -19,41 +19,46 @@
 
 typedef struct _cairo cairo_t;
 
-namespace ClipperLib {
-  namespace cairo {
+namespace ClipperLib
+{
+    namespace cairo
+    {
 
-    enum Transform {
-      tNone,
-      tUserToDevice,
-      tDeviceToUser
-    };
+        enum Transform
+        {
+            tNone,
+            tUserToDevice,
+            tDeviceToUser
+        };
 
 //nb: Since Clipper only accepts integer coordinates, fractional values have to
 //be scaled up and down when being passed to and from Clipper. This is easily
 //accomplished by setting the scaling factor (10^x) in the following functions.
 //When scaling, remember that on most platforms, integer is only a 32bit value.
-    void cairo_to_clipper(cairo_t* cr,
-                          ClipperLib::Paths &pg,
-                          int scaling_factor = 0,
-                          Transform transform = tNone);
+        void cairo_to_clipper(cairo_t* cr,
+                              ClipperLib::Paths &pg,
+                              int scaling_factor = 0,
+                              Transform transform = tNone);
 
-    void clipper_to_cairo(const ClipperLib::Paths &pg,
-                          cairo_t* cr,
-                          int scaling_factor = 0,
-                          Transform transform = tNone);
-  }
+        void clipper_to_cairo(const ClipperLib::Paths &pg,
+                              cairo_t* cr,
+                              int scaling_factor = 0,
+                              Transform transform = tNone);
+    }
 
-  class clipperCairoException : public std::exception
-  {
+    class clipperCairoException : public std::exception
+    {
     public:
-      clipperCairoException(const char* description)
+        clipperCairoException(const char* description)
         throw(): std::exception(), m_description (description) {}
-      virtual ~clipperCairoException() throw() {}
-      virtual const char* what() const throw() {return m_description.c_str();}
+        virtual ~clipperCairoException() throw() {}
+        virtual const char* what() const throw()
+        {
+            return m_description.c_str();
+        }
     private:
-      std::string m_description;
-  };
+        std::string m_description;
+    };
 }
 
 #endif
-

@@ -110,6 +110,7 @@ unsigned char* source_variable(source* s, size_t* len, unsigned char flags)
             *len = 0;
             return (NULL);
         }
+
         if(flags & SOURCE_VARIABLE_DOUBLE)
         {
             *len = s->inf_double_len;
@@ -151,6 +152,7 @@ unsigned char* source_variable(source* s, size_t* len, unsigned char flags)
     {
         *len = 0;
     }
+
     return (NULL);
 }
 
@@ -163,23 +165,28 @@ static void* source_load_lib(unsigned char* path)
     sfree((void**)&wp);
 #elif __linux__
     unsigned char *temp_path=path;
+
     if(is_file_type(path,"so")==0)
     {
         size_t len=string_length(path);
         temp_path=zmalloc(len+5);
+
         if(temp_path)
         {
             snprintf(temp_path,len+4,"%s.so",path);
         }
     }
+
     if(temp_path)
     {
         lib = dlopen(temp_path, RTLD_LAZY);
     }
+
     if(temp_path!=path)
     {
         sfree((void**)&temp_path);
     }
+
 #endif
     return (lib);
 }
@@ -227,6 +234,7 @@ static int source_load_extension(source* s)
     {
         return (-1);
     }
+
     return (0);
 }
 
@@ -253,6 +261,7 @@ static void source_destroy_routines(source* s)
 static int source_set_routines(source* s,source_table *st)
 {
     int ret=-1;
+
     if(s==NULL||st==NULL)
         return(-1);
 
@@ -292,6 +301,7 @@ int source_init(section s, surface_data* sd)
     {
         return (-1);
     }
+
     source* ss = zmalloc(sizeof(source));
     ss->sd = sd;
     ss->cs = s;
@@ -321,6 +331,7 @@ source* source_by_name(surface_data* sd, unsigned char* sn,size_t len)
             {
                 return (NULL);
             }
+
             return (s);
         }
     }
@@ -389,6 +400,7 @@ void source_reset(source* s)
     {
         s->divider = 1;
     }
+
     if(type != s->type)
     {
         // Source already initialized but the type has changed
@@ -422,6 +434,7 @@ void source_reset(source* s)
             sfree((void**)&ext_name);
         }
     }
+
     /*the MaxValue needs some tweaks*/
     if(mval > 0.0)
     {
@@ -438,6 +451,7 @@ void source_reset(source* s)
     {
         s->max_val = 1.0;
     }
+
     action_reset(s);
 
     if(s->source_reset_rtn)
@@ -465,6 +479,7 @@ int source_update(source* s)
             s->s_info_len = 0;
             sfree((void**)&s->s_info);
         }
+
         return (0);
     }
 
@@ -483,6 +498,7 @@ int source_update(source* s)
         {
             s->max_val = cv >= s->max_val ? cv : s->max_val; // adjust max
         }
+
         /*Calculate the new result*/
         cv = (s->inverted ? s->max_val - cv + s->min_val : cv);
 
@@ -512,6 +528,7 @@ int source_update(source* s)
                 s->s_info=(str[0]!=0?clone_string(str):zmalloc(1));
                 s->s_info_len =(str[0]!=0?string_length(s->s_info):0);
             }
+
             svc = 1;
         }
     }
@@ -537,6 +554,7 @@ int source_update(source* s)
             {
                 s->inf_exp = replace(s->inf_double, s->replacements, s->regexp);
             }
+
             s->inf_exp_len = string_length(s->inf_exp);
         }
     }

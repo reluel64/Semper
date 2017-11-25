@@ -37,10 +37,12 @@ static unsigned char* perform_replacements(replace_state* rs)
     size_t tbr_len=rs->tbr_end-rs->tbr_start;
 
     unsigned char* ret = NULL;
+
     if(tbr_len==0)
     {
         return(NULL);
     }
+
     for(size_t i = 0; rs->in[i]; i++)
     {
         if(tbr_len && strncmp(rs->in + i, rs->ps+rs->tbr_start, tbr_len) == 0)
@@ -69,6 +71,7 @@ static unsigned char* perform_replacements(replace_state* rs)
             ret[di++] = rs->in[i];
         }
     }
+
     return (ret);
 }
 
@@ -102,6 +105,7 @@ static unsigned char* perform_replacements_pcre(replace_state* rs)
         sfree((void**)&expression);
         return (NULL);
     }
+
     /* ***Copied from http://libs.wikia.com/wiki/Pcre_exec***
      * The first pair of integers, ovector[0] and ovector[1],
      * identify the portion of the subject string matched by the entire pattern.
@@ -114,6 +118,7 @@ static unsigned char* perform_replacements_pcre(replace_state* rs)
     match_count = pcre_exec(pc, NULL, (char*)rs->in, in_length, 0, 0, ovector, sizeof(ovector) / sizeof(int));
     pcre_free(pc);
     sfree((void**)&expression);
+
     if(match_count < 1)
     {
 
@@ -129,6 +134,7 @@ static unsigned char* perform_replacements_pcre(replace_state* rs)
     for(size_t i = rs->rl_start; i<rs->rl_end; i++)
     {
         int index = 0;
+
         if(rs->ps[i] == '$' && isdigit(rs->ps[i + 1]))
         {
             unsigned char* na = NULL;
@@ -167,10 +173,12 @@ static unsigned char* perform_replacements_pcre(replace_state* rs)
     for(size_t i = rs->rl_start; i<rs->rl_end; i++)
     {
         int index = 0;
+
         if(rs->ps[i] == '$' && isdigit(rs->ps[i + 1])) /*Get the index*/
         {
             unsigned char* na = NULL;
             index = strtoul(rs->ps + i + 1, (char**)&na, 10);
+
             if(index && index <= match_count)
             {
                 size_t str_off = ovector[2 * (index)];                           /*Get start of string*/
@@ -178,6 +186,7 @@ static unsigned char* perform_replacements_pcre(replace_state* rs)
                 strncpy(ns + ovector[0] + ni, rs->in + str_off, ov_len);
                 ni += ov_len;
             }
+
             i = (na - rs->ps) - 1;
         }
         else
@@ -244,6 +253,7 @@ static int replacer_tokenizer_filter(string_tokenizer_status *pi, void* pv)
     {
         return (1);
     }
+
     return (0);
 }
 
@@ -283,6 +293,7 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
     string_tokenizer(&sti);
 
     memcpy(tvec,sti.ovecoff,sti.oveclen*sizeof(size_t));
+
     for(size_t i=0; i<sti.oveclen/2; i++)
     {
         size_t start = sti.ovecoff[2*i];
@@ -302,22 +313,26 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
                 begin_pair=1;
                 step=0;
             }
+
             if(rep_pair[start]==',')
             {
                 start++;
             }
+
             if(rep_pair[start]==';')
             {
                 begin_pair=0;
                 end_pair=0;
                 start++;
             }
+
             if(rep_pair[end-1]==')')
             {
                 end--;
                 end_pair=1;
             }
         }
+
         if(string_strip_space_offsets(rep_pair,&start,&end)==0)
         {
             if(rep_pair[start]=='"'||rep_pair[start]=='\'')
@@ -364,8 +379,10 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
                 rs.in=work;
             }
         }
+
         step++;
     }
+
     sfree((void**)&sti.ovecoff);
     return (rs.in==in?NULL:rs.in);
 }

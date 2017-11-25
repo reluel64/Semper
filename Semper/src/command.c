@@ -73,6 +73,7 @@ COMMAND_HANDLER(handler_draggable_command)
         skeleton_add_key(sd->scd, "Draggable", ap->pms[0]);
         sd->draggable = atoi(ap->pms[0]);
     }
+
     crosswin_draggable(sd->sw, sd->draggable);
     return (0);
 }
@@ -115,10 +116,12 @@ COMMAND_HANDLER(handler_keep_position)
     {
         sd = surface_by_name(sd->cd, ap->pms[1]);
     }
+
     if(sd == NULL)
     {
         return (-1);
     }
+
     if(!strcasecmp("-1", ap->pms[0]))
     {
         if(sd->snp)
@@ -152,6 +155,7 @@ COMMAND_HANDLER(handler_reload_if_modified)
     {
         return (-1);
     }
+
     if(!strcasecmp("-1", ap->pms[0]))
     {
         if(sd->rim)
@@ -185,6 +189,7 @@ COMMAND_HANDLER(handler_keep_on_screen)
     {
         return (-1);
     }
+
     if(!strcasecmp("-1", ap->pms[0]))
     {
         if(sd->keep_on_screen)
@@ -203,6 +208,7 @@ COMMAND_HANDLER(handler_keep_on_screen)
         skeleton_add_key(sd->scd, "KeepOnScreen", ap->pms[0]);
         sd->keep_on_screen = atoi(ap->pms[0]);
     }
+
     crosswin_keep_on_screen(sd->sw, sd->keep_on_screen);
     return (0);
 }
@@ -213,10 +219,12 @@ COMMAND_HANDLER(handler_click_through)
     {
         sd = surface_by_name(sd->cd, ap->pms[1]);
     }
+
     if(sd == NULL)
     {
         return (-1);
     }
+
     if(!strcasecmp("-1", ap->pms[0]))
     {
         if(sd->clkt)
@@ -236,6 +244,7 @@ COMMAND_HANDLER(handler_click_through)
         skeleton_add_key(sd->scd, "Clickthrough", ap->pms[0]);
         sd->clkt = atoi(ap->pms[0]);
     }
+
     crosswin_click_through(sd->sw, sd->clkt);
     return (0);
 }
@@ -246,10 +255,12 @@ COMMAND_HANDLER(handler_show_command)
     {
         sd = surface_by_name(sd->cd, ap->pms[0]);
     }
+
     if(sd == NULL)
     {
         return (-1);
     }
+
     skeleton_add_key(sd->scd, "hidden", "0");
     sd->hidden = 0;
     crosswin_show(sd->sw);
@@ -262,6 +273,7 @@ COMMAND_HANDLER(handler_hide_command)
     {
         sd = surface_by_name(sd->cd, ap->pms[0]);
     }
+
     if(sd == NULL)
     {
         return (-1);
@@ -279,10 +291,12 @@ COMMAND_HANDLER(handler_hide_fade_command)
     {
         sd = surface_by_name(sd->cd, ap->pms[0]);
     }
+
     if(sd == NULL)
     {
         return (-1);
     }
+
     skeleton_add_key(sd->scd, "Hidden", "1");
     sd->hidden = 1;
     surface_fade(sd);
@@ -295,10 +309,12 @@ COMMAND_HANDLER(handler_show_fade_command)
     {
         sd = surface_by_name(sd->cd, ap->pms[0]);
     }
+
     if(sd == NULL)
     {
         return (-1);
     }
+
     skeleton_add_key(sd->scd, "Hidden", "0");
     sd->hidden = 0;
     surface_fade(sd);
@@ -311,10 +327,12 @@ COMMAND_HANDLER(handler_update_surface)
     {
         sd = surface_by_name(sd->cd, ap->pms[0]);
     }
+
     if(sd)
     {
         event_push(sd->cd->eq, (event_handler)surface_update, (void*)sd, 0, EVENT_REMOVE_BY_DATA_HANDLER|EVENT_PUSH_TAIL);
     }
+
     return (0);
 }
 
@@ -329,6 +347,7 @@ COMMAND_HANDLER(handler_add_object)
     {
         return (0);
     }
+
     section s = skeleton_get_section(&sd->skhead, ap->pms[0]); // check is there is something in the skeleton
 
     if(s == NULL)
@@ -337,6 +356,7 @@ COMMAND_HANDLER(handler_add_object)
         skeleton_add_key(s, "Object", ap->pms[1]);
         object_init(s, sd);
     }
+
     return (1);
 }
 
@@ -361,6 +381,7 @@ COMMAND_HANDLER(handler_add_source)
         skeleton_add_key(s, "Source", ap->pms[1]);
         source_init(s, sd);
     }
+
     return (1);
 }
 
@@ -416,6 +437,7 @@ COMMAND_HANDLER(handler_change_param)
 
         s->vol_var = 1;
     }
+
     return (1);
 }
 
@@ -436,6 +458,7 @@ COMMAND_HANDLER(handler_surface_pos)
 
     double xd=0.0;
     double yd=0.0;
+
     if(!math_parser(x,&xd,NULL,NULL)&&!math_parser(y,&yd,NULL,NULL))
     {
         crosswin_set_position(sd->sw,(long)xd,(long)yd);
@@ -450,6 +473,7 @@ COMMAND_HANDLER(handler_execute)
     int ret = 0;
 #ifdef WIN32
     wchar_t* s = utf8_to_ucs(ap->pms[0]);
+
     if(s)
     {
         CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
@@ -457,6 +481,7 @@ COMMAND_HANDLER(handler_execute)
         CoUninitialize();
         sfree((void**)&s);
     }
+
 #endif
     return (!ret);
 }
@@ -480,6 +505,7 @@ COMMAND_HANDLER(handler_change_variable)
     {
         return(-1);
     }
+
     double val=0.0;
     int is_math=0;
 
@@ -487,6 +513,7 @@ COMMAND_HANDLER(handler_change_variable)
     {
         is_math=math_parser(vv,&val,NULL,NULL)==0;
     }
+
     if(is_math)
     {
         vv=zmalloc(64);
@@ -498,6 +525,7 @@ COMMAND_HANDLER(handler_change_variable)
     {
         sd->sv = skeleton_add_section(&sd->skhead, "Surface-Variables");
     }
+
     if(vv)
     {
         skeleton_add_key(sd->sv, vn, vv);
@@ -520,6 +548,7 @@ COMMAND_HANDLER(handler_switch_source)
 {
     unsigned char ns = 0;
     source* s = NULL;
+
     if(ap->plength >= 1)
     {
         s = source_by_name(sd, ap->pms[0],-1);
@@ -547,18 +576,22 @@ COMMAND_HANDLER(handler_switch_source)
 COMMAND_HANDLER(handler_source_command)
 {
     surface_data* lsd = sd;
+
     if(ap->plength >= 3)
     {
         lsd = surface_by_name(sd->cd, ap->pms[2]);
     }
+
     if(lsd)
     {
         source* s = source_by_name(lsd, ap->pms[0],-1);
+
         if(s&&s->disabled == 0 && s && s->source_command_rtn)
         {
             s->source_command_rtn(s->pv, ap->pms[1]);
         }
     }
+
     return (1);
 }
 
@@ -572,6 +605,7 @@ COMMAND_HANDLER(handler_unload_surface)
     if(sd)
     {
         section* s = NULL;
+
         if(ap->plength)
         {
             s = skeleton_get_section(&sd->cd->shead, ap->pms[0]);
@@ -580,11 +614,13 @@ COMMAND_HANDLER(handler_unload_surface)
         {
             s = sd->scd;
         }
+
         skeleton_add_key(s, "Variant", "0");
 
         semper_save_configuration(sd->cd);
         surface_destroy(sd);
     }
+
     return (1);
 }
 
@@ -600,16 +636,19 @@ COMMAND_HANDLER(handler_load_surface)
     strcpy(sfp + cd->surface_dir_length + 1, ap->pms[0]);
 
     size_t var = 0;
+
     if(ap->plength > 1)
     {
         var = surface_file_variant(sfp, ap->pms[1]);
     }
+
     sfree((void**)&sfp);
     surface_data* ld_srf = NULL;
 
     if(surface_load(sd->cd, ap->pms[0], var ? var : 1))
     {
         ld_srf = surface_by_name(sd->cd, ap->pms[0]);
+
         if(ld_srf->sp.variant != (var ? var : 1))
         {
             surface_change_variant(ld_srf, ap->pms[1]);
@@ -662,6 +701,7 @@ COMMAND_HANDLER(handler_remove)
             s->vol_var = 1; // trigger the sources to self-reset
         }
     }
+
     return (1);
 }
 
@@ -676,6 +716,7 @@ COMMAND_HANDLER(handler_parameter_team)
     if(ap->plength >= 4)
     {
         lsd = surface_by_name(sd->cd, ap->pms[3]);
+
         if(lsd == NULL)
             return (0);
     }
@@ -684,6 +725,7 @@ COMMAND_HANDLER(handler_parameter_team)
     {
         nv = ap->pms[2];
     }
+
     if(ap->plength >= 2)
     {
         param = ap->pms[1];
@@ -702,6 +744,7 @@ COMMAND_HANDLER(handler_parameter_team)
                 key k = skeleton_get_key(o->os, param);
                 skeleton_key_remove(&k);
             }
+
             o->vol_var = 1;
         }
     }
@@ -718,6 +761,7 @@ COMMAND_HANDLER(handler_parameter_team)
                 key k = skeleton_get_key(s->cs, param);
                 skeleton_key_remove(&k);
             }
+
             s->vol_var = 1;
         }
     }
@@ -732,6 +776,7 @@ COMMAND_HANDLER(handler_update_team)
     if(ap->plength > 1)
     {
         sd = surface_by_name(sd->cd, ap->pms[1]);
+
         if(!sd)
         {
             return (0);
@@ -839,6 +884,7 @@ COMMAND_HANDLER(handler_force_draw)
         }
 
     }
+
     surface_adjust_size(sd);
     crosswin_draw(sd->sw);
     return (1);
@@ -850,6 +896,7 @@ static int command_process_single_action(command_handler_status* chs)
 {
     int ret = 0;
     int found=0;
+
     if(chs == NULL)
     {
         return (-1);
@@ -889,6 +936,7 @@ static int command_process_single_action(command_handler_status* chs)
         { "SourceCommand",      handler_source_command,     2 },
         { "AddSource",          handler_add_source,         2 }
     };
+
     if(chs->comm_name)
     {
         for(size_t i = 0; i < sizeof(ci) / sizeof(command_info); i++)
@@ -901,6 +949,7 @@ static int command_process_single_action(command_handler_status* chs)
                     ret = ci[i].handler(chs->sd, &chs->apm);
 
                 }
+
                 found=1;
             }
         }
@@ -963,6 +1012,7 @@ int command(surface_data* sd, unsigned char **pa)
     unsigned char push_params=0;
     unsigned char execute=0;
     unsigned char stack_pos=0;
+
     if(pa == NULL ||*pa==NULL|| sd == NULL)
     {
         diag_warn("%s %d surface_data %p action %p",__FUNCTION__,__LINE__,sd,pa);
@@ -983,6 +1033,7 @@ int command(surface_data* sd, unsigned char **pa)
     *pa=NULL;
 
     string_tokenizer(&sti);
+
     for(size_t i=0; i<sti.oveclen/2; i++)
     {
         size_t start = sti.ovecoff[2*i];
@@ -992,6 +1043,7 @@ int command(surface_data* sd, unsigned char **pa)
         {
             continue;
         }
+
         /*Clean spaces*/
         if(string_strip_space_offsets(sti.buffer,&start,&end)==0)
         {
@@ -1011,12 +1063,14 @@ int command(surface_data* sd, unsigned char **pa)
                 execute=0;
                 start++;
             }
+
             if(sti.buffer[end-1]==')')
             {
                 end--;
                 execute=1;
             }
         }
+
         if(string_strip_space_offsets(sti.buffer,&start,&end)==0)
         {
             if(sti.buffer[start]=='"'||sti.buffer[start]=='\'')
@@ -1047,10 +1101,12 @@ int command(surface_data* sd, unsigned char **pa)
             chs.sd=sd;
             command_process_single_action(&chs);
             execute=0;
+
             for(size_t i=0; i<chs.apm.plength; i++)
             {
                 sfree((void**)&chs.apm.pms[i]);
             }
+
             stack_pos=0;
             push_params=0;
             chs.apm.plength=0;
@@ -1058,6 +1114,7 @@ int command(surface_data* sd, unsigned char **pa)
             sfree((void**)&chs.comm_name);
         }
     }
+
     sfree((void**)&sti.ovecoff);
 
     /*If the string has been set during command processing then *pa will not be NULL and we could free the stored action.

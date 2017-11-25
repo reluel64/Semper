@@ -79,6 +79,7 @@ static unsigned short calculator_random_unique_set(calculator* c)
     {
         c->rg.vec[i] = i + c->rg.min_random;
     }
+
     calculator_knuth_shuffle(c->rg.vec, tcount);
     c->rg.rnum = c->rg.vec[c->rg.la--];
     return (c->rg.rnum);
@@ -109,6 +110,7 @@ static inline unsigned short calculator_random(calculator* c)
         {
             unsigned char retries = 64;
             unsigned short old_rnum = c->rg.rnum;
+
             do
             {
                 c->rg.rnum = (unsigned short)calculator_xorshift_generator(time(NULL));
@@ -120,15 +122,18 @@ static inline unsigned short calculator_random(calculator* c)
             {
                 c->rg.rnum = old_rnum;
             }
+
             return (c->rg.rnum);
         }
     }
+
     return (c->rg.rnum);
 }
 
 static int calculator_math_parser(unsigned char *vn,size_t len,double *v,void *pv)
 {
     calculator *c=pv;
+
     if(strncasecmp("Random",vn,len)==0)
     {
         calculator_random(c);
@@ -143,12 +148,14 @@ static int calculator_math_parser(unsigned char *vn,size_t len,double *v,void *p
     else
     {
         source *s=source_by_name(c->sd,vn,len);
+
         if(s)
         {
             *v=(double)s->d_info;
             return(0);
         }
     }
+
     return(-1);
 }
 
@@ -197,6 +204,7 @@ double calculator_update(void* spv)
 
     if(math_parser(c->frm,&v,calculator_math_parser,c))
         return(0.0);
+
     return (v);
 }
 

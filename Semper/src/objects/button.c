@@ -34,6 +34,7 @@ int button_mouse(object *o,mouse_status *ms)
     {
         bto->im_index=0;
     }
+
     surface_adjust_size(sd);
     event_push(sd->cd->eq,(event_handler)crosswin_draw,sd->sw,0,0);
     return(0);
@@ -88,6 +89,7 @@ int button_update(object *o)
         o->auto_h = bto->ia.height/3;
         o->auto_w = bto->ia.width;
     }
+
     return (1);
 }
 

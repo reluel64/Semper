@@ -77,12 +77,15 @@ double diag_show_update(void *spv)
             entry_pos--;
             continue;
         }
+
         strcpy(ds->ret_str+buf_pos,dml->log_buf);
         buf_pos+=string_length(dml->log_buf);
+
         if(--c==0)
         {
             break;
         }
+
         strcpy(ds->ret_str+buf_pos,"\n");
         buf_pos++;
 

@@ -35,11 +35,14 @@ static void event_trigger(int sig,siginfo_t *inf,void* pv)
 #endif
 {
 #ifdef WIN32
+
     if(eq)
     {
         SetEvent(eq->loop_event);
     }
+
 #elif __linux__
+
     if(pv&&inf==NULL)
     {
         event_queue *eq=pv;
@@ -48,11 +51,13 @@ static void event_trigger(int sig,siginfo_t *inf,void* pv)
     else if(inf!=NULL)
     {
         event_queue *eq=inf->si_value.sival_ptr;
+
         if(eq)
         {
             eventfd_write(((int*)eq->loop_event)[0],10000);// such event, much magic
         }
     }
+
 #endif
 }
 
@@ -86,6 +91,7 @@ void event_wait(event_queue* eq)
     {
         eventfd_read(((int*)eq->loop_event)[0],&dummy); //consume the event
     }
+
 #endif
 }
 
@@ -141,60 +147,74 @@ void event_remove(event_queue* eq, event_handler eh, void* pv, unsigned char fla
     {
         switch(flags&EVENT_REMOVE_BY_DATA_HANDLER)
         {
-        case EVENT_REMOVE_BY_DATA_HANDLER:
-            if(e->handler == eh && e->pv == pv)
-            {
-                e->handler = NULL;
-                if(e->timer)
+            case EVENT_REMOVE_BY_DATA_HANDLER:
+                if(e->handler == eh && e->pv == pv)
                 {
-#ifdef WIN32
-                    CloseHandle(e->timer);
-#elif __linux__
+                    e->handler = NULL;
+
                     if(e->timer)
                     {
-                        timer_delete(e->timer);
-                    }
-#endif
-                    e->timer = NULL;
-                }
-            }
-            break;
-        case EVENT_REMOVE_BY_DATA:
-            if(e->pv == pv)
-            {
-                e->handler = NULL;
-                if(e->timer)
-                {
 #ifdef WIN32
-                    CloseHandle(e->timer);
+                        CloseHandle(e->timer);
 #elif __linux__
+
+                        if(e->timer)
+                        {
+                            timer_delete(e->timer);
+                        }
+
+#endif
+                        e->timer = NULL;
+                    }
+                }
+
+                break;
+
+            case EVENT_REMOVE_BY_DATA:
+                if(e->pv == pv)
+                {
+                    e->handler = NULL;
+
                     if(e->timer)
                     {
-                        timer_delete(e->timer);
-                    }
-#endif
-                    e->timer = NULL;
-                }
-            }
-            break;
-        case EVENT_REMOVE_BY_HANDLER:
-            if(e->handler == eh)
-            {
-                e->handler = NULL;
-                if(e->timer)
-                {
 #ifdef WIN32
-                    CloseHandle(e->timer);
+                        CloseHandle(e->timer);
 #elif __linux__
+
+                        if(e->timer)
+                        {
+                            timer_delete(e->timer);
+                        }
+
+#endif
+                        e->timer = NULL;
+                    }
+                }
+
+                break;
+
+            case EVENT_REMOVE_BY_HANDLER:
+                if(e->handler == eh)
+                {
+                    e->handler = NULL;
+
                     if(e->timer)
                     {
-                        timer_delete(e->timer);
-                    }
+#ifdef WIN32
+                        CloseHandle(e->timer);
+#elif __linux__
+
+                        if(e->timer)
+                        {
+                            timer_delete(e->timer);
+                        }
+
 #endif
-                    e->timer = NULL;
+                        e->timer = NULL;
+                    }
                 }
-            }
-            break;
+
+                break;
         }
     }
 
@@ -219,6 +239,7 @@ event* event_push(event_queue* eq, event_handler handler, void* pv, size_t timeo
             flags|=EVENT_PUSH_TAIL;
         }
     }
+
     pthread_mutex_unlock(&eq->mutex);
     timeout=(timeout<16?16:timeout); //16 ms seems the resolution liked by Windows so we will use that as a limitation for both Windows and Linux
     event* e = zmalloc(sizeof(event));
@@ -274,6 +295,7 @@ event* event_push(event_queue* eq, event_handler handler, void* pv, size_t timeo
         event_trigger(0,NULL,eq);
 #endif
     }
+
     pthread_mutex_unlock(&eq->mutex);
 
     return (e);
@@ -287,6 +309,7 @@ static void event_remove_internal(event* e)
         {
             linked_list_remove(&e->current);
         }
+
         if(e->timer)
         {
 #ifdef WIN32
@@ -296,6 +319,7 @@ static void event_remove_internal(event* e)
 #endif
             e->timer=NULL;
         }
+
         sfree((void**)&e);
     }
 }
@@ -357,10 +381,12 @@ void event_process(event_queue* eq)
             pthread_mutex_lock(&eq->mutex);
             eq->ce=e;
             pthread_mutex_unlock(&eq->mutex);
+
             if(e->handler)
             {
                 e->handler(e->pv);
             }
+
             pthread_mutex_lock(&eq->mutex);
             event_remove_internal(e);
             pthread_mutex_unlock(&eq->mutex);

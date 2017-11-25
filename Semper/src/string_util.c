@@ -23,10 +23,12 @@ char *strlwr(char *s)
     {
         return(NULL);
     }
+
     for(size_t i=0; s[i]; i++)
     {
         s[i]=lowercase((uint32_t)s[i]);
     }
+
     return(s);
 }
 
@@ -36,10 +38,12 @@ char *strupr(char *s)
     {
         return(NULL);
     }
+
     for(size_t i=0; s[i]; i++)
     {
         s[i]=uppercase((uint32_t)s[i]);
     }
+
     return(s);
 }
 #endif
@@ -48,6 +52,7 @@ unsigned char is_file_type(unsigned char* file, unsigned char* ext)
     size_t length = string_length(file);
     size_t elength = string_length(ext);
     unsigned char r = 0;
+
     for(size_t i = length - 1; i; i--)
     {
         if(file[i] == '.')
@@ -55,12 +60,14 @@ unsigned char is_file_type(unsigned char* file, unsigned char* ext)
             r = strncasecmp(file + i + 1, ext, min(length, elength)) == 0;
         }
     }
+
     return (r);
 }
 
 int remove_end_begin_quotes(unsigned char* s)
 {
     size_t sz = string_length(s);
+
     if(sz < 2)
     {
         return (-1);
@@ -97,19 +104,23 @@ int remove_character(unsigned char* str, unsigned char ch)
             {
                 str[cpos] = str[cpos + 1];
             }
+
             if(i != 0)
             {
                 i--;
             }
+
             continue;
         }
     }
+
     return (0);
 }
 
 void remove_be_space(unsigned char* s)
 {
     size_t len = string_length(s);
+
     for(size_t i = len - 1; i; i--)
     {
         if(s[i] == ' ')
@@ -121,6 +132,7 @@ void remove_be_space(unsigned char* s)
             break;
         }
     }
+
     if(s[0] == ' ')
     {
         for(size_t i = 0; i < len; i++)
@@ -139,6 +151,7 @@ unsigned char* string_lower(unsigned char* s)
     unsigned short* us = utf8_to_ucs(s);
     size_t slen = string_length(s);
     size_t bn=0;
+
     for(size_t i = 0; us[i]; i++)
     {
         us[i] = lowercase(us[i]);
@@ -182,6 +195,7 @@ int uniform_slashes(unsigned char *str)
     {
         return (-1);
     }
+
     for(size_t i = 0; str[i]; i++)
     {
         if((str[i] == '/'||str[i] == '\\')&&(str[i+1]=='\\'||str[i+1]=='/'))
@@ -190,13 +204,16 @@ int uniform_slashes(unsigned char *str)
             {
                 str[cpos] = str[cpos + 1];
             }
+
             if(i != 0)
             {
                 i--;
             }
+
             continue;
         }
     }
+
     return (0);
 }
 
@@ -204,6 +221,7 @@ unsigned short* utf8_to_ucs(unsigned char* str)
 {
     size_t len = string_length(str);
     size_t di = 0;
+
     if(len == 0)
     {
         return (NULL);
@@ -228,20 +246,25 @@ unsigned short* utf8_to_ucs(unsigned char* str)
             dest[di] = ((((unsigned short)str[si++]) & 0x1F) << 6);
             dest[di] = dest[di] | (((unsigned short)str[si]) & 0x103F);
         }
+
         di++;
     }
+
     return (dest);
 }
 
 size_t utf8_len(unsigned char *str,size_t b_len)
 {
     size_t ret=0;
+
     if(str==NULL)
         return(0);
+
     if(b_len==0)
     {
         b_len = string_length(str);
     }
+
     for(size_t si = 0; si < b_len; si++)
     {
         if(str[si] <= 0x7F)
@@ -259,6 +282,7 @@ size_t utf8_len(unsigned char *str,size_t b_len)
             ret++;
         }
     }
+
     return(ret);
 }
 
@@ -273,10 +297,12 @@ unsigned char* ucs_to_utf8(unsigned short* s_in, size_t* bn, unsigned char be)
     {
         return(NULL);
     }
+
     /*Query the needed bytes to be allocated*/
     for(size_t i = 0; s_in[i]; i++)
     {
         size_t ch = s_in[i];
+
         if(be)
         {
             unsigned char byte_hi = 0;
@@ -285,6 +311,7 @@ unsigned char* ucs_to_utf8(unsigned short* s_in, size_t* bn, unsigned char be)
             byte_lo = (unsigned char)((ch & 0xFF));
             ch = ((unsigned short)byte_lo) << 8 | (byte_hi);
         }
+
         if(ch < 0x80)
         {
             nb++;
@@ -302,16 +329,19 @@ unsigned char* ucs_to_utf8(unsigned short* s_in, size_t* bn, unsigned char be)
             nb += 4;
         }
     }
+
     if(nb == 0)
     {
         return (NULL);
     }
+
     out = zmalloc(nb + 1);
     /*Let's encode Unicode to UTF-8*/
 
     for(size_t i = 0; s_in[i]; i++)
     {
         size_t ch = s_in[i];
+
         if(be)
         {
             unsigned char byte_hi = 0;
@@ -320,6 +350,7 @@ unsigned char* ucs_to_utf8(unsigned short* s_in, size_t* bn, unsigned char be)
             byte_lo = (unsigned char)((ch & 0xFF));
             ch = ((unsigned short)byte_lo) << 8 | (byte_hi);
         }
+
         if(ch < 0x80)
         {
             out[di++] = (unsigned char)s_in[i];
@@ -369,6 +400,7 @@ unsigned char* ucs32_to_utf8(unsigned int* s_in, size_t* bn, unsigned char be)
     for(size_t i = 0; s_in[i]; i++)
     {
         size_t ch = s_in[i];
+
         if(be)
         {
             unsigned char byte_hi = 0;
@@ -377,6 +409,7 @@ unsigned char* ucs32_to_utf8(unsigned int* s_in, size_t* bn, unsigned char be)
             byte_lo = (unsigned char)((ch & 0xFF));
             ch = ((unsigned short)byte_lo) << 8 | (byte_hi);
         }
+
         if(ch < 0x80)
         {
             nb++;
@@ -406,6 +439,7 @@ unsigned char* ucs32_to_utf8(unsigned int* s_in, size_t* bn, unsigned char be)
     for(size_t i = 0; s_in[i]; i++)
     {
         size_t ch = s_in[i];
+
         if(be)
         {
             unsigned char byte_hi = 0;
@@ -414,6 +448,7 @@ unsigned char* ucs32_to_utf8(unsigned int* s_in, size_t* bn, unsigned char be)
             byte_lo = (unsigned char)((ch & 0xFF));
             ch = ((unsigned short)byte_lo) << 8 | (byte_hi);
         }
+
         if(ch < 0x80)
         {
             out[di++] = (unsigned char)s_in[i];
@@ -437,10 +472,12 @@ unsigned char* ucs32_to_utf8(unsigned int* s_in, size_t* bn, unsigned char be)
             out[di++] = (s_in[i] & 0x3F) | 0x80;
         }
     }
+
     if(bn)
     {
         *bn = nb;
     }
+
     return (out);
 }
 
@@ -467,10 +504,12 @@ unsigned char* clone_string(unsigned char* s)
 {
     size_t sl = string_length(s);
     unsigned char* b = NULL;
+
     if(!sl)
     {
         return (NULL);
     }
+
     b = malloc(sl + 1);
 
     if(b)
@@ -488,9 +527,11 @@ unsigned int string_to_color(unsigned char* str)
     {
         return (0x00000000);
     }
+
     unsigned int color = 0xff000000;
     remove_character(str, ' ');
     strlwr(str);
+
     if(sscanf(str, "0x%x", &color) == 0)
     {
         unsigned int alpha = 255;
@@ -503,6 +544,7 @@ unsigned int string_to_color(unsigned char* str)
             color = blue | green << 8 | red << 16 | alpha << 24;
         }
     }
+
     return (color);
 }
 
@@ -512,7 +554,9 @@ double compute_formula(unsigned char* formula)
     {
         return (0.0);
     }
+
     double n = 0.0;
+
     if(math_parser(formula,&n,NULL,NULL)==0)
         return(n);
     else
@@ -525,6 +569,7 @@ int string_to_image_crop(unsigned char* str, image_crop* inf)
     {
         return (-1);
     }
+
     memset(inf, 0, sizeof(image_crop));
     remove_character(str, ' ');
     sscanf(str, "%ld;%ld;%ld;%ld;%hhu", &inf->x, &inf->y, &inf->w, &inf->h, &inf->origin);
@@ -538,6 +583,7 @@ int string_to_image_tile(unsigned char* str, image_tile* inf)
     {
         return (-1);
     }
+
     memset(inf, 0, sizeof(image_tile));
     remove_character(str, ' ');
     sscanf(str, "%ld;%ld", &inf->w, &inf->h);
@@ -550,6 +596,7 @@ int string_to_padding(unsigned char* str, object_padding* op)
     {
         return (-1);
     }
+
     memset(op, 0, sizeof(object_padding));
     remove_character(str, ' ');
     sscanf(str, "%ld;%ld;%ld;%ld", &op->left, &op->top, &op->right, &op->bottom);
@@ -569,6 +616,7 @@ int string_to_color_matrix(unsigned char* str, double* cm)
     {
         return (-1);
     }
+
     memset(cm, 0, sizeof(double) * 5);
     remove_character(str, ' ');
     sscanf(str, "%lf;%lf;%lf;%lf;%lf", cm, cm + 1, cm + 2, cm + 3, cm + 4);
@@ -581,6 +629,7 @@ int unix_slashes(unsigned char* s)
     {
         return (-1);
     }
+
     for(size_t i = 0; s[i]; i++)
     {
         if(s[i] == '\\')
@@ -588,6 +637,7 @@ int unix_slashes(unsigned char* s)
             s[i] = '/';
         }
     }
+
     return (0);
 }
 
@@ -636,6 +686,7 @@ int string_tokenizer(string_tokenizer_info *sti)
         size_t buf_pos = 0;
         size_t offsets=0;
         size_t lpos=0;
+
         while(buf_pos < buf_len)
         {
 
@@ -660,12 +711,15 @@ int string_tokenizer(string_tokenizer_info *sti)
                         sti->ovecoff[offsets++]=buf_pos;
                         sti->ovecoff[offsets]=buf_pos;
                     }
+
                     lpos=buf_pos++;
                     break;
                 }
+
                 buf_pos++;
             }
         }
+
         if(step==0)
         {
             if(sti->ovecoff==NULL)
@@ -674,10 +728,12 @@ int string_tokenizer(string_tokenizer_info *sti)
                 sti->ovecoff=zmalloc(offsets*sizeof(size_t));
                 sti->oveclen=offsets;
                 sts.reset=1;
+
                 if(sti->string_tokenizer_filter)
                 {
                     sti->string_tokenizer_filter(&sts,sti->filter_data);
                 }
+
                 sts.reset=0;
             }
         }
@@ -688,6 +744,7 @@ int string_tokenizer(string_tokenizer_info *sti)
             sti->oveclen=offsets;
         }
     }
+
     return(0);
 }
 
@@ -696,32 +753,38 @@ int string_strip_space_offsets(unsigned char *buf,size_t *start,size_t *end)
     while((*start)<(*end))
     {
         unsigned char found=0;
+
         if(isspace(buf[(*start)]))
         {
             (*start)++;
             found=1;
         }
+
         if(isspace(buf[(*end)-1]))
         {
             (*end)--;
             found=1;
         }
+
         if(found==0)
         {
             break;
         }
     }
+
     if((*start)>(*end))
     {
         *start=*end;
         return(-1);
     }
+
     return(0);
 }
 
 int remove_trailing_zeros(unsigned char* s)
 {
     int dot = 0;
+
     for(size_t i = 0; s[i]; i++)
     {
         if(s[i] == '.')
@@ -730,6 +793,7 @@ int remove_trailing_zeros(unsigned char* s)
             break;
         }
     }
+
     if(dot)
     {
         size_t sl = string_length(s);
@@ -751,5 +815,6 @@ int remove_trailing_zeros(unsigned char* s)
             }
         }
     }
+
     return (0);
 }

@@ -15,6 +15,7 @@ static inline void average_destroy_value(avg_val** av)
 void average_destroy(average** a)
 {
     average* ta = *a;
+
     if(ta)
     {
         avg_val* av = NULL;
@@ -39,6 +40,7 @@ static int average_reset(average* a, size_t avg_count)
         {
             break;
         }
+
         average_destroy_value(&av);
         a->count--;
     }
@@ -57,6 +59,7 @@ double average_update(average** avg, size_t avg_count, double value)
         *avg = zmalloc(sizeof(average));
         list_entry_init(&(*avg)->values);
     }
+
     average* a = *avg;
 
     average_reset(a, avg_count);
@@ -85,5 +88,6 @@ double average_update(average** avg, size_t avg_count, double value)
         average_destroy_value(&pav);
         linked_list_add(&av->current, &a->values);
     }
+
     return (a->total / (double)a->count);
 }

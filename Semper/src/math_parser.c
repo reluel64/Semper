@@ -205,7 +205,9 @@ static double math_sign   (double *vec               )
 static double math_clamp  (double *vec               )
 {
     if(vec[1]<vec[0])  return(vec[0]);
+
     if(vec[2]<vec[1])  return(vec[2]);
+
     return(vec[1]);
 }
 //Bitwise
@@ -280,6 +282,7 @@ static inline void *math_peek(list_entry *head)
     {
         return(NULL);
     }
+
     stack_element *se=element_of(head->prev,stack_element,current);
     return(se->inf);
 }
@@ -290,6 +293,7 @@ static inline void *math_pop(list_entry *head)
     {
         return(NULL);
     }
+
     stack_element *se=element_of(head->prev,stack_element,current);
     void *ret=se->inf;
     linked_list_remove(&se->current);
@@ -415,6 +419,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
         //Push the number into the queue
         unsigned char *n=NULL;
         double v=0.0;
+
         /*Check for base 2*/
         /*
         for(n=f+i;n[0];n++)
@@ -471,6 +476,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
             {
                 clp=0;
             }
+
             operator_info *foi=NULL; //found operator
             size_t token_len=0;
 
@@ -479,6 +485,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
             for(size_t x=0; x<sizeof(opt)/sizeof(operator_info); x++)
             {
                 token_len=string_length(opt[x].on);
+
                 if(!strncasecmp(opt[x].on,f+i,token_len))
                 {
                     foi=opt+x; //save the operator info
@@ -500,6 +507,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
                     size_t len=0;
                     int name=1;
                     double v=0.0;
+
                     for(len=0; f[i+len]&&name==1; len++)
                     {
                         for(size_t x=0; x<sizeof(opt)/sizeof(operator_info); x++)
@@ -511,10 +519,12 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
                                 name=0;
                                 break;
                             }
+
                             if(strncasecmp(":",opt[x].on,token_len)==0)
                                 break;
 
                         }
+
                         if(name==0)
                             break;
                     }
@@ -527,6 +537,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
                         continue;
                     }
                 }
+
                 err=1;
                 break; //surprise motherfucker  (this happens if the token or function is not supported)
             }
@@ -558,6 +569,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
             {
                 clp=1;
                 unsigned char closed=0;
+
                 while(1)
                 {
                     operator_info *loi=math_peek(&op_stack);
@@ -568,6 +580,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
                         {
                             err=1;
                         }
+
                         break;
                     }
                     else if(loi->on[0]=='(')
@@ -633,7 +646,9 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
         output_queue *oq=NULL;
         output_queue *toq=NULL;
         diag_verb("%s Expression malformed",__FUNCTION__);
+
         while(math_pop(&op_stack)); //there's no issue here to pop things like that as the data is statically allocated and we do not risk any memory leak
+
         list_enum_part_safe(oq,toq,out_queue,current)
         {
             linked_list_remove(&oq->current);
@@ -644,6 +659,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
     else
     {
         operator_info *tbl=NULL;
+
         while((tbl=math_pop(&op_stack))!=NULL)
         {
             math_push_queue(out_queue,tbl,0.0);
@@ -723,6 +739,7 @@ int math_parser(unsigned char *formula,double *res,math_parser_callback mpc,void
                 {
                     result=0.0;
                 }
+
                 linked_list_remove(&oq->current);
                 sfree((void**)&oq);
             }
@@ -731,6 +748,7 @@ int math_parser(unsigned char *formula,double *res,math_parser_callback mpc,void
             {
                 diag_verb("%s expression malformed",__FUNCTION__);
             }
+
             break;
         }
 
@@ -756,16 +774,19 @@ int math_parser(unsigned char *formula,double *res,math_parser_callback mpc,void
                     error=1;
                     break;
                 }
+
                 linked_list_remove(&op_oq->current);
                 sfree((void**)&op_oq);
             }
             else
             {
                 oq->value=(*oq->oi->mr)(vec,vp);
+
                 if(oq->value==NAN)
                 {
                     error=1;
                 }
+
                 oq->oi=NULL;
                 break;
             }

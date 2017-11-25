@@ -118,6 +118,7 @@ static void xlib_render(window *w)
         }
 
         cairo_t* cr= cairo_create(w->offscreen_buffer); // create a cairo context to gain access to surface rendering routine
+
         if(w->opacity!=255)
         {
             cairo_set_operator(cr,CAIRO_OPERATOR_CLEAR);
@@ -135,6 +136,7 @@ static void xlib_render(window *w)
         {
             w->render_func(w, cr);
         }
+
         cairo_destroy(cr);
         /*Render everything to the window*/
         cairo_surface_t *xs=cairo_xlib_surface_create(w->c->display,w->window,w->c->vinfo.visual,w->w,w->h);
@@ -169,6 +171,7 @@ void xlib_set_mask(window *w)
                     buf[i]|=0xff000000;
                 }
             }
+
             cairo_surface_mark_dirty(w->offscreen_buffer);
         }
 
@@ -204,58 +207,67 @@ int xlib_mouse_handle(window *w,XEvent *ev)
 
     switch(ev->xany.type)
     {
-    case ButtonPress:
-    {
-
-        w->mouse.state=1;
-
-        if(ev->xbutton.button==2)
-            w->mouse.button=3;
-        else if(ev->xbutton.button==3)
-            w->mouse.button=2;
-
-        if(ev->xbutton.button==Button5||ev->xbutton.button==Button4)
+        case ButtonPress:
         {
-            w->mouse.state=-1;
-            w->mouse.button=0;
-            w->mouse.scroll_dir=(ev->xbutton.button==Button5?-1:1);
+
+            w->mouse.state=1;
+
+            if(ev->xbutton.button==2)
+                w->mouse.button=3;
+            else if(ev->xbutton.button==3)
+                w->mouse.button=2;
+
+            if(ev->xbutton.button==Button5||ev->xbutton.button==Button4)
+            {
+                w->mouse.state=-1;
+                w->mouse.button=0;
+                w->mouse.scroll_dir=(ev->xbutton.button==Button5?-1:1);
+            }
+
+            break;
+        }
+
+        case ButtonRelease:
+        {
+            if(w->dragging)
+            {
+                w->dragging=0;
+                return(0);
+            }
+
+            XWindowChanges wc= {0};
+            wc.stack_mode=Above;
+
+            if(w->mouse.hover==0)
+                XConfigureWindow(w->c->display,w->window,CWStackMode,&wc);
+
+            w->mouse.state=0;
+
+            if(ev->xbutton.button==2)
+                w->mouse.button=3;
+            else if(ev->xbutton.button==3)
+                w->mouse.button=2;
+
+            break;
+        }
+
+        case MotionNotify:
+        {
+            w->mouse.hover=1;
+            break;
+        }
+
+        case LeaveNotify:
+        {
+            w->mouse.hover=0;
+
+            memset(&w->mouse,0,sizeof(mouse_status));
+
         }
         break;
-    }
-    case ButtonRelease:
-    {
-        if(w->dragging)
-        {
-            w->dragging=0;
-            return(0);
-        }
-        XWindowChanges wc= {0};
-        wc.stack_mode=Above;
-        if(w->mouse.hover==0)
-            XConfigureWindow(w->c->display,w->window,CWStackMode,&wc);
-        w->mouse.state=0;
-        if(ev->xbutton.button==2)
-            w->mouse.button=3;
-        else if(ev->xbutton.button==3)
-            w->mouse.button=2;
-        break;
-    }
-    case MotionNotify:
-    {
-        w->mouse.hover=1;
-        break;
-    }
-
-    case LeaveNotify:
-    {
-        w->mouse.hover=0;
-
-        memset(&w->mouse,0,sizeof(mouse_status));
 
     }
-    break;
 
-    }
     w->mouse_func(w,&w->mouse);
     return(0);
 }
@@ -289,6 +301,7 @@ static void xlib_set_below(window *w,unsigned char clear)
     {
         xlib_set_above(w,1);
     }
+
     XEvent xev;
     memset(&xev,0,sizeof(xev));
     xev.xclient.type = ClientMessage;
@@ -354,107 +367,113 @@ int xlib_message_dispatch(crosswin *c)
 
         switch(ev.xany.type)
         {
-        case KeyPress:
-        {
-            /*This is pretty ugly as I did not want to call the utf8_to_ucs() but for the moment it does the job*/
-            if(w->xInputContext)
+            case KeyPress:
             {
-                unsigned short symbol=0;
+                /*This is pretty ugly as I did not want to call the utf8_to_ucs() but for the moment it does the job*/
+                if(w->xInputContext)
+                {
+                    unsigned short symbol=0;
+
+                    if(ev.xkey.keycode==105||ev.xkey.keycode==37)
+                        w->ctrl_down=1;
+
+
+                    if(w->ctrl_down&&ev.xkey.keycode==36)
+                        symbol='\n';
+                    else
+                    {
+                        unsigned char buf[9]= {0};
+                        unsigned short *temp=NULL;
+
+                        Status status = 0;
+                        Xutf8LookupString(w->xInputContext, &ev.xkey, (char*)&buf,8, NULL, &status);
+
+                        temp=utf8_to_ucs(buf);
+                        symbol=temp?temp[0]:0;
+
+                        sfree((void**)&temp);
+                    }
+
+                    if(symbol&&w->kbd_func)
+                        w->kbd_func(symbol,w->kb_data);
+                }
+
+                break;
+            }
+
+            case KeyRelease:
+            {
                 if(ev.xkey.keycode==105||ev.xkey.keycode==37)
-                    w->ctrl_down=1;
+                    w->ctrl_down=0;
+
+                break;
+            }
+
+            case MotionNotify:
+            {
+
+                if(ev.xmotion.state&Button1Mask)
+                {
+                    if(w->draggable==0)
+                        continue;
+
+                    w->ccposx = ev.xmotion.x_root;
+                    w->ccposy = ev.xmotion.y_root;
+
+                    long x = w->x + (w->ccposx - w->cposx);
+                    long y = w->y + (w->ccposy - w->cposy);
+                    w->cposx = ev.xmotion.x_root;
+                    w->cposy = ev.xmotion.y_root;
+                    w->x = x;
+                    w->y = y;
+
+                    if(w->keep_on_screen)
+                    {
+                        if(y >= 0 && y + w->h <= c->sh)
+                            w->y = y;
+                        else if(y + w->h > c->sh)
+                            w->y = c->sh - w->h;
+                        else
+                            w->y = 0;
+
+                        if(x >= 0 && x + w->w <= c->sw)
+                            w->x = x;
+                        else if(x + w->w > c->sw)
+                            w->x = c->sw - w->w;
+                        else
+                            w->x = 0;
+                    }
+
+                    w->dragging=1;
+                    XMoveWindow(c->display,w->window,w->x,w->y);
+                    XSync(c->display,1);
 
 
-                if(w->ctrl_down&&ev.xkey.keycode==36)
-                    symbol='\n';
+                }
                 else
                 {
-                    unsigned char buf[9]= {0};
-                    unsigned short *temp=NULL;
-
-                    Status status = 0;
-                    Xutf8LookupString(w->xInputContext, &ev.xkey, (char*)&buf,8, NULL, &status);
-
-                    temp=utf8_to_ucs(buf);
-                    symbol=temp?temp[0]:0;
-
-                    sfree((void**)&temp);
+                    w->dragging = 0;
+                    w->cposx = ev.xmotion.x_root;
+                    w->cposy = ev.xmotion.y_root;
                 }
-
-                if(symbol&&w->kbd_func)
-                    w->kbd_func(symbol,w->kb_data);
             }
-            break;
-        }
-        case KeyRelease:
-        {
-            if(ev.xkey.keycode==105||ev.xkey.keycode==37)
-                w->ctrl_down=0;
-            break;
-        }
 
-        case MotionNotify:
-        {
+            case ButtonRelease:
+            case ButtonPress:
+            case LeaveNotify:
+                xlib_mouse_handle(w,&ev);
+                break;
 
-            if(ev.xmotion.state&Button1Mask)
+            case DestroyNotify:
             {
-                if(w->draggable==0)
-                    continue;
-
-                w->ccposx = ev.xmotion.x_root;
-                w->ccposy = ev.xmotion.y_root;
-
-                long x = w->x + (w->ccposx - w->cposx);
-                long y = w->y + (w->ccposy - w->cposy);
-                w->cposx = ev.xmotion.x_root;
-                w->cposy = ev.xmotion.y_root;
-                w->x = x;
-                w->y = y;
-
-                if(w->keep_on_screen)
-                {
-                    if(y >= 0 && y + w->h <= c->sh)
-                        w->y = y;
-                    else if(y + w->h > c->sh)
-                        w->y = c->sh - w->h;
-                    else
-                        w->y = 0;
-
-                    if(x >= 0 && x + w->w <= c->sw)
-                        w->x = x;
-                    else if(x + w->w > c->sw)
-                        w->x = c->sw - w->w;
-                    else
-                        w->x = 0;
-                }
-                w->dragging=1;
-                XMoveWindow(c->display,w->window,w->x,w->y);
-                XSync(c->display,1);
-
-
+                surface_data *sd=w->user_data;
+                event_push(sd->cd->eq, (event_handler)surface_destroy, (void*)sd,0,EVENT_REMOVE_BY_DATA);
+                break;
             }
-            else
-            {
-                w->dragging = 0;
-                w->cposx = ev.xmotion.x_root;
-                w->cposy = ev.xmotion.y_root;
-            }
-        }
-
-        case ButtonRelease:
-        case ButtonPress:
-        case LeaveNotify:
-            xlib_mouse_handle(w,&ev);
-            break;
-
-        case DestroyNotify:
-        {
-            surface_data *sd=w->user_data;
-            event_push(sd->cd->eq, (event_handler)surface_destroy, (void*)sd,0,EVENT_REMOVE_BY_DATA);
-            break;
-        }
 
         }
     }
+
     return(0);
 }
 
@@ -484,19 +503,22 @@ void xlib_set_zpos(window *w)
 {
     switch(w->zorder)
     {
-    case crosswin_topmost:
-        xlib_set_above(w,0);
-        break;
-    case crosswin_desktop:
-        xlib_set_below(w,0);
-        break;
-    case crosswin_normal:
-        xlib_set_normal(w);
-        break;
-    case crosswin_bottom:
-    case crosswin_top:
-        diag_error("%s crosswin_bottom and crosswin_top not implemented",__FILE__);
-        break;
+        case crosswin_topmost:
+            xlib_set_above(w,0);
+            break;
+
+        case crosswin_desktop:
+            xlib_set_below(w,0);
+            break;
+
+        case crosswin_normal:
+            xlib_set_normal(w);
+            break;
+
+        case crosswin_bottom:
+        case crosswin_top:
+            diag_error("%s crosswin_bottom and crosswin_top not implemented",__FILE__);
+            break;
     }
 }
 
@@ -515,6 +537,7 @@ int xlib_create_input_context(window *w)
         if(XGetIMValues(w->xInputMethod, XNQueryInputStyle, &styles, NULL)==0)
         {
             XIMStyle bestMatchStyle = 0;
+
             for(int i=0; i<styles->count_styles; i++)
             {
 
@@ -524,6 +547,7 @@ int xlib_create_input_context(window *w)
                     break;
                 }
             }
+
             XFree(styles);
             w->xInputContext = XCreateIC(w->xInputMethod, XNInputStyle, bestMatchStyle,  XNClientWindow, w->window, XNFocusWindow, w->window, NULL);
         }
@@ -536,6 +560,7 @@ int xlib_create_input_context(window *w)
         return(-1);
 
     }
+
     return(0);
 }
 

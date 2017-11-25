@@ -91,6 +91,7 @@ static timed_action_list *timed_action_list_entry(list_entry *act_head,size_t in
         tal->index=index;
         linked_list_add_last(&tal->current,act_head);
     }
+
     return(tal);
 }
 
@@ -121,6 +122,7 @@ static timed_list *timed_list_entry(list_entry *list,size_t index)
         tl->action_index=index;
         linked_list_add_last(&tl->current,list);
     }
+
     return(tl);
 }
 
@@ -218,6 +220,7 @@ static int timed_action_string_filter(string_tokenizer_status *pi, void* pv)
     {
         return (1);
     }
+
     return (0);
 }
 
@@ -263,6 +266,7 @@ size_t timed_action_fill_list(list_entry *head,string_tokenizer_info *sti,void *
 
                 type=none;
             }
+
             if(sti->buffer[end-1]==')')
             {
                 end--;
@@ -279,6 +283,7 @@ size_t timed_action_fill_list(list_entry *head,string_tokenizer_info *sti,void *
             if(sti->buffer[end-1]=='"'||sti->buffer[end-1]=='\'')
                 end--;
         }
+
         /********************************************************************/
         if(push_params&&finished==0) //receiving parameters
         {
@@ -329,6 +334,7 @@ size_t timed_action_fill_list(list_entry *head,string_tokenizer_info *sti,void *
             pthread_mutex_unlock(&tal->mtx);
         }
     }
+
     return (entries);
 }
 
@@ -383,14 +389,17 @@ void timed_action_reset(void *spv,void *ip)
 
         key k=NULL;
         size_t act_index=0;
+
         if(kn==NULL)
         {
             break;
         }
+
         if(strncasecmp("TimedList",kn,9))
         {
             continue;
         }
+
         k=skeleton_get_key(s->cs,kn);
 
         if(k==NULL)
@@ -427,6 +436,7 @@ void timed_action_reset(void *spv,void *ip)
 void timed_action_command(void *spv,unsigned char *command)
 {
     list_entry *ta=spv;
+
     if(command)
     {
         if(!strncasecmp("Start ",command,6))
@@ -445,15 +455,18 @@ void timed_action_command(void *spv,unsigned char *command)
                         {
                             break;
                         }
+
                         int status=0;
                         pthread_attr_t th_att= {0};
                         pthread_t dtid;
                         pthread_attr_init(&th_att);
                         pthread_attr_setdetachstate(&th_att,PTHREAD_CREATE_DETACHED);
+
                         if((status=pthread_create(&dtid,&th_att,timed_action_exec,tl))!=0)
                         {
-                             diag_crit("%s %d Failed to start timed_action_exec. Status %x",__FUNCTION__,__LINE__,status);
+                            diag_crit("%s %d Failed to start timed_action_exec. Status %x",__FUNCTION__,__LINE__,status);
                         }
+
                         pthread_attr_destroy(&th_att);
 
 

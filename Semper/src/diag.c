@@ -34,14 +34,17 @@ int diag_init(control_data *cd)
     ds->fp=zmalloc(cd->root_dir_length+20);
     snprintf(ds->fp,cd->root_dir_length+20,"%s/Semper.log",cd->root_dir);
     clock_gettime(CLOCK_REALTIME,&ds->t1);
+
     if((k=skeleton_get_key(cd->smp,"LogLevel"))!=NULL)
     {
         ds->level =(unsigned char)compute_formula(skeleton_key_value(k));
     }
+
     if((k=skeleton_get_key(cd->smp,"LogToFile"))!=NULL)
     {
         ds->ltf =compute_formula(skeleton_key_value(k))!=0.0;
     }
+
     if((k=skeleton_get_key(cd->smp,"LogMaxEntries"))!=NULL)
     {
         ds->max_mem_log=(size_t)compute_formula(skeleton_key_value(k));
@@ -77,6 +80,7 @@ static void diag_open_file(diag_status *ds)
 #elif __linux__
         ds->fh=fopen(ds->fp,"a+");
 #endif
+
         if(ds->fh)
         {
             unsigned char ts[64]= {0};
@@ -88,6 +92,7 @@ static void diag_open_file(diag_status *ds)
             time_t ct=time(NULL);
             struct tm *fmt_time=localtime(&ct);
             size_t date_len=strftime(ts,64,"Log started at %Y-%m-%d %H:%M",fmt_time);
+
             if(check_bom!=utf8_bom)
             {
                 fwrite(&utf8_bom,1,3,ds->fh);
@@ -97,16 +102,18 @@ static void diag_open_file(diag_status *ds)
                 fputc('\n',ds->fh);
                 fputc('\n',ds->fh);
             }
-                for(size_t i=0; i<32; i++)
+
+            for(size_t i=0; i<32; i++)
+            {
+                if(i==16)
                 {
-                    if(i==16)
-                    {
-                        fwrite(ts,1,date_len,ds->fh);
-                    }
-                    fputc('*',ds->fh);
+                    fwrite(ts,1,date_len,ds->fh);
                 }
 
-                fputc('\n',ds->fh);
+                fputc('*',ds->fh);
+            }
+
+            fputc('\n',ds->fh);
         }
     }
 }
@@ -153,6 +160,7 @@ static int diag_log_write_to_file(unsigned char *buf,size_t buf_len)
         fflush(ds->fh);
         return(0);
     }
+
     return(-1);
 }
 
@@ -166,6 +174,7 @@ int diag_log(unsigned char lvl,char *fmt, ...)
     {
         return(-5); //not set
     }
+
     if(ds->cd==NULL)
     {
         return(-2); /*log not activated*/
@@ -175,6 +184,7 @@ int diag_log(unsigned char lvl,char *fmt, ...)
     {
         return(-3); //it looks like the library was not initialized
     }
+
     int r=0;
     size_t buf_start=0;
     pthread_mutex_lock(&ds->mutex);
@@ -225,6 +235,7 @@ int diag_log(unsigned char lvl,char *fmt, ...)
     {
         diag_log_write_to_file(buf,r+buf_start);
     }
+
     pthread_mutex_unlock(&ds->mutex);
     return(0);
 }

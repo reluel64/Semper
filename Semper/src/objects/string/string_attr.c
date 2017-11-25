@@ -114,6 +114,7 @@ static int string_parse_filter(string_tokenizer_status *pi, void* pv)
 static int string_validate_attributes(string_tokenizer_info *sti)
 {
     int param=0;
+
     for(size_t i=0; i<sti->oveclen/2; i++)
     {
         size_t start = sti->ovecoff[2*i];
@@ -123,6 +124,7 @@ static int string_validate_attributes(string_tokenizer_info *sti)
         {
             continue;
         }
+
         /*Clean spaces*/
         if(string_strip_space_offsets(sti->buffer,&start,&end)==0)
         {
@@ -137,6 +139,7 @@ static int string_validate_attributes(string_tokenizer_info *sti)
                 start++;
             }
         }
+
         if(string_strip_space_offsets(sti->buffer,&start,&end)==0)
         {
             if(sti->buffer[start]=='"'||sti->buffer[start]=='\'')
@@ -149,6 +152,7 @@ static int string_validate_attributes(string_tokenizer_info *sti)
         if(param==0&&strncasecmp("Pattern",sti->buffer+start,end-start)==0)
             return(1);
     }
+
     return(0);
 }
 
@@ -161,10 +165,13 @@ static string_attributes *string_attr_alloc_index(list_entry *head, size_t index
     {
         if(sa->index < index)
             p = sa;
+
         if(sa->index > index)
             n = sa;
+
         if(n && p)
             break;
+
         if(sa->index == index)
             return (NULL);
     }
@@ -274,6 +281,7 @@ static string_format_type string_attr_fill_def(unsigned char *str,string_attribu
         sa->outline_color=0xff000000;
         return(type_outline);
     }
+
     return(type_invalid);
 }
 
@@ -287,175 +295,210 @@ static int string_attr_fill_user(object *o,string_format_type *fmt_type,string_a
 
     switch(*fmt_type)
     {
-    case type_invalid:
-        break;
-    case type_strikethrough:
-        sa->strikethrough_color=string_to_color(pm);
-        *fmt_type=type_invalid;
-        break;
-    case type_style:
-    {
-        if(!strcasecmp(pm,"Italic"))
-            sa->style=PANGO_STYLE_ITALIC;
-        else if(!strcasecmp(pm,"Oblique"))
-            sa->style=PANGO_STYLE_OBLIQUE;
-        *fmt_type=type_invalid;
-        break;
-    }
-    case type_shadow:
-    {
-        if(param==1)
-        {
-            sa->shadow_color=string_to_color(pm);
-        }
-        else if(param>=2&&param<=3)
-        {
-            double sz=0.0;
-            if(math_parser(pm,&sz,NULL,NULL)==0)
-            {
-                if(param==2)
-                    sa->shadow_x=(float)sz;
-                else
-                    sa->shadow_y=(float)sz;
-            }
-        }
-        else
-        {
-            *fmt_type=type_invalid;
-        }
-    }
-    break;
-    case type_underline:
-    {
-        if(param==1)
-        {
-            if(!strncasecmp("Error",pm,5))
-                sa->underline_style=PANGO_UNDERLINE_ERROR;
-            else if(!strncasecmp("Low",pm,3))
-                sa->underline_style=PANGO_UNDERLINE_LOW;
-            else if(!strncasecmp("Double",pm,6))
-                sa->underline_style=PANGO_UNDERLINE_DOUBLE;
-            else if(!strncasecmp("Single",pm,6))
-                sa->underline_style=PANGO_UNDERLINE_SINGLE;
-        }
-        else if(param==2)
-        {
-            sa->underline_color=string_to_color(pm);
-        }
-        else
-        {
-            *fmt_type=type_invalid;
-        }
-    }
-    break;
-    case type_font_name:
-        sfree((void**)&sa->font_name);
-        if(len)
-        {
-            sa->font_name=zmalloc(len+1);
-            strncpy(sa->font_name,str,len);
-        }
-        *fmt_type=type_invalid;
-        break;
-    case type_font_color:
-        sa->font_color=string_to_color(pm);
-        *fmt_type=type_invalid;
-        break;
-    case type_outline:
-        sa->outline_color=string_to_color(pm);
-        *fmt_type=type_invalid;
-        break;
-    case type_size:
-    {
-        double sz=0.0;
-        if(math_parser(pm,&sz,NULL,NULL)==0)
-        {
-            sa->font_size=sz;
-        }
-        *fmt_type=type_invalid;
-        break;
-    }
-    case type_weight:
-    {
-        double sz=0.0;
-        if(math_parser(pm,&sz,NULL,NULL)==0)
-        {
-            sa->weight=(unsigned int)sz;
-        }
-        *fmt_type=type_invalid;
-        break;
-    }
-    case type_pattern:
-    {
-        sfree((void**)&sa->pattern);
-        sa->pattern=zmalloc(len+1);
-        strncpy(sa->pattern,str,len);
-        *fmt_type=type_invalid;
-    }
-    case type_stretch:
-    {
-        double sz=0.0;
-        if(math_parser(pm,&sz,NULL,NULL)==0)
-        {
-            sa->stretch=(sz>0.0&&sz<9.0?(unsigned char)sz:PANGO_STRETCH_NORMAL);
-        }
-        *fmt_type=type_invalid;
-        break;
-    }
-    case type_rise:
-    {
-        double sz=0.0;
-        if(math_parser(pm,&sz,NULL,NULL)==0)
-        {
-            sa->rise=(int)sz;
-        }
-        *fmt_type=type_invalid;
-        break;
-    }
-    case type_case:
-    {
-        if(!strncasecmp("Lower",pm,5))
-            sa->str_case=STRING_CASE_LOWER;
-        else if(!strncasecmp("Upper",pm,5))
-            sa->str_case=STRING_CASE_UPPER;
-        *fmt_type=type_invalid;
-        break;
-    }
-    case type_spacing:
-    {
-        double sz=0.0;
-        if(math_parser(pm,&sz,NULL,NULL)==0)
-        {
-            sa->spacing=(int)sz;
-        }
-        *fmt_type=type_invalid;
-        break;
-    }
-    case type_gradient:
-    {
-        if(param==1)
-        {
-            double sz=0.0;
-            if(math_parser(pm,&sz,NULL,NULL)==0)
-            {
-                sa->gradient_ang=(int)sz;
-            }
-            *fmt_type=type_invalid;
-        }
-        else
-        {
-            unsigned int *temp=realloc(sa->gradient,sizeof(unsigned int*)*(sa->gradient_len+1));
+        case type_invalid:
+            break;
 
-            if(temp)
-            {
-                sa->gradient=temp;
-                sa->gradient[sa->gradient_len++]=string_to_color(pm);
-            }
+        case type_strikethrough:
+            sa->strikethrough_color=string_to_color(pm);
             *fmt_type=type_invalid;
+            break;
+
+        case type_style:
+        {
+            if(!strcasecmp(pm,"Italic"))
+                sa->style=PANGO_STYLE_ITALIC;
+            else if(!strcasecmp(pm,"Oblique"))
+                sa->style=PANGO_STYLE_OBLIQUE;
+
+            *fmt_type=type_invalid;
+            break;
+        }
+
+        case type_shadow:
+        {
+            if(param==1)
+            {
+                sa->shadow_color=string_to_color(pm);
+            }
+            else if(param>=2&&param<=3)
+            {
+                double sz=0.0;
+
+                if(math_parser(pm,&sz,NULL,NULL)==0)
+                {
+                    if(param==2)
+                        sa->shadow_x=(float)sz;
+                    else
+                        sa->shadow_y=(float)sz;
+                }
+            }
+            else
+            {
+                *fmt_type=type_invalid;
+            }
         }
         break;
+
+        case type_underline:
+        {
+            if(param==1)
+            {
+                if(!strncasecmp("Error",pm,5))
+                    sa->underline_style=PANGO_UNDERLINE_ERROR;
+                else if(!strncasecmp("Low",pm,3))
+                    sa->underline_style=PANGO_UNDERLINE_LOW;
+                else if(!strncasecmp("Double",pm,6))
+                    sa->underline_style=PANGO_UNDERLINE_DOUBLE;
+                else if(!strncasecmp("Single",pm,6))
+                    sa->underline_style=PANGO_UNDERLINE_SINGLE;
+            }
+            else if(param==2)
+            {
+                sa->underline_color=string_to_color(pm);
+            }
+            else
+            {
+                *fmt_type=type_invalid;
+            }
+        }
+        break;
+
+        case type_font_name:
+            sfree((void**)&sa->font_name);
+
+            if(len)
+            {
+                sa->font_name=zmalloc(len+1);
+                strncpy(sa->font_name,str,len);
+            }
+
+            *fmt_type=type_invalid;
+            break;
+
+        case type_font_color:
+            sa->font_color=string_to_color(pm);
+            *fmt_type=type_invalid;
+            break;
+
+        case type_outline:
+            sa->outline_color=string_to_color(pm);
+            *fmt_type=type_invalid;
+            break;
+
+        case type_size:
+        {
+            double sz=0.0;
+
+            if(math_parser(pm,&sz,NULL,NULL)==0)
+            {
+                sa->font_size=sz;
+            }
+
+            *fmt_type=type_invalid;
+            break;
+        }
+
+        case type_weight:
+        {
+            double sz=0.0;
+
+            if(math_parser(pm,&sz,NULL,NULL)==0)
+            {
+                sa->weight=(unsigned int)sz;
+            }
+
+            *fmt_type=type_invalid;
+            break;
+        }
+
+        case type_pattern:
+        {
+            sfree((void**)&sa->pattern);
+            sa->pattern=zmalloc(len+1);
+            strncpy(sa->pattern,str,len);
+            *fmt_type=type_invalid;
+        }
+
+        case type_stretch:
+        {
+            double sz=0.0;
+
+            if(math_parser(pm,&sz,NULL,NULL)==0)
+            {
+                sa->stretch=(sz>0.0&&sz<9.0?(unsigned char)sz:PANGO_STRETCH_NORMAL);
+            }
+
+            *fmt_type=type_invalid;
+            break;
+        }
+
+        case type_rise:
+        {
+            double sz=0.0;
+
+            if(math_parser(pm,&sz,NULL,NULL)==0)
+            {
+                sa->rise=(int)sz;
+            }
+
+            *fmt_type=type_invalid;
+            break;
+        }
+
+        case type_case:
+        {
+            if(!strncasecmp("Lower",pm,5))
+                sa->str_case=STRING_CASE_LOWER;
+            else if(!strncasecmp("Upper",pm,5))
+                sa->str_case=STRING_CASE_UPPER;
+
+            *fmt_type=type_invalid;
+            break;
+        }
+
+        case type_spacing:
+        {
+            double sz=0.0;
+
+            if(math_parser(pm,&sz,NULL,NULL)==0)
+            {
+                sa->spacing=(int)sz;
+            }
+
+            *fmt_type=type_invalid;
+            break;
+        }
+
+        case type_gradient:
+        {
+            if(param==1)
+            {
+                double sz=0.0;
+
+                if(math_parser(pm,&sz,NULL,NULL)==0)
+                {
+                    sa->gradient_ang=(int)sz;
+                }
+
+                *fmt_type=type_invalid;
+            }
+            else
+            {
+                unsigned int *temp=realloc(sa->gradient,sizeof(unsigned int*)*(sa->gradient_len+1));
+
+                if(temp)
+                {
+                    sa->gradient=temp;
+                    sa->gradient[sa->gradient_len++]=string_to_color(pm);
+                }
+
+                *fmt_type=type_invalid;
+            }
+
+            break;
+        }
     }
-    }
+
     return(0);
 }
 
@@ -464,6 +507,7 @@ static int string_fill_text_format(object *o)
     void *es=NULL;
     unsigned char *eval=enumerator_first_value(o,ENUMERATOR_OBJECT,&es);
     string_object *so=o->pv;
+
     do
     {
         string_format_type fmt_type=0;
@@ -471,8 +515,10 @@ static int string_fill_text_format(object *o)
         string_parser_status spa= {0};
         unsigned char param=0;
         size_t index=0;
+
         if(eval==NULL)
             break;
+
         if(strncasecmp("TextFormat",eval,9))
             continue;
 
@@ -501,6 +547,7 @@ static int string_fill_text_format(object *o)
         }
 
         sscanf(eval+10,"%llu",&index);
+
         if((sa=string_attr_alloc_index(&so->attr,index+1))==NULL)
         {
             sfree((void**)&val);
@@ -518,6 +565,7 @@ static int string_fill_text_format(object *o)
             {
                 continue;
             }
+
             /*Clean spaces*/
 
             if(string_strip_space_offsets(sti.buffer,&start,&end)==0)
@@ -538,11 +586,13 @@ static int string_fill_text_format(object *o)
                     param=0;
                     start++;
                 }
+
                 if(sti.buffer[end-1]==')')
                 {
                     end--;
                 }
             }
+
             if(string_strip_space_offsets(sti.buffer,&start,&end)==0)
             {
                 if(sti.buffer[start]=='"'||sti.buffer[start]=='\'')
@@ -582,6 +632,7 @@ int string_attr_update(string_object *so)
     }
 
     so->attr_list=pango_attr_list_new();
+
     if(so->attr_list==NULL)
         return(-1);
 
@@ -742,6 +793,7 @@ void string_attr_init(object *o)
         {
             sa->str_case=STRING_CASE_LOWER;
         }
+
         sfree((void**)&temp);
     }
 
@@ -751,10 +803,12 @@ void string_attr_init(object *o)
         sa->shadow_x=1.0;
         sa->shadow_y=-1.0;
     }
+
     if((sa->font_outline = parameter_bool(o, "FontOutline", 0, XPANDER_OBJECT))!=0)
     {
         sa->outline_color = parameter_color(o, "FontOutlineColor", sa->font_color & 0xff000000, XPANDER_OBJECT);
     }
+
     string_fill_text_format(o);
 
 }

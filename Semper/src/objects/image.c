@@ -20,13 +20,16 @@ void image_destroy(object* o)
 {
     image_object* io = o->pv;
     surface_data *sd=o->sd;
+
     if(io)
     {
         image_cache_unref_image(sd->cd->ich, &io->ia,1);
+
         if(io->ia.path!=io->image_path)
         {
             sfree((void**)&io->ia.path);
         }
+
         io->ia.path=NULL;
         sfree((void**)&io->image_path);
         sfree((void**)&o->pv);
@@ -69,6 +72,7 @@ int image_update(object* o)
     {
         sfree((void**)&io->ia.path);
     }
+
     io->ia.path=NULL;
     sb.s_in = io->image_path;
     bind_update_string(o, &sb);
@@ -92,10 +96,12 @@ int image_render(object* o, cairo_t* cr)
     surface_data *sd=o->sd;
     image_object* io = o->pv;
     image_cache_query_image(sd->cd->ich, &io->ia, &px, o->w, o->h);
+
     if(px==NULL)
     {
         return(-1);
     }
+
     int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, o->auto_w);
     cairo_surface_t* image = cairo_image_surface_create_for_data(px, CAIRO_FORMAT_ARGB32, o->auto_w, o->auto_h, stride);
 

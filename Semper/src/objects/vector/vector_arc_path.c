@@ -95,6 +95,7 @@ vector_arc_path (cairo_t *cr, vector_arc *va)
     y1_ = -sinf * k1 + cosf * k2;
 
     gamma = (x1_ * x1_) / (rx * rx) + (y1_ * y1_) / (ry * ry);
+
     if (gamma > 1)
     {
         rx *= sqrt (gamma);
@@ -104,10 +105,12 @@ vector_arc_path (cairo_t *cr, vector_arc *va)
     /* Compute the center */
 
     k1 = rx * rx * y1_ * y1_ + ry * ry * x1_ * x1_;
+
     if (k1 == 0)
         return;
 
     k1 = sqrt (fabs ((rx * rx * ry * ry) / k1 - 1));
+
     if (va->sweep ==va->large)
         k1 = -k1;
 
@@ -125,24 +128,28 @@ vector_arc_path (cairo_t *cr, vector_arc *va)
     k4 = (-y1_ - cy_) / ry;
 
     k5 = sqrt (fabs (k1 * k1 + k2 * k2));
+
     if (k5 == 0)
         return;
 
     k5 = k1 / k5;
     k5 = CLAMP (k5, -1, 1);
     theta1 = acos (k5);
+
     if (k2 < 0)
         theta1 = -theta1;
 
     /* Compute delta_theta */
 
     k5 = sqrt (fabs ((k1 * k1 + k2 * k2) * (k3 * k3 + k4 * k4)));
+
     if (k5 == 0)
         return;
 
     k5 = (k1 * k3 + k2 * k4) / k5;
     k5 = CLAMP (k5, -1, 1);
     delta_theta = acos (k5);
+
     if (k1 * k4 - k3 * k2 < 0)
         delta_theta = -delta_theta;
 

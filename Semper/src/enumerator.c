@@ -34,6 +34,7 @@ unsigned char* enumerator_first_value(void* r, int rt, void** ed)
     {
         return (NULL);
     }
+
     if(*ed == NULL)
     {
         *ed = zmalloc(sizeof(enumerator));
@@ -63,6 +64,7 @@ unsigned char* enumerator_first_value(void* r, int rt, void** ed)
         {
             return(NULL);
         }
+
         ancestor_queue *aq=element_of(((list_entry*)e->anc)->prev,ancestor_queue,current);
         linked_list_remove(&aq->current);
         e->as=aq->s;
@@ -81,6 +83,7 @@ unsigned char* enumerator_next_value(void* ed)
     if(e->as)
     {
         e->k = skeleton_next_key(e->k, e->as);
+
         if(e->k == NULL)
         {
 
@@ -105,6 +108,7 @@ unsigned char* enumerator_next_value(void* ed)
             return (skeleton_key_name(e->k));
         }
     }
+
     e->k = skeleton_next_key(e->k, e->s);
     return (skeleton_key_name(e->k));
 }
@@ -112,9 +116,11 @@ unsigned char* enumerator_next_value(void* ed)
 void enumerator_finish(void** ed)
 {
     enumerator* e = *ed;
+
     if(e->anc)
     {
         ancestor_destroy_queue(&e->anc);
     }
+
     sfree(ed);
 }
