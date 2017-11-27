@@ -148,6 +148,7 @@
         <File Name="src/objects/vector/vector_clipper_glue.cpp" ExcludeProjConfig=""/>
         <File Name="src/objects/vector/vector_parser.c"/>
         <File Name="src/objects/vector/vector_arc_path.c"/>
+        <File Name="src/objects/vector/vector_path_build.c"/>
       </VirtualDirectory>
     </VirtualDirectory>
     <File Name="src/ancestor.c"/>

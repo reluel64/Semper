@@ -42,6 +42,7 @@ typedef enum
 typedef struct
 {
     vector_path_type vpt;
+    void *cr_path; /*cairo path*/
     size_t index;
     double stroke_w;
     unsigned int stroke_color;

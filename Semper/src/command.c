@@ -44,7 +44,7 @@ typedef struct
     unsigned char quote_type;
 } command_tokenizer_status;
 
-#define COMMAND_HANDLER(_func_name) static int(_func_name)(surface_data * sd, action_parameters * ap)
+#define COMMAND_HANDLER( _func_name ) static int(_func_name)(surface_data * sd, action_parameters * ap)
 
 
 COMMAND_HANDLER(handler_draggable_command)

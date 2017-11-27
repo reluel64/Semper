@@ -1,5 +1,6 @@
 #include <string_util.h>
 #include <objects/vector.h>
+#include <cairo.h>
 #include <enumerator.h>
 #include <ancestor.h>
 #include <xpander.h>
@@ -26,6 +27,10 @@ typedef enum
 
 struct _vector_parse_func
 {
+    cairo_t *cr;                /*Ideally would be to have the context
+                                 *that we use for drawing but since it is not available here,
+                                 *we create our own
+                                 * */
     cairo_matrix_t mtx;
     vector_param_type vpmt;
     vector_path_type   vpt;
@@ -189,18 +194,13 @@ static int vector_parse_path_set(vector_parser_info *vpi)
     }
     else if(vpi->pm==NULL)
     {
-        vector_path_set_common *vpsc=NULL;
-
         switch(vpi->vpt)
         {
             case vector_path_set_line_to:
             {
                 if(vpi->param>=2)
                 {
-                    vector_path_line_to *vplt=zmalloc(sizeof(vector_path_line_to));
-                    vpsc=&vplt->vsc;
-                    vplt->dx=vpi->params[0];
-                    vplt->dy=vpi->params[1];
+                    cairo_line_to(vpi->cr, vpi->params[0], vpi->params[1]);
                 }
                 break;
             }
@@ -208,14 +208,14 @@ static int vector_parse_path_set(vector_parser_info *vpi)
             {
                 if(vpi->param>=6)
                 {
-                    vector_path_curve_to *vpct=zmalloc(sizeof(vector_path_curve_to));
+                   /* vector_path_curve_to *vpct=zmalloc(sizeof(vector_path_curve_to));
                     vpsc=&vpct->vsc;
-                    vpct->dx1=vpi->params[0];
-                    vpct->dy1=vpi->params[1];
-                    vpct->dx2=vpi->params[2];
-                    vpct->dy2=vpi->params[3];
-                    vpct->dx3=vpi->params[4];
-                    vpct->dy3=vpi->params[5];
+                    vpct->dx1 = vpi->params[0];
+                    vpct->dy1 = vpi->params[1];
+                    vpct->dx2 = vpi->params[2];
+                    vpct->dy2 = vpi->params[3];
+                    vpct->dx3 = vpi->params[4];
+                    vpct->dy3 = vpi->params[5];*/
                 }
                 break;
             }
@@ -223,27 +223,20 @@ static int vector_parse_path_set(vector_parser_info *vpi)
             {
                 if(vpi->param>=7)
                 {
-                    vector_path_arc_to *vpat=zmalloc(sizeof(vector_path_arc_to));
+                  /*  vector_path_arc_to *vpat=zmalloc(sizeof(vector_path_arc_to));
                     vpsc=&vpat->vsc;
-                    vpat->rx=vpi->params[0];
-                    vpat->ry=vpi->params[1];
-                    vpat->ex=vpi->params[3];
-                    vpat->ey=vpi->params[4];
-                    vpat->angle=vpi->params[2];
-                    vpat->sweep=vpi->params[5];
-                    vpat->large=vpi->params[6];
+                    vpat->rx    = vpi->params[0];
+                    vpat->ry    = vpi->params[1];
+                    vpat->ex    = vpi->params[3];
+                    vpat->ey    = vpi->params[4];
+                    vpat->angle = vpi->params[2];
+                    vpat->sweep = vpi->params[5];
+                    vpat->large = vpi->params[6];*/
                 }
                 break;
             }
             default:
                 break;
-        }
-
-        if(vpsc)
-        {
-            vpsc->vpt=vpi->vpt;
-            list_entry_init(&vpsc->current);
-            linked_list_add_last(&vpsc->current,(list_entry*)vpi->pv);
         }
     }
     return(0);
@@ -252,7 +245,7 @@ static int vector_parse_path_set(vector_parser_info *vpi)
 static int vector_parse_paths(vector_parser_info *vpi)
 {
     vector_path_common *vpc=NULL;
-
+    int stop = 0;
     if(vpi->param==0)
     {
         memset(&vpi->params,0,sizeof(vpi->params));
@@ -283,30 +276,35 @@ static int vector_parse_paths(vector_parser_info *vpi)
 
         if(vpi->vpt==vector_path_set&&vpi->param==4)
         {
-            vector_parser_info lvpi= {0};
+
             unsigned char *lval=parameter_string(vpi->o,lpm,NULL,XPANDER_OBJECT);
 
             if(lval)
             {
-                list_entry t_list= {0};
+                vector_parser_info lvpi= {0};
                 lvpi.pm=lval;
+                lvpi.cr=vpi->cr;
                 lvpi.o=vpi->o;
                 lvpi.func=vector_parse_path_set;
-                lvpi.pv=&t_list;
-
-                list_entry_init(&t_list);
+                lvpi.pv=NULL;
+                cairo_move_to(vpi->cr,vpi->params[0],vpi->params[1]);
                 vector_parse_option(&lvpi);
 
-                if(!linked_list_empty(&t_list))
+             //   if((vpi->params[2]>0.0))
                 {
-                    vector_path *vp=zmalloc(sizeof(vector_path));
-                    vp->x=vpi->params[0];
-                    vp->y=vpi->params[1];
-                    vp->closed=(vpi->params[2]>0.0);
-                    vpc=&vp->vpc;
+                    cairo_close_path(vpi->cr);
+                }
 
-                    list_entry_init(&vp->path_sets);
-                    linked_list_replace(&t_list,&vp->path_sets);
+                cairo_path_t *temp_pth=cairo_copy_path_flat(vpi->cr);
+
+                if((temp_pth->num_data>2&&vpi->params[2]==0.0)||(vpi->params[2]!=0.0&&temp_pth->num_data>5))
+                {
+                    vpc=zmalloc(sizeof(vector_path_common));
+                    vpc->cr_path=temp_pth;
+                }
+                else
+                {
+                    cairo_path_destroy(temp_pth);
                 }
 
                 sfree((void**)&lval);
@@ -325,12 +323,10 @@ static int vector_parse_paths(vector_parser_info *vpi)
             {
                 if(vpi->param>=4)
                 {
-                    vector_line *vl=zmalloc(sizeof(vector_line));
-                    vpc=&vl->vpc;
-                    vl->sx=vpi->params[0];
-                    vl->sy=vpi->params[1];
-                    vl->dx=vpi->params[2];
-                    vl->dy=vpi->params[3];
+                    vpc=zmalloc(sizeof(vector_path_common));
+                    cairo_move_to(vpi->cr,vpi->params[0],vpi->params[1]);
+                    cairo_line_to(vpi->cr,vpi->params[2],vpi->params[3]);
+                    vpc->cr_path=cairo_copy_path_flat(vpi->cr);
                 }
                 break;
             }
@@ -338,23 +334,35 @@ static int vector_parse_paths(vector_parser_info *vpi)
             {
                 if(vpi->param>=6)
                 {
-                    vector_curve *vc=zmalloc(sizeof(vector_curve));
-                    vpc=&vc->vpc;
+                  /*  vector_curve *vc=zmalloc(sizeof(vector_curve));
+                    vpc        = &vc->vpc;
                     vc->sx     = vpi->params[0];
                     vc->sy     = vpi->params[1];
                     vc->cx1    = vpi->params[2];
                     vc->cy1    = vpi->params[3];
-                    vc->cx2    = vpi->params[4];
-                    vc->cy2    = vpi->params[5];
-                    vc->ex     = vpi->params[6];
-                    vc->ey     = vpi->params[7];
-                    vc->closed = (vpi->params[8]>0.0);
+
+                    if(vpi->param>8)
+                    {
+                        vc->cx2    = vpi->params[4];
+                        vc->cy2    = vpi->params[5];
+                        vc->ex     = vpi->params[6];
+                        vc->ey     = vpi->params[7];
+                        vc->closed = (vpi->params[8]>0.0);
+                    }
+                    else
+                    {
+                        vc->cx2    =  vc->cx1;
+                        vc->cy2    =  vc->cy2;
+                        vc->ex     =  vpi->params[4];
+                        vc->ey     =  vpi->params[5];
+                        vc->closed = (vpi->params[6]>0.0);
+                    }*/
                 }
                 break;
             }
             case vector_path_arc:
             {
-                if(vpi->param>=9)
+              /*  if(vpi->param>=9)
                 {
                     vector_arc *va=zmalloc(sizeof(vector_arc));
                     vpc=&va->vpc;
@@ -368,40 +376,40 @@ static int vector_parse_paths(vector_parser_info *vpi)
                     va->sweep  =  vpi->params[7];
                     va->large  =  vpi->params[8];
                     va->closed = (vpi->params[9]>0.0);
-                }
+                }*/
                 break;
             }
             case vector_path_rectangle:
             {
                 if(vpi->param>=4)
                 {
-                    vector_rectangle *vr=zmalloc(sizeof(vector_rectangle));
+                   /* vector_rectangle *vr=zmalloc(sizeof(vector_rectangle));
                     vpc=&vr->vpc;
                     vr->x     = vpi->params[0];
                     vr->y     = vpi->params[1];
                     vr->w     = vpi->params[2];
                     vr->h     = vpi->params[3];
                     vr->rx    = vpi->params[4];
-                    vr->ry    = vpi->params[5];
+                    vr->ry    = vpi->params[5];*/
                 }
                 break;
             }
             case vector_path_ellipse:
             {
-                if(vpi->param>=3)
+               /* if(vpi->param>=3)
                 {
                     vector_ellipse *ve=zmalloc(sizeof(vector_ellipse));
-                    vpc=&ve->vpc;
-                    ve->xc=vpi->params[0];
-                    ve->yc=vpi->params[1];
-                    ve->rx=vpi->params[2];
-                    ve->ry=ve->rx;
+                    vpc      = &ve->vpc;
+                    ve->xc   = vpi->params[0];
+                    ve->yc   = vpi->params[1];
+                    ve->rx   = vpi->params[2];
+                    ve->ry   = ve->rx;
 
                     if(vpi->param>=4)
                     {
                         ve->ry=vpi->params[3];
                     }
-                }
+                } */
                 break;
             }
 
@@ -496,7 +504,8 @@ int vector_parser_init(object *o)
 {
     void *es=NULL;
     unsigned char *eval=enumerator_first_value(o,ENUMERATOR_OBJECT,&es);
-    vector *v=o->pv;
+    cairo_surface_t *dummy_surface=cairo_image_surface_create(CAIRO_FORMAT_A1,0,0);
+    cairo_t *cr=cairo_create(dummy_surface);
     static param_parse_func ppf[] =
     {
         vector_parse_paths,
@@ -505,9 +514,10 @@ int vector_parser_init(object *o)
 
     do
     {
+
         vector_parser_info vpi= {0};
         cairo_matrix_init_identity(&vpi.mtx);
-
+        vpi.cr=cr;
         if(eval==NULL)
             break;
 
@@ -519,23 +529,37 @@ int vector_parser_init(object *o)
         if(val==NULL)
             continue;
 
+
         vpi.pm=val;
         vpi.o=o;
 
         for(unsigned char i=0; i<sizeof(ppf)/sizeof(param_parse_func); i++)
         {
+            if(i==0)
+            {
+                cairo_new_path(cr);
+                cairo_save(cr);
+            }
             vpi.func=ppf[i];
             vector_parse_option(&vpi);
+            if(i==0)
+                cairo_restore(cr);
+            if(vpi.pv==NULL)
+                break;
         }
         if(vpi.pv)
         {
-            printf("Valid path found\n");
+            vector *v=o->pv;
+            vector_path_common *vpc=vpi.pv;
+            sscanf(eval+4,"%llu",& vpc->index);
+            linked_list_add_last(&vpc->current,&v->paths);
         }
         sfree((void**)&val);
 
     }
     while((eval=enumerator_next_value(es))!=NULL);
-
     enumerator_finish(&es);
+    cairo_destroy(cr);
+    cairo_surface_destroy(dummy_surface);
     return(0);
 }

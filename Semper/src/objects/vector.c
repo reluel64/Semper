@@ -85,24 +85,33 @@ int vector_render(object *o,cairo_t *cr)
     */
 
 
-    cairo_rectangle(cr,20,20,20,20);
-    cairo_path_t *pt=cairo_copy_path(cr);
-    cairo_new_path(cr);
+
+
+
+
+
+    double vec[8]= {50,50,50,290,390,290,390,50};
 
 
 
     cairo_matrix_t mtx;
-    cairo_matrix_init_identity(&mtx);
+
     static double i=0;
-    cairo_append_path(cr,pt);
-    cairo_matrix_translate(&mtx,40,40);
-    cairo_matrix_rotate(&mtx,DEG2RAD(i++));
-    cairo_matrix_translate(&mtx,-40,-40);
-    cairo_set_matrix(cr,&mtx);
 
+    for(int i=0; i<4; i++)
+    {
+        double x=vec[i*2];
+        double y=vec[i*2+1];
+        cairo_matrix_init_identity(&mtx);
+        cairo_matrix_translate(&mtx,x,y);
+        cairo_matrix_rotate(&mtx,DEG2RAD(i));
+        cairo_matrix_transform_point(&mtx,&vec[i*2],&vec[i*2+1]);
 
+    }
+//cairo_curve_to(cr,50,290,390,290,390,50);
 
-
+    cairo_move_to(cr,vec[0],vec[1]);
+    cairo_curve_to(cr,vec[2],vec[3],vec[4],vec[5],vec[6],vec[7]);
 
     cairo_set_color(cr,0xff00ff00);
     cairo_stroke(cr);
