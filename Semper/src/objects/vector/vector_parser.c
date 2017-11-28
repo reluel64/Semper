@@ -206,16 +206,16 @@ static int vector_parse_path_set(vector_parser_info *vpi)
             }
             case vector_path_set_curve_to:
             {
-                if(vpi->param>=6)
+                if(vpi->param>=4)
                 {
-                   /* vector_path_curve_to *vpct=zmalloc(sizeof(vector_path_curve_to));
-                    vpsc=&vpct->vsc;
-                    vpct->dx1 = vpi->params[0];
-                    vpct->dy1 = vpi->params[1];
-                    vpct->dx2 = vpi->params[2];
-                    vpct->dy2 = vpi->params[3];
-                    vpct->dx3 = vpi->params[4];
-                    vpct->dy3 = vpi->params[5];*/
+                    if(vpi->param>=6)
+                    {
+                        cairo_curve_to(vpi->cr,vpi->params[0],vpi->params[1],vpi->params[2],vpi->params[3],vpi->params[4],vpi->params[5]);
+                    }
+                    else
+                    {
+                        cairo_curve_to(vpi->cr,vpi->params[0],vpi->params[1],vpi->params[0],vpi->params[1],vpi->params[4],vpi->params[5]);
+                    }
                 }
                 break;
             }
@@ -223,15 +223,15 @@ static int vector_parse_path_set(vector_parser_info *vpi)
             {
                 if(vpi->param>=7)
                 {
-                  /*  vector_path_arc_to *vpat=zmalloc(sizeof(vector_path_arc_to));
-                    vpsc=&vpat->vsc;
-                    vpat->rx    = vpi->params[0];
-                    vpat->ry    = vpi->params[1];
-                    vpat->ex    = vpi->params[3];
-                    vpat->ey    = vpi->params[4];
-                    vpat->angle = vpi->params[2];
-                    vpat->sweep = vpi->params[5];
-                    vpat->large = vpi->params[6];*/
+                    /*  vector_path_arc_to *vpat=zmalloc(sizeof(vector_path_arc_to));
+                      vpsc=&vpat->vsc;
+                      vpat->rx    = vpi->params[0];
+                      vpat->ry    = vpi->params[1];
+                      vpat->ex    = vpi->params[3];
+                      vpat->ey    = vpi->params[4];
+                      vpat->angle = vpi->params[2];
+                      vpat->sweep = vpi->params[5];
+                      vpat->large = vpi->params[6];*/
                 }
                 break;
             }
@@ -245,7 +245,6 @@ static int vector_parse_path_set(vector_parser_info *vpi)
 static int vector_parse_paths(vector_parser_info *vpi)
 {
     vector_path_common *vpc=NULL;
-    int stop = 0;
     if(vpi->param==0)
     {
         memset(&vpi->params,0,sizeof(vpi->params));
@@ -290,7 +289,7 @@ static int vector_parse_paths(vector_parser_info *vpi)
                 cairo_move_to(vpi->cr,vpi->params[0],vpi->params[1]);
                 vector_parse_option(&lvpi);
 
-             //   if((vpi->params[2]>0.0))
+                if((vpi->params[2]>0.0))
                 {
                     cairo_close_path(vpi->cr);
                 }
@@ -334,82 +333,79 @@ static int vector_parse_paths(vector_parser_info *vpi)
             {
                 if(vpi->param>=6)
                 {
-                  /*  vector_curve *vc=zmalloc(sizeof(vector_curve));
-                    vpc        = &vc->vpc;
-                    vc->sx     = vpi->params[0];
-                    vc->sy     = vpi->params[1];
-                    vc->cx1    = vpi->params[2];
-                    vc->cy1    = vpi->params[3];
+                    vpc=zmalloc(sizeof(vector_path_common));
+                    cairo_move_to(vpi->cr,vpi->params[0],vpi->params[1]);
 
-                    if(vpi->param>8)
+                    if(vpi->param>=8)
                     {
-                        vc->cx2    = vpi->params[4];
-                        vc->cy2    = vpi->params[5];
-                        vc->ex     = vpi->params[6];
-                        vc->ey     = vpi->params[7];
-                        vc->closed = (vpi->params[8]>0.0);
+                        cairo_curve_to(vpi->cr, vpi->params[2], vpi->params[3], vpi->params[4], vpi->params[5], vpi->params[6], vpi->params[7]);
                     }
                     else
                     {
-                        vc->cx2    =  vc->cx1;
-                        vc->cy2    =  vc->cy2;
-                        vc->ex     =  vpi->params[4];
-                        vc->ey     =  vpi->params[5];
-                        vc->closed = (vpi->params[6]>0.0);
-                    }*/
+                        cairo_curve_to(vpi->cr, vpi->params[2], vpi->params[3], vpi->params[2], vpi->params[3], vpi->params[4], vpi->params[5]);
+                    }
+
+                    if((vpi->params[6]>0.0))
+                    {
+                        cairo_close_path(vpi->cr);
+                    }
+                    vpc->cr_path=cairo_copy_path_flat(vpi->cr);
                 }
                 break;
             }
             case vector_path_arc:
             {
-              /*  if(vpi->param>=9)
-                {
-                    vector_arc *va=zmalloc(sizeof(vector_arc));
-                    vpc=&va->vpc;
-                    va->sx     =  vpi->params[0];
-                    va->sy     =  vpi->params[1];
-                    va->rx     =  vpi->params[2];
-                    va->ry     =  vpi->params[3];
-                    va->ex     =  vpi->params[4];
-                    va->ey     =  vpi->params[5];
-                    va->angle  =  vpi->params[6];
-                    va->sweep  =  vpi->params[7];
-                    va->large  =  vpi->params[8];
-                    va->closed = (vpi->params[9]>0.0);
-                }*/
+                /*  if(vpi->param>=9)
+                  {
+                      vector_arc *va=zmalloc(sizeof(vector_arc));
+                      vpc=&va->vpc;
+                      va->sx     =  vpi->params[0];
+                      va->sy     =  vpi->params[1];
+                      va->rx     =  vpi->params[2];
+                      va->ry     =  vpi->params[3];
+                      va->ex     =  vpi->params[4];
+                      va->ey     =  vpi->params[5];
+                      va->angle  =  vpi->params[6];
+                      va->sweep  =  vpi->params[7];
+                      va->large  =  vpi->params[8];
+                      va->closed = (vpi->params[9]>0.0);
+                  }*/
                 break;
             }
             case vector_path_rectangle:
             {
                 if(vpi->param>=4)
                 {
-                   /* vector_rectangle *vr=zmalloc(sizeof(vector_rectangle));
-                    vpc=&vr->vpc;
-                    vr->x     = vpi->params[0];
-                    vr->y     = vpi->params[1];
-                    vr->w     = vpi->params[2];
-                    vr->h     = vpi->params[3];
-                    vr->rx    = vpi->params[4];
-                    vr->ry    = vpi->params[5];*/
+                    /* vector_rectangle *vr=zmalloc(sizeof(vector_rectangle));
+                     vpc=&vr->vpc;
+                     vr->x     = vpi->params[0];
+                     vr->y     = vpi->params[1];
+                     vr->w     = vpi->params[2];
+                     vr->h     = vpi->params[3];
+                     vr->rx    = vpi->params[4];
+                     vr->ry    = vpi->params[5];*/
                 }
                 break;
             }
             case vector_path_ellipse:
             {
-               /* if(vpi->param>=3)
-                {
-                    vector_ellipse *ve=zmalloc(sizeof(vector_ellipse));
-                    vpc      = &ve->vpc;
-                    ve->xc   = vpi->params[0];
-                    ve->yc   = vpi->params[1];
-                    ve->rx   = vpi->params[2];
-                    ve->ry   = ve->rx;
+                 if(vpi->param>=3)
+                 {
+                    vpc=zmalloc(sizeof(vector_path_common));
+                    cairo_translate(vpi->cr,vpi->params[0],vpi->params[1]);
 
-                    if(vpi->param>=4)
-                    {
-                        ve->ry=vpi->params[3];
-                    }
-                } */
+                     if(vpi->param>=4)
+                     {
+                         cairo_scale(vpi->cr, vpi->params[2] / 2.0, vpi->params[3] / 2.0);
+                     }
+                     else
+                     {
+                         cairo_scale(vpi->cr, vpi->params[2] / 2.0, vpi->params[2] / 2.0);
+                     }
+
+                     cairo_arc(vpi->cr,0.0, 0.0, 1.0, 0.0, 2*M_PI);
+                     vpc->cr_path=cairo_copy_path_flat(vpi->cr);
+                 }
                 break;
             }
 

@@ -44,7 +44,7 @@ vector_arc_path_segment (cairo_t *cr,
 
 
 void
-vector_arc_path (cairo_t *cr, vector_arc *va)
+vector_arc_path (cairo_t *cr, double sx,double sy,double rx,double ry,double angle,unsigned char sweep,unsigned char large,double ex,double ey)
 {
 
     double sinf=0.0;
@@ -63,33 +63,32 @@ vector_arc_path (cairo_t *cr, vector_arc *va)
     double k3=0.0;
     double k4=0.0;
     double k5=0.0;
-    double rx=0.0;
-    double ry=0.0;
+
     int i=0;
     int n_segs=0;
 
-    if (va->sx == va->ex && va->sy == va->ey)
+    if (sx == ex && sy == ey)
         return;
 
     /* X-axis */
 
-    sinf = sin (va->angle);
-    cosf = cos (va->angle);
+    sinf = sin (angle);
+    cosf = cos (angle);
 
-    rx = fabs (va->rx);
-    ry = fabs (va->ry);
+    rx = fabs (rx);
+    ry = fabs (ry);
 
     /* Check the radius against floading point underflow.
        See http://bugs.debian.org/508443 */
     if ((rx < 0.001) || (ry < 0.001))
     {
-        cairo_move_to(cr,va->sx,va->sy);
-        cairo_line_to (cr, va->ex, va->ey);
+        cairo_move_to(cr,sx,sy);
+        cairo_line_to (cr, ex, ey);
         return;
     }
 
-    k1 = (va->sx - va->ex) / 2;
-    k2 = (va->sy - va->ey) / 2;
+    k1 = (sx - ex) / 2.0;
+    k2 = (sy - ey) / 2.0;
 
     x1_ = cosf * k1 + sinf * k2;
     y1_ = -sinf * k1 + cosf * k2;
@@ -111,14 +110,14 @@ vector_arc_path (cairo_t *cr, vector_arc *va)
 
     k1 = sqrt (fabs ((rx * rx * ry * ry) / k1 - 1));
 
-    if (va->sweep ==va->large)
+    if (sweep ==large)
         k1 = -k1;
 
     cx_ = k1 * rx * y1_ / ry;
     cy_ = -k1 * ry * x1_ / rx;
 
-    cx = cosf * cx_ - sinf * cy_ + (va->sx + va->ex) / 2;
-    cy = sinf * cx_ + cosf * cy_ + (va->sy+ va->ey) / 2;
+    cx = cosf * cx_ - sinf * cy_ + (sx + ex) / 2;
+    cy = sinf * cx_ + cosf * cy_ + (sy+ ey) / 2;
 
     /* Compute start angle */
 
@@ -153,9 +152,9 @@ vector_arc_path (cairo_t *cr, vector_arc *va)
     if (k1 * k4 - k3 * k2 < 0)
         delta_theta = -delta_theta;
 
-    if (va->sweep && delta_theta < 0)
+    if (sweep && delta_theta < 0)
         delta_theta += M_PI * 2;
-    else if (!va->sweep && delta_theta > 0)
+    else if (!sweep && delta_theta > 0)
         delta_theta -= M_PI * 2;
 
     /* Now draw the arc */
@@ -167,7 +166,7 @@ vector_arc_path (cairo_t *cr, vector_arc *va)
         vector_arc_path_segment (cr, cx, cy,
                                  theta1 + i * delta_theta / n_segs,
                                  theta1 + (i + 1) * delta_theta / n_segs,
-                                 rx, ry, va->angle);
+                                 rx, ry, angle);
     }
 }
 
