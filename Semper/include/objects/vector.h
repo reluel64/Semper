@@ -43,8 +43,8 @@ typedef enum
 
 typedef struct
 {
-    unsigned char joined;
-    vector_path_type vpt;
+    size_t join_cnt;
+    unsigned char must_join;
     cairo_rectangle_t ext;
     void *cr_path; /*cairo path*/
     size_t index;
@@ -70,4 +70,5 @@ typedef enum
 typedef struct
 {
     list_entry paths;
+    unsigned char  check_join;
 } vector;

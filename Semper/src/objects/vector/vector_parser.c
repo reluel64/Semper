@@ -6,6 +6,7 @@
 #include <xpander.h>
 #include <mem.h>
 #include <parameter.h>
+#include <objects/vector/vector_clipper_glue.h>
 #define PARAMS_LENGTH 10
 
 typedef struct _vector_parse_func  vector_parser_info;
@@ -51,8 +52,9 @@ typedef struct
 typedef struct
 {
     vector_path_common vpc;
+    size_t sub_index;
     list_entry join;
-}vector_join_list;
+} vector_join_list;
 
 
 static int vector_parse_filter(string_tokenizer_status *pi, void* pv)
@@ -216,6 +218,8 @@ static void vector_parser_apply_matrix(vector_parser_info *vpi, vector_path_comm
 }
 
 
+
+
 static int vector_parse_path_set(vector_parser_info *vpi)
 {
     if(vpi->param==0)
@@ -319,7 +323,7 @@ static int vector_parse_fused_paths(vector_parser_info *vpi)
         }
         else
         {
-             sscanf(vpi->pm,"%lu",&vjp->index);
+            sscanf(vpi->pm,"%lu",&vjp->index);
         }
         vjp->vct=vpi->vct;
     }
@@ -415,6 +419,17 @@ static int vector_parse_paths(vector_parser_info *vpi)
                 list_entry_init(&vjl->join);
                 linked_list_replace(&t_list,&vjl->join);
                 vpc=&vjl->vpc;
+                vpc->must_join=1;
+                if(!strncasecmp("Path",vpi->pm,4))
+                {
+                    sscanf(vpi->pm+4,"%lu",&vjl->sub_index);
+                }
+                else
+                {
+                    sscanf(vpi->pm,"%lu",&vjl->sub_index);
+                }
+
+                ((vector*)vpi->o->pv)->check_join=1;
             }
         }
         else
@@ -546,7 +561,7 @@ static int vector_parse_attributes(vector_parser_info *vpi)
 {
     vector_path_common *vpc=vpi->pv;
 
-    if(vpc->vpt==vector_path_join)
+    if(vpc->cr_path==NULL)
         return(1);
 
     if(vpi->param==0)
@@ -702,9 +717,23 @@ static int vector_parse_attributes(vector_parser_info *vpi)
 }
 
 
+vector_path_common *vector_parse_get_join_path(vector *v,size_t index,size_t join_count)
+{
+    vector_path_common *vpc=NULL;
+    list_enum_part(vpc,&v->paths,current)
+    {
+        if(vpc->cr_path && vpc->index==index && vpc->join_cnt!=join_count)
+        {
+            return(vpc);
+        }
+    }
+    return(NULL);
+}
+
 
 int vector_parser_init(object *o)
 {
+    vector *v=o->pv;
     void *es=NULL;
     unsigned char *eval=enumerator_first_value(o,ENUMERATOR_OBJECT,&es);
     cairo_surface_t *dummy_surface=cairo_image_surface_create(CAIRO_FORMAT_A1,0,0);
@@ -755,6 +784,40 @@ int vector_parser_init(object *o)
     }
     while((eval=enumerator_next_value(es))!=NULL);
     enumerator_finish(&es);
+
+    if(v->check_join)
+    {
+
+        vector_path_common *vpc=NULL;
+        size_t join_count=0;
+        list_enum_part(vpc,&v->paths,current)
+        {
+
+            cairo_new_path(cr);
+            void *clipper=vector_init_clipper();
+            void *paths=vector_init_paths();
+            if(vpc->must_join)
+            {
+                join_count++;
+                char found = 0;
+                vector_join_list *vjl=(vector_join_list*)vpc;
+                vector_path_common *vpc_root=vector_parse_get_join_path(v,vjl->sub_index,join_count);
+
+                if(vpc_root==NULL)
+                {
+                    diag_error("%s %d Cannot join paths as the root path is missing\n",__FUNCTION__,__LINE__);
+                    continue;
+                }
+
+
+
+                vector_join_path *vjp=NULL;
+
+            }
+        }
+        //at this point it seems that we need to do some joins
+    }
+
     cairo_destroy(cr);
     cairo_surface_destroy(dummy_surface);
     return(0);
