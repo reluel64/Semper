@@ -222,7 +222,7 @@ void event_remove(event_queue* eq, event_handler eh, void* pv, unsigned char fla
 }
 
 
-event* event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout, unsigned char flags)
+int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout, unsigned char flags)
 {
 
     if(flags & EVENT_REMOVE_BY_DATA_HANDLER)
@@ -298,7 +298,7 @@ event* event_push(event_queue* eq, event_handler handler, void* pv, size_t timeo
 
     pthread_mutex_unlock(&eq->mutex);
 
-    return (e);
+    return (0);
 }
 
 static void event_remove_internal(event* e)

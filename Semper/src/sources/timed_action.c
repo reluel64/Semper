@@ -469,8 +469,6 @@ void timed_action_command(void *spv,unsigned char *command)
 
                         pthread_attr_destroy(&th_att);
 
-
-
                         break;
                     }
                 }

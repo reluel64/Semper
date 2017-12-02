@@ -25,7 +25,6 @@ int vector_update(object *o)
 }
 
 
-
 int vector_render(object *o,cairo_t *cr)
 {
 
@@ -93,30 +92,31 @@ int vector_render(object *o,cairo_t *cr)
 
 
     static double i=0;
-/*
-    for(int i=0; i<4; i++)
-    {
-        double x=vec[i*2];
-        double y=vec[i*2+1];
-        cairo_matrix_init_identity(&mtx);
-        cairo_matrix_translate(&mtx,x,y);
-        cairo_matrix_rotate(&mtx,DEG2RAD(i));
-        cairo_matrix_transform_point(&mtx,&vec[i*2],&vec[i*2+1]);
+    /*
+        for(int i=0; i<4; i++)
+        {
+            double x=vec[i*2];
+            double y=vec[i*2+1];
+            cairo_matrix_init_identity(&mtx);
+            cairo_matrix_translate(&mtx,x,y);
+            cairo_matrix_rotate(&mtx,DEG2RAD(i));
+            cairo_matrix_transform_point(&mtx,&vec[i*2],&vec[i*2+1]);
 
-    }
-     */
+        }
+         */
 //cairo_curve_to(cr,50,290,390,290,390,50);
-cairo_new_path(cr);
-cairo_translate(cr,50,50);
-cairo_rotate(cr,DEG2RAD(i++));
-cairo_scale(cr,1,100/2);
-cairo_rectangle(cr,0,0,100,100);
-//cairo_move_to(cr,250.0,100.0);
-  // vector_arc_path(cr,250.0,100.0,100.0,100.0,DEG2RAD(i+=10),0,0,250,400);
 
+cairo_new_path(cr);
+cairo_translate(cr,200,200);
+cairo_move_to(cr,250,100);
+//cairo_scale(cr,-1,1.0);
+    vector_arc_path(cr,250,100,100.0,100.0,0,0,0,250,400);
+    cairo_identity_matrix(cr);
+  //  cairo_line_to(cr,125,80);
     cairo_set_color(cr,0xff00ff00);
     cairo_stroke(cr);
-    vector_arc va= {0};
+
+
 
     /*cairo_translate(cr,0.0,300.0);
 

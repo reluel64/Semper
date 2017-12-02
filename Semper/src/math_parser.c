@@ -355,7 +355,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
         {"|",       OP_PRIO(0x0a), OP_AS_LE, 2, (math_rtn)       math_bitwor},
         {"<<",      OP_PRIO(0x05), OP_AS_LE, 2, (math_rtn)       math_bitshl},
         {">>",      OP_PRIO(0x05), OP_AS_LE, 2, (math_rtn)       math_bitshr},
-        {"^",      OP_PRIO(0x09), OP_AS_LE, 2, (math_rtn)       math_bitxor},
+        {"^",       OP_PRIO(0x09), OP_AS_LE, 2, (math_rtn)       math_bitxor},
         {"~",       OP_PRIO(0x02), OP_AS_RI, 1, (math_rtn)       math_bitnot},
         //Logical
         {"&&",      OP_PRIO(0x0b), OP_AS_LE, 2, (math_rtn)          math_and},

@@ -27,7 +27,7 @@ typedef struct _event_queue
 void event_wait(event_queue* eq);
 event_queue* event_queue_init(void);
 
-event* event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout, unsigned char flags);
+int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout, unsigned char flags);
 void event_remove(event_queue* eq, event_handler eh, void* pv, unsigned char flags);
 void event_queue_clear(event_queue* eq);
 void event_process(event_queue* eq);
