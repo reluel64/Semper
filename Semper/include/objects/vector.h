@@ -43,17 +43,20 @@ typedef enum
 
 typedef struct
 {
+    /*Attributes*/
+    unsigned int stroke_color;
+    unsigned int fill_color;
+    cairo_line_cap_t cap;
+    cairo_line_join_t join;
+    double stroke_w;
+   cairo_pattern_t *gradient;
+
+
     size_t join_cnt;
     unsigned char must_join;
     cairo_rectangle_t ext;
     void *cr_path; /*cairo path*/
     size_t index;
-    double stroke_w;
-    unsigned int stroke_color;
-    unsigned int fill_color;
-    cairo_line_cap_t cap;
-    cairo_line_join_t join;
-    list_entry colors;
     list_entry current;
 } vector_path_common;
 

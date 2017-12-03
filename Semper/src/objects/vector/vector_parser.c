@@ -548,6 +548,7 @@ static int vector_parse_paths(vector_parser_info *vpi)
 
     if(vpc)
     {
+        vpc->stroke_w=1.0;
         cairo_identity_matrix(vpi->cr);
         list_entry_init(&vpc->current);
         cairo_path_extents(vpi->cr,&vpc->ext.x,&vpc->ext.y,&vpc->ext.width,&vpc->ext.height);
@@ -643,6 +644,18 @@ static int vector_parse_attributes(vector_parser_info *vpi)
             else
                 vpc->cap=CAIRO_LINE_JOIN_MITER;
         }
+        else if(vpi->vpmt==vector_param_stroke)
+        {
+            vpc->stroke_color=string_to_color(lpm);
+        }
+        else if(vpi->vpmt == vector_param_fill)
+        {
+            vpc->fill_color=string_to_color(lpm);
+        }
+        else if(vpi->vpmt== vector_param_stroke_width)
+        {
+            vpc->stroke_w=atof(lpm);
+        }
         else
         {
             vpi->params[vpi->param-1]=atof(lpm);
@@ -709,8 +722,8 @@ static int vector_parse_attributes(vector_parser_info *vpi)
                 }
             }
             default:
-            if(vpi->vpmt!=0)
-                diag_error("%s %d Unhnadled type %d",__FUNCTION__,__LINE__,vpi->vpmt);
+                if(vpi->vpmt!=0)
+                    diag_error("%s %d Unhnadled type %d",__FUNCTION__,__LINE__,vpi->vpmt);
                 break;
         }
 #warning "Incomplete implementation"
@@ -756,8 +769,13 @@ static void vector_parser_destroy_item(vector_path_common **vpc)
     {
         cairo_path_destroy((*vpc)->cr_path);
     }
+
+    if((*vpc)->gradient)
+    {
+        cairo_pattern_destroy((*vpc)->gradient);
+        (*vpc)->gradient=NULL;
+    }
     sfree((void**)vpc);
-   #warning "Must implement deallocation of gradients"
 }
 
 void vector_parser_destroy(object *o)
@@ -765,9 +783,23 @@ void vector_parser_destroy(object *o)
     vector *v=o->pv;
     while(v->paths.next!=NULL && !linked_list_empty(&v->paths))
     {
-      vector_path_common  *vpc = element_of(v->paths.next, vector_path_common, current);
-      vector_parser_destroy_item(&vpc);
+        vector_path_common  *vpc = element_of(v->paths.next, vector_path_common, current);
+        vector_parser_destroy_item(&vpc);
     }
+}
+
+static int vector_parser_sort(list_entry *l1,list_entry *l2,void *pv)
+{
+    vector_path_common *vpc1=element_of(l1,vector_path_common,current);
+    vector_path_common *vpc2=element_of(l2,vector_path_common,current);
+    int res=0;
+
+
+    if(vpc1->index<vpc2->index)
+        res=-1;
+    else if(vpc1->index>vpc2->index)
+        res=1;
+    return(res);
 }
 
 int vector_parser_init(object *o)
@@ -823,7 +855,7 @@ int vector_parser_init(object *o)
     }
     while((eval=enumerator_next_value(es))!=NULL);
     enumerator_finish(&es);
-
+    merge_sort(&v->paths,vector_parser_sort,NULL);
     if(v->check_join)
     {
 
@@ -843,6 +875,7 @@ int vector_parser_init(object *o)
                     diag_error("%s %d Cannot join paths as the root path is missing\n",__FUNCTION__,__LINE__);
                     continue;
                 }
+
                 vector_join_path *vjp=NULL;
                 vector_join_path *tvjp=NULL;
                 cairo_new_path(cr);
@@ -890,9 +923,9 @@ int vector_parser_init(object *o)
                     cairo_path_destroy(vpc->cr_path);
                     vpc->cr_path=NULL;
                 }
-
+                memcpy(vpc,vpc_root,offsetof(vector_path_common,gradient));
                 vpc->cr_path=cairo_copy_path_flat(cr);
-
+                vpc->must_join=0;
             }
         }
 
@@ -905,7 +938,6 @@ int vector_parser_init(object *o)
                 vector_parser_destroy_item(&vpc);
             }
         }
-
     }
 
 

@@ -15,7 +15,6 @@ void vector_init(object *o)
 
 void vector_reset(object *o)
 {
-    vector *v=o->pv;
     vector_parser_destroy(o);
     vector_parser_init(o);
 }
@@ -35,10 +34,22 @@ int vector_render(object *o,cairo_t *cr)
     cairo_set_color(cr,0xff00ff00);
     list_enum_part(vpc,&v->paths,current)
     {
-
+        cairo_set_line_width(cr,vpc->stroke_w);
+        cairo_set_line_join(cr,vpc->join);
+        cairo_set_line_cap(cr,vpc->cap);
         cairo_new_path(cr);
         cairo_append_path(cr,vpc->cr_path);
-        cairo_stroke(cr);
+
+        if(vpc->fill_color&(0xff<<24))
+        {
+            cairo_set_color(cr,vpc->fill_color);
+            cairo_fill_preserve(cr);
+        }
+        if(vpc->stroke_color&(0xff<<24))
+        {
+            cairo_set_color(cr,vpc->stroke_color);
+            cairo_stroke(cr);
+        }
     }
 
 
