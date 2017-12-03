@@ -319,11 +319,11 @@ static int vector_parse_fused_paths(vector_parser_info *vpi)
         linked_list_add_last(&vjp->current,vpi->pv);
         if(!strncasecmp("Path",vpi->pm,4))
         {
-            sscanf(vpi->pm+4,"%lu",&vjp->index);
+            sscanf(vpi->pm+4,"%llu",&vjp->index);
         }
         else
         {
-            sscanf(vpi->pm,"%lu",&vjp->index);
+            sscanf(vpi->pm,"%llu",&vjp->index);
         }
         vjp->vct=vpi->vct;
     }
@@ -356,7 +356,7 @@ static int vector_parse_paths(vector_parser_info *vpi)
             vpi->vpt=vector_path_set;
 
         else if(!strncasecmp(vpi->pm,"Join",4))
-            vpi->vpmt=vector_path_join;
+            vpi->vpt=vector_path_join;
 
     }
     else if(vpi->pm && vpi->param > 0&&vpi->param <= PARAMS_LENGTH)
@@ -401,7 +401,7 @@ static int vector_parse_paths(vector_parser_info *vpi)
                 sfree((void**)&lval);
             }
         }
-        else if(vpi->vpmt==vector_path_join && vpi->param == 1)
+        else if(vpi->vpt==vector_path_join && vpi->param == 1)
         {
             list_entry t_list= {0};
             list_entry_init(&t_list);
@@ -422,11 +422,11 @@ static int vector_parse_paths(vector_parser_info *vpi)
                 vpc->must_join=1;
                 if(!strncasecmp("Path",vpi->pm,4))
                 {
-                    sscanf(vpi->pm+4,"%lu",&vjl->sub_index);
+                    sscanf(vpi->pm+4,"%llu",&vjl->sub_index);
                 }
                 else
                 {
-                    sscanf(vpi->pm,"%lu",&vjl->sub_index);
+                    sscanf(vpi->pm,"%llu",&vjl->sub_index);
                 }
 
                 ((vector*)vpi->o->pv)->check_join=1;
@@ -523,6 +523,7 @@ static int vector_parse_paths(vector_parser_info *vpi)
                 if(vpi->param>=3)
                 {
                     vpc=zmalloc(sizeof(vector_path_common));
+
                     cairo_translate(vpi->cr,vpi->params[0],vpi->params[1]);
 
                     if(vpi->param>=4)
@@ -547,6 +548,7 @@ static int vector_parse_paths(vector_parser_info *vpi)
 
     if(vpc)
     {
+        cairo_identity_matrix(vpi->cr);
         list_entry_init(&vpc->current);
         cairo_path_extents(vpi->cr,&vpc->ext.x,&vpc->ext.y,&vpc->ext.width,&vpc->ext.height);
         vpi->pv=vpc;
@@ -658,15 +660,15 @@ static int vector_parse_attributes(vector_parser_info *vpi)
 
                     if(vpi->param>=3)
                     {
-                        cairo_matrix_init_translate(&mtx,vpi->params[0],vpi->params[1]);
+                        cairo_matrix_init_translate(&mtx,vpi->params[0]+vpc->ext.x,vpi->params[1]+vpc->ext.y);
                         cairo_matrix_rotate(&mtx,DEG2RAD(vpi->params[2]));
-                        cairo_matrix_init_translate(&mtx,-vpi->params[0],-vpi->params[1]);
+                        cairo_matrix_translate(&mtx,-(vpi->params[0]+vpc->ext.x),-(vpi->params[1]+vpc->ext.y));
                     }
                     else
                     {
-                        cairo_matrix_init_translate(&mtx,vpc->ext.width/2.0,vpc->ext.height/2.0);
+                        cairo_matrix_init_translate(&mtx,(vpc->ext.width+vpc->ext.x)/2.0,(vpc->ext.height+vpc->ext.y)/2.0);
                         cairo_matrix_rotate(&mtx,DEG2RAD(vpi->params[0]));
-                        cairo_matrix_init_translate(&mtx,-vpc->ext.width/2.0,-vpc->ext.height/2.0);
+                        cairo_matrix_translate(&mtx,-(vpc->ext.width+vpc->ext.x)/2.0,-(vpc->ext.height+vpc->ext.y)/2.0);
                     }
 
                     vector_parser_apply_matrix(vpi,vpc,&mtx);
@@ -681,15 +683,15 @@ static int vector_parse_attributes(vector_parser_info *vpi)
 
                     if(vpi->param>=4)
                     {
-                        cairo_matrix_init_translate(&mtx,vpi->params[0],vpi->params[1]);
+                        cairo_matrix_init_translate(&mtx,vpi->params[0]+vpc->ext.x,vpi->params[1]+vpc->ext.y);
                         cairo_matrix_scale(&mtx,vpi->params[2],vpi->params[3]);
-                        cairo_matrix_init_translate(&mtx,-vpi->params[0],-vpi->params[1]);
+                        cairo_matrix_translate(&mtx,-(vpi->params[0]+vpc->ext.x),-(vpi->params[1]+vpc->ext.y));
                     }
                     else
                     {
-                        cairo_matrix_init_translate(&mtx,vpc->ext.width/2.0,vpc->ext.height/2.0);
+                        cairo_matrix_init_translate(&mtx,(vpc->ext.width+vpc->ext.x)/2.0,(vpc->ext.height+vpc->ext.y)/2.0);
                         cairo_matrix_scale(&mtx,vpi->params[0],vpi->params[1]);
-                        cairo_matrix_init_translate(&mtx,-vpc->ext.width/2.0,-vpc->ext.height/2.0);
+                        cairo_matrix_translate(&mtx,-(vpc->ext.width+vpc->ext.x)/2.0,-(vpc->ext.height+vpc->ext.y)/2.0);
                     }
 
                     vector_parser_apply_matrix(vpi,vpc,&mtx);
@@ -698,7 +700,6 @@ static int vector_parse_attributes(vector_parser_info *vpi)
             }
             case vector_param_offset:
             {
-
                 cairo_matrix_t mtx= {0};
 
                 if(vpi->param>=2)
@@ -708,28 +709,66 @@ static int vector_parse_attributes(vector_parser_info *vpi)
                 }
             }
             default:
+            if(vpi->vpmt!=0)
                 diag_error("%s %d Unhnadled type %d",__FUNCTION__,__LINE__,vpi->vpmt);
                 break;
         }
-#warning "Implement check"
+#warning "Incomplete implementation"
     }
     return(0);
 }
 
 
-vector_path_common *vector_parse_get_join_path(vector *v,size_t index,size_t join_count)
+static vector_path_common *vector_parse_get_join_path(vector *v,size_t index,size_t join_count)
 {
     vector_path_common *vpc=NULL;
     list_enum_part(vpc,&v->paths,current)
     {
         if(vpc->cr_path && vpc->index==index && vpc->join_cnt!=join_count)
         {
+            vpc->join_cnt=join_count;
             return(vpc);
         }
     }
     return(NULL);
 }
 
+
+static void vector_parser_destroy_join_list(vector_join_list *vjl)
+{
+    vector_join_path *vjp=NULL;
+    vector_join_path *tvjp=NULL;
+    list_enum_part_safe(vjp,tvjp,&vjl->join,current)
+    {
+        linked_list_remove(&vjp->current);
+        sfree((void**)&vjp);
+    }
+}
+
+static void vector_parser_destroy_item(vector_path_common **vpc)
+{
+    linked_list_remove(&(*vpc)->current);
+    if((*vpc)->must_join)
+    {
+        vector_parser_destroy_join_list((vector_join_list*)(*vpc));
+    }
+    if((*vpc)->cr_path)
+    {
+        cairo_path_destroy((*vpc)->cr_path);
+    }
+    sfree((void**)vpc);
+   #warning "Must implement deallocation of gradients"
+}
+
+void vector_parser_destroy(object *o)
+{
+    vector *v=o->pv;
+    while(v->paths.next!=NULL && !linked_list_empty(&v->paths))
+    {
+      vector_path_common  *vpc = element_of(v->paths.next, vector_path_common, current);
+      vector_parser_destroy_item(&vpc);
+    }
+}
 
 int vector_parser_init(object *o)
 {
@@ -792,14 +831,10 @@ int vector_parser_init(object *o)
         size_t join_count=0;
         list_enum_part(vpc,&v->paths,current)
         {
-
-            cairo_new_path(cr);
-            void *clipper=vector_init_clipper();
-            void *paths=vector_init_paths();
             if(vpc->must_join)
             {
                 join_count++;
-                char found = 0;
+
                 vector_join_list *vjl=(vector_join_list*)vpc;
                 vector_path_common *vpc_root=vector_parse_get_join_path(v,vjl->sub_index,join_count);
 
@@ -808,15 +843,71 @@ int vector_parser_init(object *o)
                     diag_error("%s %d Cannot join paths as the root path is missing\n",__FUNCTION__,__LINE__);
                     continue;
                 }
-
-
-
                 vector_join_path *vjp=NULL;
+                vector_join_path *tvjp=NULL;
+                cairo_new_path(cr);
+                void *clipper=vector_init_clipper();
+                void *paths=vector_init_paths();
+
+                //Convert the path from cairo to Clipper
+                cairo_append_path(cr,vpc_root->cr_path);
+                cairo_close_path(cr);
+                vector_cairo_to_clip(cr,paths);
+
+
+                list_enum_part_safe(vjp,tvjp,&vjl->join,current)
+                {
+                    cairo_new_path(cr);
+                    vector_path_common *vpc_clip=vector_parse_get_join_path(v,vjp->index,join_count);
+
+                    if(vpc_clip&&vpc_clip->cr_path)
+                    {
+
+                        unsigned char reversed=vjp->vct==vector_clip_diff_b;
+                        unsigned char correct_diff=reversed?vjp->vct-3:vjp->vct-1;
+
+                        vector_add_paths(clipper,paths,reversed,1);
+
+                        cairo_append_path(cr,vpc_clip->cr_path);
+                        cairo_close_path(cr);
+                        vector_cairo_to_clip(cr,paths);
+                        vector_add_paths(clipper,paths,!reversed,1);
+                        vector_clip_paths(clipper,paths,correct_diff);
+
+                        linked_list_remove(&vjp->current);
+                        sfree((void**)&vjp);
+
+                    }
+                }
+
+                cairo_new_path(cr);
+                vector_clip_to_cairo(cr,paths);
+                vector_destroy_paths(&paths);
+                vector_destroy_clipper(&clipper);
+
+                if(vpc->cr_path)
+                {
+                    cairo_path_destroy(vpc->cr_path);
+                    vpc->cr_path=NULL;
+                }
+
+                vpc->cr_path=cairo_copy_path_flat(cr);
 
             }
         }
-        //at this point it seems that we need to do some joins
+
+        /*Cleanup the redundant paths*/
+        vector_path_common *tvpc=NULL;
+        list_enum_part_safe(vpc,tvpc,&v->paths,current)
+        {
+            if(vpc->must_join==0&&vpc->join_cnt)
+            {
+                vector_parser_destroy_item(&vpc);
+            }
+        }
+
     }
+
 
     cairo_destroy(cr);
     cairo_surface_destroy(dummy_surface);

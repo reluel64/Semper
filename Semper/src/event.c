@@ -241,7 +241,7 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
     }
 
     pthread_mutex_unlock(&eq->mutex);
-    timeout=(timeout<16?16:timeout); //16 ms seems the resolution liked by Windows so we will use that as a limitation for both Windows and Linux
+    timeout=(timeout<1?1:timeout); //16 ms seems the resolution liked by Windows so we will use that as a limitation for both Windows and Linux
     event* e = zmalloc(sizeof(event));
     list_entry_init(&e->current);
 

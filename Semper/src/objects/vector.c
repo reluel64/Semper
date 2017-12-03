@@ -15,6 +15,8 @@ void vector_init(object *o)
 
 void vector_reset(object *o)
 {
+    vector *v=o->pv;
+    vector_parser_destroy(o);
     vector_parser_init(o);
 }
 
@@ -30,52 +32,16 @@ int vector_render(object *o,cairo_t *cr)
 
     vector *v=o->pv;
     vector_path_common *vpc = NULL;
-    /* list_enum_part(vpc,&v->paths,current)
-     {
-         cairo_new_path(cr);
-         if(vpc->vpt==vector_path_path)
-         {
+    cairo_set_color(cr,0xff00ff00);
+    list_enum_part(vpc,&v->paths,current)
+    {
 
-             vector_path *vp=(vector_path*)vpc;
-             vector_subpath_common *vsc=NULL;
-             list_enum_part(vsc,&vp->paths,current)
-             {
-                 printf("vpt %d\n",vsc->vpt);
-             }
-         }
-         else if(vpc->vpt==vector_path_rectangle)
-         {
-             vector_rectangle *vr=(vector_rectangle*)vpc;
-             cairo_rectangle(cr,vr->x,vr->y,vr->w,vr->h);
+        cairo_new_path(cr);
+        cairo_append_path(cr,vpc->cr_path);
+        cairo_stroke(cr);
+    }
 
-         }
-         else if(vpc->vpt==vector_path_line)
-         {
-             vector_line *vl=(vector_line*)vpc;
-             cairo_move_to(cr,vl->sx,vl->sy);
-             cairo_line_to(cr,vl->dx,vl->dy);
-         }
-         else if(vpc->vpt==vector_path_arc)
-         {
-             vector_arc *va=(vector_arc*)vpc;
-             cairo_arc(cr,va->xc,va->yc,va->radius,va->sa,va->ea);
-         }
 
-         cairo_set_line_cap(cr,vpc->cap);
-         cairo_set_line_join(cr,vpc->join);
-         cairo_set_line_width(cr,vpc->stroke_w>1.0? vpc->stroke_w:1.0);
-
-         if(vpc->fill_color)
-         {
-             cairo_set_color(cr,vpc->fill_color);
-             cairo_fill_preserve(cr);
-         }
-         if(vpc->fill_color)
-         {
-             cairo_set_color(cr,vpc->stroke_color);
-             cairo_stroke(cr);
-         }
-     }*/
     /*
     cairo_set_color(cr,0xff00ff00);
     void *p1=_2geom_rectangle(20,20,200,200);
@@ -91,7 +57,7 @@ int vector_render(object *o,cairo_t *cr)
 
 
 
-    static double i=0;
+    //  static double i=0;
     /*
         for(int i=0; i<4; i++)
         {
@@ -105,17 +71,17 @@ int vector_render(object *o,cairo_t *cr)
         }
          */
 //cairo_curve_to(cr,50,290,390,290,390,50);
-
-cairo_new_path(cr);
-cairo_translate(cr,200,200);
-cairo_move_to(cr,250,100);
-//cairo_scale(cr,-1,1.0);
-    vector_arc_path(cr,250,100,100.0,100.0,0,0,0,250,400);
-    cairo_identity_matrix(cr);
-  //  cairo_line_to(cr,125,80);
-    cairo_set_color(cr,0xff00ff00);
-    cairo_stroke(cr);
-
+    /*
+    cairo_new_path(cr);
+    cairo_translate(cr,200,200);
+    cairo_move_to(cr,250,100);
+    //cairo_scale(cr,-1,1.0);
+        vector_arc_path(cr,250,100,100.0,100.0,0,0,0,250,400);
+        cairo_identity_matrix(cr);
+      //  cairo_line_to(cr,125,80);
+        cairo_set_color(cr,0xff00ff00);
+        cairo_stroke(cr);
+    */
 
 
     /*cairo_translate(cr,0.0,300.0);
@@ -176,5 +142,6 @@ cairo_move_to(cr,250,100);
 
 void vector_destroy(object *o)
 {
+    vector_parser_destroy(o);
     sfree((void**)&o->pv);
 }

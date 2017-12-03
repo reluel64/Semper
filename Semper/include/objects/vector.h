@@ -7,7 +7,7 @@ int vector_render(object *o,cairo_t *cr);
 void vector_destroy(object *o);
 /*not API*/
 int vector_parser_init(object *o);
-
+void vector_parser_destroy(object *o);
 typedef enum
 {
     vector_path_unknown,
