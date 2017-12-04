@@ -29,6 +29,7 @@ struct _vector_parse_func
     vector_param_type vpmt;
     vector_path_type   vpt;
     vector_clip_type  vct;
+    unsigned char mtx_only; //used by Join Paths
     unsigned char param;
     unsigned char valid;
     unsigned char lvl;
@@ -571,22 +572,25 @@ static int vector_parse_attributes(vector_parser_info *vpi)
     {
         memset(&vpi->params,0,sizeof(vpi->params));
 
-        if(!strncasecmp(vpi->pm,"StrokeWidth",11))
-            vpi->vpmt=vector_param_stroke_width;
+        if(vpi->mtx_only==0)
+        {
+            if(!strncasecmp(vpi->pm,"StrokeWidth",11))
+                vpi->vpmt=vector_param_stroke_width;
 
-        else if(!strncasecmp(vpi->pm,"Stroke",6))
-            vpi->vpmt=vector_param_stroke;
+            else if(!strncasecmp(vpi->pm,"Stroke",6))
+                vpi->vpmt=vector_param_stroke;
 
-        else if(!strncasecmp(vpi->pm,"Fill",4))
-            vpi->vpmt=vector_param_fill;
+            else if(!strncasecmp(vpi->pm,"Fill",4))
+                vpi->vpmt=vector_param_fill;
 
-        else if(!strncasecmp(vpi->pm,"LineJoin",8))
-            vpi->vpmt=vector_param_join;
+            else if(!strncasecmp(vpi->pm,"LineJoin",8))
+                vpi->vpmt=vector_param_join;
 
-        else if(!strncasecmp(vpi->pm,"LineCap",7))
-            vpi->vpmt=vector_param_cap;
+            else if(!strncasecmp(vpi->pm,"LineCap",7))
+                vpi->vpmt=vector_param_cap;
+        }
 
-        else if(!strncasecmp(vpi->pm,"Attributes",10))
+        if(!strncasecmp(vpi->pm,"Attributes",10))
             vpi->vpmt=vector_param_shared;
 
         else  if(!strncasecmp(vpi->pm,"Skew",4))
@@ -817,7 +821,6 @@ int vector_parser_init(object *o)
 
     do
     {
-
         vector_parser_info vpi= {0};
         vpi.cr=cr;
         if(eval==NULL)
@@ -860,8 +863,9 @@ int vector_parser_init(object *o)
     {
 
         vector_path_common *vpc=NULL;
+        vector_path_common *tvpc=NULL;
         size_t join_count=0;
-        list_enum_part(vpc,&v->paths,current)
+        list_enum_part_safe(vpc,tvpc,&v->paths,current)
         {
             if(vpc->must_join)
             {
@@ -923,14 +927,44 @@ int vector_parser_init(object *o)
                     cairo_path_destroy(vpc->cr_path);
                     vpc->cr_path=NULL;
                 }
-                memcpy(vpc,vpc_root,offsetof(vector_path_common,gradient));
-                vpc->cr_path=cairo_copy_path_flat(cr);
-                vpc->must_join=0;
+
+                vector_path_common *new_vpc=zmalloc(sizeof(vector_path_common));
+                memcpy(new_vpc,vpc,sizeof(vector_path_common));                                                //copy attributes
+
+                memcpy(new_vpc,vpc_root,offsetof(vector_path_common,gradient));         //copy inherited attributes
+                cairo_path_extents(cr,&new_vpc->ext.x,&new_vpc->ext.y,&new_vpc->ext.width,&new_vpc->ext.height);        //get the initial extents
+
+                new_vpc->cr_path=cairo_copy_path_flat(cr);
+                new_vpc->must_join=0;
+
+                list_entry_init(&new_vpc->current);
+                linked_list_replace(&vpc->current,&new_vpc->current);               //replace with the cleaner vector_path_common
+                vector_parser_destroy_join_list((vector_join_list*)vpc);
+
+                sfree((void**)&vpc);
+                vector_parser_info vpi= {0};
+                vpi.cr=cr;
+
+                unsigned char tmp[256]= {0};
+                snprintf(tmp,256,new_vpc->index>0?"Path%llu":"Path",new_vpc->index);
+                vpi.pm=parameter_string(o,tmp,NULL,XPANDER_OBJECT);
+                vpi.o=o;
+                if(vpi.pm)
+                {
+                    cairo_new_path(cr);
+                    vpi.func=vector_parse_attributes;
+                    vpi.pv=new_vpc;
+                    vector_parse_option(&vpi);
+                    sfree((void**)&vpi.pm);
+                }
+
+                //last but not least, let's obtain the attributes
+
             }
         }
 
         /*Cleanup the redundant paths*/
-        vector_path_common *tvpc=NULL;
+
         list_enum_part_safe(vpc,tvpc,&v->paths,current)
         {
             if(vpc->must_join==0&&vpc->join_cnt)
