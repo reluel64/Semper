@@ -617,6 +617,7 @@ static int vector_parse_attributes(vector_parser_info *vpi)
                 lvpi.lvl=1;
                 lvpi.pm=lval;
                 lvpi.o=vpi->o;
+                lvpi.pv=vpi->pv;
                 lvpi.func=vector_parse_attributes;
                 vector_parse_option(&lvpi);
                 sfree((void**)&lval);
@@ -674,13 +675,13 @@ static int vector_parse_attributes(vector_parser_info *vpi)
                     if(vpi->param>=3)
                     {
                         cairo_matrix_init_translate(&mtx,vpi->params[0]+vpc->ext.x,vpi->params[1]+vpc->ext.y);
-                        cairo_matrix_rotate(&mtx,DEG2RAD(vpi->params[2]));
+                        cairo_matrix_rotate(&mtx,DEG2RAD(fmod(vpi->params[2],360.0)));
                         cairo_matrix_translate(&mtx,-(vpi->params[0]+vpc->ext.x),-(vpi->params[1]+vpc->ext.y));
                     }
                     else
                     {
                         cairo_matrix_init_translate(&mtx,(vpc->ext.width+vpc->ext.x)/2.0,(vpc->ext.height+vpc->ext.y)/2.0);
-                        cairo_matrix_rotate(&mtx,DEG2RAD(vpi->params[0]));
+                        cairo_matrix_rotate(&mtx,DEG2RAD(fmod(vpi->params[0],360.0)));
                         cairo_matrix_translate(&mtx,-(vpc->ext.width+vpc->ext.x)/2.0,-(vpc->ext.height+vpc->ext.y)/2.0);
                     }
 
@@ -721,9 +722,8 @@ static int vector_parse_attributes(vector_parser_info *vpi)
                     vector_parser_apply_matrix(vpi,vpc,&mtx);
                 }
             }
+
             default:
-                if(vpi->vpmt!=0)
-                    diag_error("%s %d Unhnadled type %d",__FUNCTION__,__LINE__,vpi->vpmt);
                 break;
         }
 #warning "Incomplete implementation"
