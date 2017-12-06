@@ -11,8 +11,7 @@
 
 
 
-extern void
-vector_arc_path (cairo_t *cr, double sx,double sy,double rx,double ry,double angle,unsigned char sweep,unsigned char large,double ex,double ey);
+extern void vector_arc_path (cairo_t *cr, double sx,double sy,double rx,double ry,double angle,unsigned char sweep,unsigned char large,double ex,double ey);
 
 typedef struct _vector_parse_func  vector_parser_info;
 typedef  int (*param_parse_func)(vector_parser_info *pvpi);
@@ -282,7 +281,7 @@ static int vector_parse_path_set(vector_parser_info *vpi)
                     double cpy=0.0;
                     cairo_get_current_point(vpi->cr,&cpx,&cpy);
 
-                   vector_arc_path(vpi->cr,
+                    vector_arc_path(vpi->cr,
                                     cpx,
                                     cpy,
                                     vpi->params[0],
@@ -660,10 +659,10 @@ static int vector_parse_attributes(vector_parser_info *vpi)
                 vpc->cap=CAIRO_LINE_CAP_SQUARE;
 
             else if(strncasecmp("Round",vpi->pm,5)==0)
-                vpc->cap=CAIRO_LINE_CAP_BUTT;
+                vpc->cap=CAIRO_LINE_CAP_ROUND;
 
             else
-                vpc->cap=CAIRO_LINE_JOIN_MITER;
+                vpc->cap=CAIRO_LINE_CAP_BUTT;
         }
         else if(vpi->vpmt==vector_param_stroke)
         {
