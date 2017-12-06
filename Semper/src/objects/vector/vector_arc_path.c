@@ -2,43 +2,25 @@
 #include <objects/vector.h>
 
 /*Adapted from librsvg*/
-typedef enum
+
+
+
+static void vector_arc_path_segment (cairo_t *cr,  double xc, double yc, double th0, double th1, double rx, double ry, double angle)
 {
-    Negative,
-    Positive
-} Sweep;
+    double x1=0.0;
+    double y1=0.0;
+    double x2=0.0;
+    double y2=0.0;
+    double x3=0.0;
+    double y3=0.0;
+    double t=0.0;
+    double th_half =0.0;
+    double sinff=0.0;
+    double cosff=0.0;
 
 
-
-
-void cto(cairo_t *cr,double a,double b,double c,double d,double e,double f)
-{
-      cairo_curve_to (cr,
-                    a,
-                    b,
-                   c,
-                   d,
-                    e,
-                    f);
-}
-
-
-
-
-static void
-vector_arc_path_segment (cairo_t *cr,
-                         double xc, double yc,
-                         double th0, double th1, double rx, double ry,
-                         double x_axis_rotation)
-{
-    double x1, y1, x2, y2, x3, y3;
-    double t;
-    double th_half;
-  double f, sinff, cosff;
-
-    f = x_axis_rotation;
-    sinff = sin(f);
-    cosff = cos(f);
+    sinff = sin(angle);
+    cosff = cos(angle);
 
     th_half = 0.5 * (th1 - th0);
     t = (8.0 / 3.0) * sin (th_half * 0.5) * sin (th_half * 0.5) / sin (th_half);
@@ -49,7 +31,7 @@ vector_arc_path_segment (cairo_t *cr,
     x2 = x3 + rx*(t * sin (th1));
     y2 = y3 + ry*(-t * cos (th1));
 
-    cto (cr,
+    cairo_curve_to (cr,
                     xc + (cosff*x1 - sinff*y1),
                     yc + (sinff*x1 + cosff*y1),
                     xc + (cosff*x2 - sinff*y2),
@@ -58,8 +40,7 @@ vector_arc_path_segment (cairo_t *cr,
                     yc + (sinff*x3 + cosff*y3));
 }
 
-void
-vector_arc_path (cairo_t *cr, double sx,double sy,double rx,double ry,double angle,unsigned char sweep,unsigned char large,double ex,double ey)
+void vector_arc_path (cairo_t *cr, double sx,double sy,double rx,double ry,double angle,unsigned char sweep,unsigned char large,double ex,double ey)
 {
 
     double sinff=0.0;
