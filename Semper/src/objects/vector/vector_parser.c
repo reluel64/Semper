@@ -519,6 +519,26 @@ static int vector_parse_paths(vector_parser_info *vpi)
                         cairo_rectangle(vpi->cr,vpi->params[0],vpi->params[1],vpi->params[2],vpi->params[3]);
                     }
 
+                    double x=vpi->params[0];
+                    double y=vpi->params[1];
+                    double width=vpi->params[2];
+                    double height=vpi->params[3];
+                    double rx=vpi->params[4];
+                    double ry=vpi->param>=6?vpi->params[5]:rx;
+
+                    cairo_move_to(vpi->cr,x+rx,y);
+                    cairo_line_to(vpi->cr,x+width-rx,y);
+                    vector_arc_path(vpi->cr,x+width-rx,y,rx,ry,0,1,0,x+width,y+ry);
+
+                    cairo_line_to(vpi->cr,x+width,y+height-ry);
+                    vector_arc_path(vpi->cr,x+width,y+height-ry,rx,ry,0,1,0,x+width-rx,y+height);
+
+                    cairo_line_to(vpi->cr,x+rx,y+height);
+                    vector_arc_path(vpi->cr,x+rx,y+height,rx,ry,0,1,0,x,y+height-ry);
+
+                    cairo_line_to(vpi->cr,x,y+ry);
+                    vector_arc_path(vpi->cr,x,y+ry,rx,ry,0,1,0,x+rx,y);
+
                     /* vector_rectangle *vr=zmalloc(sizeof(vector_rectangle));
                      vpc=&vr->vpc;
                      vr->x     = vpi->params[0];
