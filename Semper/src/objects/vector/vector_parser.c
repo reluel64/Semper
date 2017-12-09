@@ -809,10 +809,15 @@ static void vector_parser_destroy_item(vector_path_common **vpc)
         cairo_path_destroy((*vpc)->cr_path);
     }
 
-    if((*vpc)->gradient)
+    if((*vpc)->stroke_gradient)
     {
-        cairo_pattern_destroy((*vpc)->gradient);
-        (*vpc)->gradient=NULL;
+        cairo_pattern_destroy((*vpc)->stroke_gradient);
+        (*vpc)->stroke_gradient=NULL;
+    }
+    if((*vpc)->fill_gradient)
+    {
+        cairo_pattern_destroy((*vpc)->fill_gradient);
+        (*vpc)->fill_gradient=NULL;
     }
     sfree((void**)vpc);
 }
@@ -966,7 +971,7 @@ int vector_parser_init(object *o)
                 vector_path_common *new_vpc=zmalloc(sizeof(vector_path_common));
                 memcpy(new_vpc,vpc,sizeof(vector_path_common));                                                //copy attributes
 
-                memcpy(new_vpc,vpc_root,offsetof(vector_path_common,gradient));         //copy inherited attributes
+                memcpy(new_vpc,vpc_root,offsetof(vector_path_common,join_cnt));         //copy inherited attributes
                 cairo_path_extents(cr,&new_vpc->ext.x,&new_vpc->ext.y,&new_vpc->ext.width,&new_vpc->ext.height);        //get the initial extents
 
                 new_vpc->cr_path=cairo_copy_path_flat(cr);

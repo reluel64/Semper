@@ -145,76 +145,43 @@ void event_remove(event_queue* eq, event_handler eh, void* pv, unsigned char fla
 
     list_enum_part(e, &eq->events, current)
     {
+        unsigned char match=0;
         switch(flags&EVENT_REMOVE_BY_DATA_HANDLER)
         {
             case EVENT_REMOVE_BY_DATA_HANDLER:
                 if(e->handler == eh && e->pv == pv)
-                {
-                    e->handler = NULL;
-
-                    if(e->timer)
-                    {
-#ifdef WIN32
-                        CloseHandle(e->timer);
-#elif __linux__
-
-                        if(e->timer)
-                        {
-                            timer_delete(e->timer);
-                        }
-
-#endif
-                        e->timer = NULL;
-                    }
-                }
-
+                    match=1;
                 break;
 
             case EVENT_REMOVE_BY_DATA:
                 if(e->pv == pv)
-                {
-                    e->handler = NULL;
-
-                    if(e->timer)
-                    {
-#ifdef WIN32
-                        CloseHandle(e->timer);
-#elif __linux__
-
-                        if(e->timer)
-                        {
-                            timer_delete(e->timer);
-                        }
-
-#endif
-                        e->timer = NULL;
-                    }
-                }
-
+                    match=1;
                 break;
 
             case EVENT_REMOVE_BY_HANDLER:
                 if(e->handler == eh)
-                {
-                    e->handler = NULL;
+                    match=1;
+                break;
+        }
 
-                    if(e->timer)
-                    {
+        if(match)
+        {
+            e->handler = NULL;
+
+            if(e->timer)
+            {
 #ifdef WIN32
-                        CloseHandle(e->timer);
+                CloseHandle(e->timer);
 #elif __linux__
 
-                        if(e->timer)
-                        {
-                            timer_delete(e->timer);
-                        }
-
-#endif
-                        e->timer = NULL;
-                    }
+                if(e->timer)
+                {
+                    timer_delete(e->timer);
                 }
 
-                break;
+#endif
+                e->timer = NULL;
+            }
         }
     }
 
@@ -276,6 +243,15 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
 
     }
 
+    else if(!(flags&EVENT_NO_WAKE))
+    {
+#ifdef WIN32
+        event_trigger(eq);
+#elif __linux__
+        event_trigger(0,NULL,eq);
+#endif
+    }
+
     pthread_mutex_lock(&eq->mutex);
 
     if(flags & EVENT_PUSH_TAIL)
@@ -285,15 +261,6 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
     else
     {
         linked_list_add(&e->current, &eq->events);
-    }
-
-    if(!(flags&EVENT_PUSH_TIMER))
-    {
-#ifdef WIN32
-        event_trigger(eq);
-#elif __linux__
-        event_trigger(0,NULL,eq);
-#endif
     }
 
     pthread_mutex_unlock(&eq->mutex);

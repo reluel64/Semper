@@ -1,10 +1,11 @@
 #pragma once
 #include <pthread.h>
-#define EVENT_PUSH_TAIL 0x1
-#define EVENT_REMOVE_BY_DATA 0x2
-#define EVENT_REMOVE_BY_HANDLER 0x4
-#define EVENT_REMOVE_BY_DATA_HANDLER 0x6
-#define EVENT_PUSH_TIMER 0x8
+#define EVENT_PUSH_TAIL             1<<0
+#define EVENT_REMOVE_BY_DATA        1<<1
+#define EVENT_REMOVE_BY_HANDLER     1<<2
+#define EVENT_REMOVE_BY_DATA_HANDLER (EVENT_REMOVE_BY_DATA|EVENT_REMOVE_BY_HANDLER)
+#define EVENT_NO_WAKE               1<<4
+#define EVENT_PUSH_TIMER            1<<3
 typedef int (*event_handler)(void*);
 typedef struct _event
 {

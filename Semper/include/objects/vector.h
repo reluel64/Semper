@@ -49,8 +49,10 @@ typedef struct
     cairo_line_cap_t cap;
     cairo_line_join_t join;
     double stroke_w;
-    cairo_pattern_t *gradient;
-
+    cairo_pattern_t *stroke_gradient;
+    cairo_pattern_t *fill_gradient;
+    double *dashes;
+    size_t dash_count;
 
     size_t join_cnt;
     unsigned char must_join;

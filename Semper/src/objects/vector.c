@@ -30,7 +30,7 @@ int vector_render(object *o,cairo_t *cr)
 {
     vector *v=o->pv;
     vector_path_common *vpc = NULL;
-
+#if 0
     list_enum_part(vpc,&v->paths,current)
     {
         cairo_set_line_width(cr,vpc->stroke_w);
@@ -50,6 +50,16 @@ int vector_render(object *o,cairo_t *cr)
             cairo_stroke(cr);
         }
     }
+    #endif
+
+    cairo_arc(cr,100,100,100,0,6.24);
+    cairo_pattern_t *patt=cairo_pattern_create_radial(100.0,100.0,0.0,100.0,100.0,100.0);
+    cairo_pattern_add_color_stop_rgba(patt,0.33,0.0,0.0,0.0,1.0);
+    cairo_pattern_add_color_stop_rgba(patt,0.66,1.0,1.0,0.0,1.0);
+    cairo_pattern_add_color_stop_rgba(patt,1.0,0.0,0.0,1.0,1.0);
+    cairo_set_source(cr,patt);
+    cairo_fill(cr);
+    cairo_pattern_destroy(patt);
     return(0);
 }
 
