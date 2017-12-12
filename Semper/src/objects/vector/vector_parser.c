@@ -33,7 +33,7 @@ struct _vector_parse_func
     vector_param_type vpmt;
     vector_path_type   vpt;
     vector_clip_type  vct;
-    unsigned char mtx_only; //used by Join Paths
+    unsigned char flags;
     unsigned char param;
     unsigned char valid;
     unsigned char lvl;
@@ -222,9 +222,6 @@ static void vector_parser_apply_matrix(vector_parser_info *vpi, vector_path_comm
     cairo_path_extents(vpi->cr,&vpc->ext.x,&vpc->ext.y,&vpc->ext.width,&vpc->ext.height);
 }
 
-
-
-
 static int vector_parse_path_set(vector_parser_info *vpi)
 {
     if(vpi->param==0)
@@ -240,7 +237,7 @@ static int vector_parse_path_set(vector_parser_info *vpi)
         else if(!strncasecmp(vpi->pm,"LineTo",5))
             vpi->vpt=vector_path_set_line_to;
     }
-    else if(vpi->pm && vpi->param>0&&vpi->param<=PARAMS_LENGTH)
+    else if(vpi->pm &&vpi->param<=PARAMS_LENGTH)
     {
         unsigned char lpm[256]= {0};
         strncpy(lpm,vpi->pm,min(vpi->pm_len,255));
@@ -301,6 +298,27 @@ static int vector_parse_path_set(vector_parser_info *vpi)
     return(0);
 }
 
+static int vector_parse_gradient(vector_parser_info *vpi)
+{
+    if(vpi->pm&&vpi->param>0&&vpi->param<=10)
+    {
+        unsigned char lpm[256]= {0};
+        strncpy(lpm,vpi->pm,min(vpi->pm_len,255));
+
+        vpi->params[vpi->param-1]=vpi->param==1?string_to_color(lpm):atof(lpm);
+    }
+
+    else if(vpi->pm==NULL)
+    {
+        unsigned int color=(unsigned int)vpi->params[0];
+        double red=(double)(color>>16)/255.0;
+        double green=(double)(color>>8)/255.0;
+        double blue=(double)(color>>0)/255.0;
+        double alpha=(double)(color>>24)/255.0;
+        cairo_pattern_add_color_stop_rgba(vpi->pv,vpi->params[1],red,green,blue,alpha);
+    }
+    return(0);
+}
 
 static int vector_parse_fused_paths(vector_parser_info *vpi)
 {
@@ -369,7 +387,7 @@ static int vector_parse_paths(vector_parser_info *vpi)
             vpi->vpt=vector_path_join;
 
     }
-    else if(vpi->pm && vpi->param > 0&&vpi->param <= PARAMS_LENGTH)
+    else if(vpi->pm)
     {
 
         unsigned char lpm[256]= {0};
@@ -443,7 +461,7 @@ static int vector_parse_paths(vector_parser_info *vpi)
             }
         }
 
-        else
+        else if(vpi->param <= PARAMS_LENGTH)
         {
             vpi->params[vpi->param-1]=atof(lpm);
         }
@@ -518,7 +536,9 @@ static int vector_parse_paths(vector_parser_info *vpi)
                     {
                         cairo_rectangle(vpi->cr,vpi->params[0],vpi->params[1],vpi->params[2],vpi->params[3]);
                     }
-
+                    /*See implementation notes at
+                     * https://www.w3.org/TR/SVG/shapes.html#RectElement
+                     * */
                     double x=vpi->params[0];
                     double y=vpi->params[1];
                     double width=vpi->params[2];
@@ -526,9 +546,9 @@ static int vector_parse_paths(vector_parser_info *vpi)
                     double rx=vpi->params[4];
                     double ry=vpi->param>=6?vpi->params[5]:rx;
 
-                    cairo_move_to(vpi->cr,x+rx,y);
-                    cairo_line_to(vpi->cr,x+width-rx,y);
-                    vector_arc_path(vpi->cr,x+width-rx,y,rx,ry,0,1,0,x+width,y+ry);
+                    cairo_move_to(vpi->cr, x + rx, y);
+                    cairo_line_to(vpi->cr, x + width - rx, y);
+                    vector_arc_path(vpi->cr,x + width - rx, y, rx, ry, 0, 1, 0, x + width, y + ry);
 
                     cairo_line_to(vpi->cr,x+width,y+height-ry);
                     vector_arc_path(vpi->cr,x+width,y+height-ry,rx,ry,0,1,0,x+width-rx,y+height);
@@ -539,14 +559,6 @@ static int vector_parse_paths(vector_parser_info *vpi)
                     cairo_line_to(vpi->cr,x,y+ry);
                     vector_arc_path(vpi->cr,x,y+ry,rx,ry,0,1,0,x+rx,y);
 
-                    /* vector_rectangle *vr=zmalloc(sizeof(vector_rectangle));
-                     vpc=&vr->vpc;
-                     vr->x     = vpi->params[0];
-                     vr->y     = vpi->params[1];
-                     vr->w     = vpi->params[2];
-                     vr->h     = vpi->params[3];
-                     vr->rx    = vpi->params[4];
-                     vr->ry    = vpi->params[5];*/
                     vpc->cr_path=cairo_copy_path_flat(vpi->cr);
                 }
                 break;
@@ -607,41 +619,50 @@ static int vector_parse_attributes(vector_parser_info *vpi)
     {
         memset(&vpi->params,0,sizeof(vpi->params));
 
-        if(vpi->mtx_only==0)
+        if(vpi->flags&VPI_NORMAL_ATTR)
         {
             if(!strncasecmp(vpi->pm,"StrokeWidth",11))
                 vpi->vpmt=vector_param_stroke_width;
-
-            else if(!strncasecmp(vpi->pm,"Stroke",6))
-                vpi->vpmt=vector_param_stroke;
-
-            else if(!strncasecmp(vpi->pm,"Fill",4))
-                vpi->vpmt=vector_param_fill;
 
             else if(!strncasecmp(vpi->pm,"LineJoin",8))
                 vpi->vpmt=vector_param_join;
 
             else if(!strncasecmp(vpi->pm,"LineCap",7))
                 vpi->vpmt=vector_param_cap;
+
+            else if(!strncasecmp(vpi->pm,"Dashes",6))
+                vpi->vpmt=vector_param_dashes;
         }
 
-        if(!strncasecmp(vpi->pm,"Attributes",10))
-            vpi->vpmt=vector_param_shared;
+        if((vpi->flags&VPI_MTX_ATTR) && (vpi->vpmt==vector_param_none))
+        {
+            if(!strncasecmp(vpi->pm,"Attributes",10))
+                vpi->vpmt=vector_param_shared;
 
-        else  if(!strncasecmp(vpi->pm,"Skew",4))
-            vpi->vpmt=vector_param_skew;
+            else  if(!strncasecmp(vpi->pm,"Skew",4))
+                vpi->vpmt=vector_param_skew;
 
-        else if(!strncasecmp(vpi->pm,"Rotate",6))
-            vpi->vpmt=vector_param_rotate;
+            else if(!strncasecmp(vpi->pm,"Rotate",6))
+                vpi->vpmt=vector_param_rotate;
 
-        else if(!strncasecmp(vpi->pm,"Scale",5))
-            vpi->vpmt=vector_param_scale;
+            else if(!strncasecmp(vpi->pm,"Scale",5))
+                vpi->vpmt=vector_param_scale;
 
-        else if(!strncasecmp(vpi->pm,"Offset",6))
-            vpi->vpmt=vector_param_offset;
+            else if(!strncasecmp(vpi->pm,"Offset",6))
+                vpi->vpmt=vector_param_offset;
+        }
+
+        if((vpi->flags&VPI_GRAD_ATTR)&&(vpi->vpmt==vector_param_none))
+        {
+            if(!strncasecmp(vpi->pm,"Stroke",6))
+                vpi->vpmt=vector_param_stroke;
+
+            else if(!strncasecmp(vpi->pm,"Fill",4))
+                vpi->vpmt=vector_param_fill;
+        }
 
     }
-    else if(vpi->pm && vpi->param>0&&vpi->param<=PARAMS_LENGTH)
+    else if(vpi->pm)
     {
         unsigned char lpm[256]= {0};
         strncpy(lpm,vpi->pm,min(vpi->pm_len,255));
@@ -656,7 +677,7 @@ static int vector_parse_attributes(vector_parser_info *vpi)
                 lvpi.lvl=1;
                 lvpi.pm=lval;
                 lvpi.o=vpi->o;
-                lvpi.pv=vpi->pv;
+                lvpi.pv=NULL; /*should be vpi->pv?*/
                 lvpi.func=vector_parse_attributes;
                 vector_parse_option(&lvpi);
                 sfree((void**)&lval);
@@ -684,19 +705,80 @@ static int vector_parse_attributes(vector_parser_info *vpi)
             else
                 vpc->cap=CAIRO_LINE_CAP_BUTT;
         }
-        else if(vpi->vpmt==vector_param_stroke)
+        else if(vpi->vpmt == vector_param_fill||vpi->vpmt==vector_param_stroke)
         {
-            vpc->stroke_color=string_to_color(lpm);
-        }
-        else if(vpi->vpmt == vector_param_fill)
-        {
-            vpc->fill_color=string_to_color(lpm);
+            if(vpi->param==1&&vpi->params[PARAMS_LENGTH-1] == 0.0)
+            {
+                if(!strncasecmp("LinearGradient",lpm,14))
+                {
+                    vpi->params[PARAMS_LENGTH-1]=76071082.0; /*LGR*/
+                    //  vpc->fill_gradient=vpc->fill_gradient?vpc->fill_gradient:cairo_pattern_create_linear(0.0,0.0,1.0,1.0);
+                }
+                else if(!strncasecmp("RadialGradient",lpm,14))
+                {
+                    vpi->params[PARAMS_LENGTH-1]=82071082.0; /*RGR*/
+                    //  vpc->fill_gradient=vpc->fill_gradient?vpc->fill_gradient:cairo_pattern_create_radial(0.0,0.0,0.0,0.0,0.0,1.0);
+                }
+                else
+                {
+                    if(vpi->vpmt==vector_param_fill)
+                        vpc->fill_color=string_to_color(lpm);
+                    else
+                        vpc->stroke_color=string_to_color(lpm);
+                }
+            }
+            else if(vpi->params[PARAMS_LENGTH-1] > 0.0 && vpi->param == 2)
+            {
+                vector_parser_info lvpi= {0};
+                unsigned char *lval=parameter_string(vpi->o,lpm,NULL,XPANDER_OBJECT);
+                cairo_pattern_t *dummy_pattern=NULL;
+                if(lval)
+                {
+                    int stop_count=0;
+                    dummy_pattern=cairo_pattern_create_linear(0.0,0.0,0.0,0.0);
+                    lvpi.pm=lval;
+                    lvpi.o=vpi->o;
+                    lvpi.pv=dummy_pattern;
+                    lvpi.func=vector_parse_gradient;
+                    vector_parse_option(&lvpi);
+                    sfree((void**)&lval);
+
+                    cairo_pattern_get_color_stop_count(dummy_pattern,&stop_count);
+                    if(stop_count<1)
+                    {
+                        cairo_pattern_destroy(dummy_pattern);
+                        dummy_pattern=NULL;
+                    }
+                }
+                if(vpi->vpmt==vector_param_fill)
+                {
+                    if(vpc->fill_gradient)
+                    {
+                        cairo_pattern_destroy(vpc->fill_gradient);
+                    }
+                    vpc->fill_gradient=dummy_pattern;
+                }
+                else
+                {
+                    if(vpc->stroke_gradient)
+                    {
+                        cairo_pattern_destroy(vpc->stroke_gradient);
+                    }
+                    vpc->stroke_gradient=dummy_pattern;
+                }
+
+            }
+            else if(vpi->param>=3&&vpi->param<PARAMS_LENGTH-1)
+            {
+                vpi->params[vpi->param-3]=atof(lpm);
+                //printf("Param %d\n",vpi->param);
+            }
         }
         else if(vpi->vpmt== vector_param_stroke_width)
         {
             vpc->stroke_w=atof(lpm);
         }
-        else
+        else if(vpi->param<=PARAMS_LENGTH)
         {
             vpi->params[vpi->param-1]=atof(lpm);
         }
@@ -761,6 +843,26 @@ static int vector_parse_attributes(vector_parser_info *vpi)
                     vector_parser_apply_matrix(vpi,vpc,&mtx);
                 }
             }
+            case vector_param_fill:
+            case vector_param_stroke:
+            {
+                cairo_matrix_t mtx= {0};
+                cairo_matrix_init_translate(&mtx,-(vpc->ext.x+vpc->ext.width/2),-(vpc->ext.y+vpc->ext.height/2));
+
+                cairo_matrix_translate(&mtx,(vpc->ext.x+vpc->ext.width/2),(vpc->ext.y+vpc->ext.height/2));
+                cairo_matrix_scale(&mtx,1.0,1.0); /*do not know how to scale*/
+                cairo_matrix_translate(&mtx,-(vpc->ext.x+vpc->ext.width/2),-(vpc->ext.y+vpc->ext.height/2));
+                if(vpi->params[PARAMS_LENGTH-1]==82071082.0)
+                {
+                    printf("This is RGR\n");
+                }
+                if(vpi->params[PARAMS_LENGTH-1]==76071082.0)
+                {
+                    printf("This is LGR\n");
+                }
+                printf("END PARAM %d\n",vpi->param);
+                break;
+            }
 
             default:
                 break;
@@ -814,6 +916,7 @@ static void vector_parser_destroy_item(vector_path_common **vpc)
         cairo_pattern_destroy((*vpc)->stroke_gradient);
         (*vpc)->stroke_gradient=NULL;
     }
+
     if((*vpc)->fill_gradient)
     {
         cairo_pattern_destroy((*vpc)->fill_gradient);
@@ -856,13 +959,22 @@ int vector_parser_init(object *o)
     static param_parse_func ppf[] =
     {
         vector_parse_paths,
+        vector_parse_attributes,
         vector_parse_attributes
+    };
+
+    static unsigned char vpi_flags[]=
+    {
+        0,
+        VPI_NORMAL_ATTR,
+        VPI_GRAD_ATTR
     };
 
     do
     {
         vector_parser_info vpi= {0};
         vpi.cr=cr;
+        vpi.flags=VPI_NORMAL_ATTR;
         if(eval==NULL)
             break;
 
@@ -882,7 +994,9 @@ int vector_parser_init(object *o)
         {
             cairo_new_path(cr);
             vpi.func=ppf[i];
+            vpi.flags=vpi_flags[i];
             vector_parse_option(&vpi);
+
             if(vpi.pv==NULL)
                 break;
         }
@@ -897,8 +1011,10 @@ int vector_parser_init(object *o)
 
     }
     while((eval=enumerator_next_value(es))!=NULL);
+
     enumerator_finish(&es);
     merge_sort(&v->paths,vector_parser_sort,NULL);
+
     if(v->check_join)
     {
 
@@ -989,12 +1105,16 @@ int vector_parser_init(object *o)
                 snprintf(tmp,256,new_vpc->index>0?"Path%llu":"Path",new_vpc->index);
                 vpi.pm=parameter_string(o,tmp,NULL,XPANDER_OBJECT);
                 vpi.o=o;
+
                 if(vpi.pm)
                 {
-                    cairo_new_path(cr);
-                    vpi.func=vector_parse_attributes;
-                    vpi.pv=new_vpc;
-                    vector_parse_option(&vpi);
+                    for(unsigned char i=1; i<sizeof(ppf)/sizeof(param_parse_func); i++)
+                    {
+                        cairo_new_path(cr);
+                        vpi.func=ppf[i];
+                        vpi.flags=vpi_flags[i];
+                        vector_parse_option(&vpi);
+                    }
                     sfree((void**)&vpi.pm);
                 }
 

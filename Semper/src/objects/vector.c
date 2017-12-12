@@ -50,16 +50,37 @@ int vector_render(object *o,cairo_t *cr)
             cairo_stroke(cr);
         }
     }
-    #endif
+#else
+#if 0
+    cairo_rectangle(cr,100,100,200,100);
+    cairo_matrix_t mtx;
+    cairo_matrix_init_identity(&mtx);
+    cairo_matrix_translate(&mtx,-200,-150);
+    cairo_matrix_translate(&mtx,200,150);
+    cairo_matrix_scale(&mtx,(1.0/20.0),1.0/10.0);
+    cairo_matrix_translate(&mtx,-200,-150);
 
-    cairo_arc(cr,100,100,100,0,6.24);
-    cairo_pattern_t *patt=cairo_pattern_create_radial(100.0,100.0,0.0,100.0,100.0,100.0);
+    cairo_pattern_t *patt=cairo_pattern_create_radial(0.0,0.0,0.0,0.0,0.0,1.0);
+
     cairo_pattern_add_color_stop_rgba(patt,0.33,0.0,0.0,0.0,1.0);
     cairo_pattern_add_color_stop_rgba(patt,0.66,1.0,1.0,0.0,1.0);
     cairo_pattern_add_color_stop_rgba(patt,1.0,0.0,0.0,1.0,1.0);
+    cairo_pattern_set_matrix(patt,&mtx);
     cairo_set_source(cr,patt);
     cairo_fill(cr);
     cairo_pattern_destroy(patt);
+#else
+
+  cairo_pattern_t * pat = cairo_pattern_create_radial (128+50.0, 128+50.0, 10.0,
+                                   128+50.0,  128+50.0, 40.0);
+cairo_pattern_add_color_stop_rgba (pat, 0.0, 1.0, 1.0, 1.0, 0.5);
+cairo_pattern_add_color_stop_rgba (pat, 1.0, 1.0, 0.0, 0.0, 0.5);
+cairo_set_source (cr, pat);
+cairo_arc (cr, 128.0, 128.0, 76.8, 0, 2 * M_PI);
+cairo_fill (cr);
+cairo_pattern_destroy (pat);
+#endif
+    #endif
     return(0);
 }
 

@@ -115,8 +115,10 @@ static int image_cache_adjust_color_matrix(image_cache_decoded* icd, image_attri
 
                 if(res>255.0)
                     channels[i]=255.0;
+
                 else if(res<0.0)
                     channels[i]=0.0;
+
                 else
                     channels[i]=res;
             }

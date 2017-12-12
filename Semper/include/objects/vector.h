@@ -8,6 +8,12 @@ void vector_destroy(object *o);
 /*not API*/
 int vector_parser_init(object *o);
 void vector_parser_destroy(object *o);
+
+#define VPI_MTX_ATTR (1<<0)
+#define VPI_REG_ATTR (1<<1)
+#define VPI_NORMAL_ATTR ((1<<1)|(1<<0))
+#define VPI_GRAD_ATTR (1<<2)
+
 typedef enum
 {
     vector_path_unknown,
@@ -37,7 +43,8 @@ typedef enum
     vector_param_rotate,
     vector_param_scale,
     vector_param_skew,
-    vector_param_offset
+    vector_param_offset,
+    vector_param_dashes
 } vector_param_type;
 
 
