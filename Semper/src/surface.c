@@ -945,7 +945,7 @@ void surface_fade(surface_data* sd)
 {
     if((sd->hidden&&sd->co)||(sd->co!=sd->ro))
     {
-        sd->co=CLAMP((int)sd->co+(16*(int)sd->fade_direction),0,(int)sd->ro?sd->ro:255);
+        sd->co=CLAMP((int)sd->co+(25*(int)sd->fade_direction),0,(int)sd->ro?sd->ro:255);
         crosswin_set_opacity(sd->sw, sd->co);
         event_push(sd->cd->eq, (event_handler)surface_fade, (void*)sd, 16, EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
     }

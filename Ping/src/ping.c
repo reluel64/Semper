@@ -110,7 +110,7 @@ static void *ping_calculate(void *spv)
     p->th_active = 0;
     return(NULL);
 }
-void extension_init_func(void** spv, void* ip)
+void init(void** spv, void* ip)
 {
     ping* p = malloc(sizeof(ping));
     memset(p, 0, sizeof(ping));
@@ -124,7 +124,7 @@ void extension_init_func(void** spv, void* ip)
     *spv = p;
 }
 
-void extension_reset_func(void* spv, void* ip)
+void reset(void* spv, void* ip)
 {
     ping* p = spv;
     unsigned char* t=NULL;
@@ -159,7 +159,7 @@ void extension_reset_func(void* spv, void* ip)
     }
 }
 
-double extension_update_func(void* spv)
+double update(void* spv)
 {
     ping* p = spv;
 
@@ -194,7 +194,7 @@ double extension_update_func(void* spv)
     return (p->ping_val);
 }
 
-void extension_destroy_func(void** spv)
+void destroy(void** spv)
 {
     ping* p = *spv;
 

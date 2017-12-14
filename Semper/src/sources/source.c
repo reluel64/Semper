@@ -268,12 +268,12 @@ static int source_set_routines(source* s,source_table *st)
     if(s->type==1&&source_load_extension(s) == 0)
     {
 
-        s->source_init_rtn = source_get_proc(s->library, "extension_init_func");
-        s->source_destroy_rtn = source_get_proc(s->library, "extension_destroy_func");
-        s->source_update_rtn = source_get_proc(s->library, "extension_update_func");
-        s->source_reset_rtn = source_get_proc(s->library, "extension_reset_func");
-        s->source_string_rtn = source_get_proc(s->library, "extension_string_func");
-        s->source_command_rtn = source_get_proc(s->library, "extension_command_func");
+        s->source_init_rtn = source_get_proc(s->library, "init");
+        s->source_destroy_rtn = source_get_proc(s->library, "destroy");
+        s->source_update_rtn = source_get_proc(s->library, "update");
+        s->source_reset_rtn = source_get_proc(s->library, "reset");
+        s->source_string_rtn = source_get_proc(s->library, "string");
+        s->source_command_rtn = source_get_proc(s->library, "command");
         ret = 0;
     }
     else

@@ -154,12 +154,12 @@ static unsigned char *ucs_to_utf8(wchar_t *s_in, size_t *bn, unsigned char be)
 }
 
 
-void extension_init_func(void **spv,void *ip)
+void init(void **spv,void *ip)
 {
     *spv=zmalloc(sizeof(registry));
 }
 
-void extension_reset_func(void *spv,void *ip)
+void reset(void *spv,void *ip)
 {
     registry *r=spv;
 
@@ -210,7 +210,7 @@ void extension_reset_func(void *spv,void *ip)
 }
 
 
-double extension_update_func(void *spv)
+double update(void *spv)
 {
     registry *r=spv;
     unsigned int ret=0;
@@ -280,7 +280,7 @@ double extension_update_func(void *spv)
     return(r->num_val);
 }
 
-unsigned char *extension_string_func(void *spv)
+unsigned char *string(void *spv)
 {
     registry *r=spv;
     if(r->type==REG_QWORD||r->type==REG_DWORD)
@@ -290,7 +290,7 @@ unsigned char *extension_string_func(void *spv)
     return(r->str_val==NULL?(unsigned char*)"":r->str_val);
 }
 
-void extension_destroy_func(void **spv)
+void destroy(void **spv)
 {
     registry *r=*spv;
 

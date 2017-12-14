@@ -30,14 +30,14 @@ typedef struct
 } speedfan_data;
 
 
-void extension_init_func(void **spv,void *ip)
+void init(void **spv,void *ip)
 {
     speedfan_data *spd=malloc(sizeof(speedfan_data));
     memset(spd,0,sizeof(speedfan_data));
     *spv=spd;
 }
 
-void extension_reset_func(void *spv,void *ip)
+void reset(void *spv,void *ip)
 {
     speedfan_data *spd=spv;
     unsigned char *type=extension_string("SensorType",EXTENSION_XPAND_SOURCES|EXTENSION_XPAND_VARIABLES,ip,"temperature");
@@ -76,7 +76,7 @@ static inline int speedfan_gather_data(speedfan_shared_memory *data)
     return(ret);
 }
 
-double extension_update_func(void *spv)
+double update(void *spv)
 {
     speedfan_data *spd=spv;
     static speedfan_shared_memory data= {0};
@@ -95,7 +95,7 @@ double extension_update_func(void *spv)
     return(0.0);
 }
 
-void extension_destroy_func(void **spv)
+void destroy(void **spv)
 {
     free(*spv);
     *spv=NULL;

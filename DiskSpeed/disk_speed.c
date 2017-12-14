@@ -116,7 +116,7 @@ static double disk_speed_parse(disk_speed *ds)
 }
 
 
-void extension_init_func(void **spv,void *ip)
+void init(void **spv,void *ip)
 {
     disk_speed *ds=malloc(sizeof(disk_speed));
     memset(ds,0,sizeof(disk_speed));
@@ -126,7 +126,7 @@ void extension_init_func(void **spv,void *ip)
     *spv=ds;
 }
 
-void extension_reset_func(void *spv,void *ip)
+void reset(void *spv,void *ip)
 {
     disk_speed *ds=spv;
     unsigned char *s=extension_string("DiskSpeedType",EXTENSION_XPAND_ALL,ip,"RWTotal");
@@ -148,14 +148,14 @@ void extension_reset_func(void *spv,void *ip)
     }
 }
 
-double extension_update_func(void *spv)
+double update(void *spv)
 {
     disk_speed *ds=spv;
     disk_speed_parse(spv);
     return((double)ds->value);
 }
 
-void extension_destroy_func(void **spv)
+void destroy(void **spv)
 {
     disk_speed *ds=*spv;
     free(ds->disk_name);

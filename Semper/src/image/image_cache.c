@@ -1,5 +1,5 @@
 /*
-* Image caching with flush mechanism
+* Image caching
 * Part of Project 'Semper'
 * Written by Alexandru-Daniel Mărgărit
 */
@@ -22,11 +22,6 @@ extern int image_cache_decode_png(FILE *fh, image_cache_decoded* icd);
 extern int image_cache_decode_jpeg(FILE *fh, image_cache_decoded* icd);
 extern int image_cache_decode_svg(FILE *f,image_cache_decoded *icd);
 static void image_cache_remove_entry(image_entry** ie);
-
-/* The file format is not detected by its extension
- * Every file has its signature checked to determine the file type.
- * Of course that this may not be the best approach but it's better than checking by extension
- * */
 
 typedef enum
 {
@@ -51,7 +46,7 @@ static int image_cache_adjust_color_matrix(image_cache_decoded* icd, image_attri
     matrix[2][2] *= (tint_color_buf[0] / 255.0);
     matrix[3][3] *= (tint_color_buf[3] / 255.0);
 
-    /*Do grayscale*/
+    /*Do grayscale and/or color inversion*/
     if(ia->grayscale||ia->inv)
     {
         for(unsigned char i = 0; i < 3; i++)
@@ -633,9 +628,10 @@ static image_entry* image_cache_request(void* ich, image_attributes* ia)
         ret = image_cache_add(ich, ia);
 
         if(ret)
-        {
-            diag_info("Added %s to the cache",ret->attrib.path);
-        }
+            diag_verb("Added %s to the cache",ret->attrib.path);
+
+        else
+            diag_error("Failed to add %s to the cache",ret->attrib.path);
     }
 
     if(ret == NULL) /*no image here mate*/
@@ -686,21 +682,16 @@ void image_cache_image_parameters(void* r, image_attributes *ia, unsigned char f
         strupr(temp);
 
         if(strstr(temp, "V"))
-        {
             ia->flip = 2;
-        }
+
         else if(strstr(temp, "H"))
-        {
             ia->flip = 1;
-        }
+
         else if(strstr(temp, "B"))
-        {
             ia->flip = 3;
-        }
+
         else
-        {
             ia->flip=0;
-        }
 
         sfree((void**)&temp);
     }
@@ -723,32 +714,20 @@ void image_cache_image_parameters(void* r, image_attributes *ia, unsigned char f
     }
 
     snprintf(buf, sizeof(buf), "%sColorMatrix1", pre);
-
     if(parameter_color_matrix(r, buf, vcm + 5, flags))
-    {
         ia->cm[6] = 1.0;
-    }
 
     snprintf(buf, sizeof(buf), "%sColorMatrix2", pre);
-
     if(parameter_color_matrix(r, buf, vcm + 10, flags))
-    {
         ia->cm[12] = 1.0;
-    }
 
     snprintf(buf, sizeof(buf), "%sColorMatrix3", pre);
-
     if(parameter_color_matrix(r, buf, vcm + 15, flags))
-    {
         ia->cm[18] = 1.0;
-    }
 
     snprintf(buf, sizeof(buf), "%sColorMatrix4", pre);
-
     if(parameter_color_matrix(r, buf, vcm + 20, flags))
-    {
         ia->cm[24] = 1.0;
-    }
 }
 
 void image_cache_unref_image(void *ic,image_attributes *ia,unsigned char riz)

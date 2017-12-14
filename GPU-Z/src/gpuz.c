@@ -183,14 +183,14 @@ static inline int gpuz_gather_data(GPUZ_SH_MEM *data)
 
 /*********************************************/
 
-void extension_init_func(void **spv,void *ip)
+void init(void **spv,void *ip)
 {
     *spv=malloc(sizeof(gpuz_data));
 
     memset(*spv,0,sizeof(gpuz_data));
 }
 
-void extension_reset_func(void *spv,void *ip)
+void reset(void *spv,void *ip)
 {
     gpuz_data *gd=spv;
     free(gd->str_val);
@@ -203,7 +203,7 @@ void extension_reset_func(void *spv,void *ip)
     gd->opt=utf8_to_ucs(s);
 }
 
-double extension_update_func(void *spv)
+double update(void *spv)
 {
     static GPUZ_SH_MEM data= {0};
 
@@ -228,7 +228,7 @@ double extension_update_func(void *spv)
     return(0.0);
 }
 
-unsigned char *extension_string_func(void *spv)
+unsigned char *string(void *spv)
 {
     gpuz_data *gd=spv;
     free(gd->str_val);
@@ -249,7 +249,7 @@ unsigned char *extension_string_func(void *spv)
     return(NULL);
 }
 
-void extension_destroy_func(void **spv)
+void destroy(void **spv)
 {
     gpuz_data *gd=*spv;
     free(gd->str_val);

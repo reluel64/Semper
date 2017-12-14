@@ -46,14 +46,14 @@ typedef struct
 static inline int coretemp_gather_data(CoreTempSharedDataEx* data);
 static double coretemp_max_temp(CoreTempSharedDataEx* data);
 
-void extension_init_func(void** spv, void* ip)
+void init(void** spv, void* ip)
 {
     coretemp_data* cd = malloc(sizeof(coretemp_data));
     memset(cd, 0, sizeof(coretemp_data));
     *spv = cd;
 }
 
-void extension_reset_func(void* spv, void* ip)
+void reset(void* spv, void* ip)
 {
     coretemp_data* crd = spv;
     unsigned char opt = 0;
@@ -81,7 +81,7 @@ void extension_reset_func(void* spv, void* ip)
     crd->core_index = (crd->core_index > 127 ? 127 : crd->core_index);
 }
 
-double extension_update_func(void* spv)
+double update(void* spv)
 {
     coretemp_data* crd = spv;
     static CoreTempSharedDataEx data = { 0 };
@@ -129,7 +129,7 @@ double extension_update_func(void* spv)
     return (0.0);
 }
 
-unsigned char* extension_string_func(void* spv)
+unsigned char* string(void* spv)
 {
     coretemp_data* crd = spv;
     if(crd->opt==0)
@@ -139,7 +139,7 @@ unsigned char* extension_string_func(void* spv)
     return(NULL);
 }
 
-void extension_destroy_func(void** spv)
+void destroy(void** spv)
 {
     free(*spv);
     *spv = NULL;

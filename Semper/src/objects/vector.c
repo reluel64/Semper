@@ -70,13 +70,13 @@ int vector_render(object *o,cairo_t *cr)
     cairo_fill(cr);
     cairo_pattern_destroy(patt);
 #else
-
-  cairo_pattern_t * pat = cairo_pattern_create_radial (128+50.0, 128+50.0, 10.0,
-                                   128+50.0,  128+50.0, 40.0);
-cairo_pattern_add_color_stop_rgba (pat, 0.0, 1.0, 1.0, 1.0, 0.5);
-cairo_pattern_add_color_stop_rgba (pat, 1.0, 1.0, 0.0, 0.0, 0.5);
+static double i=0;
+  cairo_pattern_t * pat = cairo_pattern_create_radial (320.0, 220+00.0, 0.0,
+                                   320.0,  220.0, 100.0);
+cairo_pattern_add_color_stop_rgba (pat, 0.0, 155.0/255.0, 200.0/255.0, 232.0/255.0, 1.0);
+cairo_pattern_add_color_stop_rgba (pat, 1.0, 6.0/255.0, 46.0/255.0, 75.0/255.0, 1.0);
 cairo_set_source (cr, pat);
-cairo_arc (cr, 128.0, 128.0, 76.8, 0, 2 * M_PI);
+cairo_arc (cr, 300.0, 200.0, 100.0, 0, 2 * M_PI);
 cairo_fill (cr);
 cairo_pattern_destroy (pat);
 #endif

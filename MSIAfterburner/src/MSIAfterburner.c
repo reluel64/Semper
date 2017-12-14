@@ -12,13 +12,13 @@ typedef struct
 
 static inline int msi_afterburner_gather_data(MAHM_SHARED_MEMORY_HEADER* hdr,MAHM_SHARED_MEMORY_ENTRY **ent);
 
-void extension_init_func(void **spv,void *ip)
+void init(void **spv,void *ip)
 {
     *spv=malloc(sizeof(MSI_AFTERBURNER));
     memset(*spv,0,sizeof(MSI_AFTERBURNER));
 }
 
-void extension_reset_func(void *spv,void *ip)
+void reset(void *spv,void *ip)
 {
     MSI_AFTERBURNER *mab=spv;
     free(mab->res_name);
@@ -27,7 +27,7 @@ void extension_reset_func(void *spv,void *ip)
     mab->res_id=extension_size_t("resourceID",ip,0xFFFFFFFF);
 }
 
-double extension_update_func(void *spv)
+double update(void *spv)
 {
     MSI_AFTERBURNER *mab=spv;
     MAHM_SHARED_MEMORY_HEADER hdr= {0};
@@ -52,7 +52,7 @@ double extension_update_func(void *spv)
     return(val);
 }
 
-void extension_destroy_func(void **spv)
+void destroy(void **spv)
 {
     MSI_AFTERBURNER *mab=*spv;
     free(mab->res_name);

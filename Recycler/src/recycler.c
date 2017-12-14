@@ -57,7 +57,7 @@ static void sfree(void **p)
     }
 }
 
-void extension_init_func(void **spv,void *ip)
+void init(void **spv,void *ip)
 {
     recycler *r=zmalloc(sizeof(recycler));
     r->ip=ip;
@@ -70,7 +70,7 @@ void extension_init_func(void **spv,void *ip)
 
 }
 
-void extension_reset_func(void *spv, void *ip)
+void reset(void *spv, void *ip)
 {
     recycler *r=spv;
 
@@ -106,7 +106,7 @@ void extension_reset_func(void *spv, void *ip)
     }
 }
 
-double extension_update_func(void *spv)
+double update(void *spv)
 {
     recycler *r=spv;
 
@@ -138,7 +138,7 @@ double extension_update_func(void *spv)
 
 }
 
-void extension_destroy_func(void **spv)
+void destroy(void **spv)
 {
     recycler *r=*spv;
     if(r->qth)

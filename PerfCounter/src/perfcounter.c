@@ -68,7 +68,7 @@ static unsigned short* utf8_to_ucs(unsigned char* str)
 }
 
 
-void extension_init_func(void **spv,void *ip)
+void init(void **spv,void *ip)
 {
     *spv=malloc(sizeof(perf_counter));
 
@@ -76,7 +76,7 @@ void extension_init_func(void **spv,void *ip)
 }
 
 
-void extension_reset_func(void *spv,void *ip)
+void reset(void *spv,void *ip)
 {
     perf_counter *pc=spv;
     static unsigned char instance_name[PDH_MAX_INSTANCE_NAME]= {0};
@@ -183,7 +183,7 @@ void extension_reset_func(void *spv,void *ip)
 }
 
 
-double extension_update_func(void *spv)
+double update(void *spv)
 {
     perf_counter *pc=spv;
     time_t ct=time(NULL);
@@ -208,7 +208,7 @@ double extension_update_func(void *spv)
     return(pc->v);
 }
 
-void extension_destroy_func(void **spv)
+void destroy(void **spv)
 {
     perf_counter *pc=*spv;
     if(pc->counter)

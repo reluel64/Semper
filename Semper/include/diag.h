@@ -23,6 +23,7 @@ typedef struct
     struct timespec t1;
 
 } diag_status;
+
 int diag_log(unsigned char lvl,char *fmt, ...);
 #define diag_error(x...) diag_log(0x4,"[ERROR] "x)
 #define diag_info(x...)  diag_log(0x1,"[INFO] "x)
