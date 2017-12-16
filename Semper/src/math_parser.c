@@ -420,43 +420,31 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
         unsigned char *n=NULL;
         double v=0.0;
 
-        /*Check for base 2*/
-        /*
-        for(n=f+i;n[0];n++)
+
+        v=(double)strtoll(f+i,(char**)&n,2);
+
+        if(n&&toupper(n[0])!='B')
         {
-            if(isdigit(n[0])&&toupper(n[1])=='B')
-            {
-                v= (double)strtoll(f+i,(char**)&n,2);
-                err=0;
-                if(n!=f+i)
-                {
-                    n++;
-                }
-                break;
-            }
-            else if(!isdigit(n[0]))
+            n=NULL;
+            v=0.0;
+        }
+        else
+        {
+            n++; //skip 'B'
+        }
+
+        if(n==NULL&&f[i]=='0')
+        {
+            v=(double)strtoll(f+i,(char**)&n,8);
+
+            if(n==NULL||isdigit(n[0]))
             {
                 n=NULL;
-                break;
+                v=0.0;
             }
         }
 
-        if(n==NULL&&f[i]=='0'&&err)
-        {
 
-             v=(double)strtoll(f+i,(char**)&n,8);
-
-             if(n==f+i)
-             {
-                 n=NULL;
-             }
-             else
-             {
-                 err=0;
-             }
-        }
-
-        */
         if(n==NULL)
         {
             v=strtod(f+i,(char**)&n);
