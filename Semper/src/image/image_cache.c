@@ -631,7 +631,7 @@ static image_entry* image_cache_request(void* ich, image_attributes* ia)
             diag_verb("Added %s to the cache",ret->attrib.path);
 
         else
-            diag_error("Failed to add %s to the cache",ret->attrib.path);
+            diag_error("Failed to add %s to the cache",ia->path);
     }
 
     if(ret == NULL) /*no image here mate*/
