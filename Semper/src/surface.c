@@ -31,7 +31,7 @@
 #define SURFACE_INCLUDE_MAX_DEPTH 100
 /*Forward declarations */
 static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,unsigned char memory);
-static void surface_render(window* w, void* cr);
+static void surface_render(crosswin_window* w, void* cr);
 static int surface_create_paths(control_data* cd, surface_paths* sp, size_t variant, unsigned char* name);
 static void surface_destroy_structs(surface_data* sd, unsigned char destroy);
 static int ini_handler(surface_create_skeleton_handler);
@@ -143,7 +143,7 @@ void surface_reset(surface_data* sd)
     sd->uf=sd->uf==0?1000:sd->uf;
 }
 
-static int surface_mouse_handler(window* w, mouse_status* ms)
+static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
 {
     surface_data* sd = crosswin_get_window_data(w);
     crosswin_get_position(sd->sw, &sd->x, &sd->y);
@@ -259,7 +259,7 @@ int surface_destroy(surface_data* sd)
         event_remove(sd->cd->eq, NULL, sd, EVENT_REMOVE_BY_DATA);
         surface_create_paths(NULL, &sd->sp, 0, NULL); // this will destroy the paths
         surface_destroy_structs(sd, 1);
-        crosswin_destroy((window**)&sd->sw);
+        crosswin_destroy((crosswin_window**)&sd->sw);
         sfree((void**)&sd);
     }
 
@@ -484,7 +484,7 @@ int surface_adjust_size(surface_data *sd)
     return(0);
 }
 
-static void surface_render(window* w, void* cr)
+static void surface_render(crosswin_window* w, void* cr)
 {
     surface_data* sd = crosswin_get_window_data(w);
     cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);

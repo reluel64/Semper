@@ -52,8 +52,8 @@ typedef struct _crosswin_shared
 #endif
 } crosswin;
 
-typedef struct _window window;
-typedef struct _window
+typedef struct _crosswin_window crosswin_window;
+typedef struct _crosswin_window
 {
     crosswin* c;
     unsigned char opacity;
@@ -75,8 +75,8 @@ typedef struct _window
     size_t offh;
     mouse_status mouse;
     unsigned char dragging;
-    void (*render_func)(window* w, void* cr);
-    int (*mouse_func)(window* w, mouse_status* ms);
+    void (*render_func)(crosswin_window* w, void* cr);
+    int (*mouse_func)(crosswin_window* w, mouse_status* ms);
     int (*kbd_func)(unsigned  int key_code, void* ms);
     unsigned char draggable;
 
@@ -90,29 +90,29 @@ typedef struct _window
     XIM xInputMethod;
     XIC xInputContext;
 #endif
-} window;
+} crosswin_window;
 
 void crosswin_init(crosswin* c);
 void crosswin_message_dispatch(crosswin *c);
-void crosswin_set_window_data(window* w, void* pv);
-void* crosswin_get_window_data(window* w);
-void crosswin_click_through(window* w, unsigned char state);
-void crosswin_draw(window* w);
-void crosswin_set_render(window* w, void (*render)(window* w, void* cr));
-void crosswin_set_position(window* w, long x, long y);
-void crosswin_set_opacity(window* w, unsigned char opacity);
-window* crosswin_init_window(crosswin* c);
-void crosswin_set_dimension(window* w, long width, long height);
-void crosswin_set_mouse_handler(window* w, int (*mouse_handler)(window* w, mouse_status* ms));
-void crosswin_show_silent(window* w);
-void crosswin_show(window* w);
-void crosswin_hide(window* w);
-void crosswin_destroy(window** w);
-void crosswin_get_position(window* w, long* x, long* y);
-void crosswin_draggable(window* w, unsigned char draggable);
-void crosswin_keep_on_screen(window* w, unsigned char keep_on_screen);
+void crosswin_set_window_data(crosswin_window* w, void* pv);
+void* crosswin_get_window_data(crosswin_window* w);
+void crosswin_click_through(crosswin_window* w, unsigned char state);
+void crosswin_draw(crosswin_window* w);
+void crosswin_set_render(crosswin_window* w, void (*render)(crosswin_window* w, void* cr));
+void crosswin_set_position(crosswin_window* w, long x, long y);
+void crosswin_set_opacity(crosswin_window* w, unsigned char opacity);
+crosswin_window* crosswin_init_window(crosswin* c);
+void crosswin_set_dimension(crosswin_window* w, long width, long height);
+void crosswin_set_mouse_handler(crosswin_window* w, int (*mouse_handler)(crosswin_window* w, mouse_status* ms));
+void crosswin_show_silent(crosswin_window* w);
+void crosswin_show(crosswin_window* w);
+void crosswin_hide(crosswin_window* w);
+void crosswin_destroy(crosswin_window** w);
+void crosswin_get_position(crosswin_window* w, long* x, long* y);
+void crosswin_draggable(crosswin_window* w, unsigned char draggable);
+void crosswin_keep_on_screen(crosswin_window* w, unsigned char keep_on_screen);
 int crosswin_update(crosswin* c);
 void crosswin_monitor_resolution(crosswin* c, long* w, long* h);
-void crosswin_set_window_z_order(window* w, unsigned char zorder);
-void crosswin_set_kbd_handler(window *w,int(*kbd_handler)(unsigned  int key_code,void *p),void *kb_data);
-void crosswin_set_window_z_order(window* w, unsigned char zorder);
+void crosswin_set_window_z_order(crosswin_window* w, unsigned char zorder);
+void crosswin_set_kbd_handler(crosswin_window *w,int(*kbd_handler)(unsigned  int key_code,void *p),void *kb_data);
+void crosswin_set_window_z_order(crosswin_window* w, unsigned char zorder);

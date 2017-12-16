@@ -628,17 +628,16 @@ static image_entry* image_cache_request(void* ich, image_attributes* ia)
         ret = image_cache_add(ich, ia);
 
         if(ret)
-            diag_verb("Added %s to the cache",ret->attrib.path);
+            diag_verb("Added \"%s\" to the cache",ret->attrib.path);
 
         else
-            diag_error("Failed to add %s to the cache",ia->path);
+            diag_error("Failed to add \"%s\" to the cache",ia->path);
     }
 
     if(ret == NULL) /*no image here mate*/
     {
         return (NULL);
     }
-
 
     return (ret);
 }
@@ -648,9 +647,7 @@ void image_cache_image_parameters(void* r, image_attributes *ia, unsigned char f
     unsigned char buf[256] = { 0 };
 
     if(pre == NULL)
-    {
         pre = "";
-    }
 
     double* vcm = (double*)ia->cm;
     snprintf(buf, sizeof(buf), "%sOpacity", pre);

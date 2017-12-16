@@ -73,9 +73,9 @@ void crosswin_message_dispatch(crosswin *c)
 #endif
 }
 
-window* crosswin_init_window(crosswin* c)
+crosswin_window* crosswin_init_window(crosswin* c)
 {
-    window* w = zmalloc(sizeof(window));
+    crosswin_window* w = zmalloc(sizeof(crosswin_window));
     w->c = c;
 #ifdef WIN32
     win32_init_window(w);
@@ -85,17 +85,17 @@ window* crosswin_init_window(crosswin* c)
     return (w);
 }
 
-void crosswin_set_window_data(window* w, void* pv)
+void crosswin_set_window_data(crosswin_window* w, void* pv)
 {
     w->user_data = pv;
 }
 
-void* crosswin_get_window_data(window* w)
+void* crosswin_get_window_data(crosswin_window* w)
 {
     return (w->user_data);
 }
 
-void crosswin_click_through(window* w, unsigned char state)
+void crosswin_click_through(crosswin_window* w, unsigned char state)
 {
 #ifdef WIN32
     win32_click_through(w, state);
@@ -105,7 +105,7 @@ void crosswin_click_through(window* w, unsigned char state)
 #endif
 }
 
-void crosswin_draw(window* w)
+void crosswin_draw(crosswin_window* w)
 {
     crosswin* c = w->c;
 
@@ -134,12 +134,12 @@ void crosswin_draw(window* w)
 #endif
 }
 
-void crosswin_set_render(window* w, void (*render)(window* pv, void* cr))
+void crosswin_set_render(crosswin_window* w, void (*render)(crosswin_window* pv, void* cr))
 {
     w->render_func = render;
 }
 
-void crosswin_set_position(window* w, long x, long y)
+void crosswin_set_position(crosswin_window* w, long x, long y)
 {
     w->x = x;
     w->y = y;
@@ -150,13 +150,13 @@ void crosswin_set_position(window* w, long x, long y)
 #endif
 }
 
-void crosswin_get_position(window* w, long* x, long* y)
+void crosswin_get_position(crosswin_window* w, long* x, long* y)
 {
     *x = w->x;
     *y = w->y;
 }
 
-void crosswin_set_opacity(window* w, unsigned char opacity)
+void crosswin_set_opacity(crosswin_window* w, unsigned char opacity)
 {
     w->opacity=opacity;
 #ifdef WIN32
@@ -166,7 +166,7 @@ void crosswin_set_opacity(window* w, unsigned char opacity)
 #endif
 }
 
-void crosswin_set_dimension(window* w, long width, long height)
+void crosswin_set_dimension(crosswin_window* w, long width, long height)
 {
     w->w = labs(width);
     w->h = labs(height);
@@ -175,12 +175,12 @@ void crosswin_set_dimension(window* w, long width, long height)
 #endif
 }
 
-void crosswin_set_mouse_handler(window* w, int (*mouse_handler)(window* w, mouse_status* ms))
+void crosswin_set_mouse_handler(crosswin_window* w, int (*mouse_handler)(crosswin_window* w, mouse_status* ms))
 {
     w->mouse_func = mouse_handler;
 }
 
-void crosswin_set_kbd_handler(window *w,int(*kbd_func)(unsigned  int key_code,void *p),void *kb_data)
+void crosswin_set_kbd_handler(crosswin_window *w,int(*kbd_func)(unsigned  int key_code,void *p),void *kb_data)
 {
     w->kbd_func=kbd_func;
     w->kb_data=kb_data;
@@ -189,21 +189,21 @@ void crosswin_set_kbd_handler(window *w,int(*kbd_func)(unsigned  int key_code,vo
 #endif
 }
 
-void crosswin_hide(window* w)
+void crosswin_hide(crosswin_window* w)
 {
 #ifdef WIN32
     win32_hide(w);
 #endif
 }
 
-void crosswin_show(window* w)
+void crosswin_show(crosswin_window* w)
 {
 #ifdef WIN32
     win32_show(w);
 #endif
 }
 
-void crosswin_destroy(window** w)
+void crosswin_destroy(crosswin_window** w)
 {
 #ifdef WIN32
     win32_destroy_window(w);
@@ -212,17 +212,17 @@ void crosswin_destroy(window** w)
 #endif
 }
 
-void crosswin_draggable(window* w, unsigned char draggable)
+void crosswin_draggable(crosswin_window* w, unsigned char draggable)
 {
     w->draggable = draggable;
 }
 
-void crosswin_keep_on_screen(window* w, unsigned char keep_on_screen)
+void crosswin_keep_on_screen(crosswin_window* w, unsigned char keep_on_screen)
 {
     w->keep_on_screen = keep_on_screen;
 }
 
-void crosswin_set_window_z_order(window* w, unsigned char zorder)
+void crosswin_set_window_z_order(crosswin_window* w, unsigned char zorder)
 {
     w->zorder = zorder;
 #ifdef WIN32

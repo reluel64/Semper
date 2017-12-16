@@ -375,7 +375,7 @@ int object_tooltip_update(object *o)
                                      Parameter(Title,H,0);\
                                      Parameter(Title,X,0);\
                                      Parameter(Title,Y,0);\
-                                     Parameter(Text,Y,5r)";
+                                     Parameter(Text,Y,5r);";
         command(o->ttip,&empty_title);
     }
 
@@ -407,9 +407,10 @@ int object_tooltip_update(object *o)
                                   Parameter(Text,W,0);\
                                   Parameter(Text,H,0);\
                                   Parameter(Text,X,0);\
-                                  Parameter(Text,Y,0)";
+                                  Parameter(Text,Y,0);";
         command(o->ttip,&empty_txt);
     }
+
 
     surface_update(o->ttip);
     crosswin_set_position(tsd->sw, (o->x+o->w/2+sd->x)-tsd->w/2,  o->y+o->h+sd->y);

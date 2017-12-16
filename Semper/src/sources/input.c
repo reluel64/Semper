@@ -45,7 +45,7 @@ typedef struct
     unsigned char *current_command;
     unsigned char *ret_str; /*the string that should be returned or used for command processing*/
     void *ip;
-    window *w;
+    crosswin_window *w;
     list_entry commands;
     extension_string_tokenizer_info esti;
 } input_text;

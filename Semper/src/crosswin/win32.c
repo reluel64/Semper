@@ -8,7 +8,7 @@
 #include <semper.h>
 #include <surface.h>
 #include <event.h>
-static int win32_prepare_mouse_event(window* w, unsigned int message, WPARAM wpm, LPARAM lpm)
+static int win32_prepare_mouse_event(crosswin_window* w, unsigned int message, WPARAM wpm, LPARAM lpm)
 {
     memset(&w->mouse, 0, sizeof(mouse_status));
 
@@ -101,7 +101,7 @@ static int win32_prepare_mouse_event(window* w, unsigned int message, WPARAM wpm
     return (0);
 }
 
-static inline HWND win32_zpos(window* w)
+static inline HWND win32_zpos(crosswin_window* w)
 {
     switch(w->zorder)
     {
@@ -132,7 +132,7 @@ static inline HWND win32_zpos(window* w)
 static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, WPARAM wpm, LPARAM lpm)
 {
 
-    window* w = (window*)GetWindowLongPtrW(win, GWLP_USERDATA);
+    crosswin_window* w = (crosswin_window*)GetWindowLongPtrW(win, GWLP_USERDATA);
 
     if(w == NULL)
         return (DefWindowProc(win, message, wpm, lpm));
@@ -299,13 +299,13 @@ void win32_init_class(void)
     RegisterClassExW(&wclass);
 }
 
-void win32_init_window(window* w)
+void win32_init_window(crosswin_window* w)
 {
     w->window = CreateWindowExW( WS_EX_TOOLWINDOW | WS_EX_LAYERED, L"SemperSurface", L"Surface", WS_POPUP, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
     SetWindowLongPtrW(w->window, GWLP_USERDATA, (LONG_PTR)w);
 }
 
-void win32_click_through(window* w, unsigned char state)
+void win32_click_through(crosswin_window* w, unsigned char state)
 {
     unsigned int cstatus=GetWindowLongPtrW(w->window,GWL_EXSTYLE);
     cstatus=state?cstatus|WS_EX_TRANSPARENT:cstatus&~WS_EX_TRANSPARENT;
@@ -327,7 +327,7 @@ void win32_message_dispatch(crosswin *c)
     }
 }
 
-void win32_draw(window* w)
+void win32_draw(crosswin_window* w)
 {
     if(w->offscreen_buffer == NULL)
     {
@@ -364,13 +364,13 @@ void win32_draw(window* w)
     cairo_destroy(cr); // destroy the context
 }
 
-void win32_set_position(window* w)
+void win32_set_position(crosswin_window* w)
 {
     POINT ptd = { w->x, w->y };
     UpdateLayeredWindow(w->window, NULL, &ptd, NULL, NULL, NULL, 0, NULL, 0);
 }
 
-void win32_set_opacity(window* w)
+void win32_set_opacity(crosswin_window* w)
 {
     BLENDFUNCTION bf;
     bf.AlphaFormat = AC_SRC_ALPHA;
@@ -380,17 +380,17 @@ void win32_set_opacity(window* w)
     UpdateLayeredWindow(w->window, NULL, NULL, NULL, NULL, NULL, 0, &bf, ULW_ALPHA);
 }
 
-void win32_hide(window* w)
+void win32_hide(crosswin_window* w)
 {
     SetWindowPos(w->window, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_HIDEWINDOW | SWP_NOACTIVATE);
 }
 
-void win32_show(window* w)
+void win32_show(crosswin_window* w)
 {
     SetWindowPos(w->window, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW | SWP_NOACTIVATE);
 }
 
-void win32_destroy_window(window** w)
+void win32_destroy_window(crosswin_window** w)
 {
     SetWindowLongPtrW((*w)->window, GWLP_USERDATA, 0);
     DestroyWindow((*w)->window);
@@ -399,7 +399,7 @@ void win32_destroy_window(window** w)
     *w = NULL;
 }
 
-void win32_set_zpos(window *w)
+void win32_set_zpos(crosswin_window *w)
 {
     SetWindowPos(w->window, (HWND)(size_t)win32_zpos(w), 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
 }

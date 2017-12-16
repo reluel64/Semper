@@ -85,7 +85,6 @@ void mouse_destroy_actions( mouse_actions* ma)
 
 int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
 {
-
     mouse_actions* ma = NULL;
     surface_data* sd = NULL;
     int ret = 0;

@@ -645,7 +645,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
     {
         output_queue *oq=NULL;
         output_queue *toq=NULL;
-        diag_error("%s expression %s is malformed",__FUNCTION__,f);
+        diag_error("%s expression \"%s\" is malformed",__FUNCTION__,f);
 
         while(math_pop(&op_stack)); //there's no issue here to pop things like that as the data is statically allocated and we do not risk any memory leak
 
@@ -747,7 +747,7 @@ int math_parser(unsigned char *formula,double *res,math_parser_callback mpc,void
 
             if(rcnt>1)
             {
-                diag_error("%s expression %s is malformed",__FUNCTION__,formula);
+                diag_error("%s expression \"%s\" is malformed",__FUNCTION__,formula);
             }
 
             break;
