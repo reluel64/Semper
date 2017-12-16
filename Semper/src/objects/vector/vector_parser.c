@@ -1068,7 +1068,7 @@ static cairo_pattern_t *vector_parser_join_adapt_gradient(cairo_rectangle_t *ext
 
         y1=(y1==old_ext->y)?(ext->y):((y1-old_ext->y)+ext->y);
 
-        x1=(x2==old_ext->width)?(ext->width):((x2-old_ext->width)+ext->width);
+        x2=(x2==old_ext->width)?(ext->width):((x2-old_ext->width)+ext->width);
 
         y2=(y2==old_ext->y)?(ext->y):((y2-old_ext->y)+ext->y);
 
