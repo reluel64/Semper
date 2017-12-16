@@ -73,6 +73,7 @@ static void diag_open_file(diag_status *ds)
 {
     if(ds->fh==NULL&&ds->fp)
     {
+        #ifndef DEBUG
 #ifdef WIN32
         unsigned short *uc=utf8_to_ucs(ds->fp);
         ds->fh=_wfopen(uc,L"a+");
@@ -80,7 +81,9 @@ static void diag_open_file(diag_status *ds)
 #elif __linux__
         ds->fh=fopen(ds->fp,"a+");
 #endif
-
+#else
+ds->fh=stdout;
+#endif
         if(ds->fh)
         {
             unsigned char ts[64]= {0};
@@ -95,7 +98,9 @@ static void diag_open_file(diag_status *ds)
 
             if(check_bom!=utf8_bom)
             {
+                #ifndef DEBUG
                 fwrite(&utf8_bom,1,3,ds->fh);
+                #endif
             }
             else
             {
@@ -122,7 +127,9 @@ static void diag_close_file(diag_status *ds)
 {
     if(ds->fh)
     {
+        #ifndef DEBUG
         fclose(ds->fh);
+        #endif
         ds->fh=NULL;
     }
 }

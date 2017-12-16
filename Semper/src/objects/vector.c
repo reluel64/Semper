@@ -1,10 +1,13 @@
-
+/*Vector object
+ * Part of Project 'Semper'
+ * Written by Alexandru-Daniel Mărgărit
+ */
 #include <objects/object.h>
 #include <cairo/cairo.h>
 #include <mem.h>
 #include <objects/vector/vector_clipper_glue.h>
-
 #include <objects/vector.h>
+#define TESTING 0
 
 void vector_init(object *o)
 {
@@ -25,12 +28,11 @@ int vector_update(object *o)
     return(0);
 }
 
-
 int vector_render(object *o,cairo_t *cr)
 {
     vector *v=o->pv;
     vector_path_common *vpc = NULL;
-#if 0
+#if TESTING == 0
     list_enum_part(vpc,&v->paths,current)
     {
         cairo_set_line_width(cr,vpc->stroke_w);
@@ -39,10 +41,20 @@ int vector_render(object *o,cairo_t *cr)
         cairo_new_path(cr);
         cairo_append_path(cr,vpc->cr_path);
 
-        if(vpc->fill_color&(0xff<<24))
+        if(vpc->fill_gradient)
+        {
+            cairo_set_source(cr,vpc->fill_gradient);
+            cairo_fill_preserve(cr);
+        }
+        else if(vpc->fill_color&(0xff<<24))
         {
             cairo_set_color(cr,vpc->fill_color);
             cairo_fill_preserve(cr);
+        }
+        if(vpc->stroke_gradient)
+        {
+            cairo_set_source(cr,vpc->stroke_gradient);
+            cairo_stroke(cr);
         }
         if(vpc->stroke_color&(0xff<<24))
         {
@@ -70,17 +82,46 @@ int vector_render(object *o,cairo_t *cr)
     cairo_fill(cr);
     cairo_pattern_destroy(patt);
 #else
-static double i=0;
-  cairo_pattern_t * pat = cairo_pattern_create_radial (320.0, 220+00.0, 0.0,
-                                   320.0,  220.0, 100.0);
-cairo_pattern_add_color_stop_rgba (pat, 0.0, 155.0/255.0, 200.0/255.0, 232.0/255.0, 1.0);
-cairo_pattern_add_color_stop_rgba (pat, 1.0, 6.0/255.0, 46.0/255.0, 75.0/255.0, 1.0);
-cairo_set_source (cr, pat);
-cairo_arc (cr, 300.0, 200.0, 100.0, 0, 2 * M_PI);
-cairo_fill (cr);
-cairo_pattern_destroy (pat);
+    static double i=0;
+
+    cairo_rectangle_t rect= {0};
+    cairo_matrix_t m= {0};
+
+    //cairo_set_matrix(cr,&m);
+    cairo_rectangle(cr,100,100,100,100);
+
+     cairo_path_extents(cr,&rect.x,&rect.y,&rect.width,&rect.height);
+ cairo_matrix_init_identity(&m);
+    cairo_matrix_translate(&m,(rect.x+rect.width)/2.0,(rect.y+rect.height)/2.0);
+    m.yx=tan(DEG2RAD(20));
+    m.xy=tan(DEG2RAD(0));
+  cairo_matrix_translate(&m,-(rect.x+rect.width)/2.0,-(rect.y+rect.height)/2.0);
+    vector_parser_apply_matrixd(cr,&m);
+
+// cairo_identity_matrix(cr);
+    cairo_pattern_t * pat = cairo_pattern_create_linear( rect.x, rect.y, rect.width,rect.y);
+
+
+    cairo_pattern_add_color_stop_rgba (pat, 0.0, 1.0, 0, 0,1.0);
+    cairo_pattern_add_color_stop_rgba (pat, 1.0,  0.0, 1, 0,1.0);
+
+
+//   cairo_matrix_init_translate(&mtx,-center_x,-center_y);
+    // cairo_matrix_translate(&mtx,350+00,250+00);
+    //cairo_matrix_scale(&mtx,1.5,1.5);
+    //cairo_matrix_translate(&mtx,-350-00,-250-00);
+//cairo_matrix_translate(&mtx,50,50);
+    // cairo_pattern_set_matrix(pat,&mtx);
+
+
+    cairo_set_source(cr,pat);
+
+
+
+    cairo_fill (cr);
+    cairo_pattern_destroy (pat);
 #endif
-    #endif
+#endif
     return(0);
 }
 

@@ -12,7 +12,7 @@ void vector_parser_destroy(object *o);
 #define VPI_MTX_ATTR (1<<0)
 #define VPI_REG_ATTR (1<<1)
 #define VPI_NORMAL_ATTR ((1<<1)|(1<<0))
-#define VPI_GRAD_ATTR (1<<2)
+#define VPI_COLOR_ATTR (1<<2)
 
 typedef enum
 {
@@ -56,7 +56,10 @@ typedef struct
     cairo_line_cap_t cap;
     cairo_line_join_t join;
     double stroke_w;
-    cairo_pattern_t *stroke_gradient;
+
+    unsigned char reserved;
+
+     cairo_pattern_t *stroke_gradient;
     cairo_pattern_t *fill_gradient;
     double *dashes;
     size_t dash_count;

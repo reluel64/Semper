@@ -61,6 +61,23 @@ typedef struct
     list_entry join;
 } vector_join_list;
 
+static void vector_parse_clone_gradient(cairo_pattern_t *src,cairo_pattern_t *dest)
+{
+    int stop_count=0;
+    cairo_pattern_get_color_stop_count(src,&stop_count);
+
+    for(int i=0; i<stop_count; i++)
+    {
+        double offset=0.0;
+        double red=0.0;
+        double green=0.0;
+        double blue=0.0;
+        double alpha=0.0;
+        cairo_pattern_get_color_stop_rgba(src,i,&offset,&red,&green,&blue,&alpha);
+        cairo_pattern_add_color_stop_rgba(dest,offset,red,green,blue,alpha);
+    }
+}
+
 
 static int vector_parse_filter(string_tokenizer_status *pi, void* pv)
 {
@@ -104,6 +121,10 @@ static int vector_parse_filter(string_tokenizer_status *pi, void* pv)
 static int vector_parse_option(vector_parser_info *vpi)
 {
     vpi->opm=vpi->pm;
+    vpi->param=0;
+    vpi->vpmt=vector_param_none;
+    vpi->vpt=vector_path_unknown;
+    vpi->vct=0;
     string_parser_status spa= {0};
     string_tokenizer_info    sti=
     {
@@ -215,6 +236,7 @@ static void vector_parser_apply_matrix(vector_parser_info *vpi, vector_path_comm
             case CAIRO_PATH_CLOSE_PATH:
                 break;
         }
+
     }
     /*update the extents*/
     cairo_new_path(vpi->cr);
@@ -311,10 +333,10 @@ static int vector_parse_gradient(vector_parser_info *vpi)
     else if(vpi->pm==NULL)
     {
         unsigned int color=(unsigned int)vpi->params[0];
-        double red=(double)(color>>16)/255.0;
-        double green=(double)(color>>8)/255.0;
-        double blue=(double)(color>>0)/255.0;
-        double alpha=(double)(color>>24)/255.0;
+        double red=(double)((color&0xff0000)>>16)/255.0;
+        double green=(double)((color&0xff00)>>8)/255.0;
+        double blue=(double)((color&0xff)>>0)/255.0;
+        double alpha=(double)((color&0xff000000)>>24)/255.0;
         cairo_pattern_add_color_stop_rgba(vpi->pv,vpi->params[1],red,green,blue,alpha);
     }
     return(0);
@@ -632,14 +654,15 @@ static int vector_parse_attributes(vector_parser_info *vpi)
 
             else if(!strncasecmp(vpi->pm,"Dashes",6))
                 vpi->vpmt=vector_param_dashes;
+
+            if(!strncasecmp(vpi->pm,"Attributes",10))
+                vpi->vpmt=vector_param_shared;
         }
 
         if((vpi->flags&VPI_MTX_ATTR) && (vpi->vpmt==vector_param_none))
         {
-            if(!strncasecmp(vpi->pm,"Attributes",10))
-                vpi->vpmt=vector_param_shared;
 
-            else  if(!strncasecmp(vpi->pm,"Skew",4))
+            if(!strncasecmp(vpi->pm,"Skew",4))
                 vpi->vpmt=vector_param_skew;
 
             else if(!strncasecmp(vpi->pm,"Rotate",6))
@@ -652,7 +675,7 @@ static int vector_parse_attributes(vector_parser_info *vpi)
                 vpi->vpmt=vector_param_offset;
         }
 
-        if((vpi->flags&VPI_GRAD_ATTR)&&(vpi->vpmt==vector_param_none))
+        if((vpi->flags&VPI_COLOR_ATTR)&&(vpi->vpmt==vector_param_none))
         {
             if(!strncasecmp(vpi->pm,"Stroke",6))
                 vpi->vpmt=vector_param_stroke;
@@ -677,6 +700,7 @@ static int vector_parse_attributes(vector_parser_info *vpi)
                 lvpi.lvl=1;
                 lvpi.pm=lval;
                 lvpi.o=vpi->o;
+                lvpi.flags=vpi->flags;
                 lvpi.pv=NULL; /*should be vpi->pv?*/
                 lvpi.func=vector_parse_attributes;
                 vector_parse_option(&lvpi);
@@ -744,12 +768,15 @@ static int vector_parse_attributes(vector_parser_info *vpi)
                     sfree((void**)&lval);
 
                     cairo_pattern_get_color_stop_count(dummy_pattern,&stop_count);
-                    if(stop_count<1)
+                    if(stop_count<2)
                     {
+                        diag_error("Gradients require at least two colors");
                         cairo_pattern_destroy(dummy_pattern);
                         dummy_pattern=NULL;
                     }
                 }
+
+
                 if(vpi->vpmt==vector_param_fill)
                 {
                     if(vpc->fill_gradient)
@@ -842,32 +869,95 @@ static int vector_parse_attributes(vector_parser_info *vpi)
                     cairo_matrix_init_translate(&mtx,vpi->params[0],vpi->params[1]);
                     vector_parser_apply_matrix(vpi,vpc,&mtx);
                 }
+                break;
+            }
+            case vector_param_skew:
+            {
+                if(vpi->param>=2)
+                {
+                    cairo_matrix_t mtx= {0};
+                    cairo_matrix_init_translate(&mtx,(vpc->ext.width+vpc->ext.x)/2.0,(vpc->ext.height+vpc->ext.y)/2.0);
+                    mtx.xy=tan(DEG2RAD(vpi->params[0]));
+                    mtx.yx=tan(DEG2RAD(vpi->params[1]));
+                    cairo_matrix_translate(&mtx,-(vpc->ext.width+vpc->ext.x)/2.0,-(vpc->ext.height+vpc->ext.y)/2.0);
+                    vector_parser_apply_matrix(vpi,vpc,&mtx);
+                }
+                break;
             }
             case vector_param_fill:
             case vector_param_stroke:
             {
-                cairo_matrix_t mtx= {0};
-                cairo_matrix_init_translate(&mtx,-(vpc->ext.x+vpc->ext.width/2),-(vpc->ext.y+vpc->ext.height/2));
+                cairo_pattern_t *srcp=vpi->vpmt==vector_param_fill?vpc->fill_gradient:vpc->stroke_gradient;
+                cairo_pattern_t *destp=NULL;
 
-                cairo_matrix_translate(&mtx,(vpc->ext.x+vpc->ext.width/2),(vpc->ext.y+vpc->ext.height/2));
-                cairo_matrix_scale(&mtx,1.0,1.0); /*do not know how to scale*/
-                cairo_matrix_translate(&mtx,-(vpc->ext.x+vpc->ext.width/2),-(vpc->ext.y+vpc->ext.height/2));
-                if(vpi->params[PARAMS_LENGTH-1]==82071082.0)
+                if(srcp)
                 {
-                    printf("This is RGR\n");
+
+                    if(vpi->params[PARAMS_LENGTH-1]==82071082.0)
+                    {
+                        double coffx=0.0;
+                        double coffy=0.0;
+                        double r=max((vpc->ext.width-vpc->ext.x)/2.0,(vpc->ext.height-vpc->ext.y)/2.0);
+
+                        if(vpi->param-3>=2)
+                        {
+                            coffx=vpi->params[0];
+                            coffy=vpi->params[1];
+                        }
+
+                        if(vpi->param-3>=3)
+                        {
+                            if(vpi->params[2]>0.0)
+                                r=vpi->params[2];
+                        }
+
+                        double cx=(vpc->ext.x+vpc->ext.width)/2.0+coffx;
+                        double cy=(vpc->ext.y+vpc->ext.height)/2.0+coffy;
+                        double cx1=cx;
+                        double cy1=cy;
+
+                        if(vpi->param-3>=4)
+                        {
+                            cx1+=vpi->params[3];
+                            cy1+=vpi->params[4];
+                        }
+
+                        double r1=0.0;
+
+                        destp=cairo_pattern_create_radial(cx,cy,r,cx1,cy1,r1);
+                    }
+
+                    if(vpi->params[PARAMS_LENGTH-1]==76071082.0)
+                    {
+                        if(vpi->param-2>=4)
+                            destp=cairo_pattern_create_linear(vpc->ext.x+vpi->params[0],vpc->ext.y+vpi->params[1],vpc->ext.x+vpi->params[2],vpc->ext.y+vpi->params[3]);
+
+                        else if(vpi->param-2>=2)
+                            destp=cairo_pattern_create_linear(vpc->ext.x+vpi->params[0],vpc->ext.y+vpi->params[1],vpc->ext.width,vpc->ext.y);
+
+                        else
+                            destp=cairo_pattern_create_linear(vpc->ext.x,vpc->ext.y,vpc->ext.width,vpc->ext.y);
+                    }
+
+                    vector_parse_clone_gradient(srcp,destp);
+
+                    cairo_pattern_destroy(srcp);
+
+                    if(vpi->vpmt==vector_param_fill)
+                    {
+                        vpc->fill_gradient=destp;
+                    }
+                    else
+                    {
+                        vpc->stroke_gradient=destp;
+                    }
                 }
-                if(vpi->params[PARAMS_LENGTH-1]==76071082.0)
-                {
-                    printf("This is LGR\n");
-                }
-                printf("END PARAM %d\n",vpi->param);
                 break;
             }
 
             default:
                 break;
         }
-#warning "Incomplete implementation"
     }
     return(0);
 }
@@ -935,6 +1025,62 @@ void vector_parser_destroy(object *o)
     }
 }
 
+static cairo_pattern_t *vector_parser_join_adapt_gradient(cairo_rectangle_t *ext,cairo_rectangle_t *old_ext,cairo_pattern_t *src)
+{
+    cairo_pattern_type_t ptype=cairo_pattern_get_type(src);
+    cairo_pattern_t *ret=NULL;
+    if(ptype==CAIRO_PATTERN_TYPE_RADIAL)
+    {
+        double cx=0.0;
+        double cy=0.0;
+        double r=0.0;
+        double cx1=0.0;
+        double cy1=0.0;
+        double r1=0.0;
+        double coffx=0.0;
+        double coffy=0;
+        double coffx1=0.0;
+        double coffy1=0.0;
+        cairo_pattern_get_radial_circles(src,&cx,&cy,&r,&cx1,&cy1,&r1);
+
+        coffx1-=cx;
+        coffy1-=cy;
+        coffx=cx-(old_ext->x+old_ext->width)/2.0;
+        coffy=cy-(old_ext->y+old_ext->height)/2.0;
+
+        cx=(ext->x+ext->width)/2.0+coffx;
+        cy=(ext->y+ext->height)/2.0+coffy;
+        cx1=cx+coffx1;
+        cy1=cy+coffy1;
+
+        ret=cairo_pattern_create_radial(cx,cy,r,cx1,cy1,r1);
+    }
+    else
+    {
+        double x1=0.0;
+        double y1=0.0;
+        double x2=0.0;
+        double y2=0.0;
+
+        cairo_pattern_get_linear_points(src,&x1,&y1,&x2,&y2);
+
+        x1=(x1==old_ext->x)?(ext->x):((x1-old_ext->x)+ext->x);
+
+        y1=(y1==old_ext->y)?(ext->y):((y1-old_ext->y)+ext->y);
+
+        x1=(x2==old_ext->width)?(ext->width):((x2-old_ext->width)+ext->width);
+
+        y2=(y2==old_ext->y)?(ext->y):((y2-old_ext->y)+ext->y);
+
+
+        ret=cairo_pattern_create_linear(x1,y1,x2,y2);
+
+    }
+    vector_parse_clone_gradient(src,ret);
+
+    return(ret);
+}
+
 static int vector_parser_sort(list_entry *l1,list_entry *l2,void *pv)
 {
     vector_path_common *vpc1=element_of(l1,vector_path_common,current);
@@ -967,14 +1113,13 @@ int vector_parser_init(object *o)
     {
         0,
         VPI_NORMAL_ATTR,
-        VPI_GRAD_ATTR
+        VPI_COLOR_ATTR
     };
 
     do
     {
         vector_parser_info vpi= {0};
         vpi.cr=cr;
-        vpi.flags=VPI_NORMAL_ATTR;
         if(eval==NULL)
             break;
 
@@ -1084,10 +1229,19 @@ int vector_parser_init(object *o)
                     vpc->cr_path=NULL;
                 }
 
+                /* Attribute inheritance:
+                * 1) Inherit the attributes (without coloring/gradient) from the root VPC (those are the default values)
+                * 2) Try to overwrite the attributes if there ary any defined for the joined path
+                * 3) Check if there is any coloring/gradient generated at point 2
+                *    3.1) If it's generated, then do nothing (the gradients will be deallocated later)
+                *    3.2) If it's not, we will adapt the gradient(s) (if is defined in the root VPC)
+                */
                 vector_path_common *new_vpc=zmalloc(sizeof(vector_path_common));
                 memcpy(new_vpc,vpc,sizeof(vector_path_common));                                                //copy attributes
 
-                memcpy(new_vpc,vpc_root,offsetof(vector_path_common,join_cnt));         //copy inherited attributes
+
+
+                memcpy(new_vpc,vpc_root,offsetof(vector_path_common,reserved));         //copy inherited attributes (Step 1)
                 cairo_path_extents(cr,&new_vpc->ext.x,&new_vpc->ext.y,&new_vpc->ext.width,&new_vpc->ext.height);        //get the initial extents
 
                 new_vpc->cr_path=cairo_copy_path_flat(cr);
@@ -1098,14 +1252,18 @@ int vector_parser_init(object *o)
                 vector_parser_destroy_join_list((vector_join_list*)vpc);
 
                 sfree((void**)&vpc);
-                vector_parser_info vpi= {0};
-                vpi.cr=cr;
 
+
+
+
+                /*Step 2 - overwrite attributes*/
+                vector_parser_info vpi= {0};
                 unsigned char tmp[256]= {0};
                 snprintf(tmp,256,new_vpc->index>0?"Path%llu":"Path",new_vpc->index);
                 vpi.pm=parameter_string(o,tmp,NULL,XPANDER_OBJECT);
                 vpi.o=o;
-
+                vpi.pv=new_vpc;
+                vpi.cr=cr;
                 if(vpi.pm)
                 {
                     for(unsigned char i=1; i<sizeof(ppf)/sizeof(param_parse_func); i++)
@@ -1113,13 +1271,28 @@ int vector_parser_init(object *o)
                         cairo_new_path(cr);
                         vpi.func=ppf[i];
                         vpi.flags=vpi_flags[i];
+
                         vector_parse_option(&vpi);
                     }
                     sfree((void**)&vpi.pm);
                 }
 
-                //last but not least, let's obtain the attributes
 
+                /*Step 3.2 - Check for coloring*/
+
+
+                if(new_vpc->stroke_gradient==NULL&&vpc_root->stroke_gradient)
+                {
+                    /*Step 3.2*/
+                    diag_verb("%s %d StrokeGradient not defined - adapting root VPC",__FUNCTION__,__LINE__);
+                    new_vpc->stroke_gradient=vector_parser_join_adapt_gradient(&new_vpc->ext,&vpc_root->ext,vpc_root->stroke_gradient);
+                }
+                if(new_vpc->fill_gradient==NULL&&vpc_root->fill_gradient)
+                {
+                    /*Step 3.2*/
+                    diag_verb("%s %d FillGradient not defined - adapting root VPC",__FUNCTION__,__LINE__);
+                    new_vpc->fill_gradient=vector_parser_join_adapt_gradient(&new_vpc->ext,&vpc_root->ext,vpc_root->fill_gradient);
+                }
             }
         }
 

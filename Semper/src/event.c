@@ -199,7 +199,7 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
 
     pthread_mutex_lock(&eq->mutex);
 
-    if(eq->ce && flags==0)
+    if(eq->ce && (flags==0||((flags&EVENT_PUSH_TIMER)&&timeout<1)))
     {
         if(eq->ce->handler==handler&&eq->ce->pv==pv) //defer the event until the next cycle to avoid a busyloop
         {
@@ -208,10 +208,9 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
     }
 
     pthread_mutex_unlock(&eq->mutex);
-    timeout=(timeout<1?1:timeout); //16 ms seems the resolution liked by Windows so we will use that as a limitation for both Windows and Linux
+    flags=(timeout>=1?flags:(flags&~EVENT_PUSH_TIMER));
     event* e = zmalloc(sizeof(event));
     list_entry_init(&e->current);
-
 
     e->handler = handler;
     e->pv = pv;
