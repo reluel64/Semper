@@ -132,18 +132,18 @@ void reset(void* spv, void* ip)
     free(p->link);
     p->link=NULL;
 
-    if((t = extension_string("Address", 0x3, ip, "127.0.0.1")) != NULL)
+    if((t = param_string("Address", 0x3, ip, "127.0.0.1")) != NULL)
     {
         p->link=strdup(t);
     }
 
     free(p->exec);
     p->exec = NULL;
-    p->timeout = extension_size_t("Timeout", ip, 30000);
-    p->period = extension_size_t("Period", ip, 64);
-    p->rep_timeout = extension_size_t("TimeoutValue", ip, 30000);
+    p->timeout = param_size_t("Timeout", ip, 30000);
+    p->period = param_size_t("Period", ip, 64);
+    p->rep_timeout = param_size_t("TimeoutValue", ip, 30000);
     pthread_mutex_unlock(&p->mutex);
-    if((t = extension_string("FinishAction", 0x3, ip, NULL))!=NULL)
+    if((t = param_string("FinishAction", 0x3, ip, NULL))!=NULL)
     {
         p->exec = strdup(t);
     }
@@ -178,7 +178,7 @@ double update(void* spv)
         else if(p->th_active == 0 && p->th)
         {
             pthread_join(p->th, NULL);
-            extension_send_command(p->ip, p->exec);
+            send_command(p->ip, p->exec);
             p->th = 0;
         }
         if(++p->current == p->period)

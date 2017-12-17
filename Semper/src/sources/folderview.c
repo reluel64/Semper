@@ -153,8 +153,8 @@ void folderview_reset(void *spv,void *ip)
 
     folderview_child *fc=((fh->type==_child)?fh->data:NULL);
     folderview_parent *fp=((fh->type==_parent)?fh->data:(fc!=NULL?fc->parent:NULL));
-    unsigned char* temp = extension_string("Path", EXTENSION_XPAND_VARIABLES, ip, NULL);
-    void* parent = extension_get_parent(temp, ip);
+    unsigned char* temp = param_string("Path", EXTENSION_XPAND_VARIABLES, ip, NULL);
+    void* parent = get_parent(temp, ip);
 
     if(fc)
     {
@@ -163,7 +163,7 @@ void folderview_reset(void *spv,void *ip)
 
     if((parent&&fh->type==_none)||fh->type==_child)
     {
-        void *pv=extension_private(parent);
+        void *pv=get_private_data(parent);
 
         if(fp==NULL)
         {
@@ -177,8 +177,8 @@ void folderview_reset(void *spv,void *ip)
             list_entry_init(&fc->current);
         }
 
-        fc->index=extension_size_t("ChildIndex",ip,0);
-        temp=extension_string("ChildType",EXTENSION_XPAND_ALL,ip,"Name");
+        fc->index=param_size_t("ChildIndex",ip,0);
+        temp=param_string("ChildType",EXTENSION_XPAND_ALL,ip,"Name");
 
         if(temp)
         {
@@ -260,22 +260,22 @@ void folderview_reset(void *spv,void *ip)
         sfree((void**)&fp->base_path);
         sfree((void**)&fp->qcomplete_act);
 
-        fp->qcomplete_act=clone_string(extension_string("CompletionAction",EXTENSION_XPAND_ALL,ip,NULL));
-        fp->collect_mode=extension_size_t("CollectType",ip,0);
-        fp->child_count=extension_size_t("ChildCount",ip,0);
-        fp->base_path=clone_string(extension_string("Path",EXTENSION_XPAND_ALL,ip,NULL));
-        fp->hide_ext=extension_bool("HideExtensions",ip,0);
-        fp->sys=extension_bool("ShowSystem",ip,0);
-        fp->hidden=extension_bool("ShowHidden",ip,0);
-        fp->show_files=extension_bool("ShowFiles",ip,1);
-        fp->show_folders=extension_bool("ShowFolders",ip,1);
+        fp->qcomplete_act=clone_string(param_string("CompletionAction",EXTENSION_XPAND_ALL,ip,NULL));
+        fp->collect_mode=param_size_t("CollectType",ip,0);
+        fp->child_count=param_size_t("ChildCount",ip,0);
+        fp->base_path=clone_string(param_string("Path",EXTENSION_XPAND_ALL,ip,NULL));
+        fp->hide_ext=param_bool("HideExtensions",ip,0);
+        fp->sys=param_bool("ShowSystem",ip,0);
+        fp->hidden=param_bool("ShowHidden",ip,0);
+        fp->show_files=param_bool("ShowFiles",ip,1);
+        fp->show_folders=param_bool("ShowFolders",ip,1);
         fp->path=fp->base_path;
         fp->base_len=string_length(fp->base_path);
         fp->update=1;
         fp->ip=ip;
         fh->data=fp;
         fh->type=_parent;
-        temp=extension_string("SortBy",EXTENSION_XPAND_ALL,ip,"Name");
+        temp=param_string("SortBy",EXTENSION_XPAND_ALL,ip,"Name");
 
         if(temp)
         {
@@ -292,7 +292,7 @@ void folderview_reset(void *spv,void *ip)
                 fp->stype=s_size;
         }
 
-        temp=extension_string("ParentType",EXTENSION_XPAND_ALL,ip,"Path");
+        temp=param_string("ParentType",EXTENSION_XPAND_ALL,ip,"Path");
 
         if(temp)
         {
@@ -306,7 +306,7 @@ void folderview_reset(void *spv,void *ip)
                 fp->ptype=pt_file_cnt;
         }
 
-        fp->s_desc=extension_bool("SortDescending",ip,0);
+        fp->s_desc=param_bool("SortDescending",ip,0);
 
         if(memcmp(&fp->mutex,&empty_mtx,sizeof(pthread_mutex_t))==0)
         {
@@ -1110,7 +1110,7 @@ static void *folderview_collect_thread(void* vfi)
     pthread_mutex_unlock(&fp->mutex);
 
     if(fp->qcomplete_act)
-        extension_send_command(fp->ip,fp->qcomplete_act);
+        send_command(fp->ip,fp->qcomplete_act);
 
     return(NULL);
 }

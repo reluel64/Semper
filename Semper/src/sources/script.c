@@ -73,7 +73,7 @@ void script_reset(void *spv,void *ip)
 {
     script_data *sc=spv;
 
-    unsigned char * s=extension_string("ScriptPath",0x3,ip,NULL);
+    unsigned char * s=param_string("ScriptPath",0x3,ip,NULL);
     unsigned char script_changed=1;
 
     if(s) //if the scripts differs you know what that means (bye bye old script)

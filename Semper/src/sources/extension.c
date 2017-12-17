@@ -33,7 +33,7 @@ typedef struct _extension_command
     unsigned char* comm;
 } extension_command;
 
-SEMPER_API double extension_double(unsigned char* pn, void* ip, double def)
+SEMPER_API double param_double(unsigned char* pn, void* ip, double def)
 {
     if(!ip || !pn)
     {
@@ -45,7 +45,7 @@ SEMPER_API double extension_double(unsigned char* pn, void* ip, double def)
     return (parameter_double(s, pn, def, XPANDER_SOURCE));
 }
 
-SEMPER_API size_t extension_size_t(unsigned char* pn, void* ip, size_t def)
+SEMPER_API size_t param_size_t(unsigned char* pn, void* ip, size_t def)
 {
     if(!ip || !pn)
     {
@@ -56,7 +56,7 @@ SEMPER_API size_t extension_size_t(unsigned char* pn, void* ip, size_t def)
     return (parameter_size_t(s, pn, def, XPANDER_SOURCE));
 }
 
-SEMPER_API int extension_set_max(double val, void* ip, unsigned char force, unsigned char hold)
+SEMPER_API int source_set_max(double val, void* ip, unsigned char force, unsigned char hold)
 {
     source* s = ip;
 
@@ -72,7 +72,7 @@ SEMPER_API int extension_set_max(double val, void* ip, unsigned char force, unsi
 
     return (0);
 }
-SEMPER_API int extension_set_min(double val, void* ip, unsigned char force, unsigned char hold)
+SEMPER_API int source_set_min(double val, void* ip, unsigned char force, unsigned char hold)
 {
     source* s = ip;
 
@@ -89,12 +89,12 @@ SEMPER_API int extension_set_min(double val, void* ip, unsigned char force, unsi
     return (0);
 }
 
-SEMPER_API unsigned char extension_bool(unsigned char* pn, void* ip, unsigned char def)
+SEMPER_API unsigned char param_bool(unsigned char* pn, void* ip, unsigned char def)
 {
-    return ((unsigned char)extension_double(pn, ip, (double)def) != 0.0);
+    return ((unsigned char)param_double(pn, ip, (double)def) != 0.0);
 }
 
-SEMPER_API unsigned char* extension_string(unsigned char* pn, unsigned char flags, void* ip, unsigned char* def)
+SEMPER_API unsigned char* param_string(unsigned char* pn, unsigned char flags, void* ip, unsigned char* def)
 {
     if(!ip || !pn)
     {
@@ -107,19 +107,19 @@ SEMPER_API unsigned char* extension_string(unsigned char* pn, unsigned char flag
     return (s->ext_str);
 }
 
-SEMPER_API void* extension_surface(void* ip)
+SEMPER_API void* get_surface(void* ip)
 {
     source* s = ip;
     return(s?s->sd:NULL);
 }
 
-SEMPER_API unsigned char* extension_name(void* ip)
+SEMPER_API unsigned char* get_extension_name(void* ip)
 {
     source* s = ip;
     return(s?skeleton_get_section_name(s->cs):NULL);
 }
 
-SEMPER_API void* extension_by_name(unsigned char* name, void* ip)
+SEMPER_API void* get_extension_by_name(unsigned char* name, void* ip)
 {
     source* s = ip;
 
@@ -131,7 +131,7 @@ SEMPER_API void* extension_by_name(unsigned char* name, void* ip)
     return (NULL);
 }
 
-SEMPER_API void* extension_private(void* ip)
+SEMPER_API void* get_private_data(void* ip)
 {
     source* s = ip;
 
@@ -143,7 +143,7 @@ SEMPER_API void* extension_private(void* ip)
     return (NULL);
 }
 
-SEMPER_API int extension_parent_candidate(void* pc, void* ip)
+SEMPER_API int is_parent_candidate(void* pc, void* ip)
 {
     source* s = ip;
     source* sp = pc;
@@ -182,21 +182,21 @@ static int extension_command_handler(extension_command* ec)
     return (0);
 }
 
-SEMPER_API void extension_send_command(void* ir, unsigned char* command)
+SEMPER_API void send_command(void* ir, unsigned char* cmd)
 {
-    if(ir && command)
+    if(ir && cmd)
     {
         source* s = ir;
         surface_data* sd = s->sd;
         control_data* cd = sd->cd;
         extension_command* ec = zmalloc(sizeof(extension_command));
         ec->sd = sd;
-        ec->comm = clone_string(command);
+        ec->comm = clone_string(cmd);
         event_push(cd->eq, (event_handler)extension_command_handler, (void*)ec, 0, EVENT_PUSH_TAIL); //we will queue this event to be processed later
     }
 }
 
-SEMPER_API int extension_has_parent(unsigned char* str)
+SEMPER_API int has_parent(unsigned char* str)
 {
     size_t strl = string_length(str);
 
@@ -208,7 +208,7 @@ SEMPER_API int extension_has_parent(unsigned char* str)
     return (0);
 }
 
-SEMPER_API void* extension_get_parent(unsigned char* str, void* ip)
+SEMPER_API void* get_parent(unsigned char* str, void* ip)
 {
     if(!str || !ip)
     {
@@ -222,7 +222,7 @@ SEMPER_API void* extension_get_parent(unsigned char* str, void* ip)
         source* s = ip;
         source* p = source_by_name(s->sd, str + 1,strl-2);
 
-        if(extension_parent_candidate(p, s))
+        if(is_parent_candidate(p, s))
         {
             return (p);
         }
@@ -232,22 +232,22 @@ SEMPER_API void* extension_get_parent(unsigned char* str, void* ip)
 }
 
 
-SEMPER_API int extension_tokenize_string(extension_string_tokenizer_info *esti)
+SEMPER_API int tokenize_string(tokenize_string_info *tsi)
 {
-    if(esti == NULL)
+    if(tsi == NULL)
     {
         return (-1);
     }
 
-    return (string_tokenizer((string_tokenizer_info*)esti));
+    return (string_tokenizer((string_tokenizer_info*)tsi));
 }
 
-SEMPER_API void extension_tokenize_string_free(extension_string_tokenizer_info *esti)
+SEMPER_API void tokenize_string_free(tokenize_string_info *tsi)
 {
-    sfree((void**)&esti->ovecoff);
+    sfree((void**)&tsi->ovecoff);
 }
 
-SEMPER_API unsigned char *extension_get_path(void *ip,unsigned char pth)
+SEMPER_API unsigned char *get_path(void *ip,unsigned char pth)
 {
     if(ip==NULL)
     {
@@ -278,7 +278,7 @@ SEMPER_API unsigned char *extension_get_path(void *ip,unsigned char pth)
 }
 
 
-SEMPER_API unsigned char *extension_absolute_path(void *ip,unsigned char *rp,unsigned char pth)
+SEMPER_API unsigned char *absolute_path(void *ip,unsigned char *rp,unsigned char pth)
 {
     if(ip==NULL||rp==NULL)
     {

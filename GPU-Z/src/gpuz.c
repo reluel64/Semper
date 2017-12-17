@@ -199,7 +199,7 @@ void reset(void *spv,void *ip)
     gd->str_val=NULL;
     gd->opt=NULL;
 
-    unsigned char *s=extension_string("GPUZInfo",EXTENSION_XPAND_SOURCES|EXTENSION_XPAND_VARIABLES,ip,"GPU Temperature");
+    unsigned char *s=param_string("GPUZInfo",EXTENSION_XPAND_SOURCES|EXTENSION_XPAND_VARIABLES,ip,"GPU Temperature");
     gd->opt=utf8_to_ucs(s);
 }
 

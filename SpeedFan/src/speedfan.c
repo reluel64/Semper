@@ -40,7 +40,7 @@ void init(void **spv,void *ip)
 void reset(void *spv,void *ip)
 {
     speedfan_data *spd=spv;
-    unsigned char *type=extension_string("SensorType",EXTENSION_XPAND_SOURCES|EXTENSION_XPAND_VARIABLES,ip,"temperature");
+    unsigned char *type=param_string("SensorType",EXTENSION_XPAND_SOURCES|EXTENSION_XPAND_VARIABLES,ip,"temperature");
 
     if(!strcasecmp(type,"Temperature"))
         spd->senz_type=0;
@@ -49,7 +49,7 @@ void reset(void *spv,void *ip)
     else if(!strcasecmp(type,"Voltage"))
         spd->senz_type=2;
 
-    spd->senz_index=(unsigned char)extension_size_t("SensorIndex",ip,0);
+    spd->senz_index=(unsigned char)param_size_t("SensorIndex",ip,0);
 
     if(spd->senz_index>=MAX_LEN)
         spd->senz_index=MAX_LEN-1;

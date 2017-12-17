@@ -74,7 +74,7 @@ void reset(void *spv, void *ip)
 {
     recycler *r=spv;
 
-    unsigned char *temp=extension_string("Type",EXTENSION_XPAND_ALL,ip,"Items");
+    unsigned char *temp=param_string("Type",EXTENSION_XPAND_ALL,ip,"Items");
     r->query_inf=0;
 
     if(temp && strcasecmp(temp,"Size")==0)
@@ -84,10 +84,10 @@ void reset(void *spv, void *ip)
 
     pthread_mutex_lock(&r->mtx);
     sfree((void**)&r->complete_query);
-    r->complete_query=strdup(extension_string("CompleteQuery",EXTENSION_XPAND_ALL,ip,NULL));
+    r->complete_query=strdup(param_string("CompleteQuery",EXTENSION_XPAND_ALL,ip,NULL));
     pthread_mutex_unlock(&r->mtx);
 
-    r->mon_mode=extension_size_t("MonitorMode",ip,0)!=0;
+    r->mon_mode=param_size_t("MonitorMode",ip,0)!=0;
 
     if(r->mon_mode==0&&r->mth)
     {
@@ -219,7 +219,7 @@ static void *recycler_query_thread(void *p)
     }
 
     pthread_mutex_lock(&r->mtx);
-    extension_send_command(r->ip,r->complete_query);
+    send_command(r->ip,r->complete_query);
     pthread_mutex_unlock(&r->mtx);
     r->query_active=0;
     return (NULL);

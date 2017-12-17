@@ -31,21 +31,21 @@ void surface_info_reset(void* spv, void* ip)
 {
 
     surface_info* si = spv;
-    unsigned char *temp=extension_string("Info",EXTENSION_XPAND_ALL,ip,"Coordinates");
+    unsigned char *temp=param_string("Info",EXTENSION_XPAND_ALL,ip,"Coordinates");
 
     if(temp)
     {
         if(!strcasecmp(temp,"Coordinates"))
         {
             si->data=0;
-            si->coord=extension_bool("CoordIndex",ip,0);
+            si->coord=param_bool("CoordIndex",ip,0);
         }
         else if(!strcasecmp(temp,"General"))
             si->data=1;
     }
 
     sfree((void**)&si->sname);
-    si->sname = clone_string(extension_string("Surface_Name", EXTENSION_XPAND_VARIABLES, ip, NULL));
+    si->sname = clone_string(param_string("Surface_Name", EXTENSION_XPAND_VARIABLES, ip, NULL));
 
 }
 

@@ -66,7 +66,7 @@ static size_t memory_get_linux(char *field)
 void memory_reset(void* spv, void* ip)
 {
     unsigned char* type = spv;
-    unsigned char* mode = extension_string("Memory", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "Physical");
+    unsigned char* mode = param_string("Memory", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "Physical");
 #ifdef WIN32
     MEMORYSTATUSEX ms = { 0 };
     ms.dwLength = sizeof(MEMORYSTATUSEX);
@@ -80,30 +80,30 @@ void memory_reset(void* spv, void* ip)
         if(strcasecmp(mode, "Physical") == 0)
         {
 #ifdef WIN32
-            extension_set_max((double)ms.ullTotalPhys, ip, 1, 1);
+            source_set_max((double)ms.ullTotalPhys, ip, 1, 1);
 #elif __linux__
-            extension_set_max((double)memory_get_linux("MemTotal:"), ip, 1, 1);
+            source_set_max((double)memory_get_linux("MemTotal:"), ip, 1, 1);
 #endif
             *type = 0;
         }
         else if(strcasecmp(mode, "Virtual") == 0)
         {
 #ifdef WIN32
-            extension_set_max((double)ms.ullTotalVirtual, ip, 1, 1);
+            source_set_max((double)ms.ullTotalVirtual, ip, 1, 1);
 #endif
             *type = 1;
         }
         else if(strcasecmp(mode, "Pagefile") == 0)
         {
 #ifdef WIN32
-            extension_set_max((double)ms.ullTotalPageFile, ip, 1, 1);
+            source_set_max((double)ms.ullTotalPageFile, ip, 1, 1);
 #endif
             *type = 2;
         }
     }
 
 
-    *type |= (extension_bool("Total", ip, 0) << 2);
+    *type |= (param_bool("Total", ip, 0) << 2);
 }
 
 double memory_update(void* spv)

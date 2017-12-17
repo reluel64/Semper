@@ -21,7 +21,7 @@ void string_source_reset(void* pv, void* ip)
     sfree((void**)&ssi->str);
     ssi->len = 0;
     ssi->option = 0;
-    unsigned char* str = extension_string("String", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, NULL);
+    unsigned char* str = param_string("String", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, NULL);
 
     if(str)
     {
@@ -29,7 +29,7 @@ void string_source_reset(void* pv, void* ip)
         ssi->len = utf8_len(str,0);
     }
 
-    unsigned char* opt = extension_string("Mode", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "String");
+    unsigned char* opt = param_string("Mode", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "String");
 
     if(opt)
     {

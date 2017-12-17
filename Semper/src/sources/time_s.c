@@ -26,7 +26,7 @@ void time_reset(void *spv,void *ip)
 {
     time_state *ts=spv;
     sfree((void**)&ts->format);
-    ts->format=clone_string(extension_string("Format",0x3,ip,NULL));
+    ts->format=clone_string(param_string("Format",0x3,ip,NULL));
 }
 
 double time_update(void *spv)

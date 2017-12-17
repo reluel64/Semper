@@ -48,8 +48,8 @@ void disk_reset(void* spv, void* ip)
 
     sfree((void**)&d->name);
 
-    d->name = clone_string(extension_string("Disk", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, NULL));
-    d->label = extension_bool("Label", ip, 0);
+    d->name = clone_string(param_string("Disk", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, NULL));
+    d->label = param_bool("Label", ip, 0);
 
 
 #ifdef WIN32
@@ -67,7 +67,7 @@ void disk_reset(void* spv, void* ip)
     unsigned short* buf = utf8_to_ucs(d->name);
     GetDiskFreeSpaceExW(buf, NULL, d->total_bytes, NULL);
     sfree((void**)&buf);
-    extension_set_max((double)((ULARGE_INTEGER*)d->total_bytes)->QuadPart, ip, 1, 0);
+    source_set_max((double)((ULARGE_INTEGER*)d->total_bytes)->QuadPart, ip, 1, 0);
 #elif __linux__
     struct statfs s= {0};
 
@@ -87,8 +87,8 @@ void disk_reset(void* spv, void* ip)
     }
 
 #endif
-    d->type = extension_bool("Type", ip, 0);
-    d->total = extension_bool("Total", ip, 0);
+    d->type = param_bool("Type", ip, 0);
+    d->total = param_bool("Total", ip, 0);
 
 }
 

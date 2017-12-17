@@ -162,7 +162,7 @@ static int calculator_math_parser(unsigned char *vn,size_t len,double *v,void *p
 void calculator_init(void** spv, void* ip)
 {
     calculator* c = zmalloc(sizeof(calculator));
-    c->sd = extension_surface(ip);
+    c->sd = get_surface(ip);
     *spv = c;
 }
 
@@ -171,9 +171,9 @@ void calculator_reset(void* spv, void* ip)
 
     calculator* c = spv;
     sfree((void**)&c->frm);
-    c->frm = clone_string(extension_string("Function", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "0"));
-    c->rg.max_random = (unsigned short)extension_double("MaxRandom", ip, 65535.0);
-    c->rg.min_random = (unsigned short)extension_double("MinRandom", ip, 0.0);
+    c->frm = clone_string(param_string("Function", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "0"));
+    c->rg.max_random = (unsigned short)param_double("MaxRandom", ip, 65535.0);
+    c->rg.min_random = (unsigned short)param_double("MinRandom", ip, 0.0);
     c->rg.seed = (unsigned int)time(NULL);
 
     if(c->rg.max_random == 0)
@@ -188,8 +188,8 @@ void calculator_reset(void* spv, void* ip)
 
     c->rg.update = 1; // set it, temporarly, to 1 in order to obtain a first and potentially the single random number
     calculator_random(c);
-    c->rg.update = extension_bool("RefreshRandom", ip, 0);
-    c->rg.unique = extension_bool("AlwaysRandom", ip, 0);
+    c->rg.update = param_bool("RefreshRandom", ip, 0);
+    c->rg.unique = param_bool("AlwaysRandom", ip, 0);
 
     if(c->rg.unique && !c->rg.update)
     {

@@ -171,17 +171,17 @@ void processor_reset(void* spv, void* ip)
 {
     processor* p = spv;
     sfree((void**)&p->process_name);
-    unsigned char* inf_type = extension_string("Processor", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "Usage");
-    p->total = extension_bool("Total", ip, 0);
+    unsigned char* inf_type = param_string("Processor", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "Usage");
+    p->total = param_bool("Total", ip, 0);
 
     if(inf_type)
     {
         if(!strcasecmp(inf_type, "Usage"))
         {
             p->inf_type = 0;
-            extension_set_max(100.0, ip, 1, 1);
+            source_set_max(100.0, ip, 1, 1);
 #ifdef WIN32
-            p->usage_cpu_no = extension_size_t("CoreUsage", ip, 0);
+            p->usage_cpu_no = param_size_t("CoreUsage", ip, 0);
 #endif
         }
         else if(!strcasecmp(inf_type, "ProcessCount"))
@@ -201,19 +201,19 @@ void processor_reset(void* spv, void* ip)
             p->ppi = zmalloc(sizeof(PROCESSOR_POWER_INFORMATION) * p->core_count);
             p->ppi_sz = sizeof(PROCESSOR_POWER_INFORMATION) * p->core_count;
             p->CallNtPowerInformation(11, NULL, 0, p->ppi, p->ppi_sz);
-            extension_set_max(processor_frequency(p, 1), ip, 1, 0);
+            source_set_max(processor_frequency(p, 1), ip, 1, 0);
 #elif __linux__
             p->freq_cpu_no=0;
             double max=0.0;
-            extension_set_max(processor_frequency_linux(p,1),ip,1,1);
-            p->freq_cpu_no=extension_size_t("CoreIndexFrequency", ip, 0);
+            source_set_max(processor_frequency_linux(p,1),ip,1,1);
+            p->freq_cpu_no=param_size_t("CoreIndexFrequency", ip, 0);
 
 #endif
         }
         else if(!strcasecmp(inf_type,"ProcessRunning"))
         {
             p->inf_type=4;
-            p->process_name=clone_string(extension_string("ProcessName", EXTENSION_XPAND_ALL, ip, NULL));
+            p->process_name=clone_string(param_string("ProcessName", EXTENSION_XPAND_ALL, ip, NULL));
         }
     }
 }

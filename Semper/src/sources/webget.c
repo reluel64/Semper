@@ -55,7 +55,7 @@ typedef struct webget
     pthread_mutex_t mutex; 		//mutex to protect a resource to be accessed while it is modified
     list_entry children;   		//head for the children list
     list_entry current;    		//used if the entry is part of a list (is a child)
-    void *ip;              		//internal pointer (used for extension_send_command())
+    void *ip;              		//internal pointer (used for send_command())
     unsigned char *address; 	//could be a url or a file
     unsigned char *srf_dir;     //used when downloading a file in the surface's directory
     unsigned char *err_str;     //error string returned if something fails
@@ -199,18 +199,18 @@ void webget_reset(void *spv,void *ip)
     sfree((void**)&w->dwl_fail);
     sfree((void**)&w->connect_fail);
     sfree((void**)&w->srf_dir);
-    w->regexp=clone_string(extension_string("Regexp",EXTENSION_XPAND_ALL,ip,NULL));
-    w->sec_index=extension_size_t("SecondaryIndex",ip,0);
-    w->pr_index=extension_size_t("PrimaryIndex",ip,0);
-    w->u_rate=extension_size_t("UpdateRate",ip,1000);
-    w->dwl_local=extension_bool("DownloadLocal",ip,0);
-    w->dwl=extension_size_t("Download",ip, 0);
-    w->srf_dir=clone_string(extension_absolute_path(ip,"",EXTENSION_PATH_SURFACE));
-    temp=extension_string("URL",EXTENSION_XPAND_VARIABLES,ip,NULL);
+    w->regexp=clone_string(param_string("Regexp",EXTENSION_XPAND_ALL,ip,NULL));
+    w->sec_index=param_size_t("SecondaryIndex",ip,0);
+    w->pr_index=param_size_t("PrimaryIndex",ip,0);
+    w->u_rate=param_size_t("UpdateRate",ip,1000);
+    w->dwl_local=param_bool("DownloadLocal",ip,0);
+    w->dwl=param_size_t("Download",ip, 0);
+    w->srf_dir=clone_string(absolute_path(ip,"",EXTENSION_PATH_SURFACE));
+    temp=param_string("URL",EXTENSION_XPAND_VARIABLES,ip,NULL);
 
-    if((pip=extension_get_parent(temp,ip))!=NULL&&w->parent==NULL)
+    if((pip=get_parent(temp,ip))!=NULL&&w->parent==NULL)
     {
-        w->parent=extension_private(pip);
+        w->parent=get_private_data(pip);
 
         if(linked_list_empty(&w->current))
             linked_list_add_last(&w->current,&w->parent->children);
@@ -224,10 +224,10 @@ void webget_reset(void *spv,void *ip)
 
     if(pip==NULL||(pip&&w->dwl))
     {
-        w->success_act=clone_string(extension_string("SuccessAction",EXTENSION_XPAND_ALL,ip,NULL));
-        w->parse_fail_act=clone_string(extension_string("ParseFailAction",EXTENSION_XPAND_ALL,ip,NULL));
-        w->dwl_fail=clone_string(extension_string("DownloadFailAction",EXTENSION_XPAND_ALL,ip,NULL));
-        w->connect_fail=clone_string(extension_string("ConnetionFailAction",EXTENSION_XPAND_ALL,ip,NULL));
+        w->success_act=clone_string(param_string("SuccessAction",EXTENSION_XPAND_ALL,ip,NULL));
+        w->parse_fail_act=clone_string(param_string("ParseFailAction",EXTENSION_XPAND_ALL,ip,NULL));
+        w->dwl_fail=clone_string(param_string("DownloadFailAction",EXTENSION_XPAND_ALL,ip,NULL));
+        w->connect_fail=clone_string(param_string("ConnetionFailAction",EXTENSION_XPAND_ALL,ip,NULL));
     }
 
     pthread_mutex_unlock(&w->mutex);
@@ -502,11 +502,11 @@ static void *webget_worker_thread(void *p)
     {
         case CURLE_COULDNT_CONNECT:
         case CURLE_UNSUPPORTED_PROTOCOL:
-            extension_send_command(w->ip,w->connect_fail);
+            send_command(w->ip,w->connect_fail);
             break;
 
         case CURLE_URL_MALFORMAT:
-            extension_send_command(w->ip,w->dwl_fail);
+            send_command(w->ip,w->dwl_fail);
             break;
 
     }
@@ -563,7 +563,7 @@ static int webget_post_worker_update(webget *w)
         else
         {
             ret=1;
-            extension_send_command(w->ip,w->parse_fail_act);
+            send_command(w->ip,w->parse_fail_act);
         }
     }
     else if(ww&&ww->fp&&ww->dwl_mode&DOWNLOAD_TO_FILE) //no buffer? let's see if we do have a file downloaded for us
@@ -628,7 +628,7 @@ static int webget_post_worker_update(webget *w)
         else
         {
             ret=1;
-            extension_send_command(c->ip,c->parse_fail_act);
+            send_command(c->ip,c->parse_fail_act);
         }
 
         pthread_mutex_unlock(&c->mutex);
@@ -668,7 +668,7 @@ double webget_update(void *spv)
 
         if(w->ww)
         {
-            ret==0?extension_send_command(w->ip,w->success_act):0;
+            ret==0?send_command(w->ip,w->success_act):0;
             sfree((void**)&w->ww->buf);
             sfree((void**)&w->ww);
         }

@@ -58,7 +58,7 @@ void reset(void* spv, void* ip)
     coretemp_data* crd = spv;
     unsigned char opt = 0;
     crd->core_index = 0;
-    unsigned char* str_opt = extension_string("CoreTempInfo", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "Temperature");
+    unsigned char* str_opt = param_string("CoreTempInfo", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "Temperature");
 
     static unsigned char* opts[] =
     {
@@ -77,7 +77,7 @@ void reset(void* spv, void* ip)
         crd->opt = opt;
     }
 
-    crd->core_index = extension_size_t("CoreTempIndex", ip, 0);
+    crd->core_index = param_size_t("CoreTempIndex", ip, 0);
     crd->core_index = (crd->core_index > 127 ? 127 : crd->core_index);
 }
 

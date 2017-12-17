@@ -60,22 +60,22 @@ void folderinfo_reset(void* spv, void* ip)
         fi->th = 0;
     }
 
-    unsigned char* tmp = extension_string("Folder", EXTENSION_XPAND_VARIABLES, ip, "C:/");
+    unsigned char* tmp = param_string("Folder", EXTENSION_XPAND_VARIABLES, ip, "C:/");
 
-    void* parent = extension_get_parent(tmp, ip);
+    void* parent = get_parent(tmp, ip);
 
     if(parent == NULL)
         fi->path = clone_string(tmp);
     else
     {
-        fi->parent = extension_private(parent);
+        fi->parent = get_private_data(parent);
     }
 
-    fi->recurse = extension_bool("SubFolders", ip, 0);
-    fi->hiddenf = extension_bool("Hidden", ip, 0);
-    fi->systemf = extension_bool("System", ip, 0);
+    fi->recurse = param_bool("SubFolders", ip, 0);
+    fi->hiddenf = param_bool("Hidden", ip, 0);
+    fi->systemf = param_bool("System", ip, 0);
 
-    unsigned char* type = extension_string("Type", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "FileCount");
+    unsigned char* type = param_string("Type", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "FileCount");
 
     if(!strcasecmp(type, "FileCount"))
     {

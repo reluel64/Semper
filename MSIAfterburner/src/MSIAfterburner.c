@@ -23,8 +23,8 @@ void reset(void *spv,void *ip)
     MSI_AFTERBURNER *mab=spv;
     free(mab->res_name);
     mab->res_name=NULL;
-    mab->res_name=strdup(extension_string("ResourceName",EXTENSION_XPAND_ALL,ip,NULL));
-    mab->res_id=extension_size_t("resourceID",ip,0xFFFFFFFF);
+    mab->res_name=strdup(param_string("ResourceName",EXTENSION_XPAND_ALL,ip,NULL));
+    mab->res_id=param_size_t("resourceID",ip,0xFFFFFFFF);
 }
 
 double update(void *spv)

@@ -180,7 +180,7 @@ void reset(void *spv,void *ip)
         r->evt=NULL;
     }
 
-    rn=extension_string("HKEY",0x3,ip,"HKEY_CURRENT_USER");
+    rn=param_string("HKEY",0x3,ip,"HKEY_CURRENT_USER");
 
     if(rn)
     {
@@ -199,9 +199,9 @@ void reset(void *spv,void *ip)
     sfree((void**)&r->key_name);
     sfree((void**)&r->key_value);
 
-    r->key_name=utf8_to_ucs(extension_string("KeyName",0x3,ip,NULL));
-    r->key_value=utf8_to_ucs(extension_string("KeyValue",0x3,ip,NULL));
-    r->mon=extension_bool("QueryChange",ip,1);
+    r->key_name=utf8_to_ucs(param_string("KeyName",0x3,ip,NULL));
+    r->key_value=utf8_to_ucs(param_string("KeyValue",0x3,ip,NULL));
+    r->mon=param_bool("QueryChange",ip,1);
 
     if(r->rt)
     {

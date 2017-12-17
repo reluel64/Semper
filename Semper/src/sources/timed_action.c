@@ -47,7 +47,7 @@ typedef struct
 
 typedef struct
 {
-    void *ip;		/*our path to extension_send_command*/
+    void *ip;		/*our path to send_command*/
     list_entry current;
     list_entry act_chain;
     size_t action_index;
@@ -142,7 +142,7 @@ static void *timed_action_exec(void *pv)
             pthread_mutex_t lmtx;
             int ret=0;
             pthread_mutex_lock(&tal->mtx);
-            tal->act!=NULL?extension_send_command(tl->ip,tal->act):0;
+            tal->act!=NULL?send_command(tl->ip,tal->act):0;
             pthread_mutex_unlock(&tal->mtx);
 
             gettimeofday(&tv, NULL);
@@ -293,7 +293,7 @@ size_t timed_action_fill_list(list_entry *head,string_tokenizer_info *sti,void *
                 {
                     unsigned char *kn=zmalloc((end-start)+1);
                     strncpy(kn,sti->buffer+start,end-start);
-                    tal->act=clone_string(extension_string(kn,EXTENSION_XPAND_ALL,ip,NULL));
+                    tal->act=clone_string(param_string(kn,EXTENSION_XPAND_ALL,ip,NULL));
                     sfree((void**)&kn);
                     step++;
                 }
@@ -324,7 +324,7 @@ size_t timed_action_fill_list(list_entry *head,string_tokenizer_info *sti,void *
             {
                 unsigned char *kn=zmalloc((end-start)+1);
                 strncpy(kn,sti->buffer+start,end-start);
-                tal->act=clone_string(extension_string(kn,EXTENSION_XPAND_ALL,ip,NULL));
+                tal->act=clone_string(param_string(kn,EXTENSION_XPAND_ALL,ip,NULL));
                 sfree((void**)&kn);
             }
         }
@@ -412,7 +412,7 @@ void timed_action_reset(void *spv,void *ip)
 
         string_tokenizer_info sti=
         {
-            .buffer= clone_string(extension_string(kn,EXTENSION_XPAND_ALL,ip,NULL)),
+            .buffer= clone_string(param_string(kn,EXTENSION_XPAND_ALL,ip,NULL)),
             .oveclen=0,
             .ovecoff=NULL,
             .filter_data=&tats,

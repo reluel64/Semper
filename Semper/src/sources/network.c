@@ -114,7 +114,7 @@ void network_reset(void *spv,void *ip)
 
     network *n=spv;
     char *t=NULL;
-    unsigned char *p=extension_string("Type",EXTENSION_XPAND_ALL,ip,"Total");
+    unsigned char *p=param_string("Type",EXTENSION_XPAND_ALL,ip,"Total");
 
     if(p)
     {
@@ -128,8 +128,8 @@ void network_reset(void *spv,void *ip)
             n->inf=unknown;
     }
 
-    n->qty=extension_bool("Quantity",ip,0);
-    p=extension_string("Interface",EXTENSION_XPAND_ALL,ip,"0");
+    n->qty=param_bool("Quantity",ip,0);
+    p=param_string("Interface",EXTENSION_XPAND_ALL,ip,"0");
     n-> if_index=strtoul(p,&t,10);
 #ifdef WIN32
 

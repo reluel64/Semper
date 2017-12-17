@@ -120,7 +120,7 @@ void init(void **spv,void *ip)
 {
     disk_speed *ds=malloc(sizeof(disk_speed));
     memset(ds,0,sizeof(disk_speed));
-    unsigned char *s=extension_string("DiskName",EXTENSION_XPAND_ALL,ip,NULL);
+    unsigned char *s=param_string("DiskName",EXTENSION_XPAND_ALL,ip,NULL);
     if(s)
         ds->disk_name=strdup(s);
     *spv=ds;
@@ -129,7 +129,7 @@ void init(void **spv,void *ip)
 void reset(void *spv,void *ip)
 {
     disk_speed *ds=spv;
-    unsigned char *s=extension_string("DiskSpeedType",EXTENSION_XPAND_ALL,ip,"RWTotal");
+    unsigned char *s=param_string("DiskSpeedType",EXTENSION_XPAND_ALL,ip,"RWTotal");
 
     if(s)
     {

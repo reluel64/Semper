@@ -168,18 +168,18 @@ void surface_lister_reset(void* spv, void* ip)
 {
     surface_lister* sl = spv;
     control_data* cd = sl->cd;
-    unsigned char* temp = extension_string("Path", EXTENSION_XPAND_VARIABLES, ip, NULL);
+    unsigned char* temp = param_string("Path", EXTENSION_XPAND_VARIABLES, ip, NULL);
 
-    void* parent = extension_get_parent(temp, ip);
+    void* parent = get_parent(temp, ip);
 
     if(parent)
     {
-        sl->index=extension_size_t("ChildIndex",ip,0);
-        sl->parent=extension_private(parent);
+        sl->index=param_size_t("ChildIndex",ip,0);
+        sl->parent=get_private_data(parent);
     }
     else
     {
-        sl->child_count=extension_size_t("ChildCount",ip,0);
+        sl->child_count=param_size_t("ChildCount",ip,0);
         sl->base_path=cd->surface_dir;
         sl->path=sl->base_path;
         sl->base_len=cd->surface_dir_length;
@@ -295,7 +295,7 @@ void surface_lister_command(void* spv, unsigned char* command)
                     size_t dir_len=string_length(slfl->display_name);
                     unsigned char *temp=zmalloc(15+dir_len+path_len); //space for null and for slash
                     snprintf(temp,15+dir_len+path_len,"LoadSurface(%s,%s)",parent->path+parent->base_len+1,slfl->display_name);
-                    extension_send_command(parent->ip,temp);
+                    send_command(parent->ip,temp);
                     sfree((void**)&temp);
                 }
             }
@@ -306,7 +306,7 @@ void surface_lister_command(void* spv, unsigned char* command)
 
                 unsigned char *temp=zmalloc(18+path_len); //space for null and for slash
                 snprintf(temp,18+path_len,"unLoadSurface(%s)",parent->path+parent->base_len+1);
-                extension_send_command(parent->ip,temp);
+                send_command(parent->ip,temp);
                 sfree((void**)&temp);
             }
         }

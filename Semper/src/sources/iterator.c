@@ -19,13 +19,13 @@ void iterator_reset(void* spv, void* ip)
 {
     iterator_info* ii = spv;
 
-    ii->start_value = (long)extension_double("IteratorStart", ip, 0.0);
-    ii->end_value = (long)extension_double("IteratorStop", ip, 100.0);
-    ii->step = (long)extension_double("IteratorStep", ip, 1.0);
-    ii->rep_count = extension_size_t("IteratorCount", ip, 0);
+    ii->start_value = (long)param_double("IteratorStart", ip, 0.0);
+    ii->end_value = (long)param_double("IteratorStop", ip, 100.0);
+    ii->step = (long)param_double("IteratorStep", ip, 1.0);
+    ii->rep_count = param_size_t("IteratorCount", ip, 0);
     ii->current_value = ii->start_value;
-    extension_set_min((double)ii->start_value, ip, 1, 1);
-    extension_set_max((double)ii->end_value, ip, 1, 1);
+    source_set_min((double)ii->start_value, ip, 1, 1);
+    source_set_max((double)ii->end_value, ip, 1, 1);
 }
 
 double iterator_update(void* spv)

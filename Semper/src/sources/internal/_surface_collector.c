@@ -41,12 +41,12 @@ void surfaces_collector_reset(void* spv, void* ip)
 {
 
     surfaces_collector_data* scd = spv;
-    void* p = extension_get_parent(extension_string("Parent", EXTENSION_XPAND_VARIABLES, ip, NULL), ip);
+    void* p = get_parent(param_string("Parent", EXTENSION_XPAND_VARIABLES, ip, NULL), ip);
 
-    scd->parent = extension_private(p);
+    scd->parent = get_private_data(p);
 
     if(scd->parent)
-        scd->index = (size_t)extension_double("ChildIndex", ip, 0);
+        scd->index = (size_t)param_double("ChildIndex", ip, 0);
 }
 
 double surfaces_collector_update(void* spv)
@@ -140,7 +140,7 @@ void surfaces_collector_command(void* spv, unsigned char* command)
 
                 unsigned char *temp=zmalloc(18+path_len); //space for null and for slash
                 snprintf(temp,18+path_len,"unLoadSurface(%s)",sd->sp.surface_rel_dir);
-                extension_send_command(scd->ip,temp);
+                send_command(scd->ip,temp);
                 sfree((void**)&temp);
             }
         }

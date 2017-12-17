@@ -31,7 +31,7 @@ void diag_show_init(void **spv,void *ip)
 void diag_show_reset(void *spv,void *ip)
 {
     diag_show *ds=spv;
-    ds->max_msg=extension_size_t("LogCount",ip,1);
+    ds->max_msg=param_size_t("LogCount",ip,1);
 }
 
 double diag_show_update(void *spv)

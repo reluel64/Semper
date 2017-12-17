@@ -47,7 +47,7 @@ typedef struct
     void *ip;
     crosswin_window *w;
     list_entry commands;
-    extension_string_tokenizer_info esti;
+    tokenize_string_info tsi;
 } input_text;
 
 
@@ -59,7 +59,7 @@ typedef struct
 } input_tokenizer_status;
 
 
-static int input_parse_string_filter(extension_string_tokenizer_status *pi, void* pv)
+static int input_parse_string_filter(tokenize_string_status *pi, void* pv)
 {
     input_tokenizer_status* its = pv;
 
@@ -99,7 +99,7 @@ static int input_get_command(input_text *it)
     while(1)
     {
 
-        if(it->ovec_pos>=it->esti.oveclen/2)
+        if(it->ovec_pos>=it->tsi.oveclen/2)
         {
             if(it->start_command<it->end_command)
             {
@@ -117,35 +117,35 @@ static int input_get_command(input_text *it)
 
         list_enum_part(itc,&it->commands,current)
         {
-            if(it->ovec_pos>=it->esti.oveclen/2)
+            if(it->ovec_pos>=it->tsi.oveclen/2)
             {
-                extension_tokenize_string_free(&it->esti);
+                tokenize_string_free(&it->tsi);
             }
 
             if(itc->index== it->wcommand)
             {
-                if(it->ovec_pos>=it->esti.oveclen/2)
+                if(it->ovec_pos>=it->tsi.oveclen/2)
                 {
                     it->ovec_pos=0;
                     it->current_command=itc->command;
 
                     input_tokenizer_status its= {0};
 
-                    it->esti.string_tokenizer_filter=input_parse_string_filter;
-                    it->esti.filter_data=&its;
-                    it->esti.buffer=itc->command;
-                    extension_tokenize_string(&it->esti);
-                    it->esti.string_tokenizer_filter=NULL;
-                    it->esti.filter_data=NULL;
+                    it->tsi.tokenize_string_filter=input_parse_string_filter;
+                    it->tsi.filter_data=&its;
+                    it->tsi.buffer=itc->command;
+                    tokenize_string(&it->tsi);
+                    it->tsi.tokenize_string_filter=NULL;
+                    it->tsi.filter_data=NULL;
                 }
                 else
                 {
                     it->ovec_pos++;
                 }
 
-                for(; it->ovec_pos<it->esti.oveclen/2; it->ovec_pos++)
+                for(; it->ovec_pos<it->tsi.oveclen/2; it->ovec_pos++)
                 {
-                    for(size_t i=it->esti.ovecoff[it->ovec_pos*2]; it->esti.ovecoff[it->ovec_pos*2+1]-i>=11; i++)
+                    for(size_t i=it->tsi.ovecoff[it->ovec_pos*2]; it->tsi.ovecoff[it->ovec_pos*2+1]-i>=11; i++)
                     {
                         unsigned char *str=it->current_command+i;
 
@@ -163,11 +163,11 @@ static int input_get_command(input_text *it)
                     }
                     else
                     {
-                        unsigned char *comm=it->current_command+it->esti.ovecoff[it->ovec_pos*2];
-                        unsigned char temp=it->current_command[it->esti.ovecoff[it->ovec_pos*2+1]];
-                        it->current_command[it->esti.ovecoff[it->ovec_pos*2+1]]=0;
-                        extension_send_command(it->ip,comm);
-                        it->current_command[it->esti.ovecoff[it->ovec_pos*2+1]]=temp;
+                        unsigned char *comm=it->current_command+it->tsi.ovecoff[it->ovec_pos*2];
+                        unsigned char temp=it->current_command[it->tsi.ovecoff[it->ovec_pos*2+1]];
+                        it->current_command[it->tsi.ovecoff[it->ovec_pos*2+1]]=0;
+                        send_command(it->ip,comm);
+                        it->current_command[it->tsi.ovecoff[it->ovec_pos*2+1]]=temp;
                     }
                 }
 
@@ -210,10 +210,10 @@ static void input_exec_handler(input_text *it)
     it->buf_pos=0;
     input_update_ret_buf(it);
 
-    if(it->ovec_pos<it->esti.oveclen/2&&user_inp)
+    if(it->ovec_pos<it->tsi.oveclen/2&&user_inp)
     {
-        size_t start=it->esti.ovecoff[it->ovec_pos*2];
-        size_t end=it->esti.ovecoff[it->ovec_pos*2+1];
+        size_t start=it->tsi.ovecoff[it->ovec_pos*2];
+        size_t end=it->tsi.ovecoff[it->ovec_pos*2+1];
 
         if(it->current_command[start]==';')
             start++;
@@ -229,7 +229,7 @@ static void input_exec_handler(input_text *it)
         sfree((void**)&temp);
         sfree((void**)&pair);
 
-        extension_send_command(it->ip,final_command);
+        send_command(it->ip,final_command);
         sfree((void**)&final_command);
     }
 
@@ -239,9 +239,9 @@ static void input_exec_handler(input_text *it)
     {
         it->ovec_pos=0;
         it->active=0;
-        it->esti.oveclen=0;
+        it->tsi.oveclen=0;
         it->ret_str[it->ret_str_len]=0;
-        extension_tokenize_string_free(&it->esti);
+        tokenize_string_free(&it->tsi);
         crosswin_set_kbd_handler(it->w,NULL,NULL);
     }
 }
@@ -274,7 +274,7 @@ static void input_populate_list(input_text *it)
             continue;
 
         input_text_command *itc=zmalloc(sizeof(input_text_command));
-        itc->command=clone_string(extension_string(ev,EXTENSION_XPAND_ALL,it->ip,NULL));
+        itc->command=clone_string(param_string(ev,EXTENSION_XPAND_ALL,it->ip,NULL));
         //printf("%s\n",itc->command);
         sscanf(ev,"Command%llu",&itc->index);
         list_entry_init(&itc->current);
@@ -308,7 +308,7 @@ static int input_kbd_handler(unsigned int key_code,void *pv)
 
             it->buf[it->buf_pos]=0;
             input_update_ret_buf(it);
-            extension_send_command(it->ip,"UpdateSurface()");
+            send_command(it->ip,"UpdateSurface()");
             return(0);
         }
 
@@ -343,7 +343,7 @@ static int input_kbd_handler(unsigned int key_code,void *pv)
         }
     }
 
-    extension_send_command(it->ip,"UpdateSurface()");
+   send_command(it->ip,"UpdateSurface()");
     return(0);
 }
 
@@ -360,13 +360,13 @@ void input_reset(void *spv,void *ip)
 {
     input_text *it=spv;
     sfree((void**)&it->buf);
-    it->buf_lim=extension_size_t("MaxTextSize",ip,0);
-    it->number_only=extension_bool("NumberOnly",ip,0);
+    it->buf_lim=param_size_t("MaxTextSize",ip,0);
+    it->number_only=param_bool("NumberOnly",ip,0);
     it->ret_str=zmalloc(2);
     it->current_command=NULL;
     input_populate_list(it);
 
-    extension_tokenize_string_free(&it->esti);
+    tokenize_string_free(&it->tsi);
     it->ovec_pos=0;
 
     if(it->buf_lim)
@@ -432,9 +432,9 @@ void input_command(void *spv,unsigned char *comm)
         else if(it->active==1&&!strcasecmp(comm,"StopRead") && it->w->kb_data==it)
         {
             it->active=0;
-            extension_tokenize_string_free(&it->esti);
+            tokenize_string_free(&it->tsi);
             it->ovec_pos=0;
-            it->esti.oveclen=0;
+            it->tsi.oveclen=0;
             crosswin_set_kbd_handler(it->w,NULL,NULL);
             it->ret_str[it->ret_str_len]=0;
         }
@@ -446,7 +446,7 @@ void input_destroy(void **spv)
     input_text *it=*spv;
     sfree((void**)&it->ret_str);
     sfree((void**)&it->buf);
-    extension_tokenize_string_free(&it->esti);
+    tokenize_string_free(&it->tsi);
     input_destroy_list(it);
 
     if(it->w->kb_data==it)

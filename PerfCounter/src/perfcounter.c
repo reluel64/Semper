@@ -101,7 +101,7 @@ void reset(void *spv,void *ip)
     }
 
 
-    ws=extension_string("PerfInstance",0x3,ip,NULL);
+    ws=param_string("PerfInstance",0x3,ip,NULL);
 
     if(ws)
     {
@@ -112,7 +112,7 @@ void reset(void *spv,void *ip)
         instance_name[0]=0;
     }
 
-    ws=extension_string("PerfObject",0x3,ip,NULL);
+    ws=param_string("PerfObject",0x3,ip,NULL);
 
     if(ws)
     {
@@ -123,7 +123,7 @@ void reset(void *spv,void *ip)
         object_name[0]=0;
     }
 
-    ws=extension_string("PerfCounter",0x3,ip,NULL);
+    ws=param_string("PerfCounter",0x3,ip,NULL);
 
     if(ws)
     {
@@ -134,7 +134,7 @@ void reset(void *spv,void *ip)
         counter_name[0]=0;
     }
 
-    pc->delta=extension_bool("PerfDelta",ip,1);
+    pc->delta=param_bool("PerfDelta",ip,1);
 
 
     PdhOpenQueryW(NULL,0,&pc->phq);

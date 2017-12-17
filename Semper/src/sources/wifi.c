@@ -166,10 +166,10 @@ void wifi_reset(void *spv,void *ip)
 {
     wifi_data *wd=spv;
     unsigned char *s=NULL;
-    wd->wifi_index=extension_size_t("WiFiInterfaceIndex",ip,0);
-    wd->list_limit=extension_size_t("WiFiListEntries",ip,10);
-    wd->list_lvl=(unsigned char)extension_size_t("WifiListLevel",ip,0);
-    s=extension_string("WifiInfo",0x3,ip,"List");
+    wd->wifi_index=param_size_t("WiFiInterfaceIndex",ip,0);
+    wd->list_limit=param_size_t("WiFiListEntries",ip,10);
+    wd->list_lvl=(unsigned char)param_size_t("WifiListLevel",ip,0);
+    s=param_string("WifiInfo",0x3,ip,"List");
 
     if(s)
     {
@@ -201,13 +201,13 @@ void wifi_reset(void *spv,void *ip)
 
     if(wd->inf==quality)
     {
-        extension_set_max(100.0,ip,1,1);
-        extension_set_min(0.0,ip,1,1);
+        source_set_max(100.0,ip,1,1);
+        source_set_min(0.0,ip,1,1);
     }
     else
     {
-        extension_set_max(0.0,ip,1,0);
-        extension_set_min(0.0,ip,1,0);
+        source_set_max(0.0,ip,1,0);
+        source_set_min(0.0,ip,1,0);
     }
 }
 
