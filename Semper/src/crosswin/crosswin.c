@@ -205,11 +205,15 @@ void crosswin_show(crosswin_window* w)
 
 void crosswin_destroy(crosswin_window** w)
 {
+    if(w&&*w)
+    {
 #ifdef WIN32
-    win32_destroy_window(w);
+        win32_destroy_window(w);
 #elif __linux__
-    xlib_destroy_window(w);
+        xlib_destroy_window(w);
 #endif
+
+    }
 }
 
 void crosswin_draggable(crosswin_window* w, unsigned char draggable)

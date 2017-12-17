@@ -597,14 +597,19 @@ void surface_reload(surface_data* sd)
     {
         surface_destroy_structs(sd, 1);
         surface_init(&sd->sp, sd->cd, &sd,0);
+        surface_init_update(sd);
     }
 }
 
 surface_data *surface_load_memory(control_data *cd,unsigned char *buf,size_t buf_sz,surface_data **sd)
 {
     surface_reader_stat srs= {.size = buf_sz, .buf = buf, .current = 0 };
-
-    return( surface_init(&srs, cd, sd,1));
+    surface_data *rsd=surface_init(&srs, cd, sd,1);
+    if(rsd)
+    {
+        surface_init_update(rsd);
+    }
+    return(rsd);
 }
 
 size_t surface_load(control_data* cd, unsigned char* name, size_t variant)
@@ -819,13 +824,34 @@ static int ini_handler(surface_create_skeleton_handler)
     return (0);
 }
 
+void surface_init_update(surface_data *sd)
+{
+    size_t temp_cycle = 0;
+    surface_window_init(sd);                                                   // initialize window
+    surface_reset(sd); // set or reset the surface parameters
+    surface_init_items(sd);                                                    // initialize sources and objects
+
+    crosswin_click_through(sd->sw, sd->clkt);
+    crosswin_set_position(sd->sw, sd->x, sd->y);
+    crosswin_draggable(sd->sw, sd->draggable);
+    crosswin_keep_on_screen(sd->sw, sd->keep_on_screen);
+    crosswin_set_window_z_order(sd->sw, sd->zorder);
+    mouse_set_actions(sd, MOUSE_SURFACE);
+
+    temp_cycle = sd->cycle;
+    sd->cycle = 0;
+    surface_update(sd);
+    sd->cycle = temp_cycle;
+    event_push(sd->cd->eq, (event_handler)surface_fade, (void*)sd,0,0);
+}
+
 static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,unsigned char memory)
 {
     surface_paths *sp=pv;
 
     surface_data* tsd = NULL;
     skeleton_handler_data shd = { 0 };
-    size_t temp_cycle = 0;
+
     int valid = 0;
 
     if(sd)
@@ -921,25 +947,11 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
     }
 
 #endif
-    surface_window_init(tsd);                                                   // initialize window
-    surface_reset(tsd); // set or reset the surface parameters
-    surface_init_items(tsd);                                                    // initialize sources and objects
-
-    crosswin_click_through(tsd->sw, tsd->clkt);
-    crosswin_set_position(tsd->sw, tsd->x, tsd->y);
-    crosswin_draggable(tsd->sw, tsd->draggable);
-    crosswin_keep_on_screen(tsd->sw, tsd->keep_on_screen);
-    crosswin_set_window_z_order(tsd->sw, tsd->zorder);
-    mouse_set_actions(tsd, MOUSE_SURFACE);
-
-    temp_cycle = tsd->cycle;
-    tsd->cycle = 0;
-    surface_update(tsd);
-    tsd->cycle = temp_cycle;
-    event_push(tsd->cd->eq, (event_handler)surface_fade, (void*)tsd,0,0);
 
     return (tsd);
 }
+
+
 
 void surface_fade(surface_data* sd)
 {
@@ -1032,7 +1044,6 @@ int surface_update(surface_data* sd)
     }
 
     sd->cycle++; // increment the surface update cycle
-
 
     if(sd->uf!=(size_t)-1)
     {

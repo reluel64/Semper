@@ -657,6 +657,10 @@ COMMAND_HANDLER(handler_load_surface)
     else
     {
         ld_srf = surface_by_name(sd->cd, ap->pms[0]);
+        if(ld_srf)
+        {
+            surface_init_update(ld_srf);
+        }
     }
 
     if(ld_srf)

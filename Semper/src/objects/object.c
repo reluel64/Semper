@@ -344,9 +344,6 @@ int object_tooltip_update(object *o)
     surface_data *tsd=o->ttip;
     surface_data *sd=o->sd;
 
-
-
-
     if(o->ttip_title)
     {
         string_bind titsb= {0};
@@ -411,10 +408,19 @@ int object_tooltip_update(object *o)
         command(o->ttip,&empty_txt);
     }
 
-
-    surface_update(o->ttip);
+    unsigned char *show_fade="ShowFade()";
+    /*The tooltip relies on the parent object to update its contents.
+     * Therefore, we need 3 update cycles to have everything nice
+     * Cycles:
+     * 1) Update the Title and the Text with the parameters set above
+     * 2) Update the backround size
+     * 3) Update the reflect the new content*/
+    for(int iter=0; iter<3; iter++)
+    {
+        surface_update(o->ttip);
+    }
     crosswin_set_position(tsd->sw, (o->x+o->w/2+sd->x)-tsd->w/2,  o->y+o->h+sd->y);
-
+    command(o->ttip,&show_fade);
     return(0);
 }
 

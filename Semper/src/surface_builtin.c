@@ -30,7 +30,7 @@ static inline unsigned char* surface_builtin_code(size_t* size,surface_builtin_t
         "[Surface]\n"
         "SurfaceColor=0x0\n"
         "AutoSize=1\n"
-        "Updatefrequency=1\n"
+        "Updatefrequency=-1\n"
 
         "[Arrow]\n"
         "Object=String\n"
@@ -191,16 +191,17 @@ int surface_builtin_init(void *holder,surface_builtin_type tp)
 
             if(o->ttip == NULL&&(o->ttip_text||o->ttip_title))
             {
-
                 size_t buf_sz=0;
                 unsigned char *buf=surface_builtin_code(&buf_sz,tp);
                 surface_data* sd =surface_load_memory(cd,buf,buf_sz,NULL);
-
+                sd->hidden=1;
                 crosswin_set_position(sd->sw, (o->x+osd->x),  o->y+o->h+osd->y);
 
                 crosswin_click_through(sd->sw,1);
+
                 crosswin_set_window_z_order(sd->sw,crosswin_topmost);
                 o->ttip=sd;
+                crosswin_hide(sd->sw);
                 object_tooltip_update(o);
 
                 return(0);

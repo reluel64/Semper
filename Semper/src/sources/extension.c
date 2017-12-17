@@ -174,8 +174,30 @@ static int extension_command_handler(extension_command* ec)
     {
         return (-1);
     }
+    surface_data *sd=NULL;
+    int command_exec=0;
+    list_enum_part(sd,&ec->cd->surfaces,current)
+    {
+        if(ec->sd==sd)
+        {
+            command(ec->sd, &ec->comm);
+            command_exec=1;
+            break;
+        }
+    }
 
-    command(ec->sd, &ec->comm);
+    if(command_exec==0)
+    {
+        if(ec->cd->srf_reg==ec->sd)
+        {
+            command(ec->sd, &ec->comm);
+            command_exec=1;
+        }
+    }
+    if(command_exec)
+    {
+        diag_warn("%s %d Surface %p was not found",__FUNCTION__,__LINE__,ec->sd);
+    }
     sfree((void**)&ec->comm);
     sfree((void**)&ec);
 
@@ -191,6 +213,7 @@ SEMPER_API void send_command(void* ir, unsigned char* cmd)
         control_data* cd = sd->cd;
         extension_command* ec = zmalloc(sizeof(extension_command));
         ec->sd = sd;
+        ec->cd=cd;
         ec->comm = clone_string(cmd);
         event_push(cd->eq, (event_handler)extension_command_handler, (void*)ec, 0, EVENT_PUSH_TAIL); //we will queue this event to be processed later
     }

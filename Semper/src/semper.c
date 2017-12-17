@@ -179,6 +179,12 @@ static size_t semper_load_surfaces(control_data* cd)
     }
     while((s = skeleton_next_section(s, &cd->shead)));
 
+    surface_data *sd=NULL;
+    /*do the last step for  initialization*/
+    list_enum_part(sd,&cd->surfaces,current)
+    {
+         surface_init_update(sd);
+    }
     return(srf_loaded);
 }
 

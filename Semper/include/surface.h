@@ -102,3 +102,4 @@ int surface_change_variant(surface_data* sd, unsigned char* vf);
 void surface_fade(surface_data* sd);
 surface_data *surface_load_memory(control_data *cd,unsigned char *buf,size_t buf_sz,surface_data **sd);
 int surface_adjust_size(surface_data *sd);
+void surface_init_update(surface_data *sd);

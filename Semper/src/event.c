@@ -191,7 +191,6 @@ void event_remove(event_queue* eq, event_handler eh, void* pv, unsigned char fla
 
 int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout, unsigned char flags)
 {
-
     if(flags & EVENT_REMOVE_BY_DATA_HANDLER)
     {
         event_remove(eq, handler, pv, flags);
@@ -199,7 +198,7 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
 
     pthread_mutex_lock(&eq->mutex);
 
-    if(eq->ce && (flags==0||((flags&EVENT_PUSH_TIMER)&&timeout<1)))
+    if(eq->ce && flags==0)
     {
         if(eq->ce->handler==handler&&eq->ce->pv==pv) //defer the event until the next cycle to avoid a busyloop
         {
@@ -208,7 +207,7 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
     }
 
     pthread_mutex_unlock(&eq->mutex);
-    flags=(timeout>=1?flags:(flags&~EVENT_PUSH_TIMER));
+    timeout=(timeout>=16?timeout:16);
     event* e = zmalloc(sizeof(event));
     list_entry_init(&e->current);
 

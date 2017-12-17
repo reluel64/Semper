@@ -420,7 +420,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
         unsigned char *n=NULL;
         double v=0.0;
 
-
+#if 0
         v=(double)strtoll(f+i,(char**)&n,2);
 
         if(toupper(n[0])!='B')
@@ -437,14 +437,14 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
         {
             v=(double)strtoll(f+i,(char**)&n,8);
 
-            if(isdigit(n[0]))
+            if(isdigit(n[0])||n[0]=='\0')
             {
                 n=NULL;
                 v=0.0;
             }
         }
 
-
+#endif
         if(n==NULL)
         {
             v=strtod(f+i,(char**)&n);
