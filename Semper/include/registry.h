@@ -66,7 +66,7 @@
 "WorkingSurface=\"Dummy\"\n"
 "\n"
 "Diff=60\n"
-"ListRepCount=20\n"
+"ListRepCount=5\n"
 "ListRepDelay=60\n"
 "US=UpdateSurface()\n"
 ";We should add some timers here to have some\n"

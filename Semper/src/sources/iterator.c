@@ -5,7 +5,7 @@
  */
 
 #include <sources/iterator.h>
-#include <sources/extension.h>
+#include <semper_api.h>
 #include <mem.h>
 
 void iterator_init(void** spv, void* ip)

@@ -699,6 +699,8 @@ static int semper_desktop_checker(control_data *cd)
 
 int main(void)
 {
+   // double v=0;
+   // math_parser("0.01+2",&v,NULL,NULL);
     control_data* cd = zmalloc(sizeof(control_data));
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
@@ -755,5 +757,3 @@ int main(void)
     semper_save_configuration(cd);
     return (0);
 }
-
-//---------------------------------------------------------------------------

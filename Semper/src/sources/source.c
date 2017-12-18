@@ -11,7 +11,7 @@ Written by Alexandru-Daniel Mărgărit
 #include <string_util.h>
 #include <mem.h>
 #include <sources/action.h>
-#include <sources/extension.h>
+#include <semper_api.h>
 #include <bind.h>
 #include <skeleton.h>
 #include <sources/disk.h>

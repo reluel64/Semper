@@ -10,7 +10,7 @@
 #elif __linux__
 #include <sys/stat.h>
 #endif
-#include <sources/extension.h>
+#include <semper_api.h>
 #include <pcre.h>
 #include <sources/source.h>
 #include <stdio.h>

@@ -14,7 +14,7 @@
 #include <surface.h>
 #include <crosswin/crosswin.h>
 #include <sources/source.h>
-#include <sources/extension.h>
+#include <semper_api.h>
 #include <ctype.h>
 #include <enumerator.h>
 

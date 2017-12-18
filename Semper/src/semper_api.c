@@ -1,11 +1,11 @@
 /*
-Extension API
-Part of Project "Semper"
-Written by Alexandru-Daniel Mărgărit
+* Semper API
+* Part of Project "Semper"
+* Written by Alexandru-Daniel Mărgărit
 */
 
 #include <surface.h>
-#include <sources/extension.h>
+#include <semper_api.h>
 #include <math.h>
 #include <mem.h>
 #include <string_util.h>
@@ -194,7 +194,7 @@ static int extension_command_handler(extension_command* ec)
             command_exec=1;
         }
     }
-    if(command_exec)
+    if(command_exec==0)
     {
         diag_warn("%s %d Surface %p was not found",__FUNCTION__,__LINE__,ec->sd);
     }
@@ -215,7 +215,7 @@ SEMPER_API void send_command(void* ir, unsigned char* cmd)
         ec->sd = sd;
         ec->cd=cd;
         ec->comm = clone_string(cmd);
-        event_push(cd->eq, (event_handler)extension_command_handler, (void*)ec, 0, EVENT_PUSH_TAIL); //we will queue this event to be processed later
+        event_push(cd->eq, (event_handler)extension_command_handler, (void*)ec, 0, 0); //we will queue this event to be processed later
     }
 }
 

@@ -21,7 +21,6 @@
       <File Name="src/sources/average.c"/>
       <File Name="src/sources/calculator.c"/>
       <File Name="src/sources/disk.c"/>
-      <File Name="src/sources/extension.c"/>
       <File Name="src/sources/folderinfo.c"/>
       <File Name="src/sources/folderview.c"/>
       <File Name="src/sources/input.c"/>
@@ -168,6 +167,7 @@
     <File Name="src/surface_builtin.c"/>
     <File Name="src/team.c"/>
     <File Name="src/xpander.c"/>
+    <File Name="src/semper_api.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <VirtualDirectory Name="sources">
@@ -184,7 +184,6 @@
       <File Name="include/sources/average.h"/>
       <File Name="include/sources/calculator.h"/>
       <File Name="include/sources/disk.h"/>
-      <File Name="include/sources/extension.h"/>
       <File Name="include/sources/folderinfo.h"/>
       <File Name="include/sources/folderview.h"/>
       <File Name="include/sources/input.h"/>
@@ -261,6 +260,7 @@
     <File Name="include/surface_builtin.h"/>
     <File Name="include/team.h"/>
     <File Name="include/xpander.h"/>
+    <File Name="include/semper_api.h"/>
   </VirtualDirectory>
   <Description/>
   <Dependencies/>
@@ -380,7 +380,7 @@
         <Command Enabled="yes">mkdir $(WorkspacePath)\SDK</Command>
       </PreBuild>
       <PostBuild>
-        <Command Enabled="yes">copy $(ProjectPath)\include\sources\extension.h $(WorkspacePath)\SDK\extension.h</Command>
+        <Command Enabled="yes">copy $(ProjectPath)\include\semper_api.h $(WorkspacePath)\SDK\extension.h</Command>
       </PostBuild>
       <CustomBuild Enabled="no">
         <RebuildCommand/>

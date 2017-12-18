@@ -3,7 +3,7 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  */
-#include <sources/extension.h>
+#include <semper_api.h>
 #include <string_util.h>
 #include <linked_list.h>
 #include <sources/source.h>

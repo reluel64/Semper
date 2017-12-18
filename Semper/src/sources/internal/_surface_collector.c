@@ -5,7 +5,7 @@
  * */
 
 #include <semper.h>
-#include <sources/extension.h>
+#include <semper_api.h>
 #include <sources/source.h>
 #include <mem.h>
 #include <string_util.h>

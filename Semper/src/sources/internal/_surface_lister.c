@@ -10,7 +10,7 @@
 #include <surface.h>
 #include <string_util.h>
 #include <mem.h>
-#include <sources/extension.h>
+#include <semper_api.h>
 #include <semper.h>
 #include <linked_list.h>
 #ifdef __linux__

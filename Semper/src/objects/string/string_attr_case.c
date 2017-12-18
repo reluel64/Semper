@@ -5,7 +5,7 @@ Wrriten by Alexandru-Daniel Mărgărit
 */
 #include <pango/pango.h>
 #include <mem.h>
-#include <sources/extension.h>
+#include <semper_api.h>
 #include <objects/string/string_attr.h>
 #include <string_util.h>
 static PangoAttribute *string_attr_case_copy(const PangoAttribute *pa)

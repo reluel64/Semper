@@ -1,7 +1,7 @@
 /*Surface source*/
 
 #include <sources/source.h>
-#include <sources/extension.h>
+#include <semper_api.h>
 #include <semper.h>
 #include <surface.h>
 #include <mem.h>

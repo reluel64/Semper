@@ -5,7 +5,7 @@
  */
 #include <sources/processor.h>
 #include <mem.h>
-#include <sources/extension.h>
+#include <semper_api.h>
 #include <string_util.h>
 #ifdef WIN32
 #include <windows.h>
