@@ -363,9 +363,10 @@
         <Library Value="gcrypt"/>
         <Library Value="gpg-error"/>
         <Library Value="gfortran"/>
+        <Library Value="dwmapi"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" IntermediateDirectory="$(WorkspacePath)/build/$(ProjectName)" Command="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(WorkspacePath)/bin/$(ConfigurationName)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <General OutputFile="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" IntermediateDirectory="$(WorkspacePath)/build/$(ProjectName)" Command="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" CommandArguments="-f" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(WorkspacePath)/bin/$(ConfigurationName)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
       <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
@@ -380,7 +381,7 @@
         <Command Enabled="yes">mkdir $(WorkspacePath)\SDK</Command>
       </PreBuild>
       <PostBuild>
-        <Command Enabled="yes">copy $(ProjectPath)\include\semper_api.h $(WorkspacePath)\SDK\extension.h</Command>
+        <Command Enabled="yes">copy $(ProjectPath)\include\semper_api.h $(WorkspacePath)\SDK\semper_api.h</Command>
       </PostBuild>
       <CustomBuild Enabled="no">
         <RebuildCommand/>
@@ -602,7 +603,7 @@
         <Command Enabled="yes">mkdir $(WorkspacePath)\SDK</Command>
       </PreBuild>
       <PostBuild>
-        <Command Enabled="yes">copy $(ProjectPath)\include\sources\extension.h $(WorkspacePath)\SDK\extension.h</Command>
+        <Command Enabled="yes">copy $(ProjectPath)\include\semper_api.h $(WorkspacePath)\SDK\semper_api.h</Command>
       </PostBuild>
       <CustomBuild Enabled="no">
         <RebuildCommand/>

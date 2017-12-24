@@ -311,27 +311,19 @@ static void bind_create_strings(object* o, string_bind* sb)
             switch(sb->self_scaling)
             {
                 case 1:
-                    for(formula = s->d_info; formula > 1024.0; formula /= 1024.0, ++mul)
-                        ;
-
+                    for(formula = s->d_info; formula > 1024.0; formula /= 1024.0, ++mul);
                     break;
 
                 case 2:
-                    for(formula = s->d_info; formula > 1000.0; formula /= 1000.0, ++mul)
-                        ;
-
+                    for(formula = s->d_info; formula > 1000.0; formula /= 1000.0, ++mul);
                     break;
 
                 case 3:
-                    for(formula = s->d_info; formula > 1024.0 * 1024; formula /= (1024.0 * 1024), ++mul)
-                        ;
-
+                    for(formula = s->d_info; formula > 1024.0 * 1024; formula /= (1024.0 * 1024), ++mul);
                     break;
 
                 case 4:
-                    for(formula = s->d_info; formula > 1000.0 * 1000; formula /= (1000.0 * 1000), ++mul)
-                        ;
-
+                    for(formula = s->d_info; formula > 1000.0 * 1000; formula /= (1000.0 * 1000), ++mul);
                     break;
             }
         }

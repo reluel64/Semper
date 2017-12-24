@@ -183,7 +183,7 @@ static size_t semper_load_surfaces(control_data* cd)
     /*do the last step for  initialization*/
     list_enum_part(sd,&cd->surfaces,current)
     {
-         surface_init_update(sd);
+        surface_init_update(sd);
     }
     return(srf_loaded);
 }
@@ -483,11 +483,15 @@ static void semper_surface_watcher_init(control_data* cd)
 }
 #endif
 
-
-static int semper_load_local_fonts(unsigned char *path)
+typedef struct
 {
-    return(0);
+    FcConfig *conf;
+    FcStrSet *dir_set;
+    FcStrList *dir_list;
+} semper_font_state;
 
+static int semper_build_font_list(unsigned char *path,semper_font_state *sfs)
+{
     if(path==NULL)
     {
         return(-1);
@@ -557,10 +561,16 @@ static int semper_load_local_fonts(unsigned char *path)
         if(dat->d_type==DT_DIR)
 #endif
         {
-            semper_load_local_fonts(ffp);
+            FcStrSetAddFilename(sfs->dir_set,ffp);
+            //semper_build_font_list(ffp,head);
         }
         else
         {
+            /*
+            semper_font_list *sfl=zmalloc(sizeof(semper_font_list));
+            sfl->file=strdup(ffp);
+            list_entry_init(&sfl->current);
+            linked_list_add_last(&sfl->current,head);*/
             /*if(FcConfigAppFontAddFile(NULL, ffp))
             {
                 diag_info("%s %d Added %s\n",__FUNCTION__,__LINE__,ffp);
@@ -593,7 +603,7 @@ void semper_surface_watcher(unsigned long err, unsigned long transferred, void *
 #ifdef WIN32
     semper_overlapped* so = (semper_overlapped*)pv;
     control_data* cd = so->pv;
-    semper_load_local_fonts(cd->root_dir);
+    // semper_load_local_fonts(cd->root_dir);
 
     semper_reload_surfaces_if_modified(cd);
     event_push(cd->eq, (event_handler)semper_surface_watcher_init, (void*)cd, 0, 0);
@@ -621,9 +631,12 @@ void semper_surface_watcher(unsigned long err, unsigned long transferred, void *
 }
 
 
+
+
 #ifdef WIN32
 static int semper_init_fonts(control_data* cd)
 {
+#if 0
     void* conf = FcConfigCreate();
 
     cd->font_cache_dir = expand_env_var("%temp%");
@@ -632,13 +645,40 @@ static int semper_init_fonts(control_data* cd)
 
     FcDirCacheRead(cd->font_cache_dir, 1, conf);
     FcConfigAddCacheDir(conf, cd->font_cache_dir);
-    FcCacheCreateTagFile(conf);
+
 
     unsigned char *font_fldr=expand_env_var("%systemroot%\\Fonts");
-
+    FcCacheCreateTagFile(conf);
     FcConfigAppFontAddDir(conf, font_fldr);
-    semper_load_local_fonts(cd->root_dir);
+    FcStrList *list = FcConfigGetConfigDirs(conf);
+    char *t=FcStrListNext(list);
+
+    // semper_load_local_fonts(cd->root_dir);
     sfree((void**)&font_fldr);
+#endif
+char *zzz=FcConfigGetSysRoot(NULL);
+    semper_font_state sfs= {0};
+    sfs.conf=FcConfigCreate();
+    FcConfigSetCurrent(sfs.conf);
+    sfs.dir_set=FcStrSetCreate();
+    FcConfigEnableHome(0);
+    FcStrSetAddFilename(sfs.dir_set,"C:\\windows\\fonts");
+   // semper_build_font_list("C:\\windows\\fonts",&sfs);
+    sfs.dir_list=FcStrListCreate(sfs.dir_set);
+    FcStrSetDestroy(sfs.dir_set);
+
+    char *d=NULL;
+
+    while(d=FcStrListNext(sfs.dir_list))
+    {
+
+        FcDirCacheRead (d, 1, sfs.conf);
+        printf("Valid %d\n",FcDirCacheValid (d));
+       // printf("%s\n",d);
+    }
+
+      FcCacheCreateTagFile(sfs.conf);
+
     return (0);
 }
 #endif
@@ -646,6 +686,8 @@ static int semper_init_fonts(control_data* cd)
 /*Experimental work to prevent
  *'Show Desktop' from hiding the widgets
  * */
+
+
 
 static int semper_desktop_checker(control_data *cd)
 {
@@ -695,15 +737,19 @@ static int semper_desktop_checker(control_data *cd)
     return(0);
 }
 
-
-
 int main(void)
 {
-   // double v=0;
-   // math_parser("0.01+2",&v,NULL,NULL);
+
+
+   // semper_build_font_list("C:\\windows\\fonts",&font_head);
+
+    //semper_font_list *sfl=NULL;
+
+
     control_data* cd = zmalloc(sizeof(control_data));
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
+
     semper_create_directory_path(cd);
     crosswin_init(&cd->c);
     cd->eq = event_queue_init();
@@ -729,7 +775,7 @@ int main(void)
         surface_builtin_init(cd,catalog); //launch the catalog if no surface has been loaded due to various reasons
     }
 
-    while(1) //nothing fancy, just the main event loop
+    while(cd->c.quit == 0) //nothing fancy, just the main event loop
     {
         event_wait(cd->eq); // wait for an event to occur
 #ifdef __linux__
@@ -747,11 +793,6 @@ int main(void)
 
         crosswin_message_dispatch(&cd->c); // dispatch any windows message
         event_process(cd->eq);             // process the queue
-
-        if(cd->c.quit)
-        {
-            break;
-        }
     }
 
     semper_save_configuration(cd);

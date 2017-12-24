@@ -3,7 +3,7 @@
  * Written by Alexandru-Daniel Mărgărit
  */
 #include <pdh.h>
-#include <SDK/extension.h>
+#include <SDK/semper_api.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <pdhmsg.h>

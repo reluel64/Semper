@@ -8,6 +8,7 @@
 #include <semper.h>
 #include <surface.h>
 #include <event.h>
+#include <dwmapi.h>
 static int win32_prepare_mouse_event(crosswin_window* w, unsigned int message, WPARAM wpm, LPARAM lpm)
 {
     memset(&w->mouse, 0, sizeof(mouse_status));
@@ -301,8 +302,10 @@ void win32_init_class(void)
 
 void win32_init_window(crosswin_window* w)
 {
+    size_t no_peek=1;
     w->window = CreateWindowExW( WS_EX_TOOLWINDOW | WS_EX_LAYERED, L"SemperSurface", L"Surface", WS_POPUP, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
     SetWindowLongPtrW(w->window, GWLP_USERDATA, (LONG_PTR)w);
+    DwmSetWindowAttribute(w->window,DWMWA_EXCLUDED_FROM_PEEK,&no_peek,sizeof(no_peek));
 }
 
 void win32_click_through(crosswin_window* w, unsigned char state)

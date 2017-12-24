@@ -2,7 +2,7 @@
 #include <MAHMSharedMemory.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDK/extension.h>
+#include <SDK/semper_api.h>
 
 typedef struct
 {
@@ -63,7 +63,7 @@ static inline int msi_afterburner_gather_data(MAHM_SHARED_MEMORY_HEADER* hdr,MAH
 {
     void* fm = OpenFileMappingA(FILE_MAP_READ, 0, "Local\\MAHMSharedMemory");
     int ret=-1;
-    
+
     if(fm)
     {
         MAHM_SHARED_MEMORY_HEADER *shd = MapViewOfFile(fm, FILE_MAP_READ, 0, 0, sizeof(MAHM_SHARED_MEMORY_HEADER));

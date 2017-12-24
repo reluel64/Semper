@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <Windows.h>
-#include <SDK/extension.h>
+#include <SDK/semper_api.h>
 
 typedef struct
 {

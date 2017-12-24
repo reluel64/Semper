@@ -3,7 +3,7 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  * */
-#include <SDK/extension.h>
+#include <SDK/semper_api.h>
 #include <windows.h>
 
 #define string_length(s) ((s==NULL?0:strlen(s)))

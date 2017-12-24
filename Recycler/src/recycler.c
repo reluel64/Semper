@@ -4,7 +4,7 @@
 * Written by Alexandru-Daniel Mărgărit
 */
 #include <mem.h>
-#include <SDK/extension.h>
+#include <SDK/semper_api.h>
 #include <pthread.h>
 #include <windows.h>
 #include <stdio.h>

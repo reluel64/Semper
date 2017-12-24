@@ -3,7 +3,7 @@
  * Written by Alexandru-Daniel Mărgărit
  */
 
-#include <SDK/extension.h>
+#include <SDK/semper_api.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <Iphlpapi.h>

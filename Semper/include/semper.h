@@ -69,7 +69,7 @@ typedef struct
     size_t root_dir_length;
     event_queue* eq;                    //main event queue
     void *ich;                          //image cache holder
-    void *ttip;                         //tooltip holder
+    unsigned char shutdown;
     /*Surface Watcher*/
 #ifdef WIN32
     semper_overlapped* so;
