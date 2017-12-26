@@ -376,7 +376,6 @@ void source_reset(source* s)
     sfree((void**)&s->update_act);
     sfree((void**)&s->change_act);
     sfree((void**)&s->team);
-    //sfree((void**)&s->extension);
 
     s->paused = parameter_bool(s, "Paused", 0, XPANDER_SOURCE);
     s->inverted = parameter_bool(s, "Inverted", 0, XPANDER_SOURCE);

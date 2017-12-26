@@ -6,6 +6,7 @@
 #include <surface.h>
 #include <cairo/cairo.h>
 #include <crosswin/crosswin.h>
+
 #ifdef WIN32
 #include <windows.h>
 #elif __linux__
@@ -247,7 +248,6 @@ int surface_destroy(surface_data* sd)
 
     if(sd->co)
     {
-
         sd->fade_direction = -1; // set the direction
         sd->ro = 0;
 
@@ -554,7 +554,6 @@ int surface_create_paths(control_data* cd, surface_paths* sp, size_t variant, un
 
     if(fn == NULL) // if it is NULL then we do not have a file from which to create the surface and we have to abort
     {
-        sfree((void**)&sp->surface_dir);
         return (-1);
     }
 
@@ -564,10 +563,9 @@ int surface_create_paths(control_data* cd, surface_paths* sp, size_t variant, un
     snprintf(sp->file_path, surface_fdir_length + surface_filename_length + 2, "%s/%s", sp->surface_dir, fn);
     /*Well, we have a full path to our surface file*/
 
-    sp->surface_file = clone_string(fn);
+    sp->surface_file = fn;
     /*If this is not obvious, we now have the filename*/
 
-    sfree((void**)&fn); // we now have a copy so let's free this one
 
     /*
      * We created above the necessary paths to load a surface
@@ -699,16 +697,16 @@ static void surface_init_items(surface_data* sd)
             continue;
         }
 
-        key ok = skeleton_get_key(cs, "Object");
-        key sk = skeleton_get_key(cs, "Source");
+        key o_k = skeleton_get_key(cs, "Object");
+        key s_k = skeleton_get_key(cs, "Source");
 
         /*The objects have higher priority so if a section has both Object and Source declared,
          * then the section will be considered to represent an object rather than a source
          */
 
-        if(ok)
+        if(o_k)
             object_init(cs, sd);
-        else if(ok == NULL && sk)
+        else if(o_k == NULL && s_k)
             source_init(cs, sd);
     }
     while((cs = skeleton_next_section(cs, &sd->skhead)) != NULL);
@@ -719,9 +717,11 @@ static void surface_init_items(surface_data* sd)
     list_enum_part(o, &sd->objects, current)
     {
         object_reset(o);
-        object_update(o); //we need to perform the first update cycle to
-        //obtain the surface size in case it it not
-        //volatile or is not specified by the user
+        /*we need to perform the first update cycle to
+        *obtain the surface size in case it it not
+        *volatile or is not specified by the user
+        * */
+        object_update(o);
     }
 }
 
@@ -1027,8 +1027,10 @@ int surface_update(surface_data* sd)
         surface_adjust_size(sd);
     }
 
+    /*Draw*/
     sd->hidden ? 0 : crosswin_draw(sd->sw);
 
+    /*Handle commands*/
     if(sd->update_act_lock == 0)
     {
         sd->update_act_lock = 1;

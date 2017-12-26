@@ -4,6 +4,7 @@
 */
 
 #include <semper.h>
+#include <stdlib.h>
 #include <crosswin/crosswin.h>
 #include <fcntl.h>
 #include <time.h>
@@ -121,10 +122,13 @@ int semper_get_file_timestamp(unsigned char *file,semper_timestamp *st)
     if(h != (void*)-1)
     {
         FILETIME lw = { 0 };
-        GetFileTime(h, NULL, NULL, &lw);
-        st->tm1=lw.dwLowDateTime;
-        st->tm2=lw.dwHighDateTime;
+        if(GetFileTime(h, NULL, NULL, &lw))
+        {
+            st->tm1=lw.dwLowDateTime;
+            st->tm2=lw.dwHighDateTime;
+        }
         CloseHandle(h);
+
     }
     else
     {
@@ -265,10 +269,11 @@ int semper_write_key(unsigned char* file, unsigned char* sn, unsigned char* kn, 
         return (-1);
 
     semper_write_key_data swkd = {.nf = NULL, .sn = sn, .kv = kv, .kn = kn, .sect_found = 0, .key_found = 0 };
-
-    static size_t utf8_bom = 0xBFBBEF; /*such UTF-8 signature, much 3 bytes*/
     size_t sz = string_length(file);
     unsigned char temp = file[sz - 1];
+    static size_t utf8_bom = 0xBFBBEF; /*such UTF-8 signature, much 3 bytes*/
+
+
     file[sz - 1] = 0;
     unsigned char* tfn = clone_string(file);
     file[sz - 1] = temp;
@@ -349,13 +354,13 @@ int semper_save_configuration(control_data* cd)
         unsigned char* sn = skeleton_get_section_name(s);
 
         key k = skeleton_first_key(s);
-
+        /*this is a less efficient method to save the configuration but it
+          preserves comments if user adds any*/
         do
         {
             unsigned char* kn = skeleton_key_name(k);
             unsigned char* kv = skeleton_key_value(k);
-            semper_write_key(cd->cf, sn, kn, kv); /*this is a less efficient method to save the configuration but it
-	                                             preserves comments if user adds any*/
+            semper_write_key(cd->cf, sn, kn, kv);
         }
         while((k = skeleton_next_key(k, s)));
     }
@@ -369,6 +374,7 @@ static void semper_create_directory_path(control_data* cd)
     unsigned char* buf = NULL;
 
 #ifdef WIN32
+
     wchar_t* pth = zmalloc(4096 * 2);
     unsigned long mod_p_sz = 4096;
 
@@ -420,21 +426,29 @@ static void semper_create_directory_path(control_data* cd)
     cd->ext_dir_length = tsz - 1;
 #ifdef WIN32
     windows_slahses(cd->ext_dir);
+#elif
+    unix_slashes(cd->ext_dir);
 #endif
     /////////////////////////////////////////////////////////
     tsz = rdl + string_length("/Semper.ini") + 1;
     cd->cf = zmalloc(tsz);
     snprintf(cd->cf,tsz,"%s/Semper.ini",cd->root_dir);
+
 #ifdef WIN32
     windows_slahses(cd->cf);
+#elif __linux__
+    unix_slashes(cd->cf);
 #endif
     /////////////////////////////////////////////////////////
     tsz = rdl + string_length("/Surfaces") + 1;
     cd->surface_dir = zmalloc(tsz);
     snprintf(cd->surface_dir,tsz,"%s/Surfaces",cd->root_dir);
     cd->surface_dir_length = tsz - 1;
+
 #ifdef WIN32
     windows_slahses(cd->surface_dir);
+#elif __linux__
+    unix_slashes(cd->surface_dir);
 #endif
     ////////////////////////////////////////////////////////
 }
@@ -631,62 +645,13 @@ void semper_surface_watcher(unsigned long err, unsigned long transferred, void *
 }
 
 
-
-
 #ifdef WIN32
-static int semper_init_fonts(control_data* cd)
-{
-#if 0
-    void* conf = FcConfigCreate();
 
-    cd->font_cache_dir = expand_env_var("%temp%");
-    FcConfigSetCurrent(conf);
-    FcConfigEnableHome(0);
-
-    FcDirCacheRead(cd->font_cache_dir, 1, conf);
-    FcConfigAddCacheDir(conf, cd->font_cache_dir);
-
-
-    unsigned char *font_fldr=expand_env_var("%systemroot%\\Fonts");
-    FcCacheCreateTagFile(conf);
-    FcConfigAppFontAddDir(conf, font_fldr);
-    FcStrList *list = FcConfigGetConfigDirs(conf);
-    char *t=FcStrListNext(list);
-
-    // semper_load_local_fonts(cd->root_dir);
-    sfree((void**)&font_fldr);
-#endif
-char *zzz=FcConfigGetSysRoot(NULL);
-    semper_font_state sfs= {0};
-    sfs.conf=FcConfigCreate();
-    FcConfigSetCurrent(sfs.conf);
-    sfs.dir_set=FcStrSetCreate();
-    FcConfigEnableHome(0);
-    FcStrSetAddFilename(sfs.dir_set,"C:\\windows\\fonts");
-   // semper_build_font_list("C:\\windows\\fonts",&sfs);
-    sfs.dir_list=FcStrListCreate(sfs.dir_set);
-    FcStrSetDestroy(sfs.dir_set);
-
-    char *d=NULL;
-
-    while(d=FcStrListNext(sfs.dir_list))
-    {
-
-        FcDirCacheRead (d, 1, sfs.conf);
-        printf("Valid %d\n",FcDirCacheValid (d));
-       // printf("%s\n",d);
-    }
-
-      FcCacheCreateTagFile(sfs.conf);
-
-    return (0);
-}
 #endif
 
 /*Experimental work to prevent
  *'Show Desktop' from hiding the widgets
  * */
-
 
 
 static int semper_desktop_checker(control_data *cd)
@@ -737,13 +702,52 @@ static int semper_desktop_checker(control_data *cd)
     return(0);
 }
 
+
+static void  semper_init_fonts(control_data *cd)
+{
+    size_t fcroot_len=cd->root_dir_length+sizeof("/.fontcache");
+    unsigned char *fcroot=zmalloc(fcroot_len);
+    snprintf(fcroot,fcroot_len,"%s\\.fontcache",cd->root_dir);
+    unsigned short *tmp=utf8_to_ucs(fcroot);
+
+    if(_waccess(tmp,0)!=0)
+    {
+        _wmkdir(tmp);
+    }
+
+    _wputenv_s(L"FONTCONFIG_PATH",tmp);
+    _wputenv_s(L"FONTCONFIG_FILE",L".fontcfg");
+    sfree((void**)&tmp);
+
+
+    static unsigned char config[]=
+    {
+#include <font_config.xml>
+    };
+
+    size_t fcfg_len=fcroot_len+sizeof("\\.fontcfg");
+    unsigned char *win_fonts=expand_env_var("%systemroot%\\fonts");
+    unsigned char *fcfg_file=zmalloc(fcfg_len);
+    snprintf(fcfg_file,fcfg_len,"%s/.fontcfg",fcroot);
+    FILE *f=fopen(fcfg_file,"wb");
+
+    fwrite(config,sizeof(config)-1,1,f);
+    fprintf(f,"<dir>%s</dir>\n<dir>%s</dir>\n<cachedir>%s</cachedir>\n</fontconfig>",win_fonts,cd->surface_dir,fcroot);
+
+
+fclose(f);
+
+
+    FcInit();
+    FcCacheCreateTagFile( FcConfigGetCurrent());
+    FcFini();
+}
+
+
 int main(void)
 {
 
 
-   // semper_build_font_list("C:\\windows\\fonts",&font_head);
-
-    //semper_font_list *sfl=NULL;
 
 
     control_data* cd = zmalloc(sizeof(control_data));
@@ -772,7 +776,8 @@ int main(void)
 
     if(semper_load_surfaces(cd)==0)
     {
-        surface_builtin_init(cd,catalog); //launch the catalog if no surface has been loaded due to various reasons
+        /*launch the catalog if no surface has been loaded due to various reasons*/
+        surface_builtin_init(cd,catalog);
     }
 
     while(cd->c.quit == 0) //nothing fancy, just the main event loop

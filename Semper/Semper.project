@@ -261,6 +261,7 @@
     <File Name="include/team.h"/>
     <File Name="include/xpander.h"/>
     <File Name="include/semper_api.h"/>
+    <File Name="include/font_config.xml"/>
   </VirtualDirectory>
   <Description/>
   <Dependencies/>

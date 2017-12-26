@@ -9,6 +9,7 @@
 #include <surface.h>
 #include <event.h>
 #include <dwmapi.h>
+
 static int win32_prepare_mouse_event(crosswin_window* w, unsigned int message, WPARAM wpm, LPARAM lpm)
 {
     memset(&w->mouse, 0, sizeof(mouse_status));

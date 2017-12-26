@@ -113,11 +113,13 @@ void crosswin_draw(crosswin_window* w)
     {
         if(w->x < 0)
             w->x = 0;
+
         else if(w->x + w->w > c->sw)
             w->x = max(c->sw - w->w, 0);
 
         if(w->y < 0)
             w->y = 0;
+
         else if(w->y + w->h > c->sh)
             w->y = max(c->sh - w->h, 0);
 
