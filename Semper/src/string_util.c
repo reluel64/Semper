@@ -58,6 +58,7 @@ unsigned char is_file_type(unsigned char* file, unsigned char* ext)
         if(file[i] == '.')
         {
             r = strncasecmp(file + i + 1, ext, min(length, elength)) == 0;
+            break;
         }
     }
 

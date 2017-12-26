@@ -369,7 +369,7 @@ int semper_save_configuration(control_data* cd)
     return (1);
 }
 
-static void semper_create_directory_path(control_data* cd)
+static void semper_create_paths(control_data* cd)
 {
     unsigned char* buf = NULL;
 
@@ -497,14 +497,9 @@ static void semper_surface_watcher_init(control_data* cd)
 }
 #endif
 
-typedef struct
-{
-    FcConfig *conf;
-    FcStrSet *dir_set;
-    FcStrList *dir_list;
-} semper_font_state;
 
-static int semper_build_font_list(unsigned char *path,semper_font_state *sfs)
+#ifdef WIN32
+static int semper_font_cache_fix(unsigned char *path)
 {
     if(path==NULL)
     {
@@ -513,7 +508,7 @@ static int semper_build_font_list(unsigned char *path,semper_font_state *sfs)
 
     size_t path_len=string_length(path);
 
-#ifdef WIN32
+
     unsigned char *fltp=zmalloc(path_len+4);
     snprintf(fltp,path_len+4,"%s/*",path);
     windows_slahses(fltp);
@@ -529,26 +524,11 @@ static int semper_build_font_list(unsigned char *path,semper_font_state *sfs)
         return(-1);
     }
 
-#elif __linux__
-    DIR *dh=opendir(path);
-
-    if(dh==NULL)
-    {
-        return(-1);
-    }
-
-    struct dirent *dat=readdir(dh);
-
-#endif
-
 
     do
     {
-#ifdef WIN32
         unsigned char *temp=ucs_to_utf8(wfd.cFileName,NULL,0);
-#elif __linux__
-        unsigned char *temp=clone_string(dat->d_name);
-#endif
+
 
         if(!strcasecmp("..",temp)||!strcasecmp(".",temp))
         {
@@ -560,54 +540,44 @@ static int semper_build_font_list(unsigned char *path,semper_font_state *sfs)
         unsigned char *ffp=zmalloc(fsz+path_len+3);
         snprintf(ffp,fsz+path_len+3,"%s/%s",path,temp);
         uniform_slashes(ffp);
-#ifdef WIN32
         windows_slahses(ffp);
-#elif __linux__
-        unix_slashes(ffp);
-#endif
+
         sfree((void**)&temp);
 
-
-#ifdef WIN32
-
         if(wfd.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
-#elif __linux__
-        if(dat->d_type==DT_DIR)
-#endif
         {
-            FcStrSetAddFilename(sfs->dir_set,ffp);
-            //semper_build_font_list(ffp,head);
+
+            ;
         }
         else
         {
-            /*
-            semper_font_list *sfl=zmalloc(sizeof(semper_font_list));
-            sfl->file=strdup(ffp);
-            list_entry_init(&sfl->current);
-            linked_list_add_last(&sfl->current,head);*/
-            /*if(FcConfigAppFontAddFile(NULL, ffp))
+            if(is_file_type(ffp,"NEW"))
             {
-                diag_info("%s %d Added %s\n",__FUNCTION__,__LINE__,ffp);
-            }*/
+                unsigned char *s=zmalloc(fsz+path_len+3+7);
+                strncpy(s,ffp,fsz+path_len-3);
+
+                unsigned short *tmp1=utf8_to_ucs(s);
+                unsigned short *tmp2=utf8_to_ucs(ffp);
+
+                _wremove(tmp1);
+                _wrename(tmp2,tmp1);
+
+                sfree((void**)&s);
+                sfree((void**)&tmp1);
+                sfree((void**)&tmp2);
+            }
         }
 
         sfree((void**)&ffp);
 
-    }
-
-#ifdef WIN32
-
-    while(FindNextFileW(p,&wfd));
+    } while(FindNextFileW(p,&wfd));
 
     FindClose(p);
-#elif __linux__
 
-    while((dat=readdir(dh))!=NULL);
-
-    closedir(dh);
-#endif
     return(0);
 }
+#endif
+
 
 void semper_surface_watcher(unsigned long err, unsigned long transferred, void *pv)
 {
@@ -702,9 +672,10 @@ static int semper_desktop_checker(control_data *cd)
     return(0);
 }
 
-
+#ifdef WIN32
 static void  semper_init_fonts(control_data *cd)
 {
+
     size_t fcroot_len=cd->root_dir_length+sizeof("/.fontcache");
     unsigned char *fcroot=zmalloc(fcroot_len);
     snprintf(fcroot,fcroot_len,"%s\\.fontcache",cd->root_dir);
@@ -713,8 +684,12 @@ static void  semper_init_fonts(control_data *cd)
     if(_waccess(tmp,0)!=0)
     {
         _wmkdir(tmp);
-    }
 
+    }
+#if 1
+    unsigned int attr=GetFileAttributesW(tmp);
+    SetFileAttributesW(tmp,attr|FILE_ATTRIBUTE_HIDDEN);
+#endif
     _wputenv_s(L"FONTCONFIG_PATH",tmp);
     _wputenv_s(L"FONTCONFIG_FILE",L".fontcfg");
     sfree((void**)&tmp);
@@ -729,39 +704,40 @@ static void  semper_init_fonts(control_data *cd)
     unsigned char *win_fonts=expand_env_var("%systemroot%\\fonts");
     unsigned char *fcfg_file=zmalloc(fcfg_len);
     snprintf(fcfg_file,fcfg_len,"%s/.fontcfg",fcroot);
-    FILE *f=fopen(fcfg_file,"wb");
+    tmp=utf8_to_ucs(fcfg_file);
+    FILE *f=_wfopen(tmp,L"wb");
 
-    fwrite(config,sizeof(config)-1,1,f);
-    fprintf(f,"<dir>%s</dir>\n<dir>%s</dir>\n<cachedir>%s</cachedir>\n</fontconfig>",win_fonts,cd->surface_dir,fcroot);
-
-
-fclose(f);
-
+    if(f)
+    {
+        fwrite(config,sizeof(config)-1,1,f);
+        fprintf(f,"<dir>%s</dir>\n<dir>%s</dir>\n<cachedir>%s</cachedir>\n</fontconfig>",win_fonts,cd->surface_dir,fcroot);
+        fclose(f);
+    }
 
     FcInit();
     FcCacheCreateTagFile( FcConfigGetCurrent());
+    semper_font_cache_fix(fcroot);
     FcFini();
+    FcInit();
+    sfree((void**)&tmp);
+    sfree((void**)&fcfg_file);
+    sfree((void**)&win_fonts);
+    sfree((void**)&fcroot);
 }
-
+#endif
 
 int main(void)
 {
-
-
-
-
     control_data* cd = zmalloc(sizeof(control_data));
+    crosswin_init(&cd->c);
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
-
-    semper_create_directory_path(cd);
-    crosswin_init(&cd->c);
     cd->eq = event_queue_init();
+    semper_create_paths(cd);
     semper_load_configuration(cd);
-    diag_info("Project 'Semper' Debug Console");
+
 
 #ifdef WIN32
-
     diag_info("Initializing font cache...this takes time on some machines");
     semper_init_fonts(cd);
     diag_info("Fonts initialized");
@@ -771,7 +747,6 @@ int main(void)
     event_queue_set_window_event(cd->eq,XConnectionNumber(cd->c.display));
     cd->inotify_fd=inotify_init1(IN_NONBLOCK);
     event_queue_set_inotify_event(cd->eq,cd->inotify_fd);
-
 #endif
 
     if(semper_load_surfaces(cd)==0)
