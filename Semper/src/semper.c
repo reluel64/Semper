@@ -16,6 +16,7 @@
 #include <event.h>
 #include <fontconfig/fontconfig.h>
 #include <surface_builtin.h>
+
 #ifdef __linux__
 #include <sys/inotify.h>
 #include <unistd.h>
@@ -28,8 +29,8 @@
 #elif WIN32
 #include <windows.h>
 #include <winbase.h>
+#include <wchar.h>
 WINBASEAPI WINBOOL WINAPI QueryFullProcessImageNameW(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
-FcBool FcConfigAddCacheDir(FcConfig* config, const FcChar8* d);
 #endif
 
 static void semper_reload_surfaces_if_modified(control_data* cd);
@@ -570,7 +571,8 @@ static int semper_font_cache_fix(unsigned char *path)
 
         sfree((void**)&ffp);
 
-    } while(FindNextFileW(p,&wfd));
+    }
+    while(FindNextFileW(p,&wfd));
 
     FindClose(p);
 
@@ -726,8 +728,12 @@ static void  semper_init_fonts(control_data *cd)
 }
 #endif
 
+
+
 int main(void)
 {
+
+
     control_data* cd = zmalloc(sizeof(control_data));
     crosswin_init(&cd->c);
     list_entry_init(&cd->shead);

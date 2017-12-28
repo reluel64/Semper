@@ -587,6 +587,7 @@
         <Library Value="gcc"/>
         <Library Value="gcrypt"/>
         <Library Value="gpg-error"/>
+        <Library Value="dwmapi"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" IntermediateDirectory="$(WorkspacePath)/build/$(ProjectName)" Command="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(WorkspacePath)/bin/$(ConfigurationName)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>

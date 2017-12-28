@@ -11,11 +11,11 @@
 
 typedef struct
 {
-    PDH_HQUERY phq;                 //query
-    PDH_HCOUNTER *counter;           //counter handle
+    PDH_HQUERY phq;                 //query handle
+    PDH_HCOUNTER *counter;          //counter handle
     size_t cnt_cnt;                 //counter count (shitty naming)
-    unsigned char delta;            //need 2 queries? (by default we DO)
     time_t t;                       //hold the old time to make sure that there's at least 1 second between 2 queries
+    unsigned char delta;            //need 2 queries? (by default we DO)
     double v;                       //holder for the value (we make sure that we do not loose it)
 } perf_counter;
 
@@ -25,7 +25,9 @@ static void* zmalloc(size_t bytes)
 {
     if(bytes == 0)
         return (NULL);
+
     void* p = malloc(bytes );
+
     if(p)
     {
         memset(p, 0, bytes);
@@ -70,9 +72,7 @@ static unsigned short* utf8_to_ucs(unsigned char* str)
 
 void init(void **spv,void *ip)
 {
-    *spv=malloc(sizeof(perf_counter));
-
-    memset(*spv,0,sizeof(perf_counter));
+    *spv=zmalloc(sizeof(perf_counter));
 }
 
 
@@ -91,6 +91,7 @@ void reset(void *spv,void *ip)
         {
             PdhRemoveCounter(pc->counter[i]);
         }
+
         free(pc->counter);
         pc->counter=NULL;
     }
@@ -104,35 +105,26 @@ void reset(void *spv,void *ip)
     ws=param_string("PerfInstance",0x3,ip,NULL);
 
     if(ws)
-    {
         snprintf(instance_name,PDH_MAX_INSTANCE_NAME,"(%s)",ws);
-    }
+
     else
-    {
         instance_name[0]=0;
-    }
 
     ws=param_string("PerfObject",0x3,ip,NULL);
 
     if(ws)
-    {
         snprintf(object_name,PDH_MAX_INSTANCE_NAME,"%s",ws);
-    }
+
     else
-    {
         object_name[0]=0;
-    }
 
     ws=param_string("PerfCounter",0x3,ip,NULL);
 
     if(ws)
-    {
         snprintf(counter_name,PDH_MAX_INSTANCE_NAME,"%s",ws);
-    }
+
     else
-    {
         counter_name[0]=0;
-    }
 
     pc->delta=param_bool("PerfDelta",ip,1);
 

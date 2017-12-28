@@ -78,19 +78,20 @@ static inline int speedfan_gather_data(speedfan_shared_memory *data)
 
 double update(void *spv)
 {
-    speedfan_data *spd=spv;
     static speedfan_shared_memory data= {0};
+    speedfan_data *spd=spv;
+
     speedfan_gather_data(&data);
     if(data.version!=1)
         return(0.0);
     switch(spd->senz_type)
     {
-    case 0:
-        return((double)data.temps[spd->senz_index>data.NumTemps?data.NumTemps:spd->senz_index]/100.0);
-    case 1:
-        return((double)data.fans[spd->senz_index>data.NumFans?data.NumFans:spd->senz_index]);
-    case 2:
-        return((double)data.volts[spd->senz_index>data.NumVolts?data.NumVolts:spd->senz_index]/100.0);
+        case 0:
+            return((double)data.temps[spd->senz_index>data.NumTemps?data.NumTemps:spd->senz_index]/100.0);
+        case 1:
+            return((double)data.fans[spd->senz_index>data.NumFans?data.NumFans:spd->senz_index]);
+        case 2:
+            return((double)data.volts[spd->senz_index>data.NumVolts?data.NumVolts:spd->senz_index]/100.0);
     }
     return(0.0);
 }

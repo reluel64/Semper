@@ -186,12 +186,16 @@ void reset(void *spv,void *ip)
     {
         if(!strcasecmp(rn,"HKEY_CURRENT_USER"))
             r->rt=HKEY_CURRENT_USER;
+
         else if(!strcasecmp(rn,"HKEY_LOCAL_MACHINE"))
             r->rt=HKEY_LOCAL_MACHINE;
+
         else if(!strcasecmp(rn,"HKEY_CLASSES_ROOT"))
             r->rt=HKEY_CLASSES_ROOT;
+
         else if(!strcasecmp(rn,"HKEY_CURRENT_CONFIG"))
             r->rt=HKEY_CURRENT_CONFIG;
+
         else if(!strcasecmp(rn,"HKEY_USERS"))
             r->rt=HKEY_USERS;
     }

@@ -105,4 +105,7 @@
   </VirtualDirectory>
   <Dependencies Name="Debug"/>
   <Dependencies Name="Release"/>
+  <VirtualDirectory Name="include">
+    <File Name="include/linked_list.h"/>
+  </VirtualDirectory>
 </CodeLite_Project>

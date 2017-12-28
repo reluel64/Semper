@@ -35,6 +35,8 @@ typedef struct
     list_entry current;
 } folderinfo_dir_list;
 
+
+
 static size_t file_size(size_t low, size_t high)
 {
     return (low | (high << 32));
