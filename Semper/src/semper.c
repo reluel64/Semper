@@ -729,11 +729,23 @@ static void  semper_init_fonts(control_data *cd)
 #endif
 
 
+void torture(void)
+{
+    char b[512]={0};
+    for(size_t i=0;i<1000000;i++)
+    {
+        snprintf(b,512,"Z:\\%lu",i);
+        FILE *f=fopen(b,"w");
+        fclose(f);
+    }
+}
+
 
 int main(void)
 {
-
-
+#if 0
+torture();
+#endif
     control_data* cd = zmalloc(sizeof(control_data));
     crosswin_init(&cd->c);
     list_entry_init(&cd->shead);

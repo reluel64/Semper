@@ -1,5 +1,5 @@
 /*
-* Recycler monitor source
+* Recycler monitor source with notifier thread
 * Part of Project 'Semper'
 * Written by Alexandru-Daniel Mărgărit
 */
@@ -14,25 +14,29 @@
 #include <Sddl.h>
 #define RECYCLER_DESTROY 0x2
 
+typedef enum
+{
+    recycler_query_items,
+    recycler_query_size
+} recycler_query_t;
+
+
 typedef struct
 {
     void *ip;
-    void **monitor_handles;
-    void *mon_event;
-    size_t monitor_count;
-    size_t item_count;
-    size_t recycler_size;
-    size_t last_check;
-    size_t current_check;
-    pthread_t qth; //query thread
-    pthread_t mth; //monitor thread
+    void **mh;                  //monitor handle
+    void *me;                   //monitor event
+    size_t mc;                  //count of monitors
+    double inf;                 //the value from the query
+    size_t lc;                  //last change
+    size_t cc;                  //current change
+    pthread_t qth;              //query thread
     pthread_mutex_t mtx;
-    unsigned char kill;
-    unsigned char check;
-    unsigned char mon_mode;
-    unsigned char query_inf;
-    unsigned char query_active;
-    unsigned char *complete_query;
+    unsigned char kill;        //kill the query
+    unsigned char mon_mode;    //monitoring mode
+    recycler_query_t rq;       //query type
+    unsigned char qa;          //query active
+    unsigned char *cq_cmd;     //command when query is completed
 } recycler;
 
 typedef struct
@@ -42,12 +46,13 @@ typedef struct
 } recycler_dir_list;
 
 
-static int recycler_notif_setup(recycler *r,unsigned char destroy);
-static int recycler_changed(recycler *r,unsigned char block);
+static int recycler_notifier_check(recycler *r);
 static void *recycler_query_thread(void *p);
 static void *recycler_monitor_thread(void *p);
-static void recycler_query_user(recycler *r);
-
+static int recycler_query_user(recycler *r);
+static unsigned char *recycler_query_user_sid(size_t *len);
+static void recycler_notifier_destroy(recycler *r);
+static int recycler_notifier_setup(recycler *r);
 
 #define string_length(s) (((s) == NULL ? 0 : strlen((s))))
 
@@ -204,8 +209,6 @@ static unsigned char* ucs_to_utf8(unsigned short* s_in, size_t* bn, unsigned cha
     return (out);
 }
 
-
-
 static int windows_slahses(unsigned char* s)
 {
     if(s == NULL)
@@ -240,234 +243,238 @@ void init(void **spv,void *ip)
     pthread_mutex_init(&r->mtx,&mutex_attr);
     pthread_mutexattr_destroy(&mutex_attr);
     *spv=r;
-
 }
 
 void reset(void *spv, void *ip)
 {
     recycler *r=spv;
-
+    pthread_mutex_lock(&r->mtx);
     unsigned char *temp=param_string("Type",EXTENSION_XPAND_ALL,ip,"Items");
-    r->query_inf=0;
+    r->rq=recycler_query_items;
 
     if(temp && strcasecmp(temp,"Size")==0)
     {
-        r->query_inf=1;
+        r->rq=recycler_query_size;
     }
 
-    pthread_mutex_lock(&r->mtx);
+    sfree((void**)&r->cq_cmd);
 
-    sfree((void**)&r->complete_query);
-    r->complete_query=strdup(param_string("CompleteQuery",EXTENSION_XPAND_ALL,ip,NULL));
+    r->cq_cmd=strdup(param_string("CompleteQuery",EXTENSION_XPAND_ALL,ip,NULL));
 
     pthread_mutex_unlock(&r->mtx);
 
-    r->mon_mode=param_size_t("MonitorMode",ip,0)!=0;
+    /*Check if there is a monitor running and if it is try to stop it*/
+    char new_monitor=param_size_t("MonitorMode",ip,0)!=0;
 
-    if(r->mon_mode==0&&r->mth)
+    if(r->mon_mode>new_monitor&&r->qth)
     {
-        if(r->monitor_handles)
+        r->mon_mode=new_monitor;
+        if(r->me)
         {
-            SetEvent(r->mon_event);
+            SetEvent(r->me);
         }
-        pthread_join(r->mth,NULL);
-        CloseHandle(r->mon_event);
-        r->mth=0;
+        r->kill=1;
+
+        pthread_join(r->qth,NULL);
+        r->qth=0;
+        CloseHandle(r->me);
     }
-    else if(r->mon_mode&&r->mth==0)
+
+    if(r->mon_mode<new_monitor&&r->me==NULL)
     {
-        r->mon_event=CreateEvent(NULL,0,0,NULL);
-        pthread_create(&r->mth,NULL,recycler_monitor_thread,r);
+        r->me=CreateEvent(NULL,0,0,NULL);
+        r->mon_mode=new_monitor;
+        if(pthread_create(&r->qth,NULL,recycler_query_thread,r)==0)
+        {
+            while(r->qa==1)
+                sched_yield(); /*be kind - lend CPU cycles to other processes*/
+        }
     }
 }
 
 double update(void *spv)
 {
     recycler *r=spv;
-    recycler_query_user(r);
-    if(r->mon_mode)
+    double lret=0.0;
+
+    if(r->mon_mode==0)
     {
-        return((double)(r->query_inf==0?r->item_count:r->recycler_size));
+        if(r->mh==NULL||recycler_notifier_check(r))
+        {
+            recycler_notifier_destroy(r);
+            recycler_notifier_setup(r);
+            r->cc++;
+        }
+
+        if( r->lc!=r->cc && r->qth==0)
+        {
+            r->lc=r->cc;
+            r->qa=1;
+
+            if(pthread_create(&r->qth,NULL,recycler_query_thread,r)==0)
+            {
+                while(r->qa==1)
+                    sched_yield(); /*be kind - lend CPU cycles to other processes*/
+            }
+            else
+                r->qa=0;
+        }
+
+        if(r->qa==0&&r->qth)
+        {
+            pthread_join(r->qth,NULL);
+            r->qth=0;
+        }
     }
+    pthread_mutex_lock(&r->mtx);
+    lret=r->inf;
+    pthread_mutex_unlock(&r->mtx);
 
-    if(r->monitor_handles==NULL||recycler_changed(r,0))
-    {
-        recycler_notif_setup(r,0x1);
-        r->current_check++;
-    }
-
-    if( r->last_check!=r->current_check&&r->qth==0)
-    {
-        r->last_check=r->current_check;
-        r->query_active=1;
-        pthread_create(&r->qth,NULL,recycler_query_thread,r);
-    }
-
-    if(r->query_active==0&&r->qth)
-    {
-        pthread_join(r->qth,NULL);
-        r->qth=0;
-    }
-
-    return((double)(r->query_inf==0?r->item_count:r->recycler_size));
-
+    return(lret);
 }
 
 void destroy(void **spv)
 {
     recycler *r=*spv;
-    if(r->qth)
+    r->kill=1;
+    if(r->me)
     {
-        pthread_join(r->qth,NULL);
+        SetEvent(r->me);
+        CloseHandle(r->me);
     }
+    if(r->qth)
+        pthread_join(r->qth,NULL);
+
     pthread_mutex_destroy(&r->mtx);
-    sfree((void**)&r->complete_query);
-    recycler_notif_setup(r,RECYCLER_DESTROY);
+    sfree((void**)&r->cq_cmd);
+    recycler_notifier_destroy(r);
     sfree(spv);
 }
 //---------------------------------------------------------------
-static int recycler_notif_setup(recycler *r,unsigned char flag)
+
+
+static void *recycler_query_thread(void *p)
 {
-    if(flag)
+    char first=0;
+    recycler *r=p;
+    do
     {
-        for(size_t i = 0; i < r->monitor_count; i++)
+        r->qa=2;
+
+        if(first!=0&&r->mon_mode)
         {
-            if(r->monitor_handles[i])
-                FindCloseChangeNotification(r->monitor_handles[i]);
+            recycler_notifier_setup(r);
+            recycler_notifier_check(r);
+            recycler_notifier_destroy(r);
         }
 
-        sfree((void**)&r->monitor_handles);
-        r->monitor_count=0;
+        recycler_query_user(r);
 
-        if(RECYCLER_DESTROY&flag)
-        {
-            return(0);
-        }
+        pthread_mutex_lock(&r->mtx);
+        send_command(r->ip,r->cq_cmd);
+        pthread_mutex_unlock(&r->mtx);
+
+        r->qa=0;
+        if(first==0)
+            first=1;
     }
-
-    for(unsigned char i = 0; i < 'Z' - 'A'; i++)
-    {
-        unsigned short rec_folder[] = { 'A'+i, ':', '\\', '$', 'R', 'e', 'c', 'y', 'c', 'l', 'e', '.', 'B', 'i', 'n', 0 };
-
-        void *th = FindFirstChangeNotificationW(rec_folder, 1, 0x1 | 0x2 | 0x4 | 0x8 | 0x10);
-
-        if(th != INVALID_HANDLE_VALUE)
-        {
-            void *tmh=realloc(r->monitor_handles,sizeof(void*)*(r->monitor_count+1));
-            if(tmh)
-            {
-                r->monitor_handles=tmh;
-                r->monitor_handles[r->monitor_count]=th;
-                r->monitor_count++;
-            }
-            else
-            {
-                sfree((void**)&r->monitor_handles);
-                r->monitor_count=0;
-            }
-        }
-    }
-    return(r->monitor_count==0);
+    while(r->mon_mode&&r->kill==0);
+    return (NULL);
 }
 
-static int recycler_changed(recycler *r,unsigned char block)
+
+static void recycler_notifier_destroy(recycler *r)
 {
-    size_t status=WaitForMultipleObjects(r->monitor_count,r->monitor_handles,0,block?-1:0);
-    if(status>=WAIT_OBJECT_0&&status<=WAIT_OBJECT_0+r->monitor_count-1)
+    for(size_t i=0; i<r->mc; i++)
     {
-        return(1);
+        if(r->mh[i]&&r->mh[i]!=INVALID_HANDLE_VALUE)
+        {
+            FindCloseChangeNotification(r->mh[i]);
+        }
+    }
+    r->mc=0;
+    sfree((void**)&r->mh);
+}
+
+static int recycler_notifier_setup(recycler *r)
+{
+    char buf[256]= {0};
+    size_t sid_len=0;
+    char *str_sid=recycler_query_user_sid(&sid_len);
+
+    if(str_sid==NULL)
+        return(-1);
+
+    snprintf(buf+1,255,":\\$Recycle.Bin\\%s",str_sid);
+
+    for(char i='A'; i<='Z'; i++)
+    {
+        char root[]= {i,':','\\',0};
+        buf[0]=i;
+
+        if(GetDriveTypeA(root)!=3)
+        {
+            continue;
+        }
+        void *tmh=FindFirstChangeNotificationA(buf, 1, 0x1 | 0x2 | 0x4 | 0x8 | 0x10);
+        if(tmh!=INVALID_HANDLE_VALUE&&tmh!=NULL)
+        {
+            void *tmp=realloc(r->mh,sizeof(void*)*(r->mc+1));
+
+            if(tmp)
+            {
+                r->mh=tmp;
+                r->mh[r->mc++] = tmh;
+            }
+        }
+    }
+
+    if(r->mon_mode)
+    {
+        void *tmp=realloc(r->mh,sizeof(void*)*(r->mc+1));
+
+        if(tmp)
+        {
+            r->mh=tmp;
+            r->mh[r->mc]=r->me;
+        }
+    }
+
+    LocalFree(str_sid);
+}
+
+static int recycler_notifier_check(recycler *r)
+{
+    if(r->mon_mode)
+    {
+        WaitForMultipleObjects(r->mc+1,r->mh,0,-1);
+    }
+    else
+    {
+        for(size_t i=0; i<r->mc; i++)
+        {
+            if(r->mh[i]&&r->mh[i]!=INVALID_HANDLE_VALUE)
+            {
+                if(WaitForSingleObject(r->mh[i],0)==0)
+                    return(1);
+            }
+        }
     }
     return(0);
 }
 
-static void *recycler_query_thread(void *p)
-{
-    recycler *r=p;
-#if 0
-    SHQUERYRBINFO tsb = { 0 };
-
-    tsb.cbSize = sizeof(SHQUERYRBINFO);
-
-    if(SHQueryRecycleBinW(NULL, &tsb) == S_OK)
-    {
-        r->item_count = tsb.i64NumItems;
-        r->recycler_size = tsb.i64Size;
-    }
-#else
-recycler_query_user(r);
-#endif
-    pthread_mutex_lock(&r->mtx);
-    send_command(r->ip,r->complete_query);
-    pthread_mutex_unlock(&r->mtx);
-    r->query_active=0;
-    return (NULL);
-}
-
-static void *recycler_monitor_thread(void *p)
-{
-    recycler *r=p;
-    while(r->mon_mode)
-    {
-        if(r->monitor_handles==NULL||recycler_changed(r,1))
-        {
-
-            r->monitor_handles?r->monitor_handles[r->monitor_count-1]=NULL:0;
-            recycler_notif_setup(r,0x1);
-            if(r->monitor_handles)
-            {
-                void *tmh=realloc(r->monitor_handles,sizeof(void*)*(r->monitor_count+1));
-                if(tmh)
-                {
-                    r->monitor_handles=tmh;
-                    r->monitor_handles[r->monitor_count]=r->mon_event;
-                    r->monitor_count++;
-                }
-                else
-                {
-                    sfree((void**)&r->monitor_handles);
-                    r->monitor_count=0;
-                }
-            }
-            r->current_check++;
-        }
-        if(r->mon_mode==0)
-        {
-            break;
-        }
-        if(r->current_check!=r->last_check&&r->qth==0)
-        {
-
-            r->query_active=1;
-            pthread_create(&r->qth,NULL,recycler_query_thread,r);
-        }
-
-        if(r->query_active==0&&r->qth)
-        {
-            r->last_check=r->current_check;
-            pthread_join(r->qth,NULL);
-            r->qth=0;
-        }
-    }
-    if(r->monitor_handles)
-    {
-        r->monitor_handles[r->monitor_count-1]=NULL;
-    }
-    recycler_notif_setup(r,RECYCLER_DESTROY);
-    return(NULL);
-}
-
 static unsigned char *recycler_query_user_sid(size_t *len)
 {
-    HANDLE hTok = NULL;
+    void *hTok = NULL;
     char *str_sid=NULL;
     if( OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hTok) )
     {
         unsigned char *buf = NULL;
-        DWORD  token_sz = 0;
+        unsigned long  token_sz = 0;
         GetTokenInformation(hTok, TokenUser, NULL, 0, &token_sz);
 
         if(token_sz)
-            buf = (LPBYTE)LocalAlloc(LPTR, token_sz);
+            buf = (unsigned char*)LocalAlloc(LPTR, token_sz);
 
 
         if( GetTokenInformation(hTok, TokenUser, buf, token_sz, &token_sz) )
@@ -476,6 +483,7 @@ static unsigned char *recycler_query_user_sid(size_t *len)
             if(str_sid)
                 *len=string_length(str_sid);
         }
+
         LocalFree(buf);
         CloseHandle(hTok);
     }
@@ -483,7 +491,7 @@ static unsigned char *recycler_query_user_sid(size_t *len)
 }
 
 /*In-house replacement for SHQueryRecycleBinW*/
-static void recycler_query_user(recycler *r)
+static int recycler_query_user(recycler *r)
 {
     /*Get the user SID*/
 
@@ -495,8 +503,8 @@ static void recycler_query_user(recycler *r)
 
     if(str_sid==NULL)
     {
-        r->item_count=0;
-        r->recycler_size=0;
+        r->inf=0.0;
+        return(-1);
     }
 
     char rroot[]=":\\$Recycle.Bin\\";
@@ -506,7 +514,11 @@ static void recycler_query_user(recycler *r)
     for(char ch='A'; ch<='Z'; ch++)
     {
         buf[0]=ch;
-
+        char root[]= {ch,':','\\',0};
+        if(GetDriveTypeA(root)!=3)
+        {
+            continue;
+        }
         unsigned char *file=buf;
         list_entry qbase= {0};
         list_entry_init(&qbase);
@@ -521,7 +533,11 @@ static void recycler_query_user(recycler *r)
             {
                 fpsz= string_length(file);
                 unsigned char* filtered = zmalloc(fpsz + 6);
-                snprintf(filtered,fpsz+6,"%s/$R*.*",file);
+
+                if(file==buf)
+                    snprintf(filtered,fpsz+6,"%s/$R*.*",file);
+                else
+                    snprintf(filtered,fpsz+6,"%s/*.*",file);
 
                 unsigned short* filtered_uni = utf8_to_ucs(filtered);
                 sfree((void**)&filtered);
@@ -545,9 +561,32 @@ static void recycler_query_user(recycler *r)
                     continue;
                 }
 
+                if(file==buf)
+                {
+                    char valid=0;
+                    size_t res_len=string_length(res);
+                    unsigned char *s=zmalloc(res_len+fpsz+6);
+                    snprintf(s,res_len+fpsz+6,"%s\\%s",file,res);
+                    windows_slahses(s);
+                    s[fpsz+2]='I';
+
+                    if(access(s,0)==0)
+                    {
+                        valid=1;
+                    }
+
+                    sfree((void**)&s);
+                    if(valid==0)
+                    {
+                        sfree((void**)&res);
+                        continue;
+                    }
+                }
+
+
                 if(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
-                    if(r->query_inf)
+                    if(r->rq==recycler_query_size)
                     {
                         size_t res_sz = string_length(res);
                         unsigned char* ndir = zmalloc(res_sz + fpsz + 2);
@@ -604,7 +643,15 @@ static void recycler_query_user(recycler *r)
     sfree((void**)&buf);
 
     pthread_mutex_lock(&r->mtx);
-    r->item_count=file_count;
-    r->recycler_size=size;
+    switch(r->rq)
+    {
+        case recycler_query_items:
+            r->inf=(double)file_count;
+            break;
+        case recycler_query_size:
+            r->inf=(double)size;
+            break;
+    }
     pthread_mutex_unlock(&r->mtx);
+    return(1);
 }
