@@ -344,10 +344,14 @@ int object_tooltip_update(object *o)
     surface_data *tsd=o->ttip;
     surface_data *sd=o->sd;
 
-    if(o->ttip_title)
+    if(o->ot.title)
     {
         string_bind titsb= {0};
-        titsb.s_in=o->ttip_title;
+        titsb.s_in=o->ot.title;
+        titsb.percentual=o->ot.percentual;
+        titsb.scale=o->ot.scale;
+        titsb.self_scaling=o->ot.scaling;
+        titsb.decimals=o->ot.decimals;
         bind_update_string(o,&titsb);
 
         if(titsb.s_out)
@@ -376,10 +380,14 @@ int object_tooltip_update(object *o)
         command(o->ttip,&empty_title);
     }
 
-    if(o->ttip_text)
+    if(o->ot.text)
     {
         string_bind txtsb= {0};
-        txtsb.s_in=o->ttip_text;
+        txtsb.s_in=o->ot.text;
+        txtsb.percentual=o->ot.percentual;
+        txtsb.scale=o->ot.scale;
+        txtsb.self_scaling=o->ot.scaling;
+        txtsb.decimals=o->ot.decimals;
         bind_update_string(o,&txtsb);
 
         if(txtsb.s_out)
@@ -484,13 +492,14 @@ void object_reset(object* o)
     sfree((void**)&o->team);
     sfree((void**)&o->sx);
     sfree((void**)&o->sy);
-    sfree((void**)&o->ttip_text);
-    sfree((void**)&o->ttip_title);
+
+    sfree((void**)&o->ot.title);
+    sfree((void**)&o->ot.text);
+
 
     o->sx = parameter_string(o, "X", NULL, XPANDER_OBJECT);
     o->sy = parameter_string(o, "Y", NULL, XPANDER_OBJECT);
-    o->ttip_text = parameter_string(o, "TooltipText", NULL, XPANDER_OBJECT);
-    o->ttip_title = parameter_string(o, "TooltipTitle", NULL, XPANDER_OBJECT);
+
     o->w = parameter_long_long(o, "W", -1, XPANDER_OBJECT);
     o->h = parameter_long_long(o, "H", -1, XPANDER_OBJECT);
 
@@ -511,6 +520,12 @@ void object_reset(object* o)
         o->divider = 1;
     }
 
+    o->ot.text = parameter_string(o, "TooltipText", NULL, XPANDER_OBJECT);
+    o->ot.title = parameter_string(o, "TooltipTitle", NULL, XPANDER_OBJECT);
+    o->ot.percentual = parameter_bool(o, "ToolTipPercentual", 0, XPANDER_OBJECT);
+    o->ot.scale = parameter_double(o, "ToolTipScale", 0, XPANDER_OBJECT);
+    o->ot.scaling = parameter_self_scaling(o, "ToolTipSelfScaling", 0, XPANDER_OBJECT);
+    o->ot.decimals = parameter_byte(o, "ToolTipDecimals", 0, XPANDER_OBJECT);
     /*Do the private reset of the object */
     if(o->object_reset_rtn)
     {
@@ -534,7 +549,7 @@ int object_update(object *o)
     {
         o->object_update_rtn(o);
 
-        if(o->ttip&&(o->ttip_text||o->ttip_title))
+        if(o->ttip&&(o->ot.text||o->ot.title))
         {
             object_tooltip_update(o);
         }
@@ -546,7 +561,6 @@ int object_update(object *o)
             o->update_act_lock = 0;
         }
     }
-
 
     return (0);
 }
@@ -561,10 +575,11 @@ void object_destroy(object** o)
         sfree((void**)&to->team);
         sfree((void**)&to->sx);
         sfree((void**)&to->sy);
-        sfree((void**)&to->ttip_text);
-        sfree((void**)&to->ttip_title);
-        surface_builtin_destroy(&to->ttip);
 
+        sfree((void**)&to->ot.title);
+        sfree((void**)&to->ot.text);
+
+        surface_builtin_destroy(&to->ttip);
         if(to->object_destroy_rtn)
         {
             to->object_destroy_rtn(to);

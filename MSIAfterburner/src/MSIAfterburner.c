@@ -10,7 +10,7 @@ typedef struct
     size_t res_id;
 } MSI_AFTERBURNER;
 
-static inline int msi_afterburner_gather_data(MAHM_SHARED_MEMORY_HEADER* hdr,MAHM_SHARED_MEMORY_ENTRY **ent);
+static inline int msi_afterburner_gather_data (MAHM_SHARED_MEMORY_HEADER* hdr,MAHM_SHARED_MEMORY_ENTRY **ent);
 
 void init(void **spv,void *ip)
 {

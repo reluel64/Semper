@@ -35,16 +35,36 @@ typedef struct core_temp_shared_data_ex
     float fMultipliers[256];
 } CoreTempSharedDataEx, *LPCoreTempSharedDataEx, **PPCoreTempSharedDataEx;
 #pragma (pop)
+
+typedef enum
+{
+    coretemp_unk,
+    coretemp_load,
+    coretemp_tjmax,
+    coretemp_core_count,
+    coretemp_cpu_count,
+    coretemp_temp,
+    coretemp_cpu_spd,
+    coretemp_fsb_speed,
+    coretemp_vcore,
+    coretemp_mul,
+    coretemp_name,
+    coretemp_max_temp,
+    coretemp_core_speed,
+    coretemp_tdp,
+    coretemp_pwr
+} coretemp_inf_t;
+
 typedef struct
 {
     size_t core_index;
-    unsigned char opt;
+    coretemp_inf_t cti;
     double max_temp;
     unsigned char* cpu_name;
 } coretemp_data;
 
 static inline int coretemp_gather_data(CoreTempSharedDataEx* data);
-static double coretemp_max_temp(CoreTempSharedDataEx* data);
+static double coretemp_calc_max_temp(CoreTempSharedDataEx* data);
 
 void init(void** spv, void* ip)
 {
@@ -53,30 +73,35 @@ void init(void** spv, void* ip)
     *spv = cd;
 }
 
+static coretemp_inf_t coretemp_dispatch_opt(unsigned char *opt)
+{
+    static unsigned char* opts[] =
+    {
+        "Load"    , "TjMax"      , "CoreCount" ,
+        "CpuCount", "Temperature", "CPUSpeed"  ,
+        "FSBSpeed", "Voltage"    , "Multiplier",
+        "Name"    , "MaxTemp"    , "CoreSpeed" ,
+        "TDP"     , "Power"
+    };
+
+    for(char i=0; i<sizeof(opts)/sizeof(unsigned char*); i++)
+    {
+        if(strcasecmp(opt,opts[i])==0)
+        {
+            return((coretemp_inf_t)(i+1));
+        }
+    }
+
+    return(coretemp_unk);
+}
+
 void reset(void* spv, void* ip)
 {
     coretemp_data* crd = spv;
-    unsigned char opt = 0;
+    unsigned char* str_opt=NULL;
     crd->core_index = 0;
-    unsigned char* str_opt = param_string("CoreTempInfo", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "Temperature");
-
-    static unsigned char* opts[] =
-    {
-        "Load",    "TjMax",      "CoreCount", "CpuCount", "Temperature", "CPUSpeed", "FSBSpeed",
-        "Voltage", "Multiplier", "Name",      "MaxTemp",  "CoreSpeed",   "TDP",      "Power"
-    };
-
-    for(opt = 0; opt < sizeof(opts) / sizeof(unsigned char*); opt++)
-    {
-        if(!strcasecmp(str_opt, opts[opt]))
-            break;
-    }
-
-    if(opt < sizeof(opts) / sizeof(unsigned char*))
-    {
-        crd->opt = opt;
-    }
-
+    str_opt = param_string("CoreTempInfo", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "Temperature");
+    crd->cti=coretemp_dispatch_opt(str_opt);
     crd->core_index = param_size_t("CoreTempIndex", ip, 0);
     crd->core_index = (crd->core_index > 127 ? 127 : crd->core_index);
 }
@@ -89,41 +114,43 @@ double update(void* spv)
     if(coretemp_gather_data(&data))
     {
         crd->cpu_name = "ERROR";
-        return (-1.0);
+        return (0.0);
     }
 
     crd->cpu_name = data.sCPUName;
 
-    switch(crd->opt)
+    switch(crd->cti)
     {
-    case 0:
-        return (data.uiLoad[crd->core_index]); // core load
-    case 1:
-        return (data.uiTjMax[crd->core_index]); // core tjmax
-    case 2:
-        return (data.uiCoreCnt); // CPU core count
-    case 3:
-        return (data.uiCPUCnt); // cpu count
-    case 4:
-        return (data.fTemp[crd->core_index]); // core temperature
-    case 5:
-        return (data.fCPUSpeed); // global cpu speed
-    case 6:
-        return (data.fFSBSpeed); // bus speed
-    case 7:
-        return (data.fVID); // voltage requested by cpu
-    case 8:
-        return ((double)data.fMultipliers[crd->core_index]); // per core multiplier
-    case 9:
-        return (0.0);
-    case 10:
-        return (coretemp_max_temp(&data)); // highest temperature
-    case 11:
-        return ((double)data.fMultipliers[crd->core_index] * (double)data.fFSBSpeed); // per core frequency
-    case 12:
-        return (data.ucTdpSupported?(double)data.uiTdp[crd->core_index]:0.0); // TDP
-    case 13:
-        return (data.ucPowerSupported?(double)data.fPower[crd->core_index]:0.0); // Power (Wattage)
+        case coretemp_load:
+            return (data.uiLoad[crd->core_index]); // core load
+        case coretemp_tjmax:
+            return (data.uiTjMax[crd->core_index]); // core tjmax
+        case coretemp_core_count:
+            return (data.uiCoreCnt); // CPU core count
+        case coretemp_cpu_count:
+            return (data.uiCPUCnt); // cpu count
+        case coretemp_temp:
+            return (data.ucDeltaToTjMax?
+                   (float)data.uiTjMax[crd->core_index]-data.fTemp[crd->core_index]:
+                   data.fTemp[crd->core_index]); // core temperature
+        case coretemp_cpu_spd:
+            return (data.fCPUSpeed); // global cpu speed
+        case coretemp_fsb_speed:
+            return (data.fFSBSpeed); // bus speed
+        case coretemp_vcore:
+            return (data.fVID); // voltage requested by cpu
+        case coretemp_mul:
+            return ((double)data.fMultipliers[crd->core_index]); // per core multiplier
+        case coretemp_name:
+            return (0.0);
+        case coretemp_max_temp:
+            return (coretemp_calc_max_temp(&data)); // highest temperature
+        case coretemp_core_speed:
+            return ((double)data.fMultipliers[crd->core_index] * (double)data.fFSBSpeed); // per core frequency
+        case coretemp_tdp:
+            return (data.ucTdpSupported?(double)data.uiTdp[crd->core_index]:0.0); // TDP
+        case coretemp_pwr:
+            return (data.ucPowerSupported?(double)data.fPower[crd->core_index]:0.0); // Power (Wattage)
     }
 
     return (0.0);
@@ -132,10 +159,10 @@ double update(void* spv)
 unsigned char* string(void* spv)
 {
     coretemp_data* crd = spv;
-    if(crd->opt==0)
-    {
+
+    if(crd->cti==coretemp_name)
         return (crd->cpu_name?crd->cpu_name:(unsigned char*)"");
-    }
+
     return(NULL);
 }
 
@@ -165,7 +192,7 @@ static inline int coretemp_gather_data(CoreTempSharedDataEx* data)
     return (ret);
 }
 
-static double coretemp_max_temp(CoreTempSharedDataEx* data)
+static double coretemp_calc_max_temp(CoreTempSharedDataEx* data)
 {
     double max_temp = 0.0;
 

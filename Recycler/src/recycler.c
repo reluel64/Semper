@@ -1,9 +1,8 @@
 /*
-* Recycler monitor source with notifier thread
+* Recycler monitor source
 * Part of Project 'Semper'
 * Written by Alexandru-Daniel Mărgărit
 */
-#include <mem.h>
 #include <SDK/semper_api.h>
 #include <pthread.h>
 #include <windows.h>
@@ -12,7 +11,8 @@
 #include <pthread.h>
 #include <linked_list.h>
 #include <Sddl.h>
-#define RECYCLER_DESTROY 0x2
+#include <io.h>
+
 
 typedef enum
 {
@@ -26,15 +26,15 @@ typedef struct
     void *ip;
     void **mh;                  //monitor handle
     void *me;                   //monitor event
-    size_t mc;                  //count of monitors
     double inf;                 //the value from the query
+    size_t mc;                  //count of monitors
     size_t lc;                  //last change
     size_t cc;                  //current change
     pthread_t qth;              //query thread
     pthread_mutex_t mtx;
+    recycler_query_t rq;       //query type
     unsigned char kill;        //kill the query
     unsigned char mon_mode;    //monitoring mode
-    recycler_query_t rq;       //query type
     unsigned char qa;          //query active
     unsigned char *cq_cmd;     //command when query is completed
 } recycler;
@@ -48,7 +48,6 @@ typedef struct
 
 static int recycler_notifier_check(recycler *r);
 static void *recycler_query_thread(void *p);
-static void *recycler_monitor_thread(void *p);
 static int recycler_query_user(recycler *r);
 static unsigned char *recycler_query_user_sid(size_t *len);
 static void recycler_notifier_destroy(recycler *r);
@@ -329,7 +328,6 @@ double update(void *spv)
     pthread_mutex_lock(&r->mtx);
     lret=r->inf;
     pthread_mutex_unlock(&r->mtx);
-
     return(lret);
 }
 
@@ -360,12 +358,15 @@ static void *recycler_query_thread(void *p)
     do
     {
         r->qa=2;
-
-        if(first!=0&&r->mon_mode)
+        if(r->mon_mode)
         {
-            recycler_notifier_setup(r);
-            recycler_notifier_check(r);
+            if(first!=0)
+            {
+                recycler_notifier_check(r);
+            }
+
             recycler_notifier_destroy(r);
+            recycler_notifier_setup(r);
         }
 
         recycler_query_user(r);
@@ -535,7 +536,7 @@ static int recycler_query_user(recycler *r)
                 unsigned char* filtered = zmalloc(fpsz + 6);
 
                 if(file==buf)
-                    snprintf(filtered,fpsz+6,"%s/$R*.*",file);
+                    snprintf(filtered,fpsz+6,"%s/$I*.*",file);
                 else
                     snprintf(filtered,fpsz+6,"%s/*.*",file);
 
@@ -549,9 +550,7 @@ static int recycler_query_user(recycler *r)
             do
             {
                 if(r->kill||fh==INVALID_HANDLE_VALUE)
-                {
                     break;
-                }
 
                 unsigned char* res = ucs_to_utf8(wfd.cFileName, NULL, 0);
 
@@ -568,14 +567,26 @@ static int recycler_query_user(recycler *r)
                     unsigned char *s=zmalloc(res_len+fpsz+6);
                     snprintf(s,res_len+fpsz+6,"%s\\%s",file,res);
                     windows_slahses(s);
-                    s[fpsz+2]='I';
+                    s[fpsz+2]='R';
 
                     if(access(s,0)==0)
                     {
-                        valid=1;
+                        s[fpsz+2]='I';
+                        FILE *f=fopen(s,"rb");
+
+                        if(f)
+                        {
+                            size_t sz=0;
+                            fseek(f,8,SEEK_SET);
+                            fread(&sz,sizeof(size_t),1,f);
+                            fclose(f);
+                            size+=sz;
+                            valid=1;
+                        }
                     }
 
                     sfree((void**)&s);
+
                     if(valid==0)
                     {
                         sfree((void**)&res);
@@ -583,9 +594,10 @@ static int recycler_query_user(recycler *r)
                     }
                 }
 
-
+#if 0
                 if(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
+#if 0
                     if(r->rq==recycler_query_size)
                     {
                         size_t res_sz = string_length(res);
@@ -597,12 +609,14 @@ static int recycler_query_user(recycler *r)
                         fdl->dir=ndir;
                         windows_slahses(ndir);
                     }
+#endif
                 }
                 else
                 {
+
                     size+=file_size(wfd.nFileSizeLow,wfd.nFileSizeHigh);
                 }
-
+#endif
                 if(file==buf) //we only count what is in root
                 {
                     file_count++;
@@ -610,8 +624,7 @@ static int recycler_query_user(recycler *r)
 
                 sfree((void**)&res);
 
-            }
-            while(r->kill==0&&FindNextFileW(fh, &wfd));
+            } while(r->kill==0&&FindNextFileW(fh, &wfd));
 
             if(fh!=NULL&&fh!=INVALID_HANDLE_VALUE)
             {

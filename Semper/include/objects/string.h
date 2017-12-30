@@ -20,11 +20,11 @@ typedef struct
     unsigned char percentual;
     unsigned char* string;
     unsigned char* bind_string;
-
+    double scale;
     unsigned int scaling;
 
     /*Pango stuff*/
-    double scale;
+
     void* context;
     void* layout;
     void* font_map;

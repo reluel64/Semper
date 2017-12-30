@@ -16,6 +16,16 @@ typedef struct
 
 } object_padding;
 
+typedef struct
+{
+    unsigned char *title;
+    unsigned char *text;
+    double scale;
+    unsigned int scaling;
+    unsigned char decimals;
+    unsigned char percentual;
+} object_tooltip;
+
 typedef struct _object object;
 
 typedef struct _object
@@ -23,8 +33,7 @@ typedef struct _object
     list_entry bindings;
     list_entry current;
     void *ttip;
-    unsigned char *ttip_title;
-    unsigned char *ttip_text;
+    object_tooltip ot;
     unsigned char object_type; // object type(string,image,etc.)
 
     /*******Object Parameters*******/

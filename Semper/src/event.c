@@ -194,7 +194,6 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
     {
         if(eq->ce->handler==handler&&eq->ce->pv==pv) //defer the event until the next cycle to avoid a busyloop
         {
-           // printf("PushToTail\n");
             flags|=EVENT_PUSH_TAIL;
         }
     }
@@ -335,7 +334,6 @@ void event_process(event_queue* eq)
 
         if(pe)
         {
-
             pthread_mutex_lock(&eq->mutex);
             eq->ce=e;
             pthread_mutex_unlock(&eq->mutex);

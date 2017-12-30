@@ -131,41 +131,31 @@ static int action_populate(source* s)
         if(!strncasecmp(v + 6, "Above", 5) || !strncasecmp(v + 6, "Equal", 5) || !strncasecmp(v + 6, "Below", 5))
         {
             unsigned char set_val = 0;
-
-            if(strncasecmp(v + 11, "Action", 6))
-            {
-                set_val = 1;
-            }
-
-            if(set_val)
-            {
-                sscanf(v + 11, "%llu", &index);
-            }
-            else
-            {
-                sscanf(v + 17, "%llu", &index);
-            }
-
             action* a = NULL;
 
-            if(strncasecmp(v + 6, "Above", 5) == 0)
-            {
-                a = action_alloc(&sa->abv, index);
-            }
-            else if(strncasecmp(v + 6, "Below", 5) == 0)
-            {
-                a = action_alloc(&sa->blw, index);
-            }
-
-            else if(strncasecmp(v + 6, "Equal", 5) == 0)
-            {
-                a = action_alloc(&sa->equ, index);
-            }
+            if(strncasecmp(v + 11, "Action", 6))
+                set_val = 1;
 
             if(set_val)
-            {
+                sscanf(v + 11, "%llu", &index);
+
+            else
+                sscanf(v + 17, "%llu", &index);
+
+
+
+            if(strncasecmp(v + 6, "Above", 5) == 0)
+                a = action_alloc(&sa->abv, index);
+
+            else if(strncasecmp(v + 6, "Below", 5) == 0)
+                a = action_alloc(&sa->blw, index);
+
+            else if(strncasecmp(v + 6, "Equal", 5) == 0)
+                a = action_alloc(&sa->equ, index);
+
+            if(set_val)
                 a->val = parameter_double(s, v, 0.0, XPANDER_SOURCE);
-            }
+
             else
             {
                 sfree((void**)&a->actstr);
@@ -177,11 +167,9 @@ static int action_populate(source* s)
             unsigned char type = 0;
             unsigned char _bool = 0;
             unsigned char scond = 0;
-
+            action* a=NULL;
             if(!strncasecmp(v + 6, "Condition", 9))
-            {
                 type = 1;
-            }
 
             if(type)
             {
@@ -209,15 +197,12 @@ static int action_populate(source* s)
             }
 
             if(type)
-            {
                 scond?sscanf(v + 15 + (_bool ? 4 : 5), "%llu", &index):sscanf(v + 15, "%llu", &index);
-            }
-            else
-            {
-                scond?sscanf(v + 11 + (_bool ? 4 : 5), "%llu", &index):sscanf(v + 11, "%llu", &index);
-            }
 
-            action* a = action_alloc(type == 0 ? &sa->match : &sa->cond, index);
+            else
+                scond?sscanf(v + 11 + (_bool ? 4 : 5), "%llu", &index):sscanf(v + 11, "%llu", &index);
+
+            a = action_alloc(type == 0 ? &sa->match : &sa->cond, index);
 
             if(scond)
             {

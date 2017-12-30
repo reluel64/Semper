@@ -443,7 +443,6 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
                 n=NULL;
                 v=0.0;
             }
-
         }
 
 #endif

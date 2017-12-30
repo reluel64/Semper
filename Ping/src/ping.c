@@ -35,8 +35,8 @@ static void *ping_solve_address(void *spv)
     p->solve_active=1;
     unsigned int addr=0;
     unsigned char buf[256]= {0};
-    pthread_mutex_lock(&p->mutex);
 
+    pthread_mutex_lock(&p->mutex);
     strncpy(buf,p->link,255);
     pthread_mutex_unlock(&p->mutex);
 
@@ -143,6 +143,7 @@ void reset(void* spv, void* ip)
     p->period = param_size_t("Period", ip, 64);
     p->rep_timeout = param_size_t("TimeoutValue", ip, 30000);
     pthread_mutex_unlock(&p->mutex);
+
     if((t = param_string("FinishAction", 0x3, ip, NULL))!=NULL)
     {
         p->exec = strdup(t);

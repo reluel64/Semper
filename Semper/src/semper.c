@@ -509,7 +509,6 @@ static int semper_font_cache_fix(unsigned char *path)
 
     size_t path_len=string_length(path);
 
-
     unsigned char *fltp=zmalloc(path_len+4);
     snprintf(fltp,path_len+4,"%s/*",path);
     windows_slahses(fltp);
@@ -530,7 +529,6 @@ static int semper_font_cache_fix(unsigned char *path)
     {
         unsigned char *temp=ucs_to_utf8(wfd.cFileName,NULL,0);
 
-
         if(!strcasecmp("..",temp)||!strcasecmp(".",temp))
         {
             sfree((void**)&temp);
@@ -545,12 +543,7 @@ static int semper_font_cache_fix(unsigned char *path)
 
         sfree((void**)&temp);
 
-        if(wfd.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)
-        {
-
-            ;
-        }
-        else
+        if(!(wfd.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
         {
             if(is_file_type(ffp,"NEW"))
             {
@@ -729,23 +722,8 @@ static void  semper_init_fonts(control_data *cd)
 #endif
 
 
-void torture(void)
-{
-    char b[512]={0};
-    for(size_t i=0;i<1000000;i++)
-    {
-        snprintf(b,512,"Z:\\%lu",i);
-        FILE *f=fopen(b,"w");
-        fclose(f);
-    }
-}
-
-
 int main(void)
 {
-#if 0
-torture();
-#endif
     control_data* cd = zmalloc(sizeof(control_data));
     crosswin_init(&cd->c);
     list_entry_init(&cd->shead);

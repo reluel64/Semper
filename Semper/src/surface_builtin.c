@@ -189,7 +189,7 @@ int surface_builtin_init(void *holder,surface_builtin_type tp)
             surface_data *osd=o->sd;
             control_data *cd=osd->cd;
 
-            if(o->ttip == NULL&&(o->ttip_text||o->ttip_title))
+            if(o->ttip == NULL&&(o->ot.text||o->ot.title))
             {
                 size_t buf_sz=0;
                 unsigned char *buf=surface_builtin_code(&buf_sz,tp);

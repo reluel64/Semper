@@ -23,9 +23,18 @@ typedef struct
 } speedfan_shared_memory;
 
 #pragma pack(pop)
+
+typedef enum
+{
+    speedfan_unk,
+    speedfan_temp,
+    speedfan_rpm,
+    speedfan_volt
+}speedfan_senz_type;
+
 typedef struct
 {
-    unsigned char senz_type;
+    speedfan_senz_type sst;
     unsigned char senz_index;
 } speedfan_data;
 
@@ -40,14 +49,16 @@ void init(void **spv,void *ip)
 void reset(void *spv,void *ip)
 {
     speedfan_data *spd=spv;
-    unsigned char *type=param_string("SensorType",EXTENSION_XPAND_SOURCES|EXTENSION_XPAND_VARIABLES,ip,"temperature");
+    unsigned char *type=param_string("SensorType",EXTENSION_XPAND_SOURCES|EXTENSION_XPAND_VARIABLES,ip,"Temperature");
+
+    spd->sst=speedfan_unk;
 
     if(!strcasecmp(type,"Temperature"))
-        spd->senz_type=0;
+        spd->sst=speedfan_temp;
     else if(!strcasecmp(type,"RPM"))
-        spd->senz_type=1;
+        spd->sst=speedfan_temp;
     else if(!strcasecmp(type,"Voltage"))
-        spd->senz_type=2;
+        spd->sst=speedfan_volt;
 
     spd->senz_index=(unsigned char)param_size_t("SensorIndex",ip,0);
 
@@ -84,13 +95,13 @@ double update(void *spv)
     speedfan_gather_data(&data);
     if(data.version!=1)
         return(0.0);
-    switch(spd->senz_type)
+    switch(spd->sst)
     {
-        case 0:
+        case speedfan_temp:
             return((double)data.temps[spd->senz_index>data.NumTemps?data.NumTemps:spd->senz_index]/100.0);
-        case 1:
+        case speedfan_rpm:
             return((double)data.fans[spd->senz_index>data.NumFans?data.NumFans:spd->senz_index]);
-        case 2:
+        case speedfan_volt:
             return((double)data.volts[spd->senz_index>data.NumVolts?data.NumVolts:spd->senz_index]/100.0);
     }
     return(0.0);
