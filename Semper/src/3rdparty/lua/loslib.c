@@ -416,7 +416,7 @@ static int os_setlocale (lua_State *L)
     return 1;
 }
 
-
+#if 0
 static int os_exit (lua_State *L)
 {
     int status;
@@ -433,7 +433,7 @@ static int os_exit (lua_State *L)
 
     return 0;
 }
-
+#endif
 
 static const luaL_Reg syslib[] =
 {
@@ -441,7 +441,9 @@ static const luaL_Reg syslib[] =
     {"date",      os_date},
     {"difftime",  os_difftime},
     {"execute",   os_execute},
+#if 0
     {"exit",      os_exit},
+#endif
     {"getenv",    os_getenv},
     {"remove",    os_remove},
     {"rename",    os_rename},

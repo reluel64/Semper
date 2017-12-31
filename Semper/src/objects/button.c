@@ -23,17 +23,13 @@ int button_mouse(object *o,mouse_status *ms)
 
 
     if(ms->state<=0&&ms->hover)
-    {
         bto->im_index=1;
-    }
+
     else if(ms->hover&&ms->button)
-    {
         bto->im_index=2;
-    }
+
     else
-    {
         bto->im_index=0;
-    }
 
     surface_adjust_size(sd);
     event_push(sd->cd->eq,(event_handler)crosswin_draw,sd->sw,0,0);

@@ -14,6 +14,7 @@
 typedef struct
 {
     size_t max_msg;
+    unsigned char order;
     unsigned char *ret_str;
     size_t log_row;
     size_t logs_avail;
@@ -32,6 +33,7 @@ void diag_show_reset(void *spv,void *ip)
 {
     diag_show *ds=spv;
     ds->max_msg=param_size_t("LogCount",ip,1);
+    ds->order=(unsigned char)param_size_t("ReverseOrder",ip,1);
 }
 
 double diag_show_update(void *spv)
@@ -49,48 +51,91 @@ double diag_show_update(void *spv)
     sfree((void**)&ds->ret_str);
     diag_mem_log *dml=NULL;
 
-
-    list_enum_part(dml,&dss->mem_log,current)
+    if(ds->order)
     {
-        if(entry_pos)
+        list_enum_part_backward(dml,&dss->mem_log,current)
         {
-            entry_pos--;
-            continue;
-        }
+            if(entry_pos)
+            {
+                entry_pos--;
+                continue;
+            }
 
-        buf_sz+=string_length(dml->log_buf)+1;
+            buf_sz+=string_length(dml->log_buf)+1;
 
-        if(--c==0)
-        {
-            break;
+            if(--c==0)
+            {
+                break;
+            }
         }
     }
+    else
+    {
+        list_enum_part(dml,&dss->mem_log,current)
+        {
+            if(entry_pos)
+            {
+                entry_pos--;
+                continue;
+            }
 
+            buf_sz+=string_length(dml->log_buf)+1;
+
+            if(--c==0)
+            {
+                break;
+            }
+        }
+    }
     ds->ret_str=zmalloc(buf_sz+1);
     c=ds->max_msg;
     entry_pos=ds->cpos;
-
-    list_enum_part(dml,&dss->mem_log,current)
+    if(ds->order)
     {
-        if(entry_pos)
+        list_enum_part_backward(dml,&dss->mem_log,current)
         {
-            entry_pos--;
-            continue;
+            if(entry_pos)
+            {
+                entry_pos--;
+                continue;
+            }
+
+            strcpy(ds->ret_str+buf_pos,dml->log_buf);
+            buf_pos+=string_length(dml->log_buf);
+
+            if(--c==0)
+            {
+                break;
+            }
+
+            strcpy(ds->ret_str+buf_pos,"\n");
+            buf_pos++;
+
         }
-
-        strcpy(ds->ret_str+buf_pos,dml->log_buf);
-        buf_pos+=string_length(dml->log_buf);
-
-        if(--c==0)
-        {
-            break;
-        }
-
-        strcpy(ds->ret_str+buf_pos,"\n");
-        buf_pos++;
-
     }
+    else
+    {
+        list_enum_part(dml,&dss->mem_log,current)
+        {
+            if(entry_pos)
+            {
+                entry_pos--;
+                continue;
+            }
 
+            strcpy(ds->ret_str+buf_pos,dml->log_buf);
+            buf_pos+=string_length(dml->log_buf);
+
+            if(--c==0)
+            {
+                break;
+            }
+
+            strcpy(ds->ret_str+buf_pos,"\n");
+            buf_pos++;
+
+        }
+    }
     ds->ret_str[buf_pos]=0;
     pthread_mutex_unlock(&dss->mutex);
 

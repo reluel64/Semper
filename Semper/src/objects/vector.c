@@ -33,6 +33,7 @@ int vector_render(object *o,cairo_t *cr)
     vector *v=o->pv;
     vector_path_common *vpc = NULL;
 #if TESTING == 0
+
     list_enum_part(vpc,&v->paths,current)
     {
         cairo_set_line_width(cr,vpc->stroke_w);
@@ -51,6 +52,7 @@ int vector_render(object *o,cairo_t *cr)
             cairo_set_color(cr,vpc->fill_color);
             cairo_fill_preserve(cr);
         }
+
         if(vpc->stroke_gradient)
         {
             cairo_set_source(cr,vpc->stroke_gradient);
@@ -61,7 +63,12 @@ int vector_render(object *o,cairo_t *cr)
             cairo_set_color(cr,vpc->stroke_color);
             cairo_stroke(cr);
         }
+        else
+        {
+             cairo_new_path(cr);
+        }
     }
+
 #else
 #if 0
     cairo_rectangle(cr,100,100,200,100);
@@ -90,12 +97,12 @@ int vector_render(object *o,cairo_t *cr)
     //cairo_set_matrix(cr,&m);
     cairo_rectangle(cr,100,100,100,100);
 
-     cairo_path_extents(cr,&rect.x,&rect.y,&rect.width,&rect.height);
- cairo_matrix_init_identity(&m);
+    cairo_path_extents(cr,&rect.x,&rect.y,&rect.width,&rect.height);
+    cairo_matrix_init_identity(&m);
     cairo_matrix_translate(&m,(rect.x+rect.width)/2.0,(rect.y+rect.height)/2.0);
     m.yx=tan(DEG2RAD(20));
     m.xy=tan(DEG2RAD(0));
-  cairo_matrix_translate(&m,-(rect.x+rect.width)/2.0,-(rect.y+rect.height)/2.0);
+    cairo_matrix_translate(&m,-(rect.x+rect.width)/2.0,-(rect.y+rect.height)/2.0);
     vector_parser_apply_matrixd(cr,&m);
 
 // cairo_identity_matrix(cr);

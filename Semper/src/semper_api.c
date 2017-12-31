@@ -32,7 +32,7 @@ typedef struct _extension_command
     control_data* cd;
     unsigned char* comm;
 } extension_command;
-
+extern int diag_log(unsigned char lvl,char *fmt, ...);
 SEMPER_API double param_double(unsigned char* pn, void* ip, double def)
 {
     if(!ip || !pn)
@@ -355,3 +355,9 @@ SEMPER_API unsigned char *absolute_path(void *ip,unsigned char *rp,unsigned char
 
     return(NULL);
 }
+
+SEMPER_API int _diag_log(int lvl,unsigned char *fmt,...)
+{
+    return(diag_log(lvl,fmt));
+}
+

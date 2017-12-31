@@ -25,7 +25,7 @@ int image_cache_decode_svg(FILE *f,image_cache_decoded *icd)
     fseeko64(f,0,SEEK_SET);
 
     unsigned char *buf=zmalloc(buf_sz+1);
-    fread(buf,1,buf_sz,f);
+    fread(buf,buf_sz,1,f);
 
     NSVGimage *img=nsvgParse(buf,"px",0);
 
@@ -83,7 +83,7 @@ int image_cache_decode_svg(FILE *f,image_cache_decoded *icd)
             cairo_set_source_surface (ctx, crs, 0, 0);
             cairo_pattern_set_filter (cairo_get_source (ctx), CAIRO_FILTER_BEST);
 
-            cairo_set_antialias(ctx,CAIRO_ANTIALIAS_BEST);
+            cairo_set_antialias(ctx,CAIRO_ANTIALIAS_NONE);
             cairo_paint(ctx);
             cairo_destroy(ctx);
             cairo_surface_destroy(crs);

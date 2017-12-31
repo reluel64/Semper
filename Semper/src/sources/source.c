@@ -531,7 +531,8 @@ int source_update(source* s)
             svc = 1;
         }
     }
-    else if(s->s_info||s->s_info_len) //make sure that if the source was changed and does not have a string function we do clear the string information
+    //make sure that if the source was changed and does not have a string function we do clear the string information
+    else if(s->s_info||s->s_info_len)
     {
         sfree((void**)&s->s_info);
         s->s_info_len=0;

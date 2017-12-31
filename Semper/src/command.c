@@ -21,19 +21,19 @@ typedef struct
     unsigned char* pms[COMMAND_PARAMETER_STACK];
     size_t plength;
 
-} action_parameters;
+} command_parameters;
 
 typedef struct
 {
     unsigned char* act_name;
-    int (*handler)(surface_data* sd, action_parameters* ap);
+    int (*handler)(surface_data* sd, command_parameters* cp);
     size_t min_parameters;
 } command_info;
 
 typedef struct
 {
     unsigned char* comm_name; // command name
-    action_parameters apm;
+    command_parameters cpm;
     surface_data* sd;
 } command_handler_status;
 
@@ -44,14 +44,14 @@ typedef struct
     unsigned char quote_type;
 } command_tokenizer_status;
 
-#define COMMAND_HANDLER( _func_name ) static int(_func_name)(surface_data * sd, action_parameters * ap)
+#define COMMAND_HANDLER( _func_name ) static int(_func_name)(surface_data * sd, command_parameters * cp)
 
 
 COMMAND_HANDLER(handler_draggable_command)
 {
-    if(ap->plength > 1)
+    if(cp->plength > 1)
     {
-        sd = surface_by_name(sd->cd, ap->pms[1]);
+        sd = surface_by_name(sd->cd, cp->pms[1]);
     }
 
     if(sd == NULL)
@@ -59,7 +59,7 @@ COMMAND_HANDLER(handler_draggable_command)
         return (-1);
     }
 
-    if(!strcasecmp("-1", ap->pms[0]))
+    if(!strcasecmp("-1", cp->pms[0]))
     {
         if(sd->draggable)
             skeleton_add_key(sd->scd, "Draggable", "0");
@@ -70,8 +70,8 @@ COMMAND_HANDLER(handler_draggable_command)
     }
     else
     {
-        skeleton_add_key(sd->scd, "Draggable", ap->pms[0]);
-        sd->draggable = atoi(ap->pms[0]);
+        skeleton_add_key(sd->scd, "Draggable", cp->pms[0]);
+        sd->draggable = atoi(cp->pms[0]);
     }
 
     crosswin_draggable(sd->sw, sd->draggable);
@@ -80,9 +80,9 @@ COMMAND_HANDLER(handler_draggable_command)
 
 COMMAND_HANDLER(handler_set_opacity)
 {
-    if(ap->plength > 1)
+    if(cp->plength > 1)
     {
-        sd = surface_by_name(sd->cd, ap->pms[1]);
+        sd = surface_by_name(sd->cd, cp->pms[1]);
     }
 
     if(sd == NULL)
@@ -90,31 +90,31 @@ COMMAND_HANDLER(handler_set_opacity)
         return (-1);
     }
 
-    sd->ro=atoi(ap->pms[0]);
-    skeleton_add_key(sd->scd, "Opacity", ap->pms[0]);
+    sd->ro=atoi(cp->pms[0]);
+    skeleton_add_key(sd->scd, "Opacity", cp->pms[0]);
     surface_fade(sd);
     return (0);
 }
 
 COMMAND_HANDLER(handler_load_registry)
 {
-    unused_parameter(ap);
+    unused_parameter(cp);
     control_data* cd = sd->cd;
     return (surface_builtin_init(cd,catalog));
 }
 
 COMMAND_HANDLER(handler_unload_registry)
 {
-    unused_parameter(ap);
+    unused_parameter(cp);
     control_data* cd = sd->cd;
     return (surface_builtin_destroy(&cd->srf_reg));
 }
 
 COMMAND_HANDLER(handler_keep_position)
 {
-    if(ap->plength > 1)
+    if(cp->plength > 1)
     {
-        sd = surface_by_name(sd->cd, ap->pms[1]);
+        sd = surface_by_name(sd->cd, cp->pms[1]);
     }
 
     if(sd == NULL)
@@ -122,7 +122,7 @@ COMMAND_HANDLER(handler_keep_position)
         return (-1);
     }
 
-    if(!strcasecmp("-1", ap->pms[0]))
+    if(!strcasecmp("-1", cp->pms[0]))
     {
         if(sd->snp)
         {
@@ -137,8 +137,8 @@ COMMAND_HANDLER(handler_keep_position)
     }
     else
     {
-        skeleton_add_key(sd->scd, "KeepPosition", ap->pms[0]);
-        sd->snp = atoi(ap->pms[0]);
+        skeleton_add_key(sd->scd, "KeepPosition", cp->pms[0]);
+        sd->snp = atoi(cp->pms[0]);
     }
 
     return (0);
@@ -146,9 +146,9 @@ COMMAND_HANDLER(handler_keep_position)
 
 COMMAND_HANDLER(handler_reload_if_modified)
 {
-    if(ap->plength > 1)
+    if(cp->plength > 1)
     {
-        sd = surface_by_name(sd->cd, ap->pms[1]);
+        sd = surface_by_name(sd->cd, cp->pms[1]);
     }
 
     if(sd == NULL)
@@ -156,7 +156,7 @@ COMMAND_HANDLER(handler_reload_if_modified)
         return (-1);
     }
 
-    if(!strcasecmp("-1", ap->pms[0]))
+    if(!strcasecmp("-1", cp->pms[0]))
     {
         if(sd->rim)
         {
@@ -171,8 +171,8 @@ COMMAND_HANDLER(handler_reload_if_modified)
     }
     else
     {
-        skeleton_add_key(sd->scd, "ReloadIfModified", ap->pms[0]);
-        sd->rim = atoi(ap->pms[0]);
+        skeleton_add_key(sd->scd, "ReloadIfModified", cp->pms[0]);
+        sd->rim = atoi(cp->pms[0]);
     }
 
     return (0);
@@ -180,9 +180,9 @@ COMMAND_HANDLER(handler_reload_if_modified)
 
 COMMAND_HANDLER(handler_keep_on_screen)
 {
-    if(ap->plength > 1)
+    if(cp->plength > 1)
     {
-        sd = surface_by_name(sd->cd, ap->pms[1]);
+        sd = surface_by_name(sd->cd, cp->pms[1]);
     }
 
     if(sd == NULL)
@@ -190,7 +190,7 @@ COMMAND_HANDLER(handler_keep_on_screen)
         return (-1);
     }
 
-    if(!strcasecmp("-1", ap->pms[0]))
+    if(!strcasecmp("-1", cp->pms[0]))
     {
         if(sd->keep_on_screen)
         {
@@ -205,8 +205,8 @@ COMMAND_HANDLER(handler_keep_on_screen)
     }
     else
     {
-        skeleton_add_key(sd->scd, "KeepOnScreen", ap->pms[0]);
-        sd->keep_on_screen = atoi(ap->pms[0]);
+        skeleton_add_key(sd->scd, "KeepOnScreen", cp->pms[0]);
+        sd->keep_on_screen = atoi(cp->pms[0]);
     }
 
     crosswin_keep_on_screen(sd->sw, sd->keep_on_screen);
@@ -215,9 +215,9 @@ COMMAND_HANDLER(handler_keep_on_screen)
 
 COMMAND_HANDLER(handler_click_through)
 {
-    if(ap->plength > 1)
+    if(cp->plength > 1)
     {
-        sd = surface_by_name(sd->cd, ap->pms[1]);
+        sd = surface_by_name(sd->cd, cp->pms[1]);
     }
 
     if(sd == NULL)
@@ -225,7 +225,7 @@ COMMAND_HANDLER(handler_click_through)
         return (-1);
     }
 
-    if(!strcasecmp("-1", ap->pms[0]))
+    if(!strcasecmp("-1", cp->pms[0]))
     {
         if(sd->clkt)
         {
@@ -241,8 +241,8 @@ COMMAND_HANDLER(handler_click_through)
     }
     else
     {
-        skeleton_add_key(sd->scd, "Clickthrough", ap->pms[0]);
-        sd->clkt = atoi(ap->pms[0]);
+        skeleton_add_key(sd->scd, "Clickthrough", cp->pms[0]);
+        sd->clkt = atoi(cp->pms[0]);
     }
 
     crosswin_click_through(sd->sw, sd->clkt);
@@ -251,9 +251,9 @@ COMMAND_HANDLER(handler_click_through)
 
 COMMAND_HANDLER(handler_show_command)
 {
-    if(ap->plength > 0)
+    if(cp->plength > 0)
     {
-        sd = surface_by_name(sd->cd, ap->pms[0]);
+        sd = surface_by_name(sd->cd, cp->pms[0]);
     }
 
     if(sd == NULL)
@@ -269,9 +269,9 @@ COMMAND_HANDLER(handler_show_command)
 
 COMMAND_HANDLER(handler_hide_command)
 {
-    if(ap->plength > 0)
+    if(cp->plength > 0)
     {
-        sd = surface_by_name(sd->cd, ap->pms[0]);
+        sd = surface_by_name(sd->cd, cp->pms[0]);
     }
 
     if(sd == NULL)
@@ -287,9 +287,9 @@ COMMAND_HANDLER(handler_hide_command)
 
 COMMAND_HANDLER(handler_hide_fade_command)
 {
-    if(ap->plength > 0)
+    if(cp->plength > 0)
     {
-        sd = surface_by_name(sd->cd, ap->pms[0]);
+        sd = surface_by_name(sd->cd, cp->pms[0]);
     }
 
     if(sd == NULL)
@@ -305,9 +305,9 @@ COMMAND_HANDLER(handler_hide_fade_command)
 
 COMMAND_HANDLER(handler_show_fade_command)
 {
-    if(ap->plength > 0)
+    if(cp->plength > 0)
     {
-        sd = surface_by_name(sd->cd, ap->pms[0]);
+        sd = surface_by_name(sd->cd, cp->pms[0]);
     }
 
     if(sd == NULL)
@@ -323,9 +323,9 @@ COMMAND_HANDLER(handler_show_fade_command)
 
 COMMAND_HANDLER(handler_update_surface)
 {
-    if(ap->plength != 0)
+    if(cp->plength != 0)
     {
-        sd = surface_by_name(sd->cd, ap->pms[0]);
+        sd = surface_by_name(sd->cd, cp->pms[0]);
     }
 
     if(sd)
@@ -338,9 +338,9 @@ COMMAND_HANDLER(handler_update_surface)
 
 COMMAND_HANDLER(handler_add_object)
 {
-    if(ap->plength > 2)
+    if(cp->plength > 2)
     {
-        sd = surface_by_name(sd->cd, ap->pms[2]);
+        sd = surface_by_name(sd->cd, cp->pms[2]);
     }
 
     if(sd == NULL)
@@ -348,12 +348,12 @@ COMMAND_HANDLER(handler_add_object)
         return (0);
     }
 
-    section s = skeleton_get_section(&sd->skhead, ap->pms[0]); // check is there is something in the skeleton
+    section s = skeleton_get_section(&sd->skhead, cp->pms[0]); // check is there is something in the skeleton
 
     if(s == NULL)
     {
-        s = skeleton_add_section(&sd->skhead, ap->pms[0]);
-        skeleton_add_key(s, "Object", ap->pms[1]);
+        s = skeleton_add_section(&sd->skhead, cp->pms[0]);
+        skeleton_add_key(s, "Object", cp->pms[1]);
         object_init(s, sd);
     }
 
@@ -363,9 +363,9 @@ COMMAND_HANDLER(handler_add_object)
 
 COMMAND_HANDLER(handler_add_source)
 {
-    if(ap->plength > 2)
+    if(cp->plength > 2)
     {
-        sd = surface_by_name(sd->cd, ap->pms[2]);
+        sd = surface_by_name(sd->cd, cp->pms[2]);
     }
 
     if(sd == NULL)
@@ -373,12 +373,12 @@ COMMAND_HANDLER(handler_add_source)
         return (0);
     }
 
-    section s = skeleton_get_section(&sd->skhead, ap->pms[0]); // check is there is something in the skeleton
+    section s = skeleton_get_section(&sd->skhead, cp->pms[0]); // check is there is something in the skeleton
 
     if(s == NULL)
     {
-        s = skeleton_add_section(&sd->skhead, ap->pms[0]);
-        skeleton_add_key(s, "Source", ap->pms[1]);
+        s = skeleton_add_section(&sd->skhead, cp->pms[0]);
+        skeleton_add_key(s, "Source", cp->pms[1]);
         source_init(s, sd);
     }
 
@@ -387,18 +387,18 @@ COMMAND_HANDLER(handler_add_source)
 
 COMMAND_HANDLER(handler_change_param)
 {
-    unsigned char* in = ap->pms[0];
-    unsigned char* param = ap->pms[1];
+    unsigned char* in = cp->pms[0];
+    unsigned char* param = cp->pms[1];
     unsigned char* nv = NULL;
 
-    if(ap->plength >= 4)
+    if(cp->plength >= 4)
     {
-        sd = surface_by_name(sd->cd, ap->pms[3]);
+        sd = surface_by_name(sd->cd, cp->pms[3]);
     }
 
-    if(ap->plength >= 3)
+    if(cp->plength >= 3)
     {
-        nv = ap->pms[2];
+        nv = cp->pms[2];
     }
 
     if(sd == NULL)
@@ -443,15 +443,15 @@ COMMAND_HANDLER(handler_change_param)
 
 COMMAND_HANDLER(handler_surface_pos)
 {
-    unsigned char* x = ap->pms[0];
-    unsigned char* y = ap->pms[1];
+    unsigned char* x = cp->pms[0];
+    unsigned char* y = cp->pms[1];
 
-    if(ap->plength >= 3)
+    if(cp->plength >= 3)
     {
-        sd = surface_by_name(sd->cd, ap->pms[3]);
+        sd = surface_by_name(sd->cd, cp->pms[3]);
     }
 
-    if(sd == NULL||ap->plength<2)
+    if(sd == NULL||cp->plength<2)
     {
         return (-1);
     }
@@ -472,7 +472,7 @@ COMMAND_HANDLER(handler_execute)
     unused_parameter(sd);
     int ret = 0;
 #ifdef WIN32
-    wchar_t* s = utf8_to_ucs(ap->pms[0]);
+    wchar_t* s = utf8_to_ucs(cp->pms[0]);
 
     if(s)
     {
@@ -488,17 +488,17 @@ COMMAND_HANDLER(handler_execute)
 
 COMMAND_HANDLER(handler_change_variable)
 {
-    unsigned char* vn = ap->pms[0];
+    unsigned char* vn = cp->pms[0];
     unsigned char* vv = NULL;
 
-    if(ap->plength > 1)
+    if(cp->plength > 1)
     {
-        vv = ap->pms[1];
+        vv = cp->pms[1];
     }
 
-    if(ap->plength>2)
+    if(cp->plength>2)
     {
-        sd=surface_by_name(sd->cd,ap->pms[2]);
+        sd=surface_by_name(sd->cd,cp->pms[2]);
     }
 
     if(sd==NULL)
@@ -549,9 +549,9 @@ COMMAND_HANDLER(handler_switch_source)
     unsigned char ns = 0;
     source* s = NULL;
 
-    if(ap->plength >= 1)
+    if(cp->plength >= 1)
     {
-        s = source_by_name(sd, ap->pms[0],-1);
+        s = source_by_name(sd, cp->pms[0],-1);
     }
 
     if(!s)
@@ -559,9 +559,9 @@ COMMAND_HANDLER(handler_switch_source)
         return (-1);
     }
 
-    if(ap->plength >= 2)
+    if(cp->plength >= 2)
     {
-        ns = (unsigned char)compute_formula(ap->pms[1]);
+        ns = (unsigned char)compute_formula(cp->pms[1]);
     }
     else
     {
@@ -577,18 +577,18 @@ COMMAND_HANDLER(handler_source_command)
 {
     surface_data* lsd = sd;
 
-    if(ap->plength >= 3)
+    if(cp->plength >= 3)
     {
-        lsd = surface_by_name(sd->cd, ap->pms[2]);
+        lsd = surface_by_name(sd->cd, cp->pms[2]);
     }
 
     if(lsd)
     {
-        source* s = source_by_name(lsd, ap->pms[0],-1);
+        source* s = source_by_name(lsd, cp->pms[0],-1);
 
         if(s&&s->disabled == 0 && s && s->source_command_rtn)
         {
-            s->source_command_rtn(s->pv, ap->pms[1]);
+            s->source_command_rtn(s->pv, cp->pms[1]);
         }
     }
 
@@ -597,18 +597,18 @@ COMMAND_HANDLER(handler_source_command)
 
 COMMAND_HANDLER(handler_unload_surface)
 {
-    if(ap->plength)
+    if(cp->plength)
     {
-        sd = surface_by_name(sd->cd, ap->pms[0]);
+        sd = surface_by_name(sd->cd, cp->pms[0]);
     }
 
     if(sd)
     {
         section* s = NULL;
 
-        if(ap->plength)
+        if(cp->plength)
         {
-            s = skeleton_get_section(&sd->cd->shead, ap->pms[0]);
+            s = skeleton_get_section(&sd->cd->shead, cp->pms[0]);
         }
         else
         {
@@ -627,36 +627,36 @@ COMMAND_HANDLER(handler_unload_surface)
 COMMAND_HANDLER(handler_load_surface)
 {
 
-    section* s = skeleton_add_section(&sd->cd->shead, ap->pms[0]);
+    section* s = skeleton_add_section(&sd->cd->shead, cp->pms[0]);
     control_data* cd = sd->cd;
 
-    unsigned char* sfp = zmalloc(cd->surface_dir_length + string_length(ap->pms[0]) + 3);
+    unsigned char* sfp = zmalloc(cd->surface_dir_length + string_length(cp->pms[0]) + 3);
     strcpy(sfp, cd->surface_dir);
     sfp[cd->surface_dir_length] = '/';
-    strcpy(sfp + cd->surface_dir_length + 1, ap->pms[0]);
+    strcpy(sfp + cd->surface_dir_length + 1, cp->pms[0]);
 
     size_t var = 0;
 
-    if(ap->plength > 1)
+    if(cp->plength > 1)
     {
-        var = surface_file_variant(sfp, ap->pms[1]);
+        var = surface_file_variant(sfp, cp->pms[1]);
     }
 
     sfree((void**)&sfp);
     surface_data* ld_srf = NULL;
 
-    if(surface_load(sd->cd, ap->pms[0], var ? var : 1))
+    if(surface_load(sd->cd, cp->pms[0], var ? var : 1))
     {
-        ld_srf = surface_by_name(sd->cd, ap->pms[0]);
+        ld_srf = surface_by_name(sd->cd, cp->pms[0]);
 
         if(ld_srf->sp.variant != (var ? var : 1))
         {
-            surface_change_variant(ld_srf, ap->pms[1]);
+            surface_change_variant(ld_srf, cp->pms[1]);
         }
     }
     else
     {
-        ld_srf = surface_by_name(sd->cd, ap->pms[0]);
+        ld_srf = surface_by_name(sd->cd, cp->pms[0]);
         if(ld_srf)
         {
             surface_init_update(ld_srf);
@@ -681,16 +681,16 @@ COMMAND_HANDLER(handler_remove)
     source* s = NULL;
     object* o = NULL;
 
-    if(ap->plength == 1)
+    if(cp->plength == 1)
     {
-        s = source_by_name(sd, ap->pms[0],-1);
-        o = object_by_name(sd, ap->pms[0],-1);
+        s = source_by_name(sd, cp->pms[0],-1);
+        o = object_by_name(sd, cp->pms[0],-1);
     }
-    else if(ap->plength > 1)
+    else if(cp->plength > 1)
     {
-        sd = surface_by_name(sd->cd, ap->pms[1]);
-        s = source_by_name(sd, ap->pms[0],-1);
-        o = object_by_name(sd, ap->pms[0],-1);
+        sd = surface_by_name(sd->cd, cp->pms[1]);
+        s = source_by_name(sd, cp->pms[0],-1);
+        o = object_by_name(sd, cp->pms[0],-1);
     }
 
     if(sd && o)
@@ -717,27 +717,27 @@ COMMAND_HANDLER(handler_parameter_team)
     unsigned char* nv = NULL;
     unsigned char* param = NULL;
 
-    if(ap->plength >= 4)
+    if(cp->plength >= 4)
     {
-        lsd = surface_by_name(sd->cd, ap->pms[3]);
+        lsd = surface_by_name(sd->cd, cp->pms[3]);
 
         if(lsd == NULL)
             return (0);
     }
 
-    if(ap->plength >= 3)
+    if(cp->plength >= 3)
     {
-        nv = ap->pms[2];
+        nv = cp->pms[2];
     }
 
-    if(ap->plength >= 2)
+    if(cp->plength >= 2)
     {
-        param = ap->pms[1];
+        param = cp->pms[1];
     }
 
     list_enum_part(o, &lsd->objects, current)
     {
-        if(o->die == 0 && team_member(o->team, ap->pms[0]))
+        if(o->die == 0 && team_member(o->team, cp->pms[0]))
         {
             if(nv)
             {
@@ -754,7 +754,7 @@ COMMAND_HANDLER(handler_parameter_team)
     }
     list_enum_part(s, &lsd->sources, current)
     {
-        if(s->die == 0 && team_member(s->team, ap->pms[0]))
+        if(s->die == 0 && team_member(s->team, cp->pms[0]))
         {
             if(nv)
             {
@@ -777,9 +777,9 @@ COMMAND_HANDLER(handler_update_team)
     object* o = NULL;
     source* s = NULL;
 
-    if(ap->plength > 1)
+    if(cp->plength > 1)
     {
-        sd = surface_by_name(sd->cd, ap->pms[1]);
+        sd = surface_by_name(sd->cd, cp->pms[1]);
 
         if(!sd)
         {
@@ -789,7 +789,7 @@ COMMAND_HANDLER(handler_update_team)
 
     list_enum_part(o, &sd->objects, current)
     {
-        if(team_member(o->team, ap->pms[0]))
+        if(team_member(o->team, cp->pms[0]))
         {
             object_update(o);
         }
@@ -797,7 +797,7 @@ COMMAND_HANDLER(handler_update_team)
 
     list_enum_part(s, &sd->sources, current)
     {
-        if(team_member(s->team, ap->pms[0]))
+        if(team_member(s->team, cp->pms[0]))
         {
             source_update(s);
         }
@@ -810,16 +810,16 @@ COMMAND_HANDLER(handler_update)
 {
     surface_data* lsd = sd;
 
-    if(ap->plength > 1)
+    if(cp->plength > 1)
     {
-        lsd = surface_by_name(sd->cd, ap->pms[1]);
+        lsd = surface_by_name(sd->cd, cp->pms[1]);
         lsd = lsd ? lsd : sd;
     }
 
-    object* o = object_by_name(lsd, ap->pms[0],-1);
-    source* s = source_by_name(lsd, ap->pms[0],-1);
+    object* o = object_by_name(lsd, cp->pms[0],-1);
+    source* s = source_by_name(lsd, cp->pms[0],-1);
 
-    if(!strcasecmp(ap->pms[0],"S*"))
+    if(!strcasecmp(cp->pms[0],"S*"))
     {
         list_enum_part(s,&lsd->sources,current)
         {
@@ -829,7 +829,7 @@ COMMAND_HANDLER(handler_update)
             }
         }
     }
-    else if(!strcasecmp(ap->pms[0],"O*"))
+    else if(!strcasecmp(cp->pms[0],"O*"))
     {
         list_enum_part(o,&lsd->objects,current)
         {
@@ -855,14 +855,14 @@ COMMAND_HANDLER(handler_reset)
 {
     surface_data* lsd = sd;
 
-    if(ap->plength > 1)
+    if(cp->plength > 1)
     {
-        lsd = surface_by_name(sd->cd, ap->pms[1]);
+        lsd = surface_by_name(sd->cd, cp->pms[1]);
         lsd = lsd ? lsd : sd;
     }
 
-    object* o = object_by_name(lsd, ap->pms[0],-1);
-    source* s = source_by_name(lsd, ap->pms[0],-1);
+    object* o = object_by_name(lsd, cp->pms[0],-1);
+    source* s = source_by_name(lsd, cp->pms[0],-1);
 
     if(o && o->die == 0)
     {
@@ -878,9 +878,9 @@ COMMAND_HANDLER(handler_reset)
 
 COMMAND_HANDLER(handler_force_draw)
 {
-    if(ap && ap->plength > 1)
+    if(cp && cp->plength > 1)
     {
-        sd = surface_by_name(sd->cd, ap->pms[1]);
+        sd = surface_by_name(sd->cd, cp->pms[1]);
 
         if(sd == NULL)
         {
@@ -948,9 +948,9 @@ static int command_process_single_action(command_handler_status* chs)
 
             if(ci[i].handler && chs->comm_name && (strcasecmp(chs->comm_name, ci[i].act_name) == 0))
             {
-                if((ci[i].min_parameters == 0) || (ci[i].min_parameters <= chs->apm.plength))
+                if((ci[i].min_parameters == 0) || (ci[i].min_parameters <= chs->cpm.plength))
                 {
-                    ret = ci[i].handler(chs->sd, &chs->apm);
+                    ret = ci[i].handler(chs->sd, &chs->cpm);
 
                 }
 
@@ -1088,10 +1088,10 @@ int command(surface_data* sd, unsigned char **pa)
         {
             if((execute&&end!=start)||execute==0)
             {
-                chs.apm.pms[stack_pos] = zmalloc((end-start)+1);
-                strncpy(chs.apm.pms[stack_pos], sti.buffer+start, end-start);
+                chs.cpm.pms[stack_pos] = zmalloc((end-start)+1);
+                strncpy(chs.cpm.pms[stack_pos], sti.buffer+start, end-start);
                 stack_pos++;
-                chs.apm.plength++;
+                chs.cpm.plength++;
             }
         }
         else if(chs.comm_name==NULL)
@@ -1106,14 +1106,14 @@ int command(surface_data* sd, unsigned char **pa)
             command_process_single_action(&chs);
             execute=0;
 
-            for(size_t i=0; i<chs.apm.plength; i++)
+            for(size_t i=0; i<chs.cpm.plength; i++)
             {
-                sfree((void**)&chs.apm.pms[i]);
+                sfree((void**)&chs.cpm.pms[i]);
             }
 
             stack_pos=0;
             push_params=0;
-            chs.apm.plength=0;
+            chs.cpm.plength=0;
 
             sfree((void**)&chs.comm_name);
         }
