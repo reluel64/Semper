@@ -1,5 +1,5 @@
 /*
- * Parameter setters
+ * Parameter retrievers
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  * */
@@ -421,25 +421,19 @@ unsigned int parameter_self_scaling(void* req, unsigned char* npm, unsigned int 
 
     if(xpander(&xr))
     {
-
         if(xr.es)
         {
             if(strcasecmp("1", xr.es) == 0)
-            {
                 ret = 1;
-            }
+
             else if(strcasecmp("2", xr.es) == 0)
-            {
                 ret = 2;
-            }
+
             else if(strcasecmp("1k", xr.es) == 0)
-            {
                 ret = 3;
-            }
+
             else if(strcasecmp("2k", xr.es) == 0)
-            {
                 ret = 4;
-            }
         }
 
         sfree((void**)&xr.es);
@@ -447,21 +441,16 @@ unsigned int parameter_self_scaling(void* req, unsigned char* npm, unsigned int 
     else if(xr.os)
     {
         if(strcasecmp("1", xr.os) == 0)
-        {
             ret = 1;
-        }
+
         else if(strcasecmp("2", xr.os) == 0)
-        {
             ret = 2;
-        }
+
         else if(strcasecmp("1k", xr.os) == 0)
-        {
             ret = 3;
-        }
+
         else if(strcasecmp("2k", xr.os) == 0)
-        {
             ret = 4;
-        }
     }
 
     xr.os = NULL;

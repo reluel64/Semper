@@ -645,7 +645,7 @@ void *js_engine_init(unsigned char *buf,void *pv)
         return(NULL);
     }
 
-    if(duk_get_global_string(ctx,"script_init"))
+    if(duk_get_global_string(ctx,"init"))
     {
         duk_pcall(ctx, 0);
     }

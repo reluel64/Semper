@@ -48,10 +48,20 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
 #elif __linux__
 #include <dirent.h>
 #endif
+
+typedef enum
+{
+    processor_usage_t,
+    processor_process_count_t,
+    processor_core_count_t,
+    processor_freq_t,
+    processor_is_running_t,
+} processor_inf;
+
 typedef struct _processor
 {
     unsigned char total;
-    unsigned char inf_type;
+    processor_inf inf_type;
     unsigned char *process_name;
     size_t core_count;
     size_t usage_cpu_no;
@@ -178,7 +188,7 @@ void processor_reset(void* spv, void* ip)
     {
         if(!strcasecmp(inf_type, "Usage"))
         {
-            p->inf_type = 0;
+            p->inf_type = processor_usage_t;
             source_set_max(100.0, ip, 1, 1);
 #ifdef WIN32
             p->usage_cpu_no = param_size_t("CoreUsage", ip, 0);
@@ -186,15 +196,15 @@ void processor_reset(void* spv, void* ip)
         }
         else if(!strcasecmp(inf_type, "ProcessCount"))
         {
-            p->inf_type = 1;
+            p->inf_type = processor_process_count_t;
         }
         else if(!strcasecmp(inf_type, "CoreCount"))
         {
-            p->inf_type = 2;
+            p->inf_type = processor_core_count_t;
         }
         else if(!strcasecmp(inf_type, "Frequency"))
         {
-            p->inf_type = 3;
+            p->inf_type = processor_freq_t;
 #ifdef WIN32
 
             sfree((void**)&p->ppi);
@@ -212,7 +222,7 @@ void processor_reset(void* spv, void* ip)
         }
         else if(!strcasecmp(inf_type,"ProcessRunning"))
         {
-            p->inf_type=4;
+            p->inf_type=processor_is_running_t;
             p->process_name=clone_string(param_string("ProcessName", EXTENSION_XPAND_ALL, ip, NULL));
         }
     }
@@ -363,7 +373,7 @@ static size_t processor_process_count(processor *p)
 
     for(SYSTEM_PROCESS_INFORMATION* sppi = spi; sppi->NextEntryOffset;)
     {
-        if(p->inf_type==4)
+        if(p->inf_type==processor_is_running_t)
         {
             processes=0;
             unsigned char found=0;
@@ -475,16 +485,16 @@ double processor_update(void* spv)
 
     switch(p->inf_type)
     {
-        case 1:
+        case processor_process_count_t:
             return ((double)processor_process_count(spv));
 
-        case 2:
+        case processor_core_count_t:
             return ((double)p->core_count);
 
-        case 3:
+        case processor_freq_t:
             return (processor_frequency(p, p->total));
 
-        case 4:
+        case processor_is_running_t:
             return((double)processor_process_count(spv));
 
         default:

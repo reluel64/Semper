@@ -10,8 +10,6 @@
   <VirtualDirectory Name="src">
     <File Name="src/recycler.c"/>
   </VirtualDirectory>
-  <Dependencies Name="Debug"/>
-  <Dependencies Name="Release"/>
   <VirtualDirectory Name="include">
     <File Name="include/linked_list.h"/>
   </VirtualDirectory>
@@ -114,4 +112,6 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>

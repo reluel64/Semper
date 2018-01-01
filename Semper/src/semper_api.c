@@ -33,6 +33,7 @@ typedef struct _extension_command
     unsigned char* comm;
 } extension_command;
 extern int diag_log(unsigned char lvl,char *fmt, ...);
+
 SEMPER_API double param_double(unsigned char* pn, void* ip, double def)
 {
     if(!ip || !pn)
@@ -133,14 +134,7 @@ SEMPER_API void* get_extension_by_name(unsigned char* name, void* ip)
 
 SEMPER_API void* get_private_data(void* ip)
 {
-    source* s = ip;
-
-    if(s)
-    {
-        return (s->pv);
-    }
-
-    return (NULL);
+    return(ip?(((source*)ip)->pv):NULL);
 }
 
 SEMPER_API int is_parent_candidate(void* pc, void* ip)

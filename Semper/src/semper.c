@@ -725,6 +725,7 @@ static void  semper_init_fonts(control_data *cd)
 
 int main(void)
 {
+
     control_data* cd = zmalloc(sizeof(control_data));
     crosswin_init(&cd->c);
     list_entry_init(&cd->shead);

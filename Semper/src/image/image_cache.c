@@ -480,10 +480,10 @@ void image_cache_destroy(void** ic)
 static void image_cache_remove_entry(image_entry** ie)
 {
     image_entry* tie = *ie;
+    linked_list_remove(&tie->current);
 
     sfree((void**)&tie->attrib.path);
     sfree((void**)&tie->image_px);
-    linked_list_remove(&tie->current);
     sfree((void**)ie);
 }
 
@@ -503,23 +503,17 @@ static int image_cache_load_image(image_cache_decoded *icd,image_attributes *ia)
     switch(ia->tile)
     {
         case 1:
-        {
             image_cache_tile(icd, ia->rw, ia->rh);
             break;
-        }
 
         case 2:
-        {
             image_cache_scale(icd, ia->tpm.w, ia->tpm.h,ia->keep_ratio);
             image_cache_tile(icd, ia->rw, ia->rh);
             break;
-        }
 
         default:
-        {
             image_cache_scale(icd, ia->rw, ia->rh,ia->keep_ratio);
             break;
-        }
     }
 
     if(ia->opacity != 255)

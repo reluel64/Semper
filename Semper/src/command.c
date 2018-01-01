@@ -896,7 +896,7 @@ COMMAND_HANDLER(handler_force_draw)
 
 /******************************************************************************/
 
-static int command_process_single_action(command_handler_status* chs)
+static int command_execute(command_handler_status* chs)
 {
     int ret = 0;
     int found=0;
@@ -1103,7 +1103,7 @@ int command(surface_data* sd, unsigned char **pa)
         if(execute)
         {
             chs.sd=sd;
-            command_process_single_action(&chs);
+            command_execute(&chs);
             execute=0;
 
             for(size_t i=0; i<chs.cpm.plength; i++)

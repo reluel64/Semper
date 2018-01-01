@@ -177,7 +177,7 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
             surface_builtin_init(pv,1);
         }
 
-        fcomm=replace( ma->ha,tbuf,0);
+        fcomm=replace(ma->ha,tbuf, 0);
         ma->old_hover = ms->hover;
     }
     else if(ms->hover==0&&ma->old_hover != ms->hover)
@@ -187,7 +187,7 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
             surface_builtin_destroy(&((object*)pv)->ttip);
         }
 
-        fcomm=replace( ma->nha,tbuf,0);
+        fcomm=replace(ma->nha,tbuf, 0);
         ma->old_hover = ms->hover;
     }
 

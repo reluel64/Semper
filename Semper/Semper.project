@@ -266,9 +266,6 @@
   </VirtualDirectory>
   <Description/>
   <Dependencies/>
-  <Dependencies Name="Debug"/>
-  <Dependencies Name="Debug_Linux"/>
-  <Dependencies Name="Release"/>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="" C_Options="" Assembler="">
@@ -630,4 +627,7 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Debug_Linux"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>
