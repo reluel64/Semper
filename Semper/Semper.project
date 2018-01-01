@@ -168,6 +168,7 @@
     <File Name="src/team.c"/>
     <File Name="src/xpander.c"/>
     <File Name="src/semper_api.c"/>
+    <File Name="src/filemem.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <VirtualDirectory Name="sources">

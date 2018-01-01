@@ -671,7 +671,7 @@ void *lua_engine_init(unsigned char *scbuf,void *ip)
         {
             lua_setglobal(ctx,"semper");
 
-            if(lua_getglobal(ctx,"script_init")==LUA_TFUNCTION)
+            if(lua_getglobal(ctx,"init")==LUA_TFUNCTION)
             {
                 lua_pcall(ctx,0,0,0);
             }
@@ -683,7 +683,7 @@ void *lua_engine_init(unsigned char *scbuf,void *ip)
 
 void lua_engine_call_reset(void *ctx)
 {
-    if(ctx!=NULL&&lua_getglobal(ctx,"script_reset")==LUA_TFUNCTION)
+    if(ctx!=NULL&&lua_getglobal(ctx,"reset")==LUA_TFUNCTION)
     {
         lua_pcall(ctx,0,0,0);
     }
@@ -695,7 +695,7 @@ double lua_engine_call_update(void *ctx)
 
     if(ctx)
     {
-        if(lua_getglobal(ctx,"script_update")==LUA_TFUNCTION    &&
+        if(lua_getglobal(ctx,"update")==LUA_TFUNCTION    &&
                 !lua_pcall(ctx,0,1,0)   &&
                 lua_isnumber(ctx, -1))
         {
@@ -714,7 +714,7 @@ unsigned char *lua_engine_call_string(void *ctx)
 
     if(ctx)
     {
-        if(lua_getglobal(ctx,"script_string")==LUA_TFUNCTION&&!lua_pcall(ctx,0,1,0)&&lua_isstring(ctx, -1))
+        if(lua_getglobal(ctx,"string")==LUA_TFUNCTION&&!lua_pcall(ctx,0,1,0)&&lua_isstring(ctx, -1))
         {
             sr=clone_string((unsigned char*)lua_tostring(ctx,-1));
         }
@@ -729,7 +729,7 @@ void lua_engine_call_command(void *ctx,unsigned char *comm)
 {
     if(ctx)
     {
-        if(lua_getglobal(ctx,"script_command")==LUA_TFUNCTION)
+        if(lua_getglobal(ctx,"command")==LUA_TFUNCTION)
         {
             lua_pushstring(ctx,comm);
             lua_pcall(ctx,1,0,0);

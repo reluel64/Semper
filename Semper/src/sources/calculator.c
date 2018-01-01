@@ -11,8 +11,7 @@
 #include <stddef.h>
 #include <math_parser.h>
 
-
-typedef struct _random_generator
+typedef struct
 {
     unsigned char unique;
     unsigned char update;
@@ -24,14 +23,8 @@ typedef struct _random_generator
     size_t la;                    // last accessed
     size_t vec_count;             // elements in vector
     size_t rcount;                // reset number of the unique generator
-
-} random_generator;
-
-typedef struct _calculator
-{
     unsigned char* frm; 			// formula
     void* sd; 						// surface data
-    random_generator rg;
 
 } calculator;
 
@@ -58,76 +51,76 @@ static void calculator_knuth_shuffle(unsigned short* v, size_t n)
 
 static unsigned short calculator_random_unique_set(calculator* c)
 {
-    size_t tcount = (c->rg.max_random - c->rg.min_random) + 1;
-    c->rg.rcount++;
+    size_t tcount = (c->max_random - c->min_random) + 1;
+    c->rcount++;
 
-    if(c->rg.vec == NULL)
+    if(c->vec == NULL)
     {
-        c->rg.vec = zmalloc(tcount * sizeof(unsigned short));
+        c->vec = zmalloc(tcount * sizeof(unsigned short));
     }
 
-    if(c->rg.vec_count != tcount)
+    if(c->vec_count != tcount)
     {
-        sfree((void**)&c->rg.vec);
-        c->rg.vec = zmalloc(tcount * sizeof(unsigned short));
+        sfree((void**)&c->vec);
+        c->vec = zmalloc(tcount * sizeof(unsigned short));
     }
 
-    c->rg.vec_count = tcount;
-    c->rg.la = tcount - 1;
+    c->vec_count = tcount;
+    c->la = tcount;
 
     for(size_t i = 0; i < tcount; i++)
     {
-        c->rg.vec[i] = i + c->rg.min_random;
+        c->vec[i] = i + c->min_random;
     }
 
-    calculator_knuth_shuffle(c->rg.vec, tcount);
-    c->rg.rnum = c->rg.vec[c->rg.la--];
-    return (c->rg.rnum);
+    calculator_knuth_shuffle(c->vec, tcount);
+    c->rnum = c->vec[--c->la];
+    return (c->rnum);
 }
 
 static inline unsigned short calculator_random_unique(calculator* c)
 {
-    if(c->rg.la == 0)
+    if(c->la == 0)
     {
         return (calculator_random_unique_set(c));
     }
     else
     {
-        c->rg.rnum = c->rg.vec[c->rg.la--];
-        return (c->rg.rnum);
+        c->rnum = c->vec[--c->la];
+        return (c->rnum);
     }
 }
 
 static inline unsigned short calculator_random(calculator* c)
 {
-    if(c->rg.update)
+    if(c->update)
     {
-        if(c->rg.unique)
+        if(c->unique)
         {
             return (calculator_random_unique(c));
         }
         else
         {
-            unsigned char retries = 64;
-            unsigned short old_rnum = c->rg.rnum;
+            unsigned char retries = 128;
+            unsigned short old_rnum = c->rnum;
 
             do
             {
-                c->rg.rnum = (unsigned short)calculator_xorshift_generator(time(NULL));
-                c->rg.seed = c->rg.rnum;
+                c->rnum = (unsigned short)calculator_xorshift_generator(time(NULL));
+                c->seed = c->rnum;
             }
-            while((c->rg.rnum > c->rg.max_random || c->rg.rnum < c->rg.min_random) && retries--);
+            while((c->rnum > c->max_random || c->rnum < c->min_random) && retries--);
 
             if(retries == 0)
             {
-                c->rg.rnum = old_rnum;
+                c->rnum = old_rnum;
             }
 
-            return (c->rg.rnum);
+            return (c->rnum);
         }
     }
 
-    return (c->rg.rnum);
+    return (c->rnum);
 }
 
 static int calculator_math_parser(unsigned char *vn,size_t len,double *v,void *pv)
@@ -136,8 +129,8 @@ static int calculator_math_parser(unsigned char *vn,size_t len,double *v,void *p
 
     if(strncasecmp("Random",vn,len)==0)
     {
-        calculator_random(c);
-        *v=(double)c->rg.rnum;
+
+        *v=(double)calculator_random(c);
         return(0);
     }
     else if(strncasecmp("SurfaceCycle",vn,len)==0)
@@ -172,28 +165,28 @@ void calculator_reset(void* spv, void* ip)
     calculator* c = spv;
     sfree((void**)&c->frm);
     c->frm = clone_string(param_string("Function", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "0"));
-    c->rg.max_random = (unsigned short)param_double("MaxRandom", ip, 65535.0);
-    c->rg.min_random = (unsigned short)param_double("MinRandom", ip, 0.0);
-    c->rg.seed = (unsigned int)time(NULL);
+    c->max_random = (unsigned short)param_double("MaxRandom", ip, 65535.0);
+    c->min_random = (unsigned short)param_double("MinRandom", ip, 0.0);
+    c->seed = (unsigned int)time(NULL);
 
-    if(c->rg.max_random == 0)
+    if(c->max_random == 0)
     {
-        c->rg.max_random = 100;
+        c->max_random = 100;
     }
 
-    if(c->rg.max_random == c->rg.min_random)
+    if(c->max_random == c->min_random)
     {
-        c->rg.max_random = c->rg.min_random + 1;
+        c->max_random = c->min_random + 1;
     }
 
-    c->rg.update = 1; // set it, temporarly, to 1 in order to obtain a first and potentially the single random number
+    c->update = 1; // set it, temporarly, to 1 in order to obtain a first and potentially the single random number
     calculator_random(c);
-    c->rg.update = param_bool("RefreshRandom", ip, 0);
-    c->rg.unique = param_bool("AlwaysRandom", ip, 0);
+    c->update = param_bool("RefreshRandom", ip, 0);
+    c->unique = param_bool("AlwaysRandom", ip, 0);
 
-    if(c->rg.unique && !c->rg.update)
+    if(c->unique && !c->update)
     {
-        c->rg.update = 1;
+        c->update = 1;
     }
 }
 
@@ -212,6 +205,6 @@ void calculator_destroy(void** spv)
 {
     calculator* c = *spv;
     sfree((void**)&c->frm);
-    sfree((void**)&c->rg.vec);
+    sfree((void**)&c->vec);
     sfree(spv);
 }

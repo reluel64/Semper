@@ -39,7 +39,7 @@
       <Project Name="SpeedFan" ConfigName="Release"/>
       <Project Name="2geom" ConfigName="Release"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Debug(Linux)" Selected="yes">
+    <WorkspaceConfiguration Name="Debug(Linux)" Selected="no">
       <Environment/>
       <Project Name="SpeedFan" ConfigName="Release"/>
       <Project Name="Semper" ConfigName="Debug_Linux"/>

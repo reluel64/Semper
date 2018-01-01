@@ -59,22 +59,16 @@ static line_data* line_data_alloc(line_object* lo, size_t index)
     list_enum_part(ld, &lo->lines, current)
     {
         if(ld->index < index)
-        {
             p = ld;
-        }
+
         else if(ld->index > index)
-        {
             n = ld;
-        }
+
         else
-        {
             return (ld);
-        }
 
         if(n && p)
-        {
             break;
-        }
     }
 
     ld = zmalloc(sizeof(line_data));

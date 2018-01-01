@@ -657,7 +657,7 @@ void *js_engine_init(unsigned char *buf,void *pv)
 
 void js_engine_call_reset(duk_context *ctx)
 {
-    if(duk_get_global_string(ctx,"script_reset"))
+    if(duk_get_global_string(ctx,"reset"))
     {
         duk_pcall(ctx, 0);
     }
@@ -670,7 +670,7 @@ double js_engine_call_update(duk_context *ctx)
 {
     double ret=0.0;
 
-    if(duk_get_global_string(ctx,"script_update"))
+    if(duk_get_global_string(ctx,"update"))
     {
         duk_pcall(ctx, 0);
         ret=duk_get_number(ctx,-1);
@@ -684,7 +684,7 @@ unsigned char *js_engine_call_string(duk_context *ctx)
 {
     unsigned char *ret=NULL;
 
-    if(duk_get_global_string(ctx,"script_string"))
+    if(duk_get_global_string(ctx,"string"))
     {
         duk_pcall(ctx, 0);
         ret=clone_string((unsigned char*)duk_safe_to_string(ctx,-1));
@@ -697,7 +697,7 @@ unsigned char *js_engine_call_string(duk_context *ctx)
 
 void js_engine_call_command(duk_context *ctx,unsigned char *comm)
 {
-    if(duk_get_global_string(ctx,"script_command"))
+    if(duk_get_global_string(ctx,"command"))
     {
         if(comm)
         {
@@ -714,7 +714,7 @@ void js_engine_cleanup(duk_context **ctx)
 {
     if(ctx&&*ctx)
     {
-        if(duk_get_global_string(*ctx,"script_destroy"))
+        if(duk_get_global_string(*ctx,"destroy"))
         {
             duk_pcall(*ctx, 0);
         }

@@ -17,6 +17,7 @@
 #include <fontconfig/fontconfig.h>
 #include <surface_builtin.h>
 
+
 #ifdef __linux__
 #include <sys/inotify.h>
 #include <unistd.h>
@@ -670,7 +671,7 @@ static int semper_desktop_checker(control_data *cd)
 #ifdef WIN32
 static void  semper_init_fonts(control_data *cd)
 {
-
+    FcFini();
     size_t fcroot_len=cd->root_dir_length+sizeof("/.fontcache");
     unsigned char *fcroot=zmalloc(fcroot_len);
     snprintf(fcroot,fcroot_len,"%s\\.fontcache",cd->root_dir);
