@@ -343,7 +343,7 @@ static int input_kbd_handler(unsigned int key_code,void *pv)
         }
     }
 
-   send_command(it->ip,"UpdateSurface()");
+    send_command(it->ip,"UpdateSurface()");
     return(0);
 }
 

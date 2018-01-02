@@ -13,6 +13,17 @@
 #include <stdarg.h>
 #define DIAG_MEM_ENTRY_LENGTH 65535
 
+#ifdef WIN32
+#ifdef SEMPER_API
+#undef SEMPER_API
+#define SEMPER_API __attribute__((dllexport))
+#else
+#define SEMPER_API __attribute__((dllexport))
+#endif
+#else
+#define SEMPER_API
+#endif
+
 diag_status *diag_get_struct(void)
 {
     static diag_status sts= {0};
@@ -73,7 +84,7 @@ static void diag_open_file(diag_status *ds)
 {
     if(ds->fh==NULL&&ds->fp)
     {
-        #ifndef DEBUG
+#ifndef DEBUG
 #ifdef WIN32
         unsigned short *uc=utf8_to_ucs(ds->fp);
         ds->fh=_wfopen(uc,L"a+");
@@ -82,7 +93,7 @@ static void diag_open_file(diag_status *ds)
         ds->fh=fopen(ds->fp,"a+");
 #endif
 #else
-ds->fh=stdout;
+        ds->fh=stdout;
 #endif
         if(ds->fh)
         {
@@ -98,9 +109,9 @@ ds->fh=stdout;
 
             if(check_bom!=utf8_bom)
             {
-                #ifndef DEBUG
+#ifndef DEBUG
                 fwrite(&utf8_bom,1,3,ds->fh);
-                #endif
+#endif
             }
             else
             {
@@ -127,9 +138,9 @@ static void diag_close_file(diag_status *ds)
 {
     if(ds->fh)
     {
-        #ifndef DEBUG
+#ifndef DEBUG
         fclose(ds->fh);
-        #endif
+#endif
         ds->fh=NULL;
     }
 }
@@ -172,7 +183,7 @@ static int diag_log_write_to_file(unsigned char *buf,size_t buf_len)
 }
 
 
-int diag_log(unsigned char lvl,char *fmt, ...)
+SEMPER_API int diag_log(unsigned char lvl,char *fmt, ...)
 {
 
     diag_status *ds=diag_get_struct();

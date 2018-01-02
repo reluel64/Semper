@@ -44,6 +44,7 @@ int            tokenize_string(tokenize_string_info *tsi);
 int            source_set_min(double val, void* ip, unsigned char force, unsigned char hold);
 int            source_set_max(double val, void* ip, unsigned char force, unsigned char hold);
 int            is_parent_candidate(void* pc, void* ip);
+int            diag_log(unsigned char lvl,char *fmt, ...);
 unsigned char *get_path(void *ip,unsigned char pth);
 unsigned char *absolute_path(void *ip,unsigned char *rp,unsigned char pth);
 unsigned char *param_string(unsigned char* pn, unsigned char flags, void* ip, unsigned char* def);
@@ -51,4 +52,22 @@ unsigned char *get_extension_name(void* ip);
 unsigned char  param_bool(unsigned char* pn, void* ip, unsigned char def);
 
 
+#ifndef diag_info
+#define diag_info(x...)  diag_log(0x1,"[INFO] "x)
+#endif
 
+#ifndef diag_warn
+#define diag_warn(x...)  diag_log(0x2,"[WARN] "x)
+#endif
+
+#ifndef diag_error
+#define diag_error(x...) diag_log(0x4,"[ERROR] "x)
+#endif
+
+#ifndef diag_crit
+#define diag_crit(x...)  diag_log(0x8,"[CRIT] "x)
+#endif
+
+#ifndef diag_verb
+#define diag_verb(x...)  diag_log(0x10,"[VERB] "x)
+#endif

@@ -15,7 +15,7 @@
 #include <sources/source.h>
 #include <skeleton.h>
 #include <parameter.h>
-
+#include <diag.h>
 #ifdef WIN32
 #ifdef SEMPER_API
 #undef SEMPER_API
@@ -349,9 +349,3 @@ SEMPER_API unsigned char *absolute_path(void *ip,unsigned char *rp,unsigned char
 
     return(NULL);
 }
-
-SEMPER_API int _diag_log(int lvl,unsigned char *fmt,...)
-{
-    return(diag_log(lvl,fmt));
-}
-

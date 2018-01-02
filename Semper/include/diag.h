@@ -25,8 +25,25 @@ typedef struct
 } diag_status;
 
 int diag_log(unsigned char lvl,char *fmt, ...);
-#define diag_error(x...) diag_log(0x4,"[ERROR] "x)
+
+
+#ifndef diag_info
 #define diag_info(x...)  diag_log(0x1,"[INFO] "x)
+#endif
+
+#ifndef diag_warn
 #define diag_warn(x...)  diag_log(0x2,"[WARN] "x)
+#endif
+
+#ifndef diag_error
+#define diag_error(x...) diag_log(0x4,"[ERROR] "x)
+#endif
+
+
+#ifndef diag_crit
 #define diag_crit(x...)  diag_log(0x8,"[CRIT] "x)
+#endif
+
+#ifndef diag_verb
 #define diag_verb(x...)  diag_log(0x10,"[VERB] "x)
+#endif

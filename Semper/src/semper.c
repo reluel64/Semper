@@ -722,7 +722,7 @@ static void  semper_init_fonts(control_data *cd)
 }
 #endif
 
-
+extern int _diag_log(unsigned char lvl,char *fmt, ...);
 int main(void)
 {
 
@@ -733,7 +733,6 @@ int main(void)
     cd->eq = event_queue_init();
     semper_create_paths(cd);
     semper_load_configuration(cd);
-
 
 #ifdef WIN32
     diag_info("Initializing font cache...this takes time on some machines");

@@ -65,7 +65,7 @@ int vector_render(object *o,cairo_t *cr)
         }
         else
         {
-             cairo_new_path(cr);
+            cairo_new_path(cr);
         }
     }
 

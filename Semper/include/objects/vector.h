@@ -59,7 +59,7 @@ typedef struct
 
     unsigned char reserved;
 
-     cairo_pattern_t *stroke_gradient;
+    cairo_pattern_t *stroke_gradient;
     cairo_pattern_t *fill_gradient;
     double *dashes;
     size_t dash_count;
