@@ -19,6 +19,7 @@
 
 void crosswin_init(crosswin* c)
 {
+    list_entry_init(&c->windows);
 #ifdef WIN32
     win32_init_class();
     c->sh = GetSystemMetrics(SM_CYSCREEN);
@@ -76,12 +77,16 @@ void crosswin_message_dispatch(crosswin *c)
 crosswin_window* crosswin_init_window(crosswin* c)
 {
     crosswin_window* w = zmalloc(sizeof(crosswin_window));
+    list_entry_init(&w->current);
+    linked_list_add(&w->current,&c->windows);
     w->c = c;
 #ifdef WIN32
     win32_init_window(w);
 #elif __linux__
     xlib_init_window(w);
 #endif
+
+
     return (w);
 }
 
@@ -209,6 +214,7 @@ void crosswin_destroy(crosswin_window** w)
 {
     if(w&&*w)
     {
+        linked_list_remove(&(*w)->current);
 #ifdef WIN32
         win32_destroy_window(w);
 #elif __linux__
@@ -228,12 +234,44 @@ void crosswin_keep_on_screen(crosswin_window* w, unsigned char keep_on_screen)
     w->keep_on_screen = keep_on_screen;
 }
 
+static int crosswin_sort_callback(list_entry *le1,list_entry *le2,void *pv)
+{
+    crosswin_window *cw1=element_of(le1,crosswin_window,current);
+    crosswin_window *cw2=element_of(le2,crosswin_window,current);
+
+    if(cw1->zorder<cw2->zorder)
+        return(-1);
+    else if(cw1->zorder>cw2->zorder)
+        return(1);
+    else
+        return(0);
+}
 void crosswin_set_window_z_order(crosswin_window* w, unsigned char zorder)
 {
-    w->zorder = zorder;
+    if(w)
+    {
+        if(w->zorder!=zorder)
+        {
+            w->zorder = zorder;
+            merge_sort(&w->c->windows,crosswin_sort_callback,NULL);
+        }
 #ifdef WIN32
-    win32_set_zpos(w);
+        win32_set_zpos(w);
 #elif __linux__
-    xlib_set_zpos(w);
+        xlib_set_zpos(w);
 #endif
+    }
+}
+
+void crosswin_update_z(crosswin *c)
+{
+   // if(c->update_z)
+    {
+        crosswin_window *cw=NULL;
+        list_enum_part_backward(cw,&c->windows,current)
+        {
+            crosswin_set_window_z_order(cw,cw->zorder);
+        }
+        c->update_z=0;
+   }
 }

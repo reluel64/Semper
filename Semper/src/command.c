@@ -18,9 +18,16 @@
 
 typedef struct
 {
+    surface_data* sd;
+    control_data* cd;
+    unsigned char* comm;
+} command_defer_data;
+
+typedef struct
+{
     unsigned char* pms[COMMAND_PARAMETER_STACK];
     size_t plength;
-
+    unsigned char *rem_cmd;
 } command_parameters;
 
 typedef struct
@@ -35,6 +42,7 @@ typedef struct
     unsigned char* comm_name; // command name
     command_parameters cpm;
     surface_data* sd;
+
 } command_handler_status;
 
 typedef struct
@@ -45,6 +53,45 @@ typedef struct
 } command_tokenizer_status;
 
 #define COMMAND_HANDLER( _func_name ) static int(_func_name)(surface_data * sd, command_parameters * cp)
+#define DEFER_COMMAND 0x2712
+
+
+static int command_defer_handler(command_defer_data* ec)
+{
+    if(!ec)
+    {
+        return (-1);
+    }
+    surface_data *sd=NULL;
+    int command_exec=0;
+    list_enum_part(sd,&ec->cd->surfaces,current)
+    {
+        if(ec->sd==sd)
+        {
+            command(ec->sd, &ec->comm);
+            command_exec=1;
+            break;
+        }
+    }
+
+    if(command_exec==0)
+    {
+        if(ec->cd->srf_reg==ec->sd)
+        {
+            command(ec->sd, &ec->comm);
+            command_exec=1;
+        }
+    }
+    if(command_exec==0)
+    {
+        diag_warn("%s %d Surface %p was not found",__FUNCTION__,__LINE__,ec->sd);
+    }
+    sfree((void**)&ec->comm);
+    sfree((void**)&ec);
+
+    return (0);
+}
+
 
 
 COMMAND_HANDLER(handler_draggable_command)
@@ -894,6 +941,21 @@ COMMAND_HANDLER(handler_force_draw)
     return (1);
 }
 
+COMMAND_HANDLER(handler_defer)
+{
+    if(cp && cp->plength >= 1)
+    {
+        control_data* cd = sd->cd;
+        command_defer_data* cdd = zmalloc(sizeof(command_defer_data));
+        cdd->sd = sd;
+        cdd->cd=cd;
+        cdd->comm = clone_string(cp->rem_cmd);
+        event_push(cd->eq, (event_handler)command_defer_handler, (void*)cdd, atoi(cp->pms[0]), EVENT_PUSH_TIMER);
+        return(DEFER_COMMAND);
+    }
+    return(0);
+}
+
 /******************************************************************************/
 
 static int command_execute(command_handler_status* chs)
@@ -932,6 +994,7 @@ static int command_execute(command_handler_status* chs)
         { "ClickThrough",       handler_click_through,      1 },
         { "ReloadIfModified",   handler_reload_if_modified, 1 },
         { "SetOpacity",         handler_set_opacity,        1 },
+        { "Defer",              handler_defer,              1 },
 //---------------------------------------------------------------------
         { "Parameter",          handler_change_param,       2 },
         { "SurfacePos",         handler_surface_pos,        2 },
@@ -951,9 +1014,7 @@ static int command_execute(command_handler_status* chs)
                 if((ci[i].min_parameters == 0) || (ci[i].min_parameters <= chs->cpm.plength))
                 {
                     ret = ci[i].handler(chs->sd, &chs->cpm);
-
                 }
-
                 found=1;
             }
         }
@@ -1102,8 +1163,10 @@ int command(surface_data* sd, unsigned char **pa)
 
         if(execute)
         {
+            int exec_ret=0;
             chs.sd=sd;
-            command_execute(&chs);
+            chs.cpm.rem_cmd=sti.buffer+sti.ovecoff[2*i+1];
+            exec_ret = command_execute(&chs);
             execute=0;
 
             for(size_t i=0; i<chs.cpm.plength; i++)
@@ -1116,6 +1179,9 @@ int command(surface_data* sd, unsigned char **pa)
             chs.cpm.plength=0;
 
             sfree((void**)&chs.comm_name);
+
+            if(exec_ret==DEFER_COMMAND)
+                break;
         }
     }
 

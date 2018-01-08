@@ -23,81 +23,81 @@ static int win32_prepare_mouse_event(crosswin_window* w, unsigned int message, W
 
     switch(message)
     {
-        case WM_MOUSEWHEEL:
-            w->mouse.x -= w->x;
-            w->mouse.y -= w->y;
-            w->mouse.scroll_dir = GET_WHEEL_DELTA_WPARAM(wpm) > 0 ? 1 : -1;
-            break;
+    case WM_MOUSEWHEEL:
+        w->mouse.x -= w->x;
+        w->mouse.y -= w->y;
+        w->mouse.scroll_dir = GET_WHEEL_DELTA_WPARAM(wpm) > 0 ? 1 : -1;
+        break;
 
-        case WM_LBUTTONDBLCLK:
-            w->mouse.button = MOUSE_LEFT_BUTTON;
-            w->mouse.state = 2;
-            break;
+    case WM_LBUTTONDBLCLK:
+        w->mouse.button = MOUSE_LEFT_BUTTON;
+        w->mouse.state = 2;
+        break;
 
-        case WM_RBUTTONDBLCLK:
-            w->mouse.button = MOUSE_RIGHT_BUTTON;
-            w->mouse.state = 2;
-            break;
+    case WM_RBUTTONDBLCLK:
+        w->mouse.button = MOUSE_RIGHT_BUTTON;
+        w->mouse.state = 2;
+        break;
 
-        case WM_MBUTTONDBLCLK:
-            w->mouse.button = MOUSE_MIDDLE_BUTTON;
-            w->mouse.state = 2;
-            break;
+    case WM_MBUTTONDBLCLK:
+        w->mouse.button = MOUSE_MIDDLE_BUTTON;
+        w->mouse.state = 2;
+        break;
 
-        case WM_LBUTTONDOWN:
-            w->mouse.button = MOUSE_LEFT_BUTTON;
-            w->mouse.state = 1;
-            break;
+    case WM_LBUTTONDOWN:
+        w->mouse.button = MOUSE_LEFT_BUTTON;
+        w->mouse.state = 1;
+        break;
 
-        case WM_LBUTTONUP:
-            w->mouse.button = MOUSE_LEFT_BUTTON;
-            w->mouse.state = 0;
-            break;
+    case WM_LBUTTONUP:
+        w->mouse.button = MOUSE_LEFT_BUTTON;
+        w->mouse.state = 0;
+        break;
 
-        case WM_RBUTTONDOWN:
-            w->mouse.button = MOUSE_RIGHT_BUTTON;
-            w->mouse.state = 1;
-            break;
+    case WM_RBUTTONDOWN:
+        w->mouse.button = MOUSE_RIGHT_BUTTON;
+        w->mouse.state = 1;
+        break;
 
-        case WM_RBUTTONUP:
-            w->mouse.button = MOUSE_RIGHT_BUTTON;
-            w->mouse.state = 0;
-            break;
+    case WM_RBUTTONUP:
+        w->mouse.button = MOUSE_RIGHT_BUTTON;
+        w->mouse.state = 0;
+        break;
 
-        case WM_MBUTTONDOWN:
-            w->mouse.button = MOUSE_MIDDLE_BUTTON;
-            w->mouse.state = 1;
-            break;
+    case WM_MBUTTONDOWN:
+        w->mouse.button = MOUSE_MIDDLE_BUTTON;
+        w->mouse.state = 1;
+        break;
 
-        case WM_MBUTTONUP:
-            w->mouse.button = MOUSE_MIDDLE_BUTTON;
-            w->mouse.state = 0;
-            break;
+    case WM_MBUTTONUP:
+        w->mouse.button = MOUSE_MIDDLE_BUTTON;
+        w->mouse.state = 0;
+        break;
     }
 
     switch(message)
     {
-        case WM_MBUTTONDBLCLK:
-        case WM_LBUTTONDBLCLK:
-        case WM_RBUTTONDBLCLK:
-        case WM_MOUSEWHEEL:
-        case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:
-        case WM_MBUTTONDOWN:
-        case WM_MBUTTONUP:
-        case WM_MOUSEHOVER:
-            w->mouse.hover = 1;
+    case WM_MBUTTONDBLCLK:
+    case WM_LBUTTONDBLCLK:
+    case WM_RBUTTONDBLCLK:
+    case WM_MOUSEWHEEL:
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONUP:
+    case WM_MOUSEHOVER:
+        w->mouse.hover = 1;
 
-        case WM_MOUSELEAVE:
-            if(w->mouse_func)
-            {
-                w->mouse_func(w, &w->mouse);
-                return (1);
-            }
+    case WM_MOUSELEAVE:
+        if(w->mouse_func)
+        {
+            w->mouse_func(w, &w->mouse);
+            return (1);
+        }
 
-            break;
+        break;
     }
 
     return (0);
@@ -107,25 +107,23 @@ static inline HWND win32_zpos(crosswin_window* w)
 {
     switch(w->zorder)
     {
-        case crosswin_desktop:
-        {
-            return(HWND_BOTTOM);
-        }
+    case crosswin_desktop:
+        return(HWND_BOTTOM);
 
-        case crosswin_bottom:
-            return(HWND_BOTTOM);
+    case crosswin_bottom:
+        return(HWND_BOTTOM);
 
-        case crosswin_normal:
-            return (HWND_NOTOPMOST);
+    case crosswin_normal:
+        return (HWND_NOTOPMOST);
 
-        case crosswin_top:
-            return (HWND_TOP);
+    case crosswin_top:
+        return (HWND_TOP);
 
-        case crosswin_topmost:
-            return (HWND_TOPMOST);
+    case crosswin_topmost:
+        return (HWND_TOPMOST);
 
-        default:
-            return (0);
+    default:
+        return (0);
     }
 }
 
@@ -144,146 +142,138 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
     switch(message)
     {
 
-        case WM_MBUTTONDBLCLK:
-        case WM_LBUTTONDBLCLK:
-        case WM_RBUTTONDBLCLK:
-        case WM_MOUSEWHEEL:
-        case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:
+    case WM_MBUTTONDBLCLK:
+    case WM_LBUTTONDBLCLK:
+    case WM_RBUTTONDBLCLK:
+    case WM_MOUSEWHEEL:
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    {
+        if(w->dragging == 1)
         {
-            if(w->dragging == 1)
-            {
-                ReleaseCapture();
-                win32_prepare_mouse_event(w, message, wpm, lpm);
-                w->dragging = 0;
-                return (0);
-            }
-        }
-
-        case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:
-        case WM_MBUTTONDOWN:
-        case WM_MBUTTONUP:
-        case WM_MOUSEHOVER:
-        case WM_MOUSELEAVE:
-        {
-            if(message == WM_LBUTTONUP)
-            {
-                ReleaseCapture();
-            }
-
-            if(message == WM_LBUTTONDOWN)
-            {
-                SetCapture(w->window);
-            }
-
-            if(!(wpm & MK_CONTROL))
-            {
-                win32_prepare_mouse_event(w, message, wpm, lpm);
-            }
-
+            ReleaseCapture();
+            win32_prepare_mouse_event(w, message, wpm, lpm);
+            w->dragging = 0;
             return (0);
         }
+    }
 
-        case WM_WINDOWPOSCHANGING:
-        case WM_WINDOWPOSCHANGED:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONUP:
+    case WM_MOUSEHOVER:
+    case WM_MOUSELEAVE:
+    {
+        if(message == WM_LBUTTONUP)
         {
-            //((WINDOWPOS*)lpm)->flags|=SWP_NOZORDER;
-            ((WINDOWPOS*)lpm)->hwndInsertAfter =(HWND)(size_t)win32_zpos(w);
-            return(0);
+            ReleaseCapture();
         }
 
-        case WM_KEYDOWN:
+        if(message == WM_LBUTTONDOWN)
         {
-            if(lpm&1000000)
-            {
-                return(1);
-            }
-
-            return(0);
+            SetCapture(w->window);
         }
 
-        case WM_CHAR:
-        case WM_UNICHAR:
-        case WM_SYSCHAR:
+        if(!(wpm & MK_CONTROL))
         {
-
-            if(wpm==UNICODE_NOCHAR)
-            {
-                return(0);
-            }
-            else if(w->kbd_func)
-            {
-                w->kbd_func(wpm,w->kb_data);
-            }
-
-            return(0);
+            win32_prepare_mouse_event(w, message, wpm, lpm);
         }
 
-        case WM_MOUSEMOVE:
-        {
-            TRACKMOUSEEVENT ev = { 0 };
-            ev.dwFlags = 0x3;
-            ev.cbSize = sizeof(TRACKMOUSEEVENT);
-            ev.hwndTrack = win;
-            ev.dwHoverTime = 1;
-            TrackMouseEvent(&ev);
+        return (0);
+    }
 
-            if(wpm & MK_LBUTTON)
+
+    case WM_KEYDOWN:
+    {
+        if(lpm&1000000)
+        {
+            return(1);
+        }
+
+        return(0);
+    }
+
+    case WM_CHAR:
+    case WM_UNICHAR:
+    case WM_SYSCHAR:
+    {
+        if(wpm==UNICODE_NOCHAR)
+        {
+            return(0);
+        }
+        else if(w->kbd_func)
+        {
+            w->kbd_func(wpm,w->kb_data);
+        }
+
+        return(0);
+    }
+
+    case WM_MOUSEMOVE:
+    {
+        TRACKMOUSEEVENT ev = { 0 };
+        ev.dwFlags = 0x3;
+        ev.cbSize = sizeof(TRACKMOUSEEVENT);
+        ev.hwndTrack = win;
+        ev.dwHoverTime = 1;
+        TrackMouseEvent(&ev);
+
+        if(wpm & MK_LBUTTON)
+        {
+            if(w->draggable)
             {
-                if(w->draggable)
+                w->ccposx = GET_X_LPARAM(lpm);
+                w->ccposy = GET_Y_LPARAM(lpm);
+                long x = w->x + (w->ccposx - w->cposx);
+                long y = w->y + (w->ccposy - w->cposy);
+
+                if(w->x != x || w->y != y)
                 {
-                    w->ccposx = GET_X_LPARAM(lpm);
-                    w->ccposy = GET_Y_LPARAM(lpm);
-                    long x = w->x + (w->ccposx - w->cposx);
-                    long y = w->y + (w->ccposy - w->cposy);
-
-                    if(w->x != x || w->y != y)
-                    {
-                        w->dragging = 1;
-                    }
-
-                    w->x = x;
-                    w->y = y;
-
-                    if(w->keep_on_screen)
-                    {
-                        if(y >= 0 && y + w->h <= c->sh)
-                            w->y = y;
-                        else if(y + w->h > c->sh)
-                            w->y = c->sh - w->h;
-                        else
-                            w->y = 0;
-
-                        if(x >= 0 && x + w->w <= c->sw)
-                            w->x = x;
-                        else if(x + w->w > c->sw)
-                            w->x = c->sw - w->w;
-                        else
-                            w->x = 0;
-                    }
-
-                    SetWindowPos(w->window, NULL, w->x, w->y, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
+                    w->dragging = 1;
                 }
-            }
-            else
-            {
-                w->dragging = 0;
-                w->cposx = GET_X_LPARAM(lpm);
-                w->cposy = GET_Y_LPARAM(lpm);
-            }
 
-            w->mouse.x = GET_X_LPARAM(lpm);
-            w->mouse.y = GET_Y_LPARAM(lpm);
-            return (0);
+                w->x = x;
+                w->y = y;
+
+                if(w->keep_on_screen)
+                {
+                    if(y >= 0 && y + w->h <= c->sh)
+                        w->y = y;
+                    else if(y + w->h > c->sh)
+                        w->y = c->sh - w->h;
+                    else
+                        w->y = 0;
+
+                    if(x >= 0 && x + w->w <= c->sw)
+                        w->x = x;
+                    else if(x + w->w > c->sw)
+                        w->x = c->sw - w->w;
+                    else
+                        w->x = 0;
+                }
+
+                SetWindowPos(w->window, NULL, w->x, w->y, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
+            }
         }
-
-        case WM_CLOSE:
+        else
         {
-            surface_data *sd=w->user_data;
-            event_push(sd->cd->eq, (event_handler)surface_destroy, (void*)sd,0,EVENT_REMOVE_BY_DATA);
-            return(0);
+            w->dragging = 0;
+            w->cposx = GET_X_LPARAM(lpm);
+            w->cposy = GET_Y_LPARAM(lpm);
         }
+
+        w->mouse.x = GET_X_LPARAM(lpm);
+        w->mouse.y = GET_Y_LPARAM(lpm);
+        return (0);
+    }
+
+    case WM_CLOSE:
+    {
+        surface_data *sd=w->user_data;
+        event_push(sd->cd->eq, (event_handler)surface_destroy, (void*)sd,0,EVENT_REMOVE_BY_DATA);
+        return(0);
+    }
     }
 
     return (DefWindowProc(win, message, wpm, lpm));
@@ -405,7 +395,7 @@ void win32_destroy_window(crosswin_window** w)
 
 void win32_set_zpos(crosswin_window *w)
 {
-    SetWindowPos(w->window, (HWND)(size_t)win32_zpos(w), 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+    SetWindowPos(w->window, win32_zpos(w), 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
 }
 
 #endif

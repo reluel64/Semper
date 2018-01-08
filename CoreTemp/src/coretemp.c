@@ -77,11 +77,11 @@ static coretemp_inf_t coretemp_dispatch_opt(unsigned char *opt)
 {
     static unsigned char* opts[] =
     {
-        "Load"    , "TjMax"      , "CoreCount" ,
-        "CpuCount", "Temperature", "CPUSpeed"  ,
-        "FSBSpeed", "Voltage"    , "Multiplier",
-        "Name"    , "MaxTemp"    , "CoreSpeed" ,
-        "TDP"     , "Power"
+        "Load", "TjMax", "CoreCount",
+        "CpuCount", "Temperature", "CPUSpeed",
+        "FSBSpeed", "Voltage", "Multiplier",
+        "Name", "MaxTemp", "CoreSpeed",
+        "TDP", "Power"
     };
 
     for(char i=0; i<sizeof(opts)/sizeof(unsigned char*); i++)
@@ -131,8 +131,8 @@ double update(void* spv)
             return (data.uiCPUCnt); // cpu count
         case coretemp_temp:
             return (data.ucDeltaToTjMax?
-                   (float)data.uiTjMax[crd->core_index]-data.fTemp[crd->core_index]:
-                   data.fTemp[crd->core_index]); // core temperature
+                    (float)data.uiTjMax[crd->core_index]-data.fTemp[crd->core_index]:
+                    data.fTemp[crd->core_index]); // core temperature
         case coretemp_cpu_spd:
             return (data.fCPUSpeed); // global cpu speed
         case coretemp_fsb_speed:
@@ -151,6 +151,9 @@ double update(void* spv)
             return (data.ucTdpSupported?(double)data.uiTdp[crd->core_index]:0.0); // TDP
         case coretemp_pwr:
             return (data.ucPowerSupported?(double)data.fPower[crd->core_index]:0.0); // Power (Wattage)
+        default:
+            diag_error("%s %d CoreTemp unknown option 0x%x",__FUNCTION__,__LINE__,crd->cti);
+            break;
     }
 
     return (0.0);
@@ -187,7 +190,16 @@ static inline int coretemp_gather_data(CoreTempSharedDataEx* data)
             UnmapViewOfFile(shd);
             ret=0;
         }
+
+        else
+        {
+            diag_error("%s %d Failed to read CoreTemp data",__FUNCTION__,__LINE__);
+        }
         CloseHandle(fm);
+    }
+    else
+    {
+        diag_error("%s %d Failed to access CoreTemp data",__FUNCTION__,__LINE__);
     }
     return (ret);
 }

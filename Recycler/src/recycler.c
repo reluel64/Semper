@@ -234,6 +234,7 @@ static size_t file_size(size_t low, size_t high)
 
 void init(void **spv,void *ip)
 {
+    diag_info("Initializing Recycler with context 0x%p",ip);
     recycler *r=zmalloc(sizeof(recycler));
     r->ip=ip;
     pthread_mutexattr_t mutex_attr;
@@ -504,6 +505,7 @@ static int recycler_query_user(recycler *r)
 
     if(str_sid==NULL)
     {
+        diag_error("%s %d Failed to get user SID",__FUNCTION__,__LINE__);
         r->inf=0.0;
         return(-1);
     }
@@ -589,6 +591,7 @@ static int recycler_query_user(recycler *r)
 
                     if(valid==0)
                     {
+                        diag_warn("%s %d Entry %s is not valid",__FUNCTION__,__LINE__,res);
                         sfree((void**)&res);
                         continue;
                     }
@@ -624,7 +627,8 @@ static int recycler_query_user(recycler *r)
 
                 sfree((void**)&res);
 
-            } while(r->kill==0&&FindNextFileW(fh, &wfd));
+            }
+            while(r->kill==0&&FindNextFileW(fh, &wfd));
 
             if(fh!=NULL&&fh!=INVALID_HANDLE_VALUE)
             {

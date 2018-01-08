@@ -4,7 +4,7 @@
 #endif
 
 #include <stddef.h>
-
+#include <linked_list.h>
 #ifdef __linux__
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -18,7 +18,7 @@
 #define MOUSE_LEFT_BUTTON 0x1
 #define MOUSE_RIGHT_BUTTON 0x2
 #define MOUSE_MIDDLE_BUTTON 0x3
-
+typedef struct _crosswin_window crosswin_window;
 
 typedef enum
 {
@@ -41,21 +41,26 @@ typedef struct _mouse_status
 
 /*Proper declaration*/
 
-typedef struct _crosswin_shared
+typedef struct
 {
     long sw; // screen width
     long sh; // screen height
+    unsigned char update_z;
     unsigned char quit;
+    crosswin_window *helper;
+    list_entry windows;
 #ifdef __linux__
     void *display;
     XVisualInfo vinfo;
 #endif
 } crosswin;
 
-typedef struct _crosswin_window crosswin_window;
+
 typedef struct _crosswin_window
 {
     crosswin* c;
+    list_entry current;
+
     unsigned char opacity;
     void* user_data;
     void *kb_data;
@@ -104,7 +109,6 @@ void crosswin_set_opacity(crosswin_window* w, unsigned char opacity);
 crosswin_window* crosswin_init_window(crosswin* c);
 void crosswin_set_dimension(crosswin_window* w, long width, long height);
 void crosswin_set_mouse_handler(crosswin_window* w, int (*mouse_handler)(crosswin_window* w, mouse_status* ms));
-void crosswin_show_silent(crosswin_window* w);
 void crosswin_show(crosswin_window* w);
 void crosswin_hide(crosswin_window* w);
 void crosswin_destroy(crosswin_window** w);

@@ -35,8 +35,6 @@ extern unsigned char *js_engine_call_string(void *ctx);
 extern void js_engine_cleanup(void **ctx);
 extern void js_engine_call_command(void *ctx,unsigned char *comm);
 
-
-
 typedef enum
 {
     unknown,

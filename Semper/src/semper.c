@@ -33,7 +33,7 @@
 #include <wchar.h>
 WINBASEAPI WINBOOL WINAPI QueryFullProcessImageNameW(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
 #endif
-
+extern void crosswin_update_z(crosswin *c);
 static void semper_reload_surfaces_if_modified(control_data* cd);
 static void semper_surface_watcher(unsigned long err, unsigned long transferred, void *pv);
 
@@ -525,7 +525,6 @@ static int semper_font_cache_fix(unsigned char *path)
         return(-1);
     }
 
-
     do
     {
         unsigned char *temp=ucs_to_utf8(wfd.cFileName,NULL,0);
@@ -619,51 +618,71 @@ void semper_surface_watcher(unsigned long err, unsigned long transferred, void *
  *'Show Desktop' from hiding the widgets
  * */
 
+/*A quick thought on how this should work:
+ * 1) We do have a helper window that stays at the bottom of the stack - on top of the desktop window
+ * 2) Every crosswin_desktop must be pushed on top of this window in reversed order (stack)
+ * 3) every crosswin_bottom has to be added after crosswin_desktop
+ * 4) Every crosswin_normal has to be added after crosswin_bottom
+ * 5) The crosswin_top* are pushed as regular
+ * 6) The process must repeat to ensure the order remains set
+ **/
+
+static void draw(void *p,void *cr)
+{
+    cairo_set_operator(cr,CAIRO_OPERATOR_SOURCE);
+    cairo_set_color(cr,0xffff0000);
+    cairo_paint(cr);
+}
+
 
 static int semper_desktop_checker(control_data *cd)
 {
-    static unsigned char state=0;
+    event_push(cd->eq,(event_handler)semper_desktop_checker,cd,100,EVENT_PUSH_TIMER|EVENT_PUSH_TAIL); //schedule another check
+      crosswin_update_z(&cd->c);
+      return(0);
+    static unsigned char state=1;
     surface_data *sd=NULL;
     void *fg=NULL;
     void *sh=NULL;
+
+
 #ifdef WIN32
     fg=GetForegroundWindow();
     sh=FindWindowExW(fg,NULL,L"SHELLDLL_DefView",L"");
 #endif
-    event_push(cd->eq,(event_handler)semper_desktop_checker,cd,100,EVENT_PUSH_TIMER|EVENT_PUSH_TAIL); //schedule another check
 
-    if(sh==NULL&&state==1)
+
+    if(sh==NULL)
     {
-        list_enum_part(sd,&cd->surfaces,current)
+        crosswin_window *cw=NULL;
+        list_enum_part_backward(cw,&cd->c.windows,current)
         {
-            if(sd->zorder<crosswin_normal)
-                crosswin_set_window_z_order(sd->sw,sd->zorder); //set it to its default position
+            if(cw->zorder==crosswin_bottom)
+                crosswin_set_window_z_order(cw,crosswin_bottom);
         }
-        state=0;
-        return(0);
     }
+    else
+    {
+        crosswin_set_window_z_order(cd->c.helper,crosswin_normal);
+    }
+
+
+
+
 
     //The shell has the focus.
     //This could mean one of two things:
     //1) The user is on desktop (which is fine)
     //2) The user just triggered the 'ShowDesktop' command (which is fine but we must take care of it)
-    if(sh!=NULL)
+
+
+    if(cd->srf_reg)
     {
-        list_enum_part(sd,&cd->surfaces,current)
-        {
-            crosswin_set_window_z_order(sd->sw,crosswin_topmost); //set it temporarily to top
-            crosswin_set_window_z_order(sd->sw,sd->zorder<crosswin_normal?crosswin_normal:sd->zorder); //set it to its default position
-        }
-
-        if(cd->srf_reg)
-        {
-            sd=cd->srf_reg;
-            crosswin_set_window_z_order(sd->sw,crosswin_topmost);
-            crosswin_set_window_z_order(sd->sw,crosswin_normal);
-        }
-
-        state=1;
+        sd=cd->srf_reg;
+        crosswin_set_window_z_order(sd->sw,crosswin_topmost);
+        crosswin_set_window_z_order(sd->sw,crosswin_normal);
     }
+
 
     return(0);
 }
@@ -680,7 +699,6 @@ static void  semper_init_fonts(control_data *cd)
     if(_waccess(tmp,0)!=0)
     {
         _wmkdir(tmp);
-
     }
 #if 1
     unsigned int attr=GetFileAttributesW(tmp);
@@ -722,24 +740,24 @@ static void  semper_init_fonts(control_data *cd)
 }
 #endif
 
-extern int _diag_log(unsigned char lvl,char *fmt, ...);
+
 int main(void)
 {
 
     control_data* cd = zmalloc(sizeof(control_data));
     crosswin_init(&cd->c);
+
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
     cd->eq = event_queue_init();
     semper_create_paths(cd);
     semper_load_configuration(cd);
-
 #ifdef WIN32
     diag_info("Initializing font cache...this takes time on some machines");
     semper_init_fonts(cd);
     diag_info("Fonts initialized");
     event_push(cd->eq, (event_handler)semper_surface_watcher_init, (void*)cd, 0, 0);
-    event_push(cd->eq,(event_handler)semper_desktop_checker,cd,100,EVENT_PUSH_TIMER);
+
 #elif __linux__
     event_queue_set_window_event(cd->eq,XConnectionNumber(cd->c.display));
     cd->inotify_fd=inotify_init1(IN_NONBLOCK);
@@ -751,7 +769,9 @@ int main(void)
         /*launch the catalog if no surface has been loaded due to various reasons*/
         surface_builtin_init(cd,catalog);
     }
-
+#if 0
+    semper_desktop_checker(cd);
+#endif
     while(cd->c.quit == 0) //nothing fancy, just the main event loop
     {
         event_wait(cd->eq); // wait for an event to occur
