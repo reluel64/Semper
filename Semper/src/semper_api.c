@@ -26,7 +26,7 @@
 #else
 #define SEMPER_API
 #endif
-typedef struct _extension_command
+typedef struct
 {
     surface_data* sd;
     control_data* cd;

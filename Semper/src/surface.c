@@ -166,7 +166,9 @@ static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
             memset(buf, 0, sizeof(buf));
             snprintf(buf, sizeof(buf), "%ld", sd->y);
             skeleton_add_key(sd->scd, "Y", buf);
-            //semper_save_configuration(sd->cd);
+
+            /*Defer the parameter update*/
+            event_push(sd->cd->eq,(event_handler)semper_save_configuration,(void*)sd->cd,500,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
         }
     }
 
@@ -492,8 +494,7 @@ static void surface_render(crosswin_window* w, void* cr)
     if(surface_render_background(sd, cr) == -1)
     {
         cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-        cairo_rectangle(cr, 0, 0, sd->w, sd->h);
-        cairo_fill(cr);
+        cairo_paint(cr);
     }
 
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
@@ -868,9 +869,10 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
         return(NULL);
     }
 
-    event_remove(cd->eq, NULL, tsd, EVENT_REMOVE_BY_DATA); // make sure that we do not have events for this surface
-
-    diag_info("Validating surface file");
+    /* make sure that we do not have events for this surface in
+     * case we are coming from a surface that has been reloaded
+     * */
+    event_remove(cd->eq, NULL, tsd, EVENT_REMOVE_BY_DATA);
 
     if(memory==0)
     {
@@ -884,7 +886,7 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
 
     if(valid == 0)
     {
-        diag_error("Invalid surface file");
+        diag_error("Invalid surface");
         return (NULL);
     }
 
@@ -908,7 +910,10 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
 
     if(sp)
     {
-        memcpy(&tsd->sp, sp, sizeof(surface_paths));                       // create a local copy of the paths (warning: we do not free the previously allocated paths. We're just copying the addresses*/
+          /*create a local copy of the paths (warning: we do not free the previously allocated paths.
+          *We're just copying the addresses
+          * */
+        memcpy(&tsd->sp, sp, sizeof(surface_paths));
     }
 
     surface_modified(tsd);                                                   // get the initial timestamp
@@ -928,10 +933,9 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
         ini_parser_parse_stream((ini_reader)surface_read_from_memory,pv,surface_create_skeleton_handler,&shd);
     }
 
-    sfree((void**)&shd.kv);                                                      // free a small yet important to free residue
+    sfree((void**)&shd.kv);                                                 // free a small yet important to free residue
 
-    tsd->snp = 1;                                                                // give the reset routine a chance to read X and Y from the skeleton
-
+    tsd->snp = 1;                                                          // give the reset routine a chance to read X and Y from the skeleton
     tsd->spm = skeleton_get_section(&tsd->skhead, "Surface");
 
     if(sp)
@@ -950,8 +954,6 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
 
     return (tsd);
 }
-
-
 
 void surface_fade(surface_data* sd)
 {
