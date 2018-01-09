@@ -845,7 +845,7 @@ int remove_trailing_zeros(unsigned char* s)
 }
 
 
-static unsigned char* perform_replacements(replace_state* rs)
+static unsigned char* string_util_do_replacements_plain(replace_state* rs)
 {
     size_t nm = 0;
     size_t di = 0;
@@ -891,7 +891,7 @@ static unsigned char* perform_replacements(replace_state* rs)
     return (ret);
 }
 
-static unsigned char* perform_replacements_pcre(replace_state* rs)
+static unsigned char* string_util_do_replacements_pcre(replace_state* rs)
 {
 
     if(!rs || !rs->in || (rs->tbr_end-rs->tbr_start)==0)
@@ -1021,7 +1021,7 @@ static unsigned char* perform_replacements_pcre(replace_state* rs)
     return (ns);
 }
 
-static int replacer_tokenizer_filter(string_tokenizer_status *pi, void* pv)
+static int string_util_replace_tokenizer_filter(string_tokenizer_status *pi, void* pv)
 {
     replacer_tokenizer_status* rts = pv;
 
@@ -1096,7 +1096,7 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
     {
         .buffer                  = rep_pair,
         .filter_data             = &rts,
-        .string_tokenizer_filter = replacer_tokenizer_filter,
+        .string_tokenizer_filter = string_util_replace_tokenizer_filter,
         .ovecoff                 = NULL,
         .oveclen                 = 0
     };
@@ -1175,14 +1175,14 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
 
             if(regexp)
             {
-                if((work=perform_replacements_pcre(&rs))==NULL)
+                if((work=string_util_do_replacements_pcre(&rs))==NULL)
                 {
-                    work=perform_replacements(&rs);
+                    work=string_util_do_replacements_plain(&rs);
                 }
             }
             else
             {
-                work=perform_replacements(&rs);
+                work=string_util_do_replacements_plain(&rs);
             }
 
             if(rs.in!=in)
