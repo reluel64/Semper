@@ -19,7 +19,7 @@
 #include <inttypes.h>
 #include <ctype.h>
 
-static void bind_dealloc_index(bind_index** bi)
+static inline void bind_dealloc_index(bind_index** bi)
 {
     linked_list_remove(&(*bi)->current);
     sfree((void**)bi);
@@ -27,9 +27,11 @@ static void bind_dealloc_index(bind_index** bi)
 
 static void bind_dealloc(binding** b)
 {
-    linked_list_remove(&(*b)->current);
     bind_index* bi = NULL;
     bind_index* tbi = NULL;
+
+    linked_list_remove(&(*b)->current);
+
     list_enum_part_safe(bi, tbi, &(*b)->index, current)
     {
         bind_dealloc_index(&bi);
@@ -310,21 +312,21 @@ static void bind_create_strings(object* o, string_bind* sb)
         {
             switch(sb->self_scaling)
             {
-                case 1:
-                    for(formula = s->d_info; formula > 1024.0; formula /= 1024.0, ++mul);
-                    break;
+            case 1:
+                for(formula = s->d_info; formula > 1024.0; formula /= 1024.0, ++mul);
+                break;
 
-                case 2:
-                    for(formula = s->d_info; formula > 1000.0; formula /= 1000.0, ++mul);
-                    break;
+            case 2:
+                for(formula = s->d_info; formula > 1000.0; formula /= 1000.0, ++mul);
+                break;
 
-                case 3:
-                    for(formula = s->d_info; formula > 1024.0 * 1024; formula /= (1024.0 * 1024), ++mul);
-                    break;
+            case 3:
+                for(formula = s->d_info; formula > 1024.0 * 1024; formula /= (1024.0 * 1024), ++mul);
+                break;
 
-                case 4:
-                    for(formula = s->d_info; formula > 1000.0 * 1000; formula /= (1000.0 * 1000), ++mul);
-                    break;
+            case 4:
+                for(formula = s->d_info; formula > 1000.0 * 1000; formula /= (1000.0 * 1000), ++mul);
+                break;
             }
         }
 

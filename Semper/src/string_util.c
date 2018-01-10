@@ -3,8 +3,8 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Margarit
  */
- #define PCRE_STATIC
- #include <pcre.h>
+#define PCRE_STATIC
+#include <pcre.h>
 #include <stdlib.h>
 #include <string.h>
 #include <mem.h>
@@ -1173,14 +1173,7 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
             rs.rl_start=start;
             rs.rl_end=end;
 
-            if(regexp)
-            {
-                if((work=string_util_do_replacements_pcre(&rs))==NULL)
-                {
-                    work=string_util_do_replacements_plain(&rs);
-                }
-            }
-            else
+            if(!regexp||(work=string_util_do_replacements_pcre(&rs))==NULL)
             {
                 work=string_util_do_replacements_plain(&rs);
             }

@@ -521,7 +521,7 @@ int surface_change_variant(surface_data* sd, unsigned char* vf)
     return (vn);
 }
 
-int surface_create_paths(control_data* cd, surface_paths* sp, size_t variant, unsigned char* name)
+static int surface_create_paths(control_data* cd, surface_paths* sp, size_t variant, unsigned char* name)
 {
     if(sp == NULL)
     {
@@ -580,6 +580,20 @@ int surface_create_paths(control_data* cd, surface_paths* sp, size_t variant, un
 
     sp->variant = variant;
     sp->surface_rel_dir = clone_string(name);
+
+    uniform_slashes(sp->data_dir);
+    uniform_slashes(sp->file_path);
+    uniform_slashes(sp->surface_dir);
+    uniform_slashes(sp->surface_file);
+    uniform_slashes(sp->surface_rel_dir);
+
+#ifdef WIN32
+    windows_slahses(sp->data_dir);
+    windows_slahses(sp->file_path);
+    windows_slahses(sp->surface_dir);
+    windows_slahses(sp->surface_file);
+    windows_slahses(sp->surface_rel_dir);
+#endif
     return (1);
 }
 
@@ -763,17 +777,13 @@ static int ini_handler(surface_create_skeleton_handler)
         shd->ls = skeleton_add_section(&sd->skhead, sn);
 
         if(strcasecmp(sn,"Surface-Variables")==0)
-        {
             sd->sv  = shd->ls;
-        }
     }
 
     if(kn)
     {
         if(shd->ls == NULL)
-        {
             shd->ls = skeleton_add_section(&sd->skhead, NULL);
-        }
 
         if(kn && strcasecmp(kn, "$Include") == 0)
         {
@@ -910,9 +920,9 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
 
     if(sp)
     {
-          /*create a local copy of the paths (warning: we do not free the previously allocated paths.
-          *We're just copying the addresses
-          * */
+        /*create a local copy of the paths (warning: we do not free the previously allocated paths.
+        *We're just copying the addresses
+        * */
         memcpy(&tsd->sp, sp, sizeof(surface_paths));
     }
 

@@ -140,20 +140,20 @@ void event_remove(event_queue* eq, event_handler eh, void* pv, unsigned char fla
         unsigned char match=0;
         switch(flags&EVENT_REMOVE_BY_DATA_HANDLER)
         {
-            case EVENT_REMOVE_BY_DATA_HANDLER:
-                if(e->handler == eh && e->pv == pv)
-                    match=1;
-                break;
+        case EVENT_REMOVE_BY_DATA_HANDLER:
+            if(e->handler == eh && e->pv == pv)
+                match=1;
+            break;
 
-            case EVENT_REMOVE_BY_DATA:
-                if(e->pv == pv)
-                    match=1;
-                break;
+        case EVENT_REMOVE_BY_DATA:
+            if(e->pv == pv)
+                match=1;
+            break;
 
-            case EVENT_REMOVE_BY_HANDLER:
-                if(e->handler == eh)
-                    match=1;
-                break;
+        case EVENT_REMOVE_BY_HANDLER:
+            if(e->handler == eh)
+                match=1;
+            break;
         }
 
         if(match)
@@ -243,6 +243,8 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
     }
 
     pthread_mutex_lock(&eq->mutex);
+
+
 
     if(flags & EVENT_PUSH_TAIL)
     {

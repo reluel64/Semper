@@ -666,10 +666,6 @@ static int semper_desktop_checker(control_data *cd)
         crosswin_set_window_z_order(cd->c.helper,crosswin_normal);
     }
 
-
-
-
-
     //The shell has the focus.
     //This could mean one of two things:
     //1) The user is on desktop (which is fine)

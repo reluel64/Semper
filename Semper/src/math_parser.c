@@ -420,7 +420,7 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
         unsigned char *n=NULL;
         double v=0.0;
 
-#if 1
+#if 1 //I've had some trouble in making this to work. If it's causing troubles again I'll just set this to 0 until I fix it
         v=(double)strtoll(f+i,(char**)&n,2);
 
         if(toupper(n[0])!='B')

@@ -4,8 +4,9 @@
 #define EVENT_REMOVE_BY_DATA        1<<1
 #define EVENT_REMOVE_BY_HANDLER     1<<2
 #define EVENT_REMOVE_BY_DATA_HANDLER (EVENT_REMOVE_BY_DATA|EVENT_REMOVE_BY_HANDLER)
-#define EVENT_NO_WAKE               1<<4
 #define EVENT_PUSH_TIMER            1<<3
+#define EVENT_NO_WAKE               1<<4
+#define EVENT_PUSH_HIGH_PRIO        1<<5 /*Unimplemented*/
 typedef int (*event_handler)(void*);
 typedef struct _event
 {
