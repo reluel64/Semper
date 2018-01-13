@@ -21,11 +21,11 @@ typedef struct
 static void * ohm_query(void *pv);
 
 static unsigned char *ucs_to_utf8(wchar_t *s_in, size_t *bn, unsigned char be);
+
 void init(void **spv,void *ip)
 {
     open_hardware_monitor *ohm=malloc(sizeof(open_hardware_monitor));
     memset(ohm,0,sizeof(open_hardware_monitor));
-
 
     pthread_mutexattr_t mutex_attr;
     pthread_mutexattr_init(&mutex_attr);
@@ -76,8 +76,14 @@ double update(void *spv)
 
     if(ohm->qth==0)
     {
-        pthread_create(&ohm->qth, NULL, ohm_query, ohm);
-        ohm->work=1;
+        if(pthread_create(&ohm->qth, NULL, ohm_query, ohm)==0)
+        {
+            ohm->work=1;
+        }
+        else
+        {
+            diag_error("Failed to start WMI query thread");
+        }
     }
 
     while(ohm->work==1)
@@ -145,23 +151,29 @@ static void * ohm_query(void *pv)
 
                     if(hr==S_OK)
                     {
-                        pthread_mutex_lock(&ohm->mutex);
+
                         char *s_name=ucs_to_utf8(name.bstrVal,NULL,0);
                         char *s_type=ucs_to_utf8(type.bstrVal,NULL,0);
-                        pthread_mutex_unlock(&ohm->mutex);
+
+                        pthread_mutex_lock(&ohm->mutex);
+
                         if(s_name&&s_type&&!strcasecmp(s_name,ohm->name)&&!strcasecmp(s_type,ohm->type))
                         {
+                            pthread_mutex_unlock(&ohm->mutex);
                             VARIANT val= {0};
                             hr = result->lpVtbl->Get(result, L"Value", 0, &val, 0, 0);
                             if(hr==S_OK)
                             {
-                                pthread_mutex_lock(&ohm->mutex);
                                 ohm->value=(double)val.fltVal;
-                                pthread_mutex_unlock(&ohm->mutex);
                                 VariantClear(&val);
                                 found=1;
                             }
                         }
+                        else
+                        {
+                             pthread_mutex_unlock(&ohm->mutex);
+                        }
+
                         free(s_name);
                         free(s_type);
                         VariantClear(&type);
