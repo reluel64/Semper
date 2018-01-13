@@ -11,7 +11,7 @@ typedef struct
 {
     unsigned char *name;
     unsigned char *type;
-    IWbemLocator         *locator;
+
     pthread_mutex_t mutex;
     double value;
     pthread_t qth;
@@ -32,11 +32,6 @@ void init(void **spv,void *ip)
     pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
     pthread_mutex_init(&ohm->mutex,&mutex_attr);
     pthread_mutexattr_destroy(&mutex_attr);
-
-
-    CoInitializeEx(0, COINIT_MULTITHREADED);
-    CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
-    CoCreateInstance(&CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER, &IID_IWbemLocator, (LPVOID *) &ohm->locator);
     *spv=ohm;
 }
 
@@ -110,8 +105,7 @@ void destroy(void **spv)
     if(ohm->qth)
         pthread_join(ohm->qth,NULL);
     pthread_mutex_destroy(&ohm->mutex);
-    ohm->locator->lpVtbl->Release(ohm->locator);
-    CoUninitialize();
+
     free(ohm->name);
     free(ohm->type);
     free(*spv);
@@ -123,12 +117,16 @@ void destroy(void **spv)
 static void * ohm_query(void *pv)
 {
     open_hardware_monitor *ohm=pv;
-    ohm->work=2;
-
     IEnumWbemClassObject *results  = NULL;
     IWbemServices        *services=NULL;
+    IWbemLocator         *locator=NULL;
+    ohm->work=2;
 
-    HRESULT hr = ohm->locator->lpVtbl->ConnectServer(ohm->locator,  L"ROOT\\OpenHardwareMonitor", NULL, NULL, NULL, 0, NULL, NULL, &services);
+
+    CoInitializeEx(0, 0);
+    CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
+    CoCreateInstance(&CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER, &IID_IWbemLocator, (LPVOID *) &locator);
+    HRESULT hr = locator->lpVtbl->ConnectServer(locator,  L"ROOT\\OpenHardwareMonitor", NULL, NULL, NULL, 0, NULL, NULL, &services);
     if(hr==S_OK)
     {
         hr = services->lpVtbl->ExecQuery(services, L"WQL", L"SELECT * FROM Sensor", WBEM_FLAG_BIDIRECTIONAL, NULL, &results);
@@ -171,7 +169,7 @@ static void * ohm_query(void *pv)
                         }
                         else
                         {
-                             pthread_mutex_unlock(&ohm->mutex);
+                            pthread_mutex_unlock(&ohm->mutex);
                         }
 
                         free(s_name);
@@ -194,6 +192,8 @@ static void * ohm_query(void *pv)
         }
         services->lpVtbl->Release(services);
     }
+    locator->lpVtbl->Release(locator);
+    CoUninitialize();
     ohm->work=0;
 
     return(NULL);
