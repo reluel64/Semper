@@ -284,10 +284,15 @@ void reset(void *spv, void *ip)
     {
         r->me=CreateEvent(NULL,0,0,NULL);
         r->mon_mode=new_monitor;
+        r->qa=1;
         if(pthread_create(&r->qth,NULL,recycler_query_thread,r)==0)
         {
             while(r->qa==1)
                 sched_yield(); /*be kind - lend CPU cycles to other processes*/
+        }
+        else
+        {
+            r->qa=0;
         }
     }
 }
@@ -662,12 +667,12 @@ static int recycler_query_user(recycler *r)
     pthread_mutex_lock(&r->mtx);
     switch(r->rq)
     {
-        case recycler_query_items:
-            r->inf=(double)file_count;
-            break;
-        case recycler_query_size:
-            r->inf=(double)size;
-            break;
+    case recycler_query_items:
+        r->inf=(double)file_count;
+        break;
+    case recycler_query_size:
+        r->inf=(double)size;
+        break;
     }
     pthread_mutex_unlock(&r->mtx);
     return(1);

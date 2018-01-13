@@ -9,6 +9,7 @@
  * */
 
 #include <crosswin/crosswin.h>
+#include <time.h>
 #ifdef WIN32
 #include <crosswin/win32.h>
 #elif __linux__

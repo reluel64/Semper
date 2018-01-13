@@ -500,14 +500,14 @@ static void *webget_worker_thread(void *p)
 
     switch(ret)
     {
-        case CURLE_COULDNT_CONNECT:
-        case CURLE_UNSUPPORTED_PROTOCOL:
-            send_command(w->ip,w->connect_fail);
-            break;
+    case CURLE_COULDNT_CONNECT:
+    case CURLE_UNSUPPORTED_PROTOCOL:
+        send_command(w->ip,w->connect_fail);
+        break;
 
-        case CURLE_URL_MALFORMAT:
-            send_command(w->ip,w->dwl_fail);
-            break;
+    case CURLE_URL_MALFORMAT:
+        send_command(w->ip,w->dwl_fail);
+        break;
 
     }
 
@@ -678,16 +678,16 @@ double webget_update(void *spv)
     {
 
         int status=0;
+        w->work=1;
         status=pthread_create(&w->worker, NULL, webget_worker_thread, w);
 
         if(status)
         {
+            w->work=0;
             diag_crit("%s %d Failed to start webget_worker_thread. Status %x",__FUNCTION__,__LINE__,status);
         }
         else
         {
-            w->work=1;
-
             while(w->work==1)
             {
                 sched_yield();

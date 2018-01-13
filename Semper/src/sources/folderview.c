@@ -346,15 +346,12 @@ double folderview_update(void *spv)
         if(fp->work==0&&fp->update&&fp->thread==0)
         {
             int status=0;
-            pthread_attr_t th_att= {0};
-            pthread_attr_init(&th_att);
-            pthread_attr_setdetachstate(&th_att,PTHREAD_CREATE_JOINABLE);
+            fp->work=1;
             status=pthread_create(&fp->thread, NULL, folderview_collect_thread, fp);
-            pthread_attr_destroy(&th_att);
-            fp->work=(status==0);
 
-            if(fp->work==0)
+            if(status)
             {
+                fp->work=0;
                 diag_crit("%s %d Failed to start folderview_collect_thread. Status %x",__FUNCTION__,__LINE__,status);
             }
             else

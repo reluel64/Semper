@@ -243,20 +243,22 @@ double folderinfo_update(void* spv)
     if(fi->working==0&&fi->parent == NULL && fi->th == 0)
     {
         int status=0;
-
+        fi->working=1;
 #ifdef WIN32
-        pthread_attr_t th_att= {0};
-        pthread_attr_init(&th_att);
-        pthread_attr_setdetachstate(&th_att,PTHREAD_CREATE_JOINABLE);
-        pthread_create(&fi->th, &th_att, folderinfo_collect_thread, fi);
-
-        pthread_attr_destroy(&th_att);
+        status=pthread_create(&fi->th, NULL, folderinfo_collect_thread, fi);
 #endif
-        fi->working=(status==0);
 
         if(status)
         {
+            fi->working=0;
             diag_crit("%s %d Failed to start folderinfo_collect_thread. Status %x",__FUNCTION__,__LINE__,status);
+        }
+        else
+        {
+             while(fi->working==1)
+            {
+                sched_yield();
+            }
         }
     }
 
@@ -275,14 +277,14 @@ double folderinfo_update(void* spv)
 
     switch(fi->type)
     {
-        case 0:
-            return ((double)fi->ofile_count);
+    case 0:
+        return ((double)fi->ofile_count);
 
-        case 1:
-            return ((double)fi->ofolder_count);
+    case 1:
+        return ((double)fi->ofolder_count);
 
-        case 2:
-            return ((double)fi->osize);
+    case 2:
+        return ((double)fi->osize);
     }
 
     return (0.0);
