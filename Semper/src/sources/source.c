@@ -546,15 +546,7 @@ int source_update(source* s)
 
         if(s->replacements)
         {
-            if(s->s_info)
-            {
-                s->inf_exp = replace(s->s_info, s->replacements, s->regexp);
-            }
-            else
-            {
-                s->inf_exp = replace(s->inf_double, s->replacements, s->regexp);
-            }
-
+            s->inf_exp = replace((s->s_info ? s->s_info : s->inf_double), s->replacements, s->regexp);
             s->inf_exp_len = string_length(s->inf_exp);
         }
     }

@@ -112,7 +112,25 @@ void crosswin_click_through(crosswin_window* w, unsigned char state)
 
 void crosswin_draw(crosswin_window* w)
 {
+    crosswin_set_position(w, w->x, w->y);
+
+#ifdef WIN32
+    win32_draw(w);
+#elif __linux__
+    xlib_draw(w);
+#endif
+}
+
+void crosswin_set_render(crosswin_window* w, void (*render)(crosswin_window* pv, void* cr))
+{
+    w->render_func = render;
+}
+
+void crosswin_set_position(crosswin_window* w, long x, long y)
+{
     crosswin* c = w->c;
+    w->x = x;
+    w->y = y;
 
     if(w->keep_on_screen == 1)
     {
@@ -127,29 +145,8 @@ void crosswin_draw(crosswin_window* w)
 
         else if(w->y + w->h > c->sh)
             w->y = max(c->sh - w->h, 0);
-
-        crosswin_set_position(w, w->x, w->y);
     }
 
-#ifdef WIN32
-
-    win32_draw(w);
-
-#elif __linux__
-
-    xlib_draw(w);
-#endif
-}
-
-void crosswin_set_render(crosswin_window* w, void (*render)(crosswin_window* pv, void* cr))
-{
-    w->render_func = render;
-}
-
-void crosswin_set_position(crosswin_window* w, long x, long y)
-{
-    w->x = x;
-    w->y = y;
 #ifdef WIN32
     win32_set_position(w);
 #elif __linux__
@@ -260,18 +257,16 @@ void crosswin_set_window_z_order(crosswin_window* w, unsigned char zorder)
 #elif __linux__
         xlib_set_zpos(w);
 #endif
+
+
     }
 }
 
 void crosswin_update_z(crosswin *c)
 {
-   // if(c->update_z)
+    // if(c->update_z)
     {
-        crosswin_window *cw=NULL;
-        list_enum_part_backward(cw,&c->windows,current)
-        {
-            crosswin_set_window_z_order(cw,cw->zorder);
-        }
+
         c->update_z=0;
-   }
+    }
 }

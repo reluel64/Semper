@@ -108,8 +108,6 @@ static inline HWND win32_zpos(crosswin_window* w)
     switch(w->zorder)
     {
     case crosswin_desktop:
-        return(HWND_BOTTOM);
-
     case crosswin_bottom:
         return(HWND_BOTTOM);
 
@@ -136,8 +134,6 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
 
     if(w == NULL)
         return (DefWindowProc(win, message, wpm, lpm));
-
-    crosswin* c = w->c;
 
     switch(message)
     {
@@ -182,8 +178,6 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
 
         return (0);
     }
-
-
     case WM_KEYDOWN:
     {
         if(lpm&1000000)
@@ -198,18 +192,25 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
     case WM_UNICHAR:
     case WM_SYSCHAR:
     {
-        if(wpm==UNICODE_NOCHAR)
-        {
-            return(0);
-        }
-        else if(w->kbd_func)
+        if(w->kbd_func&&wpm!=UNICODE_NOCHAR)
         {
             w->kbd_func(wpm,w->kb_data);
         }
-
         return(0);
     }
-
+    case WM_WINDOWPOSCHANGING:
+    {
+        WINDOWPOS *wp=(WINDOWPOS*)lpm;
+        if(w->lock_z)
+        {
+            wp->flags|=SWP_NOZORDER;
+        }
+        else
+        {
+            wp->hwndInsertAfter=win32_zpos(w);
+        }
+        break;
+    }
     case WM_MOUSEMOVE:
     {
         TRACKMOUSEEVENT ev = { 0 };
@@ -233,27 +234,7 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
                     w->dragging = 1;
                 }
 
-                w->x = x;
-                w->y = y;
-
-                if(w->keep_on_screen)
-                {
-                    if(y >= 0 && y + w->h <= c->sh)
-                        w->y = y;
-                    else if(y + w->h > c->sh)
-                        w->y = c->sh - w->h;
-                    else
-                        w->y = 0;
-
-                    if(x >= 0 && x + w->w <= c->sw)
-                        w->x = x;
-                    else if(x + w->w > c->sw)
-                        w->x = c->sw - w->w;
-                    else
-                        w->x = 0;
-                }
-
-                SetWindowPos(w->window, NULL, w->x, w->y, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
+                crosswin_set_position(w,x,y);
             }
         }
         else
@@ -289,6 +270,7 @@ void win32_init_class(void)
     wclass.hCursor = LoadImageA(NULL, MAKEINTRESOURCE(32512), IMAGE_CURSOR, 0, 0, LR_SHARED);
     wclass.cbSize = sizeof(WNDCLASSEXW);
     RegisterClassExW(&wclass);
+
 }
 
 void win32_init_window(crosswin_window* w)
@@ -323,6 +305,16 @@ void win32_message_dispatch(crosswin *c)
 
 void win32_draw(crosswin_window* w)
 {
+    BLENDFUNCTION bf=
+    {
+        .AlphaFormat=AC_SRC_ALPHA,
+        .BlendFlags=0,
+        .BlendOp=AC_SRC_OVER,
+        .SourceConstantAlpha=w->opacity
+    };
+    static POINT pt = { 0, 0 };
+    SIZE sz = { w->w, w->h };
+
     if(w->offscreen_buffer == NULL)
     {
         w->offscreen_buffer = cairo_win32_surface_create_with_dib(CAIRO_FORMAT_ARGB32, w->w, w->h); // create a surface to render on
@@ -341,15 +333,6 @@ void win32_draw(crosswin_window* w)
     HDC dc = cairo_win32_surface_get_dc(w->offscreen_buffer); // get the device context that will be used by UpdateLayeredWindow
 
     w->render_func ? w->render_func(w, cr) : 0;
-
-    BLENDFUNCTION bf;
-    bf.AlphaFormat = AC_SRC_ALPHA;
-    bf.BlendFlags = 0;
-    bf.BlendOp = AC_SRC_OVER;
-    bf.SourceConstantAlpha = w->opacity;
-    POINT pt = { 0, 0 };
-
-    SIZE sz = { w->w, w->h };
 
     UpdateLayeredWindow(w->window, NULL, NULL, &sz, dc, &pt, 0, &bf, ULW_ALPHA);
 

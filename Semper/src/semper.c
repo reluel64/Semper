@@ -627,44 +627,24 @@ void semper_surface_watcher(unsigned long err, unsigned long transferred, void *
  * 6) The process must repeat to ensure the order remains set
  **/
 
-static void draw(void *p,void *cr)
-{
-    cairo_set_operator(cr,CAIRO_OPERATOR_SOURCE);
-    cairo_set_color(cr,0xffff0000);
-    cairo_paint(cr);
-}
-
 
 static int semper_desktop_checker(control_data *cd)
 {
     event_push(cd->eq,(event_handler)semper_desktop_checker,cd,100,EVENT_PUSH_TIMER|EVENT_PUSH_TAIL); //schedule another check
-      crosswin_update_z(&cd->c);
-      return(0);
+
     static unsigned char state=1;
     surface_data *sd=NULL;
     void *fg=NULL;
     void *sh=NULL;
-
+    void *sh2=NULL;
 
 #ifdef WIN32
     fg=GetForegroundWindow();
     sh=FindWindowExW(fg,NULL,L"SHELLDLL_DefView",L"");
+    sh2=FindWindowExW(fg,NULL,L"Progman",L"");
 #endif
+    printf("%p %p\n",sh,sh2);
 
-
-    if(sh==NULL)
-    {
-        crosswin_window *cw=NULL;
-        list_enum_part_backward(cw,&cd->c.windows,current)
-        {
-            if(cw->zorder==crosswin_bottom)
-                crosswin_set_window_z_order(cw,crosswin_bottom);
-        }
-    }
-    else
-    {
-        crosswin_set_window_z_order(cd->c.helper,crosswin_normal);
-    }
 
     //The shell has the focus.
     //This could mean one of two things:
@@ -741,6 +721,7 @@ int main(void)
 {
 
     control_data* cd = zmalloc(sizeof(control_data));
+
     crosswin_init(&cd->c);
 
     list_entry_init(&cd->shead);
@@ -770,6 +751,7 @@ int main(void)
 #endif
     while(cd->c.quit == 0) //nothing fancy, just the main event loop
     {
+        printf("Cycle\n");
         event_wait(cd->eq); // wait for an event to occur
 #ifdef __linux__
         semper_surface_watcher(0,0,cd);

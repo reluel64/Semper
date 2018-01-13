@@ -89,13 +89,13 @@ unsigned char is_file_type(unsigned char* file, unsigned char* ext)
     return (r);
 }
 
-int remove_end_begin_quotes(unsigned char* s)
+size_t  remove_end_begin_quotes(unsigned char* s)
 {
     size_t sz = string_length(s);
 
     if(sz < 2)
     {
-        return (-1);
+        return (0);
     }
 
     if(s[sz - 1] == '\"')
@@ -111,7 +111,7 @@ int remove_end_begin_quotes(unsigned char* s)
         }
     }
 
-    return (0);
+    return (sz-1);
 }
 
 int remove_character(unsigned char* str, unsigned char ch)

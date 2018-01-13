@@ -47,7 +47,7 @@ static unsigned char* ini_find_chars(unsigned char* s, unsigned char* cs)
 
     for(; s[i]; i++)
     {
-        if((cs == NULL || !strchr(cs, s[i])) && !(space && strchr("#;", s[i])))
+        if((cs == NULL || !strchr(cs, s[i])) && !(space && strchr(";", s[i])))
         {
             space = isspace(s[i]);
         }
@@ -103,7 +103,6 @@ int ini_parser_parse_stream(ini_reader ir, void* data, ini_handler ih, void* pv)
 {
     unsigned char* buf = zmalloc(INI_PARSER_MAX_LINE + 1);
     unsigned char* sn = zmalloc(INI_PARSER_MAX_LINE + 1);
-    // unsigned char *com=zmalloc(INI_PARSER_MAX_LINE+1);
     int ret = 0;
 
     if(buf == NULL || sn == NULL)

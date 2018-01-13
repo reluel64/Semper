@@ -424,29 +424,9 @@ int xlib_message_dispatch(crosswin *c)
                     long y = w->y + (w->ccposy - w->cposy);
                     w->cposx = ev.xmotion.x_root;
                     w->cposy = ev.xmotion.y_root;
-                    w->x = x;
-                    w->y = y;
-
-                    if(w->keep_on_screen)
-                    {
-                        if(y >= 0 && y + w->h <= c->sh)
-                            w->y = y;
-                        else if(y + w->h > c->sh)
-                            w->y = c->sh - w->h;
-                        else
-                            w->y = 0;
-
-                        if(x >= 0 && x + w->w <= c->sw)
-                            w->x = x;
-                        else if(x + w->w > c->sw)
-                            w->x = c->sw - w->w;
-                        else
-                            w->x = 0;
-                    }
-
                     w->dragging=1;
-                    XMoveWindow(c->display,w->window,w->x,w->y);
-                    XSync(c->display,1);
+                  crosswin_set_position(w,x,y);
+
 
 
                 }

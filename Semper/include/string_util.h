@@ -29,7 +29,7 @@ typedef struct
 void remove_be_space(unsigned char* s);
 int string_strip_space_offsets(unsigned char *buf,size_t *start,size_t *end);
 double compute_formula(unsigned char* formula);
-int remove_end_begin_quotes(unsigned char* s);
+size_t remove_end_begin_quotes(unsigned char* s);
 int remove_character(unsigned char* str, unsigned char ch);
 int string_to_image_crop(unsigned char* str, image_crop* inf);
 int string_to_image_tile(unsigned char* str, image_tile* inf);

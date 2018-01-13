@@ -384,8 +384,6 @@ static int surface_render_background(surface_data* sd, cairo_t* cr)
     unsigned char *px=NULL;
     image_cache_query_image(sd->cd->ich,&sd->ia,&px,-1,-1);
 
-
-
     if(px)
     {
         int stride=cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,sd->ia.width);

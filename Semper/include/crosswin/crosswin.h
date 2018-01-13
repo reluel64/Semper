@@ -74,8 +74,8 @@ typedef struct _crosswin_window
     long ccposx; // current cursor x with mouse held
     long ccposy; // current cursor y with mouse held
     unsigned char keep_on_screen;
-
-    unsigned char zorder;
+    unsigned char lock_z;
+    crosswin_position zorder;
     size_t offw;
     size_t offh;
     mouse_status mouse;
