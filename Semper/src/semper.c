@@ -717,17 +717,48 @@ static void  semper_init_fonts(control_data *cd)
 #endif
 
 
+int semper_single_instance(control_data *cd)
+{
+    FILE *f=NULL;
+    unsigned char *lock_file=zmalloc(cd->root_dir_length+7);
+    snprintf(lock_file,cd->root_dir_length+7,"%s/.lock",cd->root_dir);
+
+#ifdef WIN32
+    windows_slahses(lock_file);
+    unsigned short *uc=utf8_to_ucs(lock_file);
+    if(_wremove(uc)==0||_waccess(uc,0)!=0)
+    {
+        f=_wfopen(uc,L"w");
+    }
+    sfree((void**)&uc);
+#elif __linux__
+    if(remove(lock_file)==0||access(lock_file))
+    {
+        f=fopen(lock_file,"w");
+    }
+#endif
+    sfree((void**)&lock_file);
+
+    return(f!=NULL);
+}
+
 int main(void)
 {
 
     control_data* cd = zmalloc(sizeof(control_data));
+    semper_create_paths(cd);
+
+    if(semper_single_instance(cd)==0)
+    {
+        return(0);
+    }
 
     crosswin_init(&cd->c);
 
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
     cd->eq = event_queue_init();
-    semper_create_paths(cd);
+
     semper_load_configuration(cd);
 #ifdef WIN32
     diag_info("Initializing font cache...this takes time on some machines");
