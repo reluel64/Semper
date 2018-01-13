@@ -31,6 +31,7 @@
         <Library Value="semper"/>
         <Library Value="wbemuuid"/>
         <Library Value="ole32"/>
+        <Library Value="OleAut32"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(WorkspacePath)/bin/$(ConfigurationName)/Extensions/$(ProjectName).dll" IntermediateDirectory="$(WorkspacePath)/build/$(ProjectName)" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>

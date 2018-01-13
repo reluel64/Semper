@@ -6,22 +6,34 @@
 #include <tchar.h>
 #include <windows.h>
 #include <wbemidl.h>
-
+#include <pthread.h>
 typedef struct
 {
     unsigned char *name;
     unsigned char *type;
     IWbemLocator         *locator;
-
+    pthread_mutex_t mutex;
+    double value;
+    pthread_t qth;
+    unsigned char work;
 } open_hardware_monitor;
 
+static void * ohm_query(void *pv);
 
-static double ohm_query(open_hardware_monitor *ohm);
 static unsigned char *ucs_to_utf8(wchar_t *s_in, size_t *bn, unsigned char be);
 void init(void **spv,void *ip)
 {
     open_hardware_monitor *ohm=malloc(sizeof(open_hardware_monitor));
     memset(ohm,0,sizeof(open_hardware_monitor));
+
+
+    pthread_mutexattr_t mutex_attr;
+    pthread_mutexattr_init(&mutex_attr);
+    pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
+    pthread_mutex_init(&ohm->mutex,&mutex_attr);
+    pthread_mutexattr_destroy(&mutex_attr);
+
+
     CoInitializeEx(0, COINIT_MULTITHREADED);
     CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
     CoCreateInstance(&CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER, &IID_IWbemLocator, (LPVOID *) &ohm->locator);
@@ -31,11 +43,14 @@ void init(void **spv,void *ip)
 void reset(void *spv,void *ip)
 {
     open_hardware_monitor *ohm=spv;
+    unsigned char *temp=NULL;
+
+    pthread_mutex_lock(&ohm->mutex);
     free(ohm->name);
     free(ohm->type);
     ohm->name=NULL;
     ohm->type=NULL;
-    unsigned char *temp=NULL;
+
 
     temp=param_string("Name",EXTENSION_XPAND_ALL,ip,NULL);
 
@@ -46,15 +61,39 @@ void reset(void *spv,void *ip)
 
     if(temp)
         ohm->type=strdup(temp);
+
+    pthread_mutex_unlock(&ohm->mutex);
 }
 
 
 double update(void *spv)
 {
     open_hardware_monitor *ohm=spv;
+    int status=0;
+    double v=0;
     if(ohm->type==NULL||ohm->name==NULL)
         return(0.0);
-    return(ohm_query(ohm));
+
+    if(ohm->qth==0)
+    {
+        pthread_create(&ohm->qth, NULL, ohm_query, ohm);
+        ohm->work=1;
+    }
+
+    while(ohm->work==1)
+    {
+        sched_yield();
+    }
+
+    if(ohm->work==0&&ohm->qth)
+    {
+        pthread_join(ohm->qth,NULL);
+        memset(&ohm->qth,0,sizeof(pthread_t));
+    }
+    pthread_mutex_lock(&ohm->mutex);
+    v=ohm->value;
+    pthread_mutex_unlock(&ohm->mutex);
+    return(v);
 }
 
 
@@ -62,6 +101,9 @@ double update(void *spv)
 void destroy(void **spv)
 {
     open_hardware_monitor *ohm=*spv;
+    if(ohm->qth)
+        pthread_join(ohm->qth,NULL);
+    pthread_mutex_destroy(&ohm->mutex);
     ohm->locator->lpVtbl->Release(ohm->locator);
     CoUninitialize();
     free(ohm->name);
@@ -72,9 +114,11 @@ void destroy(void **spv)
 }
 
 
-static double ohm_query(open_hardware_monitor *ohm)
+static void * ohm_query(void *pv)
 {
-    double value=0;
+    open_hardware_monitor *ohm=pv;
+    ohm->work=2;
+
     IEnumWbemClassObject *results  = NULL;
     IWbemServices        *services=NULL;
 
@@ -87,44 +131,60 @@ static double ohm_query(open_hardware_monitor *ohm)
         {
             IWbemClassObject *result = NULL;
             ULONG returnedCount = 0;
+            unsigned char found=0;
 
-
-            while((hr = results->lpVtbl->Next(results, WBEM_INFINITE, 1, &result, &returnedCount)) == S_OK)
+            while(found==0&&(hr = results->lpVtbl->Next(results, WBEM_INFINITE, 1, &result, &returnedCount)) == S_OK)
             {
                 VARIANT name= {0};
-                VARIANT type= {0};
-
                 hr = result->lpVtbl->Get(result, L"Name", 0, &name, 0, 0);
 
                 if(hr==S_OK)
                 {
+                    VARIANT type= {0};
                     hr = result->lpVtbl->Get(result, L"SensorType", 0, &type, 0, 0);
 
                     if(hr==S_OK)
                     {
+                        pthread_mutex_lock(&ohm->mutex);
                         char *s_name=ucs_to_utf8(name.bstrVal,NULL,0);
                         char *s_type=ucs_to_utf8(type.bstrVal,NULL,0);
-
+                        pthread_mutex_unlock(&ohm->mutex);
                         if(s_name&&s_type&&!strcasecmp(s_name,ohm->name)&&!strcasecmp(s_type,ohm->type))
                         {
                             VARIANT val= {0};
                             hr = result->lpVtbl->Get(result, L"Value", 0, &val, 0, 0);
                             if(hr==S_OK)
                             {
-                                value=val.fltVal;
+                                pthread_mutex_lock(&ohm->mutex);
+                                ohm->value=(double)val.fltVal;
+                                pthread_mutex_unlock(&ohm->mutex);
+                                VariantClear(&val);
+                                found=1;
                             }
                         }
                         free(s_name);
                         free(s_type);
+                        VariantClear(&type);
                     }
+                    VariantClear(&name);
                 }
+
                 result->lpVtbl->Release(result);
             }
             results->lpVtbl->Release(results);
+
+            if(found==0)
+            {
+                pthread_mutex_lock(&ohm->mutex);
+                ohm->value=0.0;
+                pthread_mutex_unlock(&ohm->mutex);
+            }
         }
         services->lpVtbl->Release(services);
     }
-    return(value);
+    ohm->work=0;
+
+    return(NULL);
 }
 
 

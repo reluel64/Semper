@@ -678,11 +678,7 @@ double webget_update(void *spv)
     {
 
         int status=0;
-        pthread_attr_t th_att= {0};
-        pthread_attr_init(&th_att);
-        pthread_attr_setdetachstate(&th_att,PTHREAD_CREATE_JOINABLE);
         status=pthread_create(&w->worker, NULL, webget_worker_thread, w);
-        pthread_attr_destroy(&th_att);
 
         if(status)
         {

@@ -186,11 +186,11 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
     size_t start=pa->start_index;
     size_t end=((pa->end_index==-1)?so->bind_string_len:pa->end_index);
 
-    for(size_t i=pa->start_index; i<end; i++)
+    for(size_t i=pa->start_index; i<=end; i++)
     {
         PangoRectangle pr= {0};
 
-        if(((i+1==end)||(i==pa->start_index))&&so->bind_string[i]==' ')
+        if(((i+1==end)||(i==pa->start_index))&&i<end&&so->bind_string[i]==' ')
         {
             start++;
             continue;
@@ -228,11 +228,14 @@ int string_attr_color_handler(PangoAttribute *pa,void *pv)
                     .width=pw,
                     .height=ph
                 };
+
                 string_attr_color_draw(so,sa,&prv,cr,(unsigned char)(size_t)(pm[2]));
-                oy=pr.y;
+
+                //  if(i+1<end)
                 yh=1;
                 pw=0;
                 ph=0;
+                oy=pr.y;
                 px=pr.x;
                 py=pr.y;
             }

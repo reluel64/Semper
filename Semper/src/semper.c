@@ -751,7 +751,6 @@ int main(void)
 #endif
     while(cd->c.quit == 0) //nothing fancy, just the main event loop
     {
-        printf("Cycle\n");
         event_wait(cd->eq); // wait for an event to occur
 #ifdef __linux__
         semper_surface_watcher(0,0,cd);
