@@ -68,7 +68,7 @@ int diag_init(control_data *cd)
     pthread_mutexattr_destroy(&mutex_attr);
     return(0);
 }
-
+#if 0
 int diag_print(void)
 {
     diag_status *ds=diag_get_struct();
@@ -79,7 +79,7 @@ int diag_print(void)
     }
     return(0);
 }
-
+#endif
 static void diag_open_file(diag_status *ds)
 {
     if(ds->fh==NULL&&ds->fp)

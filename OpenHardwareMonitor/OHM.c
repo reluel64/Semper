@@ -11,11 +11,11 @@ typedef struct
 {
     unsigned char *name;
     unsigned char *type;
-
+    unsigned char work;
     pthread_mutex_t mutex;
     double value;
     pthread_t qth;
-    unsigned char work;
+
 } open_hardware_monitor;
 
 static void * ohm_query(void *pv);
@@ -46,7 +46,6 @@ void reset(void *spv,void *ip)
     ohm->name=NULL;
     ohm->type=NULL;
 
-
     temp=param_string("Name",EXTENSION_XPAND_ALL,ip,NULL);
 
     if(temp)
@@ -60,7 +59,6 @@ void reset(void *spv,void *ip)
     pthread_mutex_unlock(&ohm->mutex);
 }
 
-
 double update(void *spv)
 {
     open_hardware_monitor *ohm=spv;
@@ -71,19 +69,19 @@ double update(void *spv)
 
     if(ohm->qth==0)
     {
+        ohm->work=1;
         if(pthread_create(&ohm->qth, NULL, ohm_query, ohm)==0)
         {
-            ohm->work=1;
+            while(ohm->work==1)
+            {
+                sched_yield();
+            }
         }
         else
         {
+            ohm->work=0;
             diag_error("Failed to start WMI query thread");
         }
-    }
-
-    while(ohm->work==1)
-    {
-        sched_yield();
     }
 
     if(ohm->work==0&&ohm->qth)
@@ -91,6 +89,7 @@ double update(void *spv)
         pthread_join(ohm->qth,NULL);
         memset(&ohm->qth,0,sizeof(pthread_t));
     }
+
     pthread_mutex_lock(&ohm->mutex);
     v=ohm->value;
     pthread_mutex_unlock(&ohm->mutex);

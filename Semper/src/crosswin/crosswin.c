@@ -270,3 +270,38 @@ void crosswin_update_z(crosswin *c)
         c->update_z=0;
     }
 }
+
+
+int crosswin_mouse_handle(crosswin_window *cw)
+{
+    if(cw->mouse_func==NULL)
+        return(-1);
+
+    if(cw->mbt.button!=cw->mouse.button&&cw->mouse.state==1)
+    {
+        cw->mbt.button=cw->mouse.button;
+        cw->mbt.last_click_tm=GetTickCount64();
+    }
+    size_t diff=GetTickCount64()-cw->mbt.last_click_tm;
+
+    if(diff<500&&diff>100&&cw->mouse.state==1&&cw->mouse.button==cw->mbt.button)
+    {
+        cw->mouse.state=2;
+        cw->mouse_func(cw,&cw->mouse);
+        memset(&cw->mbt,0,sizeof(mouse_button_data));
+        printf("Double\n");
+        return(0);
+    }
+    else if(diff>500)
+    {
+        memset(&cw->mbt,0,sizeof(mouse_button_data));
+    }
+
+    cw->mouse_func(cw,&cw->mouse);
+
+    if(cw->mouse.handled==1&&cw->mouse.state==1)
+    {
+        memset(&cw->mbt,0,sizeof(mouse_button_data));
+    }
+    return(0);
+}

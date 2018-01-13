@@ -74,7 +74,6 @@ surface_data* surface_by_name(control_data* cd, unsigned char* sn)
             return (sd);
         }
     }
-
     return (NULL);
 }
 

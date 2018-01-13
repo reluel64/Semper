@@ -230,7 +230,6 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
         timer_create(CLOCK_MONOTONIC,&ev,(timer_t*)&e->timer);
         timer_settime((timer_t)e->timer,0,&tval,NULL);
 #endif
-
     }
 
     else if(!(flags&EVENT_NO_WAKE))
@@ -243,8 +242,6 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
     }
 
     pthread_mutex_lock(&eq->mutex);
-
-
 
     if(flags & EVENT_PUSH_TAIL)
     {

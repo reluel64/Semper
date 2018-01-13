@@ -37,6 +37,7 @@ typedef struct _mouse_status
     int button; // click button
     int state; // 0-released 1-pressed 2-double clicked
     int hover;
+    unsigned char handled;
 } mouse_status;
 
 /*Proper declaration*/
@@ -55,6 +56,12 @@ typedef struct
 #endif
 } crosswin;
 
+
+typedef struct
+{
+    size_t last_click_tm;
+    int button;
+}mouse_button_data;
 
 typedef struct _crosswin_window
 {
@@ -84,6 +91,7 @@ typedef struct _crosswin_window
     int (*mouse_func)(crosswin_window* w, mouse_status* ms);
     int (*kbd_func)(unsigned  int key_code, void* ms);
     unsigned char draggable;
+    mouse_button_data mbt;
 
 #ifdef WIN32
     HWND window;
@@ -96,7 +104,7 @@ typedef struct _crosswin_window
     XIC xInputContext;
 #endif
 } crosswin_window;
-
+int crosswin_mouse_handle(crosswin_window *cw);
 void crosswin_init(crosswin* c);
 void crosswin_message_dispatch(crosswin *c);
 void crosswin_set_window_data(crosswin_window* w, void* pv);

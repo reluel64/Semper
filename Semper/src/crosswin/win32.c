@@ -91,12 +91,16 @@ static int win32_prepare_mouse_event(crosswin_window* w, unsigned int message, W
         w->mouse.hover = 1;
 
     case WM_MOUSELEAVE:
+        crosswin_mouse_handle(w);
+        return(1);
+#if 0
         if(w->mouse_func)
         {
+
             w->mouse_func(w, &w->mouse);
             return (1);
         }
-
+#endif
         break;
     }
 
@@ -264,7 +268,7 @@ void win32_init_class(void)
 {
     WNDCLASSEXW wclass = { 0 };
     memset(&wclass, 0, sizeof(WNDCLASSEX));
-    wclass.style = CS_DBLCLKS | CS_NOCLOSE | CS_OWNDC;
+    wclass.style = (CS_DBLCLKS&0) | CS_NOCLOSE | CS_OWNDC;
     wclass.lpfnWndProc = win32_message_callback;
     wclass.lpszClassName = L"SemperSurface";
     wclass.hCursor = LoadImageA(NULL, MAKEINTRESOURCE(32512), IMAGE_CURSOR, 0, 0, LR_SHARED);

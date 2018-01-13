@@ -193,6 +193,7 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
 
     if(fcomm)
     {
+        ms->handled=1;
         ret=1;
         command(sd,&fcomm);
         sfree((void**)&fcomm);
