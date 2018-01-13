@@ -274,22 +274,23 @@ void crosswin_update_z(crosswin *c)
 
 int crosswin_mouse_handle(crosswin_window *cw)
 {
+    size_t diff=0;
     if(cw->mouse_func==NULL)
         return(-1);
 
     if(cw->mbt.button!=cw->mouse.button&&cw->mouse.state==1)
     {
         cw->mbt.button=cw->mouse.button;
-        cw->mbt.last_click_tm=GetTickCount64();
+        cw->mbt.last_click_tm=clock();
     }
-    size_t diff=GetTickCount64()-cw->mbt.last_click_tm;
+
+    diff = clock() - cw->mbt.last_click_tm;
 
     if(diff<500&&diff>100&&cw->mouse.state==1&&cw->mouse.button==cw->mbt.button)
     {
         cw->mouse.state=2;
         cw->mouse_func(cw,&cw->mouse);
         memset(&cw->mbt,0,sizeof(mouse_button_data));
-        printf("Double\n");
         return(0);
     }
     else if(diff>500)
