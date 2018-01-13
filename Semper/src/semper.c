@@ -729,6 +729,8 @@ int semper_single_instance(control_data *cd)
     if(_wremove(uc)==0||_waccess(uc,0)!=0)
     {
         f=_wfopen(uc,L"w");
+        unsigned int attr=GetFileAttributesW(uc);
+        SetFileAttributesW(uc,attr|FILE_ATTRIBUTE_HIDDEN);
     }
     sfree((void**)&uc);
 #elif __linux__
@@ -744,7 +746,6 @@ int semper_single_instance(control_data *cd)
 
 int main(void)
 {
-
     control_data* cd = zmalloc(sizeof(control_data));
     semper_create_paths(cd);
 
