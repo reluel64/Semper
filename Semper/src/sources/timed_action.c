@@ -51,10 +51,10 @@ typedef struct
     list_entry current;
     list_entry act_chain;
     size_t action_index;
-    unsigned char disabled;
     unsigned char running;
     pthread_mutex_t mutex;	/*This will prevent nasty stuff to happen*/
     pthread_cond_t cond;    /*signal this when the timed action has to be killed*/
+    pthread_t time_thread;
 } timed_list;
 
 typedef struct
@@ -111,11 +111,11 @@ static timed_list *timed_list_entry(list_entry *list,size_t index)
     if(tl==NULL)
     {
         tl=zmalloc(sizeof(timed_list));
-        pthread_mutexattr_t mutex_attr;
-        pthread_mutexattr_init(&mutex_attr);
-        pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
-        pthread_mutex_init(&tl->mutex,&mutex_attr);
-        pthread_mutexattr_destroy(&mutex_attr);
+      //  pthread_mutexattr_t mutex_attr;
+      //  pthread_mutexattr_init(&mutex_attr);
+       // pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
+        //pthread_mutex_init(&tl->mutex,&mutex_attr);
+       // pthread_mutexattr_destroy(&mutex_attr);
         pthread_cond_init(&tl->cond,NULL);
         list_entry_init(&tl->current);
         list_entry_init(&tl->act_chain);
@@ -130,8 +130,8 @@ static void *timed_action_exec(void *pv)
 {
     timed_list *tl=pv;
     timed_action_list *tal=NULL;
-    tl->running=1;
-    pthread_mutex_lock(&tl->mutex);
+    tl->running=2;
+  //  pthread_mutex_lock(&tl->mutex);
 
     list_enum_part(tal,&tl->act_chain,current)
     {
@@ -161,7 +161,7 @@ static void *timed_action_exec(void *pv)
                 break;
         }
     }
-    pthread_mutex_unlock(&tl->mutex);
+   // pthread_mutex_unlock(&tl->mutex);
     tl->running=0;
     return(NULL);
 }
@@ -347,11 +347,13 @@ static void timed_action_destroy_list(list_entry *head)
         timed_action_list *tal=NULL;
         timed_action_list *ttal=NULL;
         pthread_cond_signal(&tl->cond);                         /*signal the thread to end*/
-
-        pthread_mutex_lock(&tl->mutex);                         /*wait for thread to complete*/
+        if(tl->time_thread)
+        {
+            pthread_join(tl->time_thread,NULL);
+            memset(&tl->time_thread,0,sizeof(pthread_t));
+        }
         linked_list_remove(&tl->current);                       /*remove the timed list from the chain*/
-        pthread_mutex_unlock(&tl->mutex);                       /*unlock the mutex before destroying it*/
-        pthread_mutex_destroy(&tl->mutex);                      /*destroy the mutex*/
+      //  pthread_mutex_destroy(&tl->mutex);                      /*destroy the mutex*/
         pthread_cond_destroy(&tl->cond);                        /*destroy the condition variable*/
 
         list_enum_part_safe(tal,ttal,&tl->act_chain,current)
@@ -457,18 +459,19 @@ void timed_action_command(void *spv,unsigned char *command)
                         }
 
                         int status=0;
-                        pthread_attr_t th_att= {0};
-                        pthread_t dtid;
-                        pthread_attr_init(&th_att);
-                        pthread_attr_setdetachstate(&th_att,PTHREAD_CREATE_DETACHED);
-
-                        if((status=pthread_create(&dtid,&th_att,timed_action_exec,tl))!=0)
+                        tl->running=1;
+                        if((status=pthread_create(&tl->time_thread,NULL,timed_action_exec,tl))!=0)
                         {
+                            tl->running=0;
                             diag_crit("%s %d Failed to start timed_action_exec. Status %x",__FUNCTION__,__LINE__,status);
                         }
-
-                        pthread_attr_destroy(&th_att);
-
+                        else
+                        {
+                            while(tl->running==1)
+                            {
+                                sched_yield();
+                            }
+                        }
                         break;
                     }
                 }
@@ -488,8 +491,11 @@ void timed_action_command(void *spv,unsigned char *command)
                     if(tl->action_index==comm_index)
                     {
                         pthread_cond_signal(&tl->cond);
-                        pthread_mutex_lock(&tl->mutex);
-                        pthread_mutex_unlock(&tl->mutex);
+                        if(tl->time_thread)
+                        {
+                            pthread_join(tl->time_thread,NULL);
+                            memset(&tl->time_thread,0,sizeof(pthread_t));
+                        }
                         break;
                     }
                 }
