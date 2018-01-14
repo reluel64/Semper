@@ -1014,6 +1014,7 @@ static int command_execute(command_handler_status* chs)
                 if((ci[i].min_parameters == 0) || (ci[i].min_parameters <= chs->cpm.plength))
                 {
                     ret = ci[i].handler(chs->sd, &chs->cpm);
+                    break;
                 }
                 found=1;
             }

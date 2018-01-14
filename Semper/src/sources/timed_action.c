@@ -111,11 +111,6 @@ static timed_list *timed_list_entry(list_entry *list,size_t index)
     if(tl==NULL)
     {
         tl=zmalloc(sizeof(timed_list));
-      //  pthread_mutexattr_t mutex_attr;
-      //  pthread_mutexattr_init(&mutex_attr);
-       // pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
-        //pthread_mutex_init(&tl->mutex,&mutex_attr);
-       // pthread_mutexattr_destroy(&mutex_attr);
         pthread_cond_init(&tl->cond,NULL);
         list_entry_init(&tl->current);
         list_entry_init(&tl->act_chain);
@@ -131,7 +126,7 @@ static void *timed_action_exec(void *pv)
     timed_list *tl=pv;
     timed_action_list *tal=NULL;
     tl->running=2;
-  //  pthread_mutex_lock(&tl->mutex);
+
 
     list_enum_part(tal,&tl->act_chain,current)
     {
@@ -161,7 +156,7 @@ static void *timed_action_exec(void *pv)
                 break;
         }
     }
-   // pthread_mutex_unlock(&tl->mutex);
+
     tl->running=0;
     return(NULL);
 }
@@ -353,7 +348,6 @@ static void timed_action_destroy_list(list_entry *head)
             memset(&tl->time_thread,0,sizeof(pthread_t));
         }
         linked_list_remove(&tl->current);                       /*remove the timed list from the chain*/
-      //  pthread_mutex_destroy(&tl->mutex);                      /*destroy the mutex*/
         pthread_cond_destroy(&tl->cond);                        /*destroy the condition variable*/
 
         list_enum_part_safe(tal,ttal,&tl->act_chain,current)
