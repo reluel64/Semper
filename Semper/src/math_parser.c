@@ -346,7 +346,11 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
         //Basic
         { "+",      OP_PRIO(0x04), OP_AS_LE, 2, (math_rtn)          math_add},
         { "-",      OP_PRIO(0x04), OP_AS_LE, 2, (math_rtn)          math_sub},
-        { "**",     OP_PRIO(0x02), OP_AS_RI, 2, (math_rtn)          math_pow},   //the power operator has to be declared before multiplication otherwise the exression is not evaluated properly.
+        /*
+         * the power operator has to be declared before
+         * multiplication otherwise the exression is not evaluated properly.
+         */
+        { "**",     OP_PRIO(0x02), OP_AS_RI, 2, (math_rtn)          math_pow},
         { "*",      OP_PRIO(0x03), OP_AS_LE, 2, (math_rtn)          math_mul},
         { "/",      OP_PRIO(0x03), OP_AS_LE, 2, (math_rtn)          math_div},
         {"%",       OP_PRIO(0x03), OP_AS_LE, 2, (math_rtn)          math_mod},
@@ -367,7 +371,11 @@ static int math_parser_gen_queue(unsigned char *f,list_entry *out_queue,math_par
         {">=",      OP_PRIO(0x06), OP_AS_LE, 2, (math_rtn)          math_gte},
         {">",       OP_PRIO(0x06), OP_AS_LE, 2, (math_rtn)           math_gt},
         {"!=",      OP_PRIO(0x07), OP_AS_LE, 2, (math_rtn)          math_neq},
-        {"?",       OP_PRIO(0x0e), OP_AS_RI, 1, (math_rtn)         math_cond}, //even the operator is actually "?:", we split it in half and the actual work is done by the ":" operator function
+        /*
+         * even the operator is actually "?:", we split it in
+         *half and the actual work is done by the ":" operator function
+         */
+        {"?",       OP_PRIO(0x0e), OP_AS_RI, 1, (math_rtn)         math_cond},
         {":",       OP_PRIO(0x0e), OP_AS_RI, 3, (math_rtn)        math_condr},
         //Constants
         {"pi",      OP_PRIO(0x00), OP_AS_UN, 0, (math_rtn)           math_pi},

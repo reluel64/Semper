@@ -21,7 +21,7 @@
 
 
 #ifdef WIN32
-static void event_trigger(event_queue* eq)
+static void event_start_processing(event_queue* eq)
 #elif __linux__
 static void event_trigger(int sig,siginfo_t *inf,void* pv)
 #endif
@@ -52,18 +52,36 @@ static void event_trigger(int sig,siginfo_t *inf,void* pv)
 
 #endif
 }
+/*Time to break things*/
+
+int event_add_wait(event_queue *eq,event_wait_handler ewh,void *pv,void *wait,unsigned int flags)
+{
+    if(eq==NULL||ewh==NULL||wait==NULL)
+        return(-1);
+
+    event_waiter *ew=zmalloc(sizeof(event_waiter));
+
+    if(ew)
+    {
+        ew->ewh=ewh;
+        ew->flags=flags;
+        ew->pv=pv;
+        ew->wait=wait;
+        list_entry_init(&ew->current);
+
+        pthread_mutex_lock(&eq->mutex);
+        linked_list_add(&ew->current,&eq->waiters);
+        pthread_mutex_unlock(&eq->mutex);
+
+        return(0);
+    }
+    return(-1);
+}
 
 void event_wait(event_queue* eq)
 {
 #ifdef WIN32
-
-    if(eq->loop_event == NULL)
-    {
-        eq->loop_event = CreateEventW(NULL, 0, 1, NULL);
-    }
-
     MsgWaitForMultipleObjectsEx(1, &eq->loop_event, -1, QS_ALLEVENTS, MWMO_ALERTABLE | MWMO_INPUTAVAILABLE);
-
 #elif __linux__
 
     struct pollfd p[3]= {0};
@@ -104,14 +122,17 @@ void event_queue_set_inotify_event(event_queue *eq,int fd)
 event_queue* event_queue_init(void)
 {
     event_queue* eq = zmalloc(sizeof(event_queue));
-
     pthread_mutexattr_t mutex_attr;
     pthread_mutexattr_init(&mutex_attr);
-    pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
+    pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE);
     pthread_mutex_init(&eq->mutex,&mutex_attr);
     pthread_mutexattr_destroy(&mutex_attr);
     list_entry_init(&eq->events);
+    list_entry_init(&eq->waiters);
 
+#ifdef WIN32
+    eq->loop_event = CreateEvent(NULL, 0, 1, NULL);
+#endif
 #ifdef __linux__
 
     struct sigaction sa= {0};
@@ -214,7 +235,7 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
         e->timer = CreateWaitableTimer(NULL, 1, NULL);
         LARGE_INTEGER li = { 0 };
         li.QuadPart = -10000 * (long)timeout;
-        SetWaitableTimer(e->timer, &li, 0, (PTIMERAPCROUTINE)event_trigger, eq, 0);
+        SetWaitableTimer(e->timer, &li, 0, (PTIMERAPCROUTINE)event_start_processing, eq, 0);
 
 #elif __linux__
         struct itimerspec tval= {0};
@@ -235,7 +256,7 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
     else if(!(flags&EVENT_NO_WAKE))
     {
 #ifdef WIN32
-        event_trigger(eq);
+        event_start_processing(eq);
 #elif __linux__
         event_trigger(0,NULL,eq);
 #endif

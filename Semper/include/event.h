@@ -8,7 +8,8 @@
 #define EVENT_NO_WAKE               1<<4
 #define EVENT_PUSH_HIGH_PRIO        1<<5 /*Unimplemented*/
 typedef int (*event_handler)(void*);
-typedef struct _event
+typedef int (*event_wait_handler)(void *,void *);
+typedef struct
 {
     event_handler handler;
     void* pv;
@@ -23,8 +24,19 @@ typedef struct _event_queue
     void* loop_event;
     pthread_mutex_t mutex;
     list_entry events;
+    list_entry waiters;
     event *ce; //current event
 } event_queue;
+
+typedef struct
+{
+    event_wait_handler ewh;
+    void *pv;
+    void *wait;
+    unsigned int flags;
+    list_entry current;
+}event_waiter;
+
 
 void event_wait(event_queue* eq);
 event_queue* event_queue_init(void);

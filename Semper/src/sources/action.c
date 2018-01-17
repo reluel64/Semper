@@ -142,8 +142,6 @@ static int action_populate(source* s)
             else
                 sscanf(v + 17, "%llu", &index);
 
-
-
             if(strncasecmp(v + 6, "Above", 5) == 0)
                 a = action_alloc(&sa->abv, index);
 

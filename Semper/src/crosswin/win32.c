@@ -259,6 +259,12 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
         event_push(sd->cd->eq, (event_handler)surface_destroy, (void*)sd,0,EVENT_REMOVE_BY_DATA);
         return(0);
     }
+    case WM_QUIT:
+    {
+        crosswin *c=w->c;
+        c->quit=1;
+        return(0);
+    }
     }
 
     return (DefWindowProc(win, message, wpm, lpm));
@@ -296,14 +302,10 @@ void win32_message_dispatch(crosswin *c)
 {
     MSG msg = { 0 };
 
-    if(PeekMessageW(&msg, NULL, 0, 0, 1)!=WM_QUIT)
+    while(PeekMessageW(&msg, NULL, 0, 0, 1))
     {
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
-    }
-    else
-    {
-        c->quit=1;
     }
 }
 
