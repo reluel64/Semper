@@ -82,6 +82,7 @@ static int command_defer_handler(command_defer_data* ec)
             command_exec=1;
         }
     }
+
     if(command_exec==0)
     {
         diag_warn("%s %d Surface %p was not found",__FUNCTION__,__LINE__,ec->sd);

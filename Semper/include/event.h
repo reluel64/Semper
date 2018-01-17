@@ -33,14 +33,18 @@ typedef struct
     event_wait_handler ewh;
     void *pv;
     void *wait;
+#ifdef WIN32
+    void *mon_th;
+#endif
     unsigned int flags;
     list_entry current;
-}event_waiter;
+} event_waiter;
 
 
 void event_wait(event_queue* eq);
 event_queue* event_queue_init(void);
-
+int event_remove_wait(event_queue *eq,void *wait);
+int event_add_wait(event_queue *eq,event_wait_handler ewh,void *pv,void *wait,unsigned int flags);
 int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout, unsigned char flags);
 void event_remove(event_queue* eq, event_handler eh, void* pv, unsigned char flags);
 void event_queue_clear(event_queue* eq);

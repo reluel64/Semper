@@ -20,11 +20,7 @@
 #endif
 
 
-#ifdef WIN32
 static void event_start_processing(event_queue* eq)
-#elif __linux__
-static void event_trigger(int sig,siginfo_t *inf,void* pv)
-#endif
 {
 #ifdef WIN32
 
@@ -35,12 +31,17 @@ static void event_trigger(int sig,siginfo_t *inf,void* pv)
 
 #elif __linux__
 
-    if(pv&&inf==NULL)
+    if(eq)
     {
-        event_queue *eq=pv;
         eventfd_write(((int*)eq->loop_event)[0],10000);// such event, much magic
     }
-    else if(inf!=NULL)
+#endif
+}
+
+#ifdef __linux__
+static void event_start_processing_sig_wrap(int sig,siginfo_t *inf,void* pv)
+{
+    if(inf!=NULL)
     {
         event_queue *eq=inf->si_value.sival_ptr;
 
@@ -49,10 +50,8 @@ static void event_trigger(int sig,siginfo_t *inf,void* pv)
             eventfd_write(((int*)eq->loop_event)[0],10000);// such event, much magic
         }
     }
-
-#endif
 }
-/*Time to break things*/
+#endif
 
 int event_add_wait(event_queue *eq,event_wait_handler ewh,void *pv,void *wait,unsigned int flags)
 {
@@ -78,10 +77,47 @@ int event_add_wait(event_queue *eq,event_wait_handler ewh,void *pv,void *wait,un
     return(-1);
 }
 
+int event_remove_wait(event_queue *eq,void *wait)
+{
+    if(eq==NULL||wait==NULL)
+        return(-1);
+
+    event_waiter *ew=NULL;
+    event_waiter *tew=NULL;
+    list_enum_part_safe(ew,tew,&eq->waiters,current)
+    {
+        if(ew->wait==wait||wait==(void*)-1)
+        {
+            UnregisterWaitEx(ew->mon_th,INVALID_HANDLE_VALUE);
+            pthread_mutex_lock(&eq->mutex);
+            linked_list_remove(&ew->current);
+            pthread_mutex_unlock(&eq->mutex);
+            sfree((void**)&ew);
+        }
+    }
+    return(0);
+}
+
 void event_wait(event_queue* eq)
 {
 #ifdef WIN32
+    event_waiter *ew=NULL;
+    list_enum_part(ew,&eq->waiters,current)
+    {
+        if(ew->mon_th==NULL)
+            RegisterWaitForSingleObject(&ew->mon_th,ew->wait,(WAITORTIMERCALLBACK)event_start_processing,eq,-1, WT_EXECUTEONLYONCE);
+    }
+
     MsgWaitForMultipleObjectsEx(1, &eq->loop_event, -1, QS_ALLEVENTS, MWMO_ALERTABLE | MWMO_INPUTAVAILABLE);
+
+    list_enum_part(ew,&eq->waiters,current)
+    {
+        UnregisterWaitEx(ew->mon_th,INVALID_HANDLE_VALUE);
+        ew->mon_th=NULL;
+
+        if(WaitForSingleObject(ew->wait,0)==0)
+            ew->ewh(ew->pv,ew->wait);
+    }
 #elif __linux__
 
     struct pollfd p[3]= {0};
@@ -118,7 +154,6 @@ void event_queue_set_inotify_event(event_queue *eq,int fd)
 }
 #endif
 
-
 event_queue* event_queue_init(void)
 {
     event_queue* eq = zmalloc(sizeof(event_queue));
@@ -141,7 +176,7 @@ event_queue* event_queue_init(void)
     sigaddset(&sigs,SIGALRM);
     //  sigprocmask(SIG_BLOCK,&sigs,NULL);
     sa.sa_handler=NULL;
-    sa.sa_sigaction=event_trigger;
+    sa.sa_sigaction=event_start_processing_sig_wrap;
     sa.sa_flags= SA_SIGINFO;
     //sa.sa_mask=sigs;
     sigaction(SIGALRM,&sa,NULL);
@@ -191,7 +226,6 @@ void event_remove(event_queue* eq, event_handler eh, void* pv, unsigned char fla
                 {
                     timer_delete(e->timer);
                 }
-
 #endif
                 e->timer = NULL;
             }
@@ -317,6 +351,7 @@ void event_queue_destroy(event_queue** eq)
 {
     if(*eq)
     {
+        event_remove_wait(*eq,(void*)-1);
         event_queue_clear(*eq);
         pthread_mutex_destroy(&(*eq)->mutex);
 #ifdef WIN32
