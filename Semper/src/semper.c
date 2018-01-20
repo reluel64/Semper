@@ -16,7 +16,7 @@
 #include <event.h>
 #include <fontconfig/fontconfig.h>
 #include <surface_builtin.h>
-
+#include <watcher.h>
 
 #ifdef __linux__
 #include <sys/inotify.h>
@@ -34,8 +34,6 @@
 WINBASEAPI WINBOOL WINAPI QueryFullProcessImageNameW(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
 #endif
 extern void crosswin_update_z(crosswin *c);
-static void semper_reload_surfaces_if_modified(control_data* cd);
-static void semper_surface_watcher(unsigned long err, unsigned long transferred, void *pv);
 
 typedef struct
 {
@@ -218,8 +216,8 @@ static int ini_handler(semper_write_key_handler)
 
     if(swkd->sect_off > swkd->sect_end_off && strcasecmp(sn, swkd->sn))
     {
-        swkd->sect_end_off = ftello64(swkd->nf) - swkd->new_lines;
-        fseek(swkd->nf, -(((long)swkd->new_lines) - 1), SEEK_CUR);
+        swkd->sect_end_off = ftello(swkd->nf) - swkd->new_lines;
+        fseeko(swkd->nf, -(((long)swkd->new_lines) - 1), SEEK_CUR);
         swkd->new_lines = 0;
 
         if(swkd->key_found == 0)
@@ -236,7 +234,7 @@ static int ini_handler(semper_write_key_handler)
         /*this is the section - store the offset*/
         if(!strcasecmp(sn, swkd->sn))
         {
-            swkd->sect_off = ftello64(swkd->nf); /*save the offset of the section start*/
+            swkd->sect_off = ftello(swkd->nf); /*save the offset of the section start*/
             swkd->key_found = 0;
         }
 
@@ -428,7 +426,7 @@ static void semper_create_paths(control_data* cd)
     cd->ext_dir_length = tsz - 1;
 #ifdef WIN32
     windows_slahses(cd->ext_dir);
-#elif
+#elif __linux__
     unix_slashes(cd->ext_dir);
 #endif
     /////////////////////////////////////////////////////////
@@ -454,51 +452,6 @@ static void semper_create_paths(control_data* cd)
 #endif
     ////////////////////////////////////////////////////////
 }
-
-static void semper_reload_surfaces_if_modified(control_data* cd)
-{
-    surface_data* sd = NULL;
-
-    list_enum_part(sd, &cd->surfaces, current)
-    {
-        if(sd->rim && surface_modified(sd))
-        {
-            surface_reload(sd);
-        }
-    }
-}
-
-#ifdef WIN32
-static void semper_surface_watcher_init(control_data* cd)
-{
-
-    if(cd->dh == NULL)
-    {
-        wchar_t* s_ucs = utf8_to_ucs(cd->surface_dir);
-        cd->dh = CreateFileW(s_ucs, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-                             FILE_FLAG_OVERLAPPED | FILE_FLAG_BACKUP_SEMANTICS, NULL);
-        sfree((void**)&s_ucs);
-    }
-
-    if(cd->notify_buf == NULL)
-    {
-        cd->notify_buf = zmalloc(sizeof(FILE_NOTIFY_INFORMATION) * 256);
-    }
-
-    if(cd->so == NULL)
-    {
-        cd->so = zmalloc(sizeof(semper_overlapped));
-    }
-
-    cd->so->pv = cd;
-
-    ReadDirectoryChangesW(cd->dh, cd->notify_buf, sizeof(FILE_NOTIFY_INFORMATION) * 256, 1,
-                          FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_ATTRIBUTES |
-                          FILE_NOTIFY_CHANGE_LAST_WRITE,
-                          NULL, (OVERLAPPED*)cd->so, (LPOVERLAPPED_COMPLETION_ROUTINE)semper_surface_watcher);
-}
-#endif
-
 
 #ifdef WIN32
 static int semper_font_cache_fix(unsigned char *path)
@@ -571,99 +524,7 @@ static int semper_font_cache_fix(unsigned char *path)
 
     return(0);
 }
-#endif
 
-
-void semper_surface_watcher(unsigned long err, unsigned long transferred, void *pv)
-{
-
-    unused_parameter(err);
-    unused_parameter(transferred);
-#ifdef WIN32
-    semper_overlapped* so = (semper_overlapped*)pv;
-    control_data* cd = so->pv;
-    // semper_load_local_fonts(cd->root_dir);
-
-    semper_reload_surfaces_if_modified(cd);
-    event_push(cd->eq, (event_handler)semper_surface_watcher_init, (void*)cd, 0, 0);
-#elif __linux__
-    control_data *cd=pv;
-    struct pollfd p= {0};
-
-    p.events=POLLIN;
-    p.fd=cd->inotify_fd;
-    poll(&p,1,0);
-
-    if(p.revents)
-    {
-        struct inotify_event inev= {0};
-        size_t buf_len=sizeof(struct inotify_event) + NAME_MAX + 1;
-
-        char buf[sizeof(struct inotify_event) + NAME_MAX + 1]= {0};
-
-        while(read(cd->inotify_fd,buf,buf_len)>0); //consume the events
-
-        semper_reload_surfaces_if_modified(cd);
-    }
-
-#endif
-}
-
-
-#ifdef WIN32
-
-#endif
-
-/*Experimental work to prevent
- *'Show Desktop' from hiding the widgets
- * */
-
-/*A quick thought on how this should work:
- * 1) We do have a helper window that stays at the bottom of the stack - on top of the desktop window
- * 2) Every crosswin_desktop must be pushed on top of this window in reversed order (stack)
- * 3) every crosswin_bottom has to be added after crosswin_desktop
- * 4) Every crosswin_normal has to be added after crosswin_bottom
- * 5) The crosswin_top* are pushed as regular
- * 6) The process must repeat to ensure the order remains set
- **/
-
-
-static int semper_desktop_checker(control_data *cd)
-{
-    event_push(cd->eq,(event_handler)semper_desktop_checker,cd,100,EVENT_PUSH_TIMER|EVENT_PUSH_TAIL); //schedule another check
-
-    static unsigned char state=1;
-    surface_data *sd=NULL;
-    void *fg=NULL;
-    void *sh=NULL;
-    void *sh2=NULL;
-
-#ifdef WIN32
-    fg=GetForegroundWindow();
-    sh=FindWindowExW(fg,NULL,L"SHELLDLL_DefView",L"");
-    sh2=FindWindowExW(fg,NULL,L"Progman",L"");
-#endif
-    printf("%p %p\n",sh,sh2);
-
-
-    //The shell has the focus.
-    //This could mean one of two things:
-    //1) The user is on desktop (which is fine)
-    //2) The user just triggered the 'ShowDesktop' command (which is fine but we must take care of it)
-
-
-    if(cd->srf_reg)
-    {
-        sd=cd->srf_reg;
-        crosswin_set_window_z_order(sd->sw,crosswin_topmost);
-        crosswin_set_window_z_order(sd->sw,crosswin_normal);
-    }
-
-
-    return(0);
-}
-
-#ifdef WIN32
 static void  semper_init_fonts(control_data *cd)
 {
     FcFini();
@@ -717,7 +578,7 @@ static void  semper_init_fonts(control_data *cd)
 #endif
 
 
-int semper_single_instance(control_data *cd)
+static int semper_single_instance(control_data *cd)
 {
     FILE *f=NULL;
     unsigned char *lock_file=zmalloc(cd->root_dir_length+7);
@@ -734,7 +595,7 @@ int semper_single_instance(control_data *cd)
     }
     sfree((void**)&uc);
 #elif __linux__
-    if(remove(lock_file)==0||access(lock_file))
+    if(remove(lock_file)==0||access(lock_file,0)!=0)
     {
         f=fopen(lock_file,"w");
     }
@@ -742,6 +603,36 @@ int semper_single_instance(control_data *cd)
     sfree((void**)&lock_file);
 
     return(f!=NULL);
+}
+
+
+static int semper_watcher_callback(void *pv,void *wait)
+{
+    surface_data* sd = NULL;
+    control_data *cd=pv;
+    list_enum_part(sd, &cd->surfaces, current)
+    {
+        if(sd->rim && surface_modified(sd))
+        {
+            surface_reload(sd);
+        }
+    }
+    printf("Check\n");
+    watcher_next(cd->watcher);
+    return(0);
+}
+
+static int semper_check_screen(control_data *cd)
+{
+    if(crosswin_update(&cd->c))
+    {
+        surface_data *sd=NULL;
+        list_enum_part(sd,&cd->surfaces,current)
+        {
+            surface_reload(sd);
+        }
+    }
+    return(0);
 }
 
 int main(void)
@@ -755,50 +646,40 @@ int main(void)
     }
 
     crosswin_init(&cd->c);
-
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
     cd->eq = event_queue_init();
+    cd->watcher=watcher_init(cd->surface_dir);
 
+
+    event_add_wait(cd->eq,(event_wait_handler)crosswin_message_dispatch,&cd->c,cd->c.disp_fd,0x1);
+ 
+    event_add_wait(cd->eq,(event_wait_handler)semper_check_screen,cd,NULL,0);
+    if(cd->watcher)
+    {
+        event_add_wait(cd->eq,(event_wait_handler)semper_watcher_callback,cd,(void*)((size_t*)cd->watcher)[0],0x1);
+    }
     semper_load_configuration(cd);
+
 #ifdef WIN32
     diag_info("Initializing font cache...this takes time on some machines");
     semper_init_fonts(cd);
     diag_info("Fonts initialized");
-    event_push(cd->eq, (event_handler)semper_surface_watcher_init, (void*)cd, 0, 0);
-
-#elif __linux__
-    event_queue_set_window_event(cd->eq,XConnectionNumber(cd->c.display));
-    cd->inotify_fd=inotify_init1(IN_NONBLOCK);
-    event_queue_set_inotify_event(cd->eq,cd->inotify_fd);
 #endif
+
 
     if(semper_load_surfaces(cd)==0)
     {
         /*launch the catalog if no surface has been loaded due to various reasons*/
         surface_builtin_init(cd,catalog);
     }
-#if 0
-    semper_desktop_checker(cd);
-#endif
+
     while(cd->c.quit == 0) //nothing fancy, just the main event loop
     {
-        event_wait(cd->eq); // wait for an event to occur
-#ifdef __linux__
-        semper_surface_watcher(0,0,cd);
-#endif
-
-        if(crosswin_update(&cd->c))
+        if(event_wait(cd->eq))                 // wait for an event to occur
         {
-            surface_data *sd=NULL;
-            list_enum_part(sd,&cd->surfaces,current)
-            {
-                surface_reload(sd);
-            }
+            event_process(cd->eq);             // process the queue
         }
-
-        crosswin_message_dispatch(&cd->c); // dispatch any windows message
-        event_process(cd->eq);             // process the queue
     }
 
     semper_save_configuration(cd);

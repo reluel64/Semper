@@ -206,9 +206,7 @@ void surface_destroy_structs(surface_data* sd, unsigned char destroy)
         sd->y=0;
         sd->h=0;
         sd->w=0;
-#ifdef __linux__
-        inotify_rm_watch(sd->cd->inotify_fd,sd->inotify_watch_id);
-#endif
+
         list_enum_part_safe(s, ts, &sd->sources, current)
         {
             source_destroy(&s);
@@ -949,15 +947,6 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
     {
         tsd->scd = skeleton_get_section(&cd->shead, sp->surface_rel_dir);          // get the section from Semper.ini
     }
-
-#ifdef __linux__
-
-    if(memory==0)
-    {
-        tsd->inotify_watch_id=inotify_add_watch( cd->inotify_fd, tsd->sp.file_path, IN_ALL_EVENTS );
-    }
-
-#endif
 
     return (tsd);
 }

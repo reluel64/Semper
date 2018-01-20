@@ -9,6 +9,7 @@
 #include <event.h>
 #include <pthread.h>
 #ifdef __linux__
+#include <sys/epoll.h>
 #include <sys/eventfd.h>
 #include <sys/inotify.h>
 #include <fcntl.h>
@@ -33,7 +34,7 @@ static void event_start_processing(event_queue* eq)
 
     if(eq)
     {
-        eventfd_write(((int*)eq->loop_event)[0],10000);// such event, much magic
+        eventfd_write((int)(size_t)eq->loop_event,1);// such event, much magic
     }
 #endif
 }
@@ -44,18 +45,14 @@ static void event_start_processing_sig_wrap(int sig,siginfo_t *inf,void* pv)
     if(inf!=NULL)
     {
         event_queue *eq=inf->si_value.sival_ptr;
-
-        if(eq)
-        {
-            eventfd_write(((int*)eq->loop_event)[0],10000);// such event, much magic
-        }
+        event_start_processing(eq);
     }
 }
 #endif
 
 int event_add_wait(event_queue *eq,event_wait_handler ewh,void *pv,void *wait,unsigned int flags)
 {
-    if(eq==NULL||ewh==NULL||wait==NULL)
+    if(eq==NULL||ewh==NULL)
         return(-1);
 
     event_waiter *ew=zmalloc(sizeof(event_waiter));
@@ -67,13 +64,14 @@ int event_add_wait(event_queue *eq,event_wait_handler ewh,void *pv,void *wait,un
         ew->pv=pv;
         ew->wait=wait;
         list_entry_init(&ew->current);
-
         pthread_mutex_lock(&eq->mutex);
         linked_list_add(&ew->current,&eq->waiters);
         pthread_mutex_unlock(&eq->mutex);
-
-        return(0);
     }
+
+    eq->waiters_count++;
+    return(0);
+
     return(-1);
 }
 
@@ -88,71 +86,112 @@ int event_remove_wait(event_queue *eq,void *wait)
     {
         if(ew->wait==wait||wait==(void*)-1)
         {
+#ifdef WIN32
             UnregisterWaitEx(ew->mon_th,INVALID_HANDLE_VALUE);
+#endif
             pthread_mutex_lock(&eq->mutex);
             linked_list_remove(&ew->current);
             pthread_mutex_unlock(&eq->mutex);
             sfree((void**)&ew);
+            eq->waiters_count--;
         }
     }
     return(0);
 }
 
-void event_wait(event_queue* eq)
+unsigned char event_wait(event_queue* eq)
 {
+
+    unsigned char event_p=0;
 #ifdef WIN32
     event_waiter *ew=NULL;
+
+#if 1
     list_enum_part(ew,&eq->waiters,current)
     {
         if(ew->mon_th==NULL)
             RegisterWaitForSingleObject(&ew->mon_th,ew->wait,(WAITORTIMERCALLBACK)event_start_processing,eq,-1, WT_EXECUTEONLYONCE);
     }
+#endif
 
-    MsgWaitForMultipleObjectsEx(1, &eq->loop_event, -1, QS_ALLEVENTS, MWMO_ALERTABLE | MWMO_INPUTAVAILABLE);
-
+    if(MsgWaitForMultipleObjectsEx(1, &eq->loop_event, -1, QS_ALLEVENTS, MWMO_ALERTABLE | MWMO_INPUTAVAILABLE)==WAIT_OBJECT_0)
+    {
+        event_p=1;
+    }
+#if 1
     list_enum_part(ew,&eq->waiters,current)
     {
         UnregisterWaitEx(ew->mon_th,INVALID_HANDLE_VALUE);
         ew->mon_th=NULL;
 
-        if(WaitForSingleObject(ew->wait,0)==0)
+        if(ew->wait==NULL||WaitForSingleObject(ew->wait,0)==0)
             ew->ewh(ew->pv,ew->wait);
     }
+#endif
 #elif __linux__
-
-    struct pollfd p[3]= {0};
+    /*build wait structures*/
 
     eventfd_t dummy;
-    p[0].events=POLLIN|POLL_OUT;
-    p[1].events=POLLIN|POLL_OUT|POLL_MSG;
-    p[2].events=POLLIN;
+    size_t evts=1;
+    struct pollfd *events=zmalloc(sizeof(struct pollfd));
+    events[0].fd=(int)(size_t)eq->loop_event;
+    events[0].events=POLLIN;
+    event_waiter *ew=NULL;
 
-    p[0].fd=((int*)eq->loop_event)[0];
-    p[1].fd=((int*)eq->loop_event)[1];
-    p[2].fd=((int*)eq->loop_event)[2]; //for the watcher we will consume the events later
-
-    poll(p,3,-1);
-
-    if(p[0].revents)
+    list_enum_part(ew,&eq->waiters,current)
     {
-        eventfd_read(((int*)eq->loop_event)[0],&dummy); //consume the event
+        if(ew->wait==NULL&&ew->wait==(void*)-1)
+            continue;
+        struct pollfd *temp=realloc(events,(evts+1)*sizeof(struct pollfd));
+
+
+        if(temp)
+        {
+            events=temp;
+            events[evts].fd=(int)(size_t)ew->wait;
+            events[evts].events=ew->flags;
+            events[evts].revents=0;
+            evts++;
+        }
     }
 
+
+    if(events)
+    {
+        poll(events,evts,-1);
+    }
+
+
+    if(events[0].revents)
+    {
+        eventfd_read((int)(size_t)eq->loop_event,&dummy); //consume the event
+        event_p=1;
+    }
+
+    list_enum_part(ew,&eq->waiters,current)
+    {
+        if(ew->wait!=0&&ew->wait!=(void*)-1)
+        {
+            for(size_t i=1; i<evts; i++)
+            {
+                if(events[i].fd==(int)(size_t)ew->wait&&events[i].revents)
+                {
+                    ew->ewh(ew->pv,ew->wait);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            ew->ewh(ew->pv,ew->wait);
+        }
+    }
+
+    sfree((void**)&events);
+
 #endif
+    return(event_p);
 }
-
-
-#ifdef __linux__
-void event_queue_set_window_event(event_queue *eq,int fd)
-{
-    ((int*)eq->loop_event)[1]=fd;
-}
-
-void event_queue_set_inotify_event(event_queue *eq,int fd)
-{
-    ((int*)eq->loop_event)[2]=fd;
-}
-#endif
 
 event_queue* event_queue_init(void)
 {
@@ -167,9 +206,8 @@ event_queue* event_queue_init(void)
 
 #ifdef WIN32
     eq->loop_event = CreateEvent(NULL, 0, 1, NULL);
-#endif
-#ifdef __linux__
-
+#elif __linux__
+    eq->loop_wait=(void*)(size_t)epoll_create1(0);
     struct sigaction sa= {0};
     sigset_t sigs;
     sigemptyset(&sigs);
@@ -180,8 +218,7 @@ event_queue* event_queue_init(void)
     sa.sa_flags= SA_SIGINFO;
     //sa.sa_mask=sigs;
     sigaction(SIGALRM,&sa,NULL);
-    eq->loop_event=zmalloc(sizeof(int)*3);
-    ((int*)eq->loop_event)[0]=eventfd(2401, EFD_NONBLOCK);
+    eq->loop_event=(void*)(size_t)eventfd(0x2712, EFD_NONBLOCK);
 #endif
     return (eq);
 }
@@ -289,11 +326,7 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
 
     else if(!(flags&EVENT_NO_WAKE))
     {
-#ifdef WIN32
         event_start_processing(eq);
-#elif __linux__
-        event_trigger(0,NULL,eq);
-#endif
     }
 
     pthread_mutex_lock(&eq->mutex);

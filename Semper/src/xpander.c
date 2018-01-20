@@ -330,25 +330,25 @@ int xpander(xpander_request *xr)
                     start++;
 
                     //try to match a variable from the table
-                    for(size_t i=0; i<sizeof(tbl)/sizeof(xpander_table); i++)
+                    for(size_t ti=0; ti<sizeof(tbl)/sizeof(xpander_table); ti++)
                     {
-                        if(!strncasecmp(wbuf+start,tbl[i].vn,end-start))
+                        if(!strncasecmp(wbuf+start,tbl[ti].vn,end-start))
                         {
                             start=0;
                             found=1;
                             has_var=1;
 
-                            if(tbl[i].conv_func)
+                            if(tbl[ti].conv_func)
                             {
                                 alloc=1;
-                                end=tbl[i].conv_func(tbl[i].vv,&buf_start);
-                                break;
+                                end=tbl[ti].conv_func(tbl[ti].vv,&buf_start);
                             }
                             else
                             {
-                                buf_start=tbl[i].vv;
-                                end=string_length(tbl[i].vv);
+                                buf_start=tbl[ti].vv;
+                                end=string_length(tbl[ti].vv);
                             }
+                             break;
                         }
                     }
 

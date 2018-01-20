@@ -6,6 +6,7 @@
     </Plugin>
   </Plugins>
   <VirtualDirectory Name="src">
+    <File Name="src/watcher.c"/>
     <VirtualDirectory Name="sources">
       <VirtualDirectory Name="internal">
         <File Name="src/sources/internal/_diag_show.c"/>
@@ -169,6 +170,7 @@
     <File Name="src/semper_api.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
+    <File Name="include/watcher.h"/>
     <VirtualDirectory Name="sources">
       <VirtualDirectory Name="internal">
         <File Name="include/sources/internal/_diag_show.h"/>

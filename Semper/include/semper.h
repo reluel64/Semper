@@ -71,16 +71,10 @@ typedef struct
     void *ich;                          //image cache holder
     unsigned char shutdown;
     /*Surface Watcher*/
-#ifdef WIN32
-    semper_overlapped* so;
-    unsigned long* notify_buf;
-    void* dh;
-#elif __linux__
-    int inotify_fd;
-#endif
+
+    void *watcher;
     /*Diagnostic provider*/
     void  *diag_prov;
-
 
 } control_data;
 

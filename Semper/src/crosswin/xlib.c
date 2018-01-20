@@ -7,12 +7,14 @@
 #include <surface.h>
 #include <event.h>
 #include <mem.h>
-#define CONTEXT_ID 0x201
+#define CONTEXT_ID 0x2712
 
 void xlib_init_display(crosswin *c)
 {
     c->display=XOpenDisplay(NULL);
+
     XMatchVisualInfo(c->display, DefaultScreen(c->display), 32, TrueColor, &c->vinfo);
+    c->disp_fd=XConnectionNumber(c->display);
 }
 typedef struct Hints
 {
@@ -22,9 +24,9 @@ typedef struct Hints
     long            inputMode;
     unsigned long   status;
 } Hints;
-static void xlib_set_above(window *w,unsigned char clear);
-static void xlib_set_below(window *w,unsigned char clear);
-void xlib_init_window(window *w)
+static void xlib_set_above(crosswin_window *w,unsigned char clear);
+static void xlib_set_below(crosswin_window *w,unsigned char clear);
+void xlib_init_window(crosswin_window *w)
 {
     XSetWindowAttributes attr;
 
@@ -45,6 +47,7 @@ void xlib_init_window(window *w)
                     PointerMotionMask 	    |
                     ButtonMotionMask 	    |
                     VisibilityChangeMask    |
+                    ExposureMask            |
                     ButtonPressMask;
 
     w->window = XCreateWindow(w->c->display						,
@@ -58,11 +61,12 @@ void xlib_init_window(window *w)
                               InputOutput						,
                               w->c->vinfo.visual,
                               CWBorderPixel						|
-                              CWOverrideRedirect                |
+                              
                               CWBackPixmap                      |
                               CWBackPixel                       |
                               CWColormap  						|
                               CWEventMask						|
+                              
                               CWCursor 							,
                               &attr
                              );
@@ -70,7 +74,7 @@ void xlib_init_window(window *w)
 
     XSaveContext(w->c->display,(XID)w->window,CONTEXT_ID,(const char*)w);
     Atom type = XInternAtom(w->c->display,"_NET_WM_WINDOW_TYPE", False);
-    Atom value = XInternAtom(w->c->display,"_NET_WM_WINDOW_TYPE_NORMAL", False);
+    Atom value = XInternAtom(w->c->display,"_NET_WM_WINDOW_TYPE_DOCK", False);
     XChangeProperty(w->c->display, w->window, type, XA_ATOM, 32, PropModeReplace,(unsigned char*)&value, 1);
 
     Hints hints;
@@ -87,7 +91,7 @@ void xlib_init_window(window *w)
 
 }
 
-void xlib_set_dimmension(window *w)
+void xlib_set_dimmension(crosswin_window *w)
 {
     XWindowChanges wc= {0};
     wc.width=w->w;
@@ -96,7 +100,7 @@ void xlib_set_dimmension(window *w)
 }
 
 
-static void xlib_render(window *w)
+static void xlib_render(crosswin_window *w)
 {
     if(w->render_func)
     {
@@ -118,7 +122,7 @@ static void xlib_render(window *w)
         }
 
         cairo_t* cr= cairo_create(w->offscreen_buffer); // create a cairo context to gain access to surface rendering routine
-
+        
         if(w->opacity!=255)
         {
             cairo_set_operator(cr,CAIRO_OPERATOR_CLEAR);
@@ -150,9 +154,9 @@ static void xlib_render(window *w)
     }
 }
 
-void xlib_set_mask(window *w)
+void xlib_set_mask(crosswin_window *w)
 {
-
+    return;
     cairo_surface_t *xs=cairo_xlib_surface_create_for_bitmap (w->c->display,w->pixmap,DefaultScreenOfDisplay(w->c->display),w->w,w->h);
     cairo_t *cr=cairo_create(xs);
 
@@ -190,13 +194,14 @@ void xlib_set_mask(window *w)
     cairo_surface_destroy(xs);
 }
 
-void xlib_draw(window* w)
+void xlib_draw(crosswin_window* w)
 {
     xlib_render(w);
     xlib_set_mask(w);
+    XSync(w->c->display,0);
 }
 
-int xlib_mouse_handle(window *w,XEvent *ev)
+int xlib_mouse_handle(crosswin_window *w,XEvent *ev)
 {
 
     w->mouse.button=ev->xbutton.button;
@@ -207,64 +212,63 @@ int xlib_mouse_handle(window *w,XEvent *ev)
 
     switch(ev->xany.type)
     {
-        case ButtonPress:
+    case ButtonPress:
+    {
+
+        w->mouse.state=1;
+
+        if(ev->xbutton.button==2)
+            w->mouse.button=3;
+        else if(ev->xbutton.button==3)
+            w->mouse.button=2;
+
+        if(ev->xbutton.button==Button5||ev->xbutton.button==Button4)
         {
-
-            w->mouse.state=1;
-
-            if(ev->xbutton.button==2)
-                w->mouse.button=3;
-            else if(ev->xbutton.button==3)
-                w->mouse.button=2;
-
-            if(ev->xbutton.button==Button5||ev->xbutton.button==Button4)
-            {
-                w->mouse.state=-1;
-                w->mouse.button=0;
-                w->mouse.scroll_dir=(ev->xbutton.button==Button5?-1:1);
-            }
-
-            break;
+            w->mouse.state=-1;
+            w->mouse.button=0;
+            w->mouse.scroll_dir=(ev->xbutton.button==Button5?-1:1);
         }
 
-        case ButtonRelease:
-        {
-            if(w->dragging)
-            {
-                w->dragging=0;
-                return(0);
-            }
-
-            XWindowChanges wc= {0};
-            wc.stack_mode=Above;
-
-            if(w->mouse.hover==0)
-                XConfigureWindow(w->c->display,w->window,CWStackMode,&wc);
-
-            w->mouse.state=0;
-
-            if(ev->xbutton.button==2)
-                w->mouse.button=3;
-            else if(ev->xbutton.button==3)
-                w->mouse.button=2;
-
-            break;
-        }
-
-        case MotionNotify:
-        {
-            w->mouse.hover=1;
-            break;
-        }
-
-        case LeaveNotify:
-        {
-            w->mouse.hover=0;
-
-            memset(&w->mouse,0,sizeof(mouse_status));
-
-        }
         break;
+    }
+
+    case ButtonRelease:
+    {
+        if(w->dragging)
+        {
+            w->dragging=0;
+            return(0);
+        }
+
+        XWindowChanges wc= {0};
+        wc.stack_mode=Above;
+
+        if(w->mouse.hover==0)
+            XConfigureWindow(w->c->display,w->window,CWStackMode,&wc);
+
+        w->mouse.state=0;
+
+        if(ev->xbutton.button==2)
+            w->mouse.button=3;
+        else if(ev->xbutton.button==3)
+            w->mouse.button=2;
+
+        break;
+    }
+
+    case MotionNotify:
+    {
+        w->mouse.hover=1;
+        break;
+    }
+
+    case LeaveNotify:
+    {
+        w->mouse.hover=0;
+        memset(&w->mouse,0,sizeof(mouse_status));
+
+    }
+    break;
 
     }
 
@@ -272,8 +276,9 @@ int xlib_mouse_handle(window *w,XEvent *ev)
     return(0);
 }
 
-static void xlib_set_above(window *w,unsigned char clear)
+static void xlib_set_above(crosswin_window *w,unsigned char clear)
 {
+    return;
     if(clear==0)
     {
         xlib_set_below(w,1);
@@ -295,8 +300,9 @@ static void xlib_set_above(window *w,unsigned char clear)
     // XSendEvent(w->c->display, DefaultRootWindow(w->c->display), False, SubstructureRedirectMask|SubstructureNotifyMask, &xev);
 }
 
-static void xlib_set_below(window *w,unsigned char clear)
+static void xlib_set_below(crosswin_window *w,unsigned char clear)
 {
+    return;
     if(clear==0)
     {
         xlib_set_above(w,1);
@@ -318,14 +324,15 @@ static void xlib_set_below(window *w,unsigned char clear)
     // XSendEvent(w->c->display, DefaultRootWindow(w->c->display), False, SubstructureRedirectMask|SubstructureNotifyMask, &xev);
 }
 
-static void xlib_set_normal(window *w)
+static void xlib_set_normal(crosswin_window *w)
 {
+    return;
     xlib_set_below(w,1);
     xlib_set_above(w,1);
     XRaiseWindow(w->c->display,w->window);
 }
 
-static int xlib_move_internal(int x,int y,window *w,unsigned char start)
+static int xlib_move_internal(int x,int y,crosswin_window *w,unsigned char start)
 {
     if(w->dragging==start)
         return(0);
@@ -352,11 +359,11 @@ static int xlib_move_internal(int x,int y,window *w,unsigned char start)
 
 int xlib_message_dispatch(crosswin *c)
 {
-    while(XPending(c->display))
+    do
     {
 
         XEvent ev= {0};
-        window *w=NULL;
+        crosswin_window *w=NULL;
 
         XNextEvent(c->display,&ev);
 
@@ -364,112 +371,110 @@ int xlib_message_dispatch(crosswin *c)
 
         if(c==NULL||w==NULL)
             continue;
-
         switch(ev.xany.type)
         {
-            case KeyPress:
+        case KeyPress:
+        {
+            /*This is pretty ugly as I did not want to call the utf8_to_ucs() but for the moment it does the job*/
+            if(w->xInputContext)
             {
-                /*This is pretty ugly as I did not want to call the utf8_to_ucs() but for the moment it does the job*/
-                if(w->xInputContext)
-                {
-                    unsigned short symbol=0;
+                unsigned short symbol=0;
 
-                    if(ev.xkey.keycode==105||ev.xkey.keycode==37)
-                        w->ctrl_down=1;
-
-
-                    if(w->ctrl_down&&ev.xkey.keycode==36)
-                        symbol='\n';
-                    else
-                    {
-                        unsigned char buf[9]= {0};
-                        unsigned short *temp=NULL;
-
-                        Status status = 0;
-                        Xutf8LookupString(w->xInputContext, &ev.xkey, (char*)&buf,8, NULL, &status);
-
-                        temp=utf8_to_ucs(buf);
-                        symbol=temp?temp[0]:0;
-
-                        sfree((void**)&temp);
-                    }
-
-                    if(symbol&&w->kbd_func)
-                        w->kbd_func(symbol,w->kb_data);
-                }
-
-                break;
-            }
-
-            case KeyRelease:
-            {
                 if(ev.xkey.keycode==105||ev.xkey.keycode==37)
-                    w->ctrl_down=0;
-
-                break;
-            }
-
-            case MotionNotify:
-            {
-
-                if(ev.xmotion.state&Button1Mask)
-                {
-                    if(w->draggable==0)
-                        continue;
-
-                    w->ccposx = ev.xmotion.x_root;
-                    w->ccposy = ev.xmotion.y_root;
-
-                    long x = w->x + (w->ccposx - w->cposx);
-                    long y = w->y + (w->ccposy - w->cposy);
-                    w->cposx = ev.xmotion.x_root;
-                    w->cposy = ev.xmotion.y_root;
-                    w->dragging=1;
-                  crosswin_set_position(w,x,y);
+                    w->ctrl_down=1;
 
 
-
-                }
+                if(w->ctrl_down&&ev.xkey.keycode==36)
+                    symbol='\n';
                 else
                 {
-                    w->dragging = 0;
-                    w->cposx = ev.xmotion.x_root;
-                    w->cposy = ev.xmotion.y_root;
+                    unsigned char buf[9]= {0};
+                    unsigned short *temp=NULL;
+
+                    Status status = 0;
+                    Xutf8LookupString(w->xInputContext, &ev.xkey, (char*)&buf,8, NULL, &status);
+
+                    temp=utf8_to_ucs(buf);
+                    symbol=temp?temp[0]:0;
+
+                    sfree((void**)&temp);
                 }
+
+                if(symbol&&w->kbd_func)
+                    w->kbd_func(symbol,w->kb_data);
             }
 
-            case ButtonRelease:
-            case ButtonPress:
-            case LeaveNotify:
-                xlib_mouse_handle(w,&ev);
-                break;
+            break;
+        }
 
-            case DestroyNotify:
+        case KeyRelease:
+        {
+            if(ev.xkey.keycode==105||ev.xkey.keycode==37)
+                w->ctrl_down=0;
+
+            break;
+        }
+
+        case MotionNotify:
+        {
+
+            if(ev.xmotion.state&Button1Mask)
             {
-                surface_data *sd=w->user_data;
-                event_push(sd->cd->eq, (event_handler)surface_destroy, (void*)sd,0,EVENT_REMOVE_BY_DATA);
-                break;
+                if(w->draggable==0)
+                    continue;
+
+                w->ccposx = ev.xmotion.x_root;
+                w->ccposy = ev.xmotion.y_root;
+
+                long x = w->x + (w->ccposx - w->cposx);
+                long y = w->y + (w->ccposy - w->cposy);
+                w->cposx = ev.xmotion.x_root;
+                w->cposy = ev.xmotion.y_root;
+                w->dragging=1;
+                crosswin_set_position(w,x,y);
+
             }
+            else
+            {
+                w->dragging = 0;
+                w->cposx = ev.xmotion.x_root;
+                w->cposy = ev.xmotion.y_root;
+            }
+        }
+
+        case ButtonRelease:
+        case ButtonPress:
+        case LeaveNotify:
+            xlib_mouse_handle(w,&ev);
+            break;
+
+        case DestroyNotify:
+        {
+            surface_data *sd=w->user_data;
+            event_push(sd->cd->eq, (event_handler)surface_destroy, (void*)sd,0,EVENT_REMOVE_BY_DATA);
+            break;
+        }
 
         }
     }
+    while(XPending(c->display));
 
     return(0);
 }
 
-int xlib_set_opacity(window *w)
+int xlib_set_opacity(crosswin_window *w)
 {
 
     xlib_draw(w);
     return(0);
 }
 
-void  xlib_set_position(window *w)
+void  xlib_set_position(crosswin_window *w)
 {
     XMoveWindow(w->c->display,w->window,w->x,w->y);
 }
 
-void xlib_destroy_window(window **w)
+void xlib_destroy_window(crosswin_window **w)
 {
     xlib_destroy_input_context(*w);
     XDestroyWindow((*w)->c->display,(*w)->window);
@@ -479,31 +484,32 @@ void xlib_destroy_window(window **w)
     free(*w);
 }
 
-void xlib_set_zpos(window *w)
+void xlib_set_zpos(crosswin_window *w)
 {
+    return;
     switch(w->zorder)
     {
-        case crosswin_topmost:
-            xlib_set_above(w,0);
-            break;
+    case crosswin_topmost:
+        xlib_set_above(w,0);
+        break;
 
-        case crosswin_desktop:
-            xlib_set_below(w,0);
-            break;
+    case crosswin_desktop:
+        xlib_set_below(w,0);
+        break;
 
-        case crosswin_normal:
-            xlib_set_normal(w);
-            break;
+    case crosswin_normal:
+        xlib_set_normal(w);
+        break;
 
-        case crosswin_bottom:
-        case crosswin_top:
-            diag_error("%s crosswin_bottom and crosswin_top not implemented",__FILE__);
-            break;
+    case crosswin_bottom:
+    case crosswin_top:
+        diag_error("%s crosswin_bottom and crosswin_top not implemented",__FILE__);
+        break;
     }
 }
 
 
-int xlib_create_input_context(window *w)
+int xlib_create_input_context(crosswin_window *w)
 {
     if(w->xInputContext||w->xInputMethod)
         return(0);
@@ -544,7 +550,7 @@ int xlib_create_input_context(window *w)
     return(0);
 }
 
-int xlib_destroy_input_context(window *w)
+int xlib_destroy_input_context(crosswin_window *w)
 {
     w->xInputContext?XDestroyIC(w->xInputContext):0;
     w->xInputMethod?XCloseIM(w->xInputMethod):0;

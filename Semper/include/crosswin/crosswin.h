@@ -48,10 +48,12 @@ typedef struct
     long sh; // screen height
     unsigned char update_z;
     unsigned char quit;
+     void *disp_fd;
     crosswin_window *helper;
     list_entry windows;
 #ifdef __linux__
     void *display;
+   
     XVisualInfo vinfo;
 #endif
 } crosswin;
@@ -67,7 +69,7 @@ typedef struct _crosswin_window
 {
     crosswin* c;
     list_entry current;
-
+    
     unsigned char opacity;
     void* user_data;
     void *kb_data;

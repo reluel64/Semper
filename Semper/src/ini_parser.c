@@ -2,7 +2,6 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  */
-
 #include <mem.h>
 #include <ini_parser.h>
 #include <stdio.h>
@@ -83,7 +82,7 @@ static inline encoding ini_detect_encoding(FILE* fh)
 
     fread(bom, 1, 2, fh);
 
-    fseeko64(fh, 0, SEEK_SET);
+    fseeko(fh, 0, SEEK_SET);
 
     if(bom[0] == 0xFF && bom[1] == 0xFE)
     {

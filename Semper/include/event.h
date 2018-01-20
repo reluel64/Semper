@@ -21,10 +21,12 @@ typedef struct
 
 typedef struct _event_queue
 {
-    void* loop_event;
+    void *loop_event;
+    void *loop_wait;
     pthread_mutex_t mutex;
     list_entry events;
     list_entry waiters;
+    size_t waiters_count;
     event *ce; //current event
 } event_queue;
 
@@ -41,7 +43,7 @@ typedef struct
 } event_waiter;
 
 
-void event_wait(event_queue* eq);
+unsigned char event_wait(event_queue* eq);
 event_queue* event_queue_init(void);
 int event_remove_wait(event_queue *eq,void *wait);
 int event_add_wait(event_queue *eq,event_wait_handler ewh,void *pv,void *wait,unsigned int flags);
