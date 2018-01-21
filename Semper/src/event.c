@@ -34,7 +34,7 @@ static void event_start_processing(event_queue* eq)
 
     if(eq)
     {
-        eventfd_write((int)(size_t)eq->loop_event,1);// such event, much magic
+        eventfd_write((int)(size_t)eq->loop_event,0x3010);
     }
 #endif
 }

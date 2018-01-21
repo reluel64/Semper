@@ -285,11 +285,11 @@ int semper_write_key(unsigned char* file, unsigned char* sn, unsigned char* kn, 
     swkd.nf = fopen(tfn, "wb+");
 #endif
 
-    fwrite(&utf8_bom, 3, 1, swkd.nf);
+    
 
     if(swkd.nf == NULL)
         return (-2);
-
+    fwrite(&utf8_bom, 3, 1, swkd.nf);
     ini_parser_parse_file(file, semper_write_key_handler, &swkd);
     fflush(swkd.nf);
 
@@ -617,7 +617,6 @@ static int semper_watcher_callback(void *pv,void *wait)
             surface_reload(sd);
         }
     }
-    printf("Check\n");
     watcher_next(cd->watcher);
     return(0);
 }
@@ -634,6 +633,7 @@ static int semper_check_screen(control_data *cd)
     }
     return(0);
 }
+
 
 int main(void)
 {
@@ -653,7 +653,7 @@ int main(void)
 
 
     event_add_wait(cd->eq,(event_wait_handler)crosswin_message_dispatch,&cd->c,cd->c.disp_fd,0x1);
- 
+
     event_add_wait(cd->eq,(event_wait_handler)semper_check_screen,cd,NULL,0);
     if(cd->watcher)
     {

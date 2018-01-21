@@ -29,21 +29,6 @@ static int win32_prepare_mouse_event(crosswin_window* w, unsigned int message, W
         w->mouse.scroll_dir = GET_WHEEL_DELTA_WPARAM(wpm) > 0 ? 1 : -1;
         break;
 
-    case WM_LBUTTONDBLCLK:
-        w->mouse.button = MOUSE_LEFT_BUTTON;
-        w->mouse.state = 2;
-        break;
-
-    case WM_RBUTTONDBLCLK:
-        w->mouse.button = MOUSE_RIGHT_BUTTON;
-        w->mouse.state = 2;
-        break;
-
-    case WM_MBUTTONDBLCLK:
-        w->mouse.button = MOUSE_MIDDLE_BUTTON;
-        w->mouse.state = 2;
-        break;
-
     case WM_LBUTTONDOWN:
         w->mouse.button = MOUSE_LEFT_BUTTON;
         w->mouse.state = 1;

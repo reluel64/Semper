@@ -14,7 +14,7 @@ void xlib_init_display(crosswin *c)
     c->display=XOpenDisplay(NULL);
 
     XMatchVisualInfo(c->display, DefaultScreen(c->display), 32, TrueColor, &c->vinfo);
-    c->disp_fd=XConnectionNumber(c->display);
+    c->disp_fd=(void*)(size_t)XConnectionNumber(c->display);
 }
 typedef struct Hints
 {
@@ -61,12 +61,10 @@ void xlib_init_window(crosswin_window *w)
                               InputOutput						,
                               w->c->vinfo.visual,
                               CWBorderPixel						|
-                              
                               CWBackPixmap                      |
                               CWBackPixel                       |
                               CWColormap  						|
                               CWEventMask						|
-                              
                               CWCursor 							,
                               &attr
                              );
@@ -85,9 +83,6 @@ void xlib_init_window(crosswin_window *w)
     XChangeProperty(w->c->display,w->window,property,property,32,PropModeReplace,(unsigned char *)&hints,5);
 
     XMapWindow(w->c->display, w->window);
-
-    /*Create the input context*/
-
 
 }
 
@@ -167,7 +162,6 @@ void xlib_set_mask(crosswin_window *w)
 
         if(buf)
         {
-
             for(size_t i=0; i<(size_t)w->w*(size_t)w->h; i++)
             {
                 if(buf[i]&0xff000000)
@@ -203,7 +197,7 @@ void xlib_draw(crosswin_window* w)
 
 int xlib_mouse_handle(crosswin_window *w,XEvent *ev)
 {
-
+    memset(&w->mouse,0,sizeof(mouse_status));
     w->mouse.button=ev->xbutton.button;
     w->mouse.scroll_dir=0;
     w->mouse.x=ev->xbutton.x;
@@ -258,6 +252,7 @@ int xlib_mouse_handle(crosswin_window *w,XEvent *ev)
 
     case MotionNotify:
     {
+        
         w->mouse.hover=1;
         break;
     }
@@ -271,8 +266,7 @@ int xlib_mouse_handle(crosswin_window *w,XEvent *ev)
     break;
 
     }
-
-    w->mouse_func(w,&w->mouse);
+    crosswin_mouse_handle(w);
     return(0);
 }
 
@@ -544,7 +538,6 @@ int xlib_create_input_context(crosswin_window *w)
         XCloseIM(w->xInputMethod);
         w->xInputMethod=NULL;
         return(-1);
-
     }
 
     return(0);

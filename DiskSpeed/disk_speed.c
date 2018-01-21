@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <SDK/semper_api.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <string.h>
 typedef enum
 {
@@ -135,14 +136,19 @@ void reset(void *spv,void *ip)
     {
         if(!strcasecmp("RWTotal",s))
             ds->dst=rw_total;
+            
         else if(!strcasecmp("RWSpeed",s))
             ds->dst=rw_speed;
+            
         else if(!strcasecmp("ReadTotal",s))
             ds->dst=read_total;
+            
         else if(!strcasecmp("Readspeed",s))
             ds->dst=read_speed;
+            
         else if(!strcasecmp("WriteTotal",s))
             ds->dst=write_total;
+            
         else if(!strcasecmp("WriteSpeed",s))
             ds->dst=write_speed;
     }

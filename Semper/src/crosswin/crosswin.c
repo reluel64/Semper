@@ -230,6 +230,7 @@ void crosswin_draggable(crosswin_window* w, unsigned char draggable)
 void crosswin_keep_on_screen(crosswin_window* w, unsigned char keep_on_screen)
 {
     w->keep_on_screen = keep_on_screen;
+    crosswin_set_position(w,w->x,w->y);
 }
 
 static int crosswin_sort_callback(list_entry *le1,list_entry *le2,void *pv)
@@ -273,20 +274,33 @@ void crosswin_update_z(crosswin *c)
 }
 
 
+static size_t crosswin_get_time(void)
+{
+#ifdef WIN32
+    return(clock());
+#elif __linux__
+    struct timespec t= {0};
+    clock_gettime(CLOCK_MONOTONIC_RAW,&t);
+    return(t.tv_sec*1000+t.tv_nsec/1000000);
+#endif
+}
+
+
 int crosswin_mouse_handle(crosswin_window *cw)
 {
     size_t diff=0;
+    
     if(cw->mouse_func==NULL)
         return(-1);
 
     if(cw->mbt.button!=cw->mouse.button&&cw->mouse.state==1)
     {
         cw->mbt.button=cw->mouse.button;
-        cw->mbt.last_click_tm=clock();
+        cw->mbt.last_click_tm=crosswin_get_time();
     }
 
-    diff = clock() - cw->mbt.last_click_tm;
-
+    diff = labs(crosswin_get_time()- cw->mbt.last_click_tm);
+    
     if(diff<500&&diff>100&&cw->mouse.state==1&&cw->mouse.button==cw->mbt.button)
     {
         cw->mouse.state=2;

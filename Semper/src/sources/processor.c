@@ -214,7 +214,6 @@ void processor_reset(void* spv, void* ip)
             source_set_max(processor_frequency(p, 1), ip, 1, 0);
 #elif __linux__
             p->freq_cpu_no=0;
-            double max=0.0;
             source_set_max(processor_frequency_linux(p,1),ip,1,1);
             p->freq_cpu_no=param_size_t("CoreIndexFrequency", ip, 0);
 
@@ -331,7 +330,7 @@ static double processor_usage(processor* p)
             break;
         }
     }
-
+    fclose(f);
     size_t diff_idle=idle_cpu-p->idle_time_old;
     size_t diff_total=used_cpu-p->system_time_old;
 
