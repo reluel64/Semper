@@ -43,7 +43,7 @@ void bind_destroy(object* o);
 void bind_set_raw(void* soi, unsigned char* pn, unsigned char* pv);
 void bind_reset(object* o);
 
-void bind_unbind(surface_data* sd, unsigned char* sn);
+void bind_unbind(surface_data* sd,source *s);
 size_t  bind_update_string(object* o, string_bind* sb);
 int bind_update_numeric(object* o, bind_numeric* bn);
 double bind_percentual_value(double val, double min_val, double max_val);

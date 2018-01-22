@@ -1,3 +1,4 @@
+#ifdef WIN32
 #include <windows.h>
 #include <MAHMSharedMemory.h>
 #include <stdio.h>
@@ -92,3 +93,4 @@ static inline int msi_afterburner_gather_data(MAHM_SHARED_MEMORY_HEADER* hdr,MAH
     }
     return (ret);
 }
+#endif

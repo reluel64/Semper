@@ -2,6 +2,7 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  */
+#ifdef WIN32
 #include <stdlib.h>
 #include <SDK/semper_api.h>
 #include <windows.h>
@@ -17,9 +18,9 @@ typedef struct
     unsigned short NumTemps;
     unsigned short NumFans;
     unsigned short NumVolts;
-    int temps[32];
-    int fans[32];
-    int volts[32];
+    int temps[MAX_LEN];
+    int fans[MAX_LEN];
+    int volts[MAX_LEN];
 } speedfan_shared_memory;
 
 #pragma pack(pop)
@@ -112,3 +113,4 @@ void destroy(void **spv)
     free(*spv);
     *spv=NULL;
 }
+#endif

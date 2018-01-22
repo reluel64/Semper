@@ -1,3 +1,8 @@
+/*
+ * Recycler monitor
+ * Part of Project 'Semper'
+ */
+#ifdef WIN32
 #include <stdlib.h>
 #include <string.h>
 #include <Windows.h>
@@ -315,3 +320,4 @@ void destroy(void **spv)
 
     sfree(spv);
 }
+#endif

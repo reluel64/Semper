@@ -103,22 +103,21 @@ unsigned char event_wait(event_queue* eq)
 {
 
     unsigned char event_p=0;
+     event_waiter *ew=NULL;
 #ifdef WIN32
-    event_waiter *ew=NULL;
 
-#if 1
+
     list_enum_part(ew,&eq->waiters,current)
     {
         if(ew->mon_th==NULL)
             RegisterWaitForSingleObject(&ew->mon_th,ew->wait,(WAITORTIMERCALLBACK)event_start_processing,eq,-1, WT_EXECUTEONLYONCE);
     }
-#endif
 
     if(MsgWaitForMultipleObjectsEx(1, &eq->loop_event, -1, QS_ALLEVENTS, MWMO_ALERTABLE | MWMO_INPUTAVAILABLE)==WAIT_OBJECT_0)
     {
         event_p=1;
     }
-#if 1
+
     list_enum_part(ew,&eq->waiters,current)
     {
         UnregisterWaitEx(ew->mon_th,INVALID_HANDLE_VALUE);
@@ -127,7 +126,7 @@ unsigned char event_wait(event_queue* eq)
         if(ew->wait==NULL||WaitForSingleObject(ew->wait,0)==0)
             ew->ewh(ew->pv,ew->wait);
     }
-#endif
+
 #elif __linux__
     /*build wait structures*/
 
@@ -136,7 +135,6 @@ unsigned char event_wait(event_queue* eq)
     struct pollfd *events=zmalloc(sizeof(struct pollfd));
     events[0].fd=(int)(size_t)eq->loop_event;
     events[0].events=POLLIN;
-    event_waiter *ew=NULL;
 
     list_enum_part(ew,&eq->waiters,current)
     {

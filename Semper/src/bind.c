@@ -233,7 +233,7 @@ void bind_reset(object* o)
     bind_invalidate(o);
 }
 
-void bind_unbind(surface_data* sd, unsigned char* sn)
+void bind_unbind(surface_data* sd, source *s)
 {
     object* o = NULL;
     list_enum_part(o, &sd->objects, current)
@@ -241,15 +241,10 @@ void bind_unbind(surface_data* sd, unsigned char* sn)
         binding* b = NULL;
         list_enum_part(b, &o->bindings, current)
         {
-            if(b->s)
+            if(b->s==s)
             {
-                unsigned char* sname = skeleton_get_section_name(b->s->cs);
-
-                if(sn && sname && !strcasecmp(sn, sname))
-                {
-                    bind_dealloc(&b);
-                    break;
-                }
+                bind_dealloc(&b);
+                break;
             }
         }
     }

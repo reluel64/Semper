@@ -26,16 +26,16 @@ static int mouse_set_actions_internal(void *pv,unsigned char tgt,unsigned char d
 
     switch(tgt)
     {
-        case MOUSE_OBJECT:
-            ma=&((object*)pv)->ma;
-            break;
+    case MOUSE_OBJECT:
+        ma=&((object*)pv)->ma;
+        break;
 
-        case MOUSE_SURFACE:
-            ma=&((surface_data*)pv)->ma;
-            break;
+    case MOUSE_SURFACE:
+        ma=&((surface_data*)pv)->ma;
+        break;
 
-        case MOUSE_SURFACE|MOUSE_OBJECT:
-            ma=pv;
+    case MOUSE_SURFACE|MOUSE_OBJECT:
+        ma=pv;
     }
 
     if(ma==NULL)
@@ -135,34 +135,34 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
     {
         switch(ms->button)
         {
-            case MOUSE_LEFT_BUTTON:
-                fcomm=replace(ms->state == 0 ? ma->lcu : ma->lcd,tbuf,0);
-                break;
+        case MOUSE_LEFT_BUTTON:
+            fcomm=replace(ms->state == 0 ? ma->lcu : ma->lcd,tbuf,0);
+            break;
 
-            case MOUSE_MIDDLE_BUTTON:
-                fcomm=replace(ms->state == 0 ? ma->mcu : ma->mcd,tbuf,0);
-                break;
+        case MOUSE_MIDDLE_BUTTON:
+            fcomm=replace(ms->state == 0 ? ma->mcu : ma->mcd,tbuf,0);
+            break;
 
-            case MOUSE_RIGHT_BUTTON:
-                fcomm=replace(ms->state == 0 ? ma->rcu : ma->rcd,tbuf,0);
-                break;
+        case MOUSE_RIGHT_BUTTON:
+            fcomm=replace(ms->state == 0 ? ma->rcu : ma->rcd,tbuf,0);
+            break;
         }
     }
     else if(ms->state == 2)
     {
         switch(ms->button)
         {
-            case MOUSE_LEFT_BUTTON:
-                fcomm=replace(ma->lcdd,tbuf,0);
-                break;
+        case MOUSE_LEFT_BUTTON:
+            fcomm=replace(ma->lcdd,tbuf,0);
+            break;
 
-            case MOUSE_MIDDLE_BUTTON:
-                fcomm=replace(ma->mcdd,tbuf,0);
-                break;
+        case MOUSE_MIDDLE_BUTTON:
+            fcomm=replace(ma->mcdd,tbuf,0);
+            break;
 
-            case MOUSE_RIGHT_BUTTON:
-                fcomm=replace(ma->rcdd,tbuf,0);
-                break;
+        case MOUSE_RIGHT_BUTTON:
+            fcomm=replace(ma->rcdd,tbuf,0);
+            break;
         }
     }
     else if(ms->scroll_dir)

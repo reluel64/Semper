@@ -3,6 +3,7 @@
 * Part of Project 'Semper'
 * Written by Alexandru-Daniel Mărgărit
 */
+#ifdef WIN32
 #include <SDK/semper_api.h>
 #include <pthread.h>
 #include <windows.h>
@@ -677,3 +678,4 @@ static int recycler_query_user(recycler *r)
     pthread_mutex_unlock(&r->mtx);
     return(1);
 }
+#endif

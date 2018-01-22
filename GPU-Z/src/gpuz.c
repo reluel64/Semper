@@ -3,6 +3,7 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  * */
+ #ifdef WIN32
 #include <SDK/semper_api.h>
 #include <windows.h>
 
@@ -258,3 +259,4 @@ void destroy(void **spv)
 
     *spv=NULL;
 }
+#endif

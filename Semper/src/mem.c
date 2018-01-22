@@ -16,15 +16,9 @@ void* zmalloc(size_t bytes)
         return (NULL);
     }
 
-    void* p = malloc(bytes * ALLOC_FACTOR);
+    void* p = calloc(bytes ,ALLOC_FACTOR);
 
-    if(p)
-    {
-        memset(p, 0, bytes);
-        return (p);
-    }
-
-    return (NULL);
+    return (p);
 }
 
 void sfree(void** p)

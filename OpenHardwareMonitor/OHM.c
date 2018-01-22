@@ -1,3 +1,4 @@
+#ifdef WIN32
 #define _WIN32_WINNT 0x0400
 #define _WIN32_DCOM
 #include <SDK/semper_api.h>
@@ -278,3 +279,4 @@ static unsigned char *ucs_to_utf8(wchar_t *s_in, size_t *bn, unsigned char be)
     }
     return(out);
 }
+#endif

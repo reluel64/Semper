@@ -44,7 +44,7 @@ int diag_init(control_data *cd)
 
     ds->fp=zmalloc(cd->root_dir_length+20);
     snprintf(ds->fp,cd->root_dir_length+20,"%s/Semper.log",cd->root_dir);
-    clock_gettime(CLOCK_REALTIME,&ds->t1);
+    clock_gettime(CLOCK_MONOTONIC,&ds->t1);
 
     if((k=skeleton_get_key(cd->smp,"LogLevel"))!=NULL)
     {
@@ -209,7 +209,7 @@ SEMPER_API int diag_log(unsigned char lvl,char *fmt, ...)
     unsigned char buf[DIAG_MEM_ENTRY_LENGTH]= {0};
 
     struct timespec t2= {0};
-    clock_gettime(CLOCK_REALTIME,&t2);
+    clock_gettime(CLOCK_MONOTONIC,&t2);
     buf_start=snprintf(buf,DIAG_MEM_ENTRY_LENGTH,"[%.8llu.%.4lu] ",
                        t2.tv_sec-ds->t1.tv_sec,
                        (t2.tv_nsec>ds->t1.tv_nsec?t2.tv_nsec-ds->t1.tv_nsec:0)/1000000);

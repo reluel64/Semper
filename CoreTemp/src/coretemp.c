@@ -3,7 +3,7 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  * */
-
+#ifdef WIN32
 #include <SDK/semper_api.h>
 #include <windows.h>
 
@@ -215,3 +215,4 @@ static double coretemp_calc_max_temp(CoreTempSharedDataEx* data)
     }
     return (max_temp);
 }
+#endif

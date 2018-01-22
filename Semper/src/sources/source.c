@@ -343,7 +343,7 @@ void source_destroy(source** s)
 {
     source* ts = *s;
     unsigned char* sname = skeleton_get_section_name(ts->cs);
-    bind_unbind(ts->sd, sname);
+    bind_unbind(ts->sd, ts);
     source_destroy_routines(ts); // call the source routines to perform internal cleanup
     action_destroy(ts);
     average_destroy(&ts->avg_struct);

@@ -3,6 +3,7 @@
  * Written by Alexandru-Daniel Mărgărit
  */
 
+#ifdef WIN32
 #include <SDK/semper_api.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -212,3 +213,4 @@ void destroy(void** spv)
     free(*spv);
     *spv = NULL;
 }
+#endif
