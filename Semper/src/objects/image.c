@@ -46,15 +46,6 @@ void image_init(object* o)
 void image_reset(object* o)
 {
     image_object* io = o->pv;
-    // surface_data *sd=o->sd;
-    /*
-    image_cache_unref_image(sd->cd->ich, &io->ia,0);
-
-    if(io->ia.path!=io->image_path)
-    {
-        sfree((void**)&io->ia.path);
-    }
-     * */
     io->ia.path=NULL;
     sfree((void**)&io->image_path);
     io->image_path = parameter_string(o, "ImagePath", "%0", XPANDER_OBJECT);

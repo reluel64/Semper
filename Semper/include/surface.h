@@ -75,7 +75,7 @@ typedef struct _surface_data
     size_t cycle;             // update cycle counter (it is used for dividers)
     section spm;              //[surface]
     section sv;               //[surface-Variables]
-    section scd;              // section from main_skeleton
+    section scd;              // section from Semper.ini
     size_t def_divider;       //default update divider
     size_t uf;                // update frequency (miliseconds)
     mouse_actions ma;         // mouse actions

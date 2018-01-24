@@ -13,7 +13,7 @@
 #include <image/image_cache.h>
 #include <ancestor.h>
 
-static inline section parameter_dispatch_section(void* r, section* shead, unsigned char flag)
+static inline section parameter_dispatch_section(void* r, unsigned char flag)
 {
     if(r == NULL || ((flag & 0x4) && (flag & 0x8) && (flag & 0x10)))
     {
@@ -25,31 +25,22 @@ static inline section parameter_dispatch_section(void* r, section* shead, unsign
         case XPANDER_REQUESTOR_OBJECT:
         {
             object* ro = r;
-            surface_data* sd = ro->sd;
-            *shead = &sd->skhead;
             return (ro->os);
         }
 
         case XPANDER_REQUESTOR_SOURCE:
         {
             source* rs = r;
-            surface_data* sd = rs->sd;
-            *shead = &sd->skhead;
             return (rs->cs);
         }
 
         case XPANDER_REQUESTOR_SURFACE:
         {
-
             surface_data* sd = r;
-            *shead = &sd->skhead;
-
-            if(flag & 0x20)
+            if(flag & XPANDER_CONFIG)
             {
-                *shead = &sd->cd->shead;
                 return (sd->scd);
             }
-
             return (sd->spm);
         }
 
@@ -61,8 +52,8 @@ static inline section parameter_dispatch_section(void* r, section* shead, unsign
 double parameter_double(void* req, unsigned char* npm, double def, unsigned char xpander_flags)
 {
     double ret = def;
-    section shead = NULL;
-    section s = parameter_dispatch_section(req, &shead, xpander_flags);
+
+    section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !s)
     {
@@ -100,8 +91,7 @@ double parameter_double(void* req, unsigned char* npm, double def, unsigned char
 size_t parameter_size_t(void* req, unsigned char* npm, size_t def, unsigned char xpander_flags)
 {
     size_t ret = def;
-    section shead = NULL;
-    section s = parameter_dispatch_section(req, &shead, xpander_flags);
+   section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !s)
     {
@@ -154,8 +144,7 @@ unsigned char parameter_bool(void* req, unsigned char* npm, unsigned char def, u
 unsigned char* parameter_string(void* req, unsigned char* npm, unsigned char* def, unsigned char xpander_flags)
 {
     unsigned char* ret = NULL;
-    section shead = NULL;
-    section s = parameter_dispatch_section(req, &shead, xpander_flags);
+   section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !s)
     {
@@ -197,8 +186,7 @@ unsigned int parameter_color(void* req, unsigned char* npm, unsigned int def, un
 {
     unsigned int ret = def;
 
-    section shead = NULL;
-    section s = parameter_dispatch_section(req, &shead, xpander_flags);
+   section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !s)
     {
@@ -235,8 +223,7 @@ unsigned int parameter_color(void* req, unsigned char* npm, unsigned int def, un
 int parameter_image_tile(void* req, unsigned char* npm, image_tile* param, unsigned char xpander_flags)
 {
     int ret = 1;
-    section shead = NULL;
-    section s = parameter_dispatch_section(req, &shead, xpander_flags);
+   section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !param || !s)
     {
@@ -274,8 +261,7 @@ int parameter_image_tile(void* req, unsigned char* npm, image_tile* param, unsig
 int parameter_object_padding(void* req, unsigned char* npm, object_padding* param, unsigned char xpander_flags)
 {
     int ret = -1;
-    section shead = NULL;
-    section s = parameter_dispatch_section(req, &shead, xpander_flags);
+  section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !param || !s)
     {
@@ -315,8 +301,7 @@ int parameter_object_padding(void* req, unsigned char* npm, object_padding* para
 int parameter_image_crop(void* req, unsigned char* npm, image_crop* param, unsigned char xpander_flags)
 {
     int ret = -1;
-    section shead = NULL;
-    section s = parameter_dispatch_section(req, &shead, xpander_flags);
+   section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !param || !s)
     {
@@ -356,8 +341,7 @@ int parameter_image_crop(void* req, unsigned char* npm, image_crop* param, unsig
 int parameter_color_matrix(void* req, unsigned char* npm, double* cm, unsigned char xpander_flags)
 {
     int ret = -1;
-    section shead = NULL;
-    section s = parameter_dispatch_section(req, &shead, xpander_flags);
+   section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !cm || !s)
     {
@@ -398,8 +382,7 @@ int parameter_color_matrix(void* req, unsigned char* npm, double* cm, unsigned c
 unsigned int parameter_self_scaling(void* req, unsigned char* npm, unsigned int def, unsigned char xpander_flags)
 {
     unsigned int ret = def;
-    section shead = NULL;
-    section s = parameter_dispatch_section(req, &shead, xpander_flags);
+   section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !s)
     {

@@ -15,10 +15,7 @@ void* zmalloc(size_t bytes)
     {
         return (NULL);
     }
-
-    void* p = calloc(bytes ,ALLOC_FACTOR);
-
-    return (p);
+    return (calloc(bytes ,ALLOC_FACTOR));
 }
 
 void sfree(void** p)

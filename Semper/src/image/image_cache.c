@@ -698,11 +698,8 @@ void image_cache_image_parameters(void* r, image_attributes *ia, unsigned char f
     parameter_image_crop(r, buf, &ia->cpm, flags);
 
     snprintf(buf, sizeof(buf), "%sColorMatrix", pre);
-
     if(parameter_color_matrix(r, buf, vcm, flags))
-    {
         ia->cm[0] = 1.0;
-    }
 
     snprintf(buf, sizeof(buf), "%sColorMatrix1", pre);
     if(parameter_color_matrix(r, buf, vcm + 5, flags))
