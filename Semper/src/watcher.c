@@ -92,7 +92,7 @@ void watcher_next(void *wt)
 #elif __linux__
     size_t len=sizeof(struct inotify_event)+NAME_MAX+1;
     unsigned char buf[sizeof(struct inotify_event)+NAME_MAX+1]= {0};
-    
+
     while(read((int)(size_t)wd->base_fd,buf,len)>0);
 
     for(size_t i=0; i<wd->wtch_c; i++)
@@ -108,9 +108,6 @@ void watcher_next(void *wt)
 #endif
 
 }
-
-
-
 
 void  *watcher_init(unsigned char *dir)
 {

@@ -7,8 +7,11 @@
 #define EVENT_PUSH_TIMER            1<<3
 #define EVENT_NO_WAKE               1<<4
 #define EVENT_PUSH_HIGH_PRIO        1<<5 /*Unimplemented*/
+
+
 typedef int (*event_handler)(void*);
 typedef int (*event_wait_handler)(void *,void *);
+
 typedef struct
 {
     event_handler handler;
@@ -16,7 +19,6 @@ typedef struct
     void* timer;
     size_t time;
     list_entry current;
-
 } event;
 
 typedef struct _event_queue
@@ -26,7 +28,6 @@ typedef struct _event_queue
     pthread_mutex_t mutex;
     list_entry events;
     list_entry waiters;
-    size_t waiters_count;
     event *ce; //current event
 } event_queue;
 
@@ -51,7 +52,3 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
 void event_remove(event_queue* eq, event_handler eh, void* pv, unsigned char flags);
 void event_queue_clear(event_queue* eq);
 void event_process(event_queue* eq);
-#ifdef __linux__
-void event_queue_set_window_event(event_queue *eq,int fd);
-void event_queue_set_inotify_event(event_queue *eq,int fd);
-#endif

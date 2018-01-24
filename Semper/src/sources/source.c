@@ -413,7 +413,6 @@ void source_reset(source* s)
         if(type != 1)
         {
             source_set_routines(s,st); // do not call if the type is "Extension" as this is handled below
-
         }
     }
 

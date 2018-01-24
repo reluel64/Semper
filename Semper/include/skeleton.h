@@ -12,7 +12,7 @@ section skeleton_next_section(section s, section shead);
 section skeleton_first_section(section s);
 section skeleton_get_section(section s, unsigned char* sn);
 key skeleton_add_key(section s, unsigned char* kn, unsigned char* kv);
-section skeleton_add_section(section s, unsigned char* sn);
+section skeleton_add_section(section shead, unsigned char* sn);
 unsigned char* skeleton_key_name(key k);
 unsigned char* skeleton_key_value(key k);
 void skeleton_key_remove(key* k);

@@ -40,11 +40,11 @@ static void event_start_processing(event_queue* eq)
 }
 
 #ifdef __linux__
-static void event_start_processing_sig_wrap(int sig,siginfo_t *inf,void* pv)
+static void event_start_processing_sig_wrap(union sigval sig)
 {
-    if(inf!=NULL)
+    if(sig.sival_ptr!=NULL)
     {
-        event_queue *eq=inf->si_value.sival_ptr;
+        event_queue *eq=sig.sival_ptr;
         event_start_processing(eq);
     }
 }
@@ -68,11 +68,12 @@ int event_add_wait(event_queue *eq,event_wait_handler ewh,void *pv,void *wait,un
         linked_list_add(&ew->current,&eq->waiters);
         pthread_mutex_unlock(&eq->mutex);
     }
+    else
+    {
+        return(-1);
+    }
 
-    eq->waiters_count++;
     return(0);
-
-    return(-1);
 }
 
 int event_remove_wait(event_queue *eq,void *wait)
@@ -93,7 +94,6 @@ int event_remove_wait(event_queue *eq,void *wait)
             linked_list_remove(&ew->current);
             pthread_mutex_unlock(&eq->mutex);
             sfree((void**)&ew);
-            eq->waiters_count--;
         }
     }
     return(0);
@@ -206,16 +206,6 @@ event_queue* event_queue_init(void)
     eq->loop_event = CreateEvent(NULL, 0, 1, NULL);
 #elif __linux__
     eq->loop_wait=(void*)(size_t)epoll_create1(0);
-    struct sigaction sa= {0};
-    sigset_t sigs;
-    sigemptyset(&sigs);
-    sigaddset(&sigs,SIGALRM);
-    //  sigprocmask(SIG_BLOCK,&sigs,NULL);
-    sa.sa_handler=NULL;
-    sa.sa_sigaction=event_start_processing_sig_wrap;
-    sa.sa_flags= SA_SIGINFO;
-    //sa.sa_mask=sigs;
-    sigaction(SIGALRM,&sa,NULL);
     eq->loop_event=(void*)(size_t)eventfd(0x2712, EFD_NONBLOCK);
 #endif
     return (eq);
@@ -314,9 +304,10 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
         tval.it_value.tv_nsec=1000000*(timeout-(tval.it_value.tv_sec*1000));
 
         memset(&ev,0,sizeof(struct sigevent));
-        ev.sigev_notify=SIGEV_SIGNAL;
-        ev.sigev_signo=SIGALRM;
-        ev.sigev_value.sival_ptr=eq;//this little prick gave me about 2 hours of headaches
+        ev.sigev_notify=SIGEV_THREAD;
+        ev.sigev_notify_function=event_start_processing_sig_wrap;
+        ev.sigev_value.sival_ptr=eq;
+
         timer_create(CLOCK_MONOTONIC,&ev,(timer_t*)&e->timer);
         timer_settime((timer_t)e->timer,0,&tval,NULL);
 #endif
@@ -382,8 +373,10 @@ void event_queue_destroy(event_queue** eq)
 {
     if(*eq)
     {
+        pthread_mutex_lock(&(*eq)->mutex);
         event_remove_wait(*eq,(void*)-1);
         event_queue_clear(*eq);
+        pthread_mutex_unlock(&(*eq)->mutex);
         pthread_mutex_destroy(&(*eq)->mutex);
 #ifdef WIN32
         CloseHandle((*eq)->loop_event);

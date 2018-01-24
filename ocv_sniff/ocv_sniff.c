@@ -1,3 +1,4 @@
+#ifdef WIN32
 #include <SDK/semper_api.h>
 #include <ocv_sniff.h>
 #include <windows.h>
@@ -158,3 +159,4 @@ static inline int ocv_sniff_gather_data(OCV_SHARED *data)
 
     return(ret);
 }
+#endif

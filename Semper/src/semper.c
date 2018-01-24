@@ -285,13 +285,13 @@ int semper_write_key(unsigned char* file, unsigned char* sn, unsigned char* kn, 
     swkd.nf = fopen(tfn, "wb+");
 #endif
 
-    
+
 
     if(swkd.nf == NULL)
         return (-2);
+    setvbuf(swkd.nf,NULL,_IONBF,0);
     fwrite(&utf8_bom, 3, 1, swkd.nf);
     ini_parser_parse_file(file, semper_write_key_handler, &swkd);
-    fflush(swkd.nf);
 
     if(swkd.sect_off == 0) /*section was not found*/
     {
@@ -653,8 +653,8 @@ int main(void)
 
 
     event_add_wait(cd->eq,(event_wait_handler)crosswin_message_dispatch,&cd->c,cd->c.disp_fd,0x1);
-
     event_add_wait(cd->eq,(event_wait_handler)semper_check_screen,cd,NULL,0);
+
     if(cd->watcher)
     {
         event_add_wait(cd->eq,(event_wait_handler)semper_watcher_callback,cd,(void*)((size_t*)cd->watcher)[0],0x1);
