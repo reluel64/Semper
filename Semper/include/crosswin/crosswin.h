@@ -15,9 +15,6 @@
 #include <cairo/cairo-xlib.h>
 #endif
 
-#define MOUSE_LEFT_BUTTON 0x1
-#define MOUSE_RIGHT_BUTTON 0x2
-#define MOUSE_MIDDLE_BUTTON 0x3
 typedef struct _crosswin_window crosswin_window;
 
 typedef enum
@@ -29,16 +26,55 @@ typedef enum
     crosswin_topmost
 } crosswin_position;
 
+typedef enum
+{
+    mouse_button_none,
+    mouse_button_left,
+    mouse_button_middle,
+    mouse_button_right
+} mouse_button;
+
+typedef enum
+{
+    mouse_button_state_none,
+    mouse_button_state_unpressed,
+    mouse_button_state_pressed,
+    mouse_button_state_2x
+} mouse_button_state;
+
+typedef enum
+{
+    mouse_none,
+    mouse_unhover,
+    mouse_hover
+} mouse_hover_state;
+
 typedef struct _mouse_status
 {
-    long x; // x coordinate of the pointer
-    long y; // y coordinate of the pointer
-    int scroll_dir; // scroll direction 1->up -1->down
-    int button; // click button
-    int state; // 0-released 1-pressed 2-double clicked
-    int hover;
+    long x;                 // x coordinate of the pointer
+    long y;                 // y coordinate of the pointer
+    char scroll_dir;        // scroll direction 1->up -1->down
+    mouse_button button;
+    mouse_button_state state;
+    mouse_hover_state hover;
     unsigned char handled;
 } mouse_status;
+
+typedef struct
+{
+    long x;                 // x coordinate of the pointer
+    long y;                 // y coordinate of the pointer
+    long root_x;
+    long root_y;
+    char scroll_dir;        // scroll direction 1->up -1->down
+    size_t last_time;
+    mouse_button button;
+    mouse_button_state state;
+    mouse_hover_state hover;
+    unsigned char handled;
+    unsigned char ctrl;
+    unsigned char drag;
+} mouse_data;
 
 /*Proper declaration*/
 
@@ -48,28 +84,22 @@ typedef struct
     long sh; // screen height
     unsigned char update_z;
     unsigned char quit;
-     void *disp_fd;
+    void *disp_fd;
+    int (*handle_mouse)(crosswin_window *w);
     crosswin_window *helper;
     list_entry windows;
 #ifdef __linux__
     void *display;
-   
+
     XVisualInfo vinfo;
 #endif
 } crosswin;
-
-
-typedef struct
-{
-    size_t last_click_tm;
-    int button;
-}mouse_button_data;
 
 typedef struct _crosswin_window
 {
     crosswin* c;
     list_entry current;
-    
+
     unsigned char opacity;
     void* user_data;
     void *kb_data;
@@ -80,20 +110,16 @@ typedef struct _crosswin_window
     long w;
     long cposx; // current cursor x
     long cposy; // current cursor y
-    long ccposx; // current cursor x with mouse held
-    long ccposy; // current cursor y with mouse held
     unsigned char keep_on_screen;
     unsigned char lock_z;
     crosswin_position zorder;
     size_t offw;
     size_t offh;
-    mouse_status mouse;
-    unsigned char dragging;
+    mouse_data md;
     void (*render_func)(crosswin_window* w, void* cr);
     int (*mouse_func)(crosswin_window* w, mouse_status* ms);
     int (*kbd_func)(unsigned  int key_code, void* ms);
     unsigned char draggable;
-    mouse_button_data mbt;
 
 #ifdef WIN32
     HWND window;
@@ -106,7 +132,6 @@ typedef struct _crosswin_window
     XIC xInputContext;
 #endif
 } crosswin_window;
-int crosswin_mouse_handle(crosswin_window *cw);
 void crosswin_init(crosswin* c);
 void crosswin_message_dispatch(crosswin *c);
 void crosswin_set_window_data(crosswin_window* w, void* pv);

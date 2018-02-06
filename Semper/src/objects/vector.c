@@ -58,14 +58,10 @@ int vector_render(object *o,cairo_t *cr)
             cairo_set_source(cr,vpc->stroke_gradient);
             cairo_stroke(cr);
         }
-        if(vpc->stroke_color&(0xff<<24))
+        else if(vpc->stroke_color&(0xff<<24))
         {
             cairo_set_color(cr,vpc->stroke_color);
             cairo_stroke(cr);
-        }
-        else
-        {
-            cairo_new_path(cr);
         }
     }
 

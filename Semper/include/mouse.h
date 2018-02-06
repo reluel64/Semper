@@ -11,7 +11,10 @@
 
 typedef struct _mouse_actions
 {
-    unsigned char old_hover;
+    /*old states*/
+    mouse_button_state ombs;
+    mouse_button       omb;
+    mouse_hover_state omhs;
     // Mouse down
     unsigned char* lcd;
     unsigned char* mcd;

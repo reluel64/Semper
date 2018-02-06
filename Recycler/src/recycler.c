@@ -264,7 +264,7 @@ void reset(void *spv, void *ip)
 
     pthread_mutex_unlock(&r->mtx);
 
-    /*Check if there is a monitor running and if it is try to stop it*/
+    /*Check if there is a monitor running and if it is, try to stop it*/
     char new_monitor=param_size_t("MonitorMode",ip,0)!=0;
 
     if(r->mon_mode>new_monitor&&r->qth)
@@ -379,7 +379,7 @@ static void *recycler_query_thread(void *p)
         recycler_query_user(r);
 
         pthread_mutex_lock(&r->mtx);
-        send_command(r->ip,r->cq_cmd);
+        send_command_ex(r->ip,r->cq_cmd,100,1);
         pthread_mutex_unlock(&r->mtx);
 
         r->qa=0;

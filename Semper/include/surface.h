@@ -62,8 +62,8 @@ typedef struct _surface_data
     unsigned char* update_act;
     unsigned char* reload_act;
     unsigned char* unload_act;
-    unsigned char mouse_hover;
-    unsigned char old_mouse_hover;
+    mouse_hover_state mhs;
+    mouse_hover_state omhs;
     unsigned char update_act_lock:1;
     unsigned char reload_act_lock:1;
     unsigned char unload_act_lock:1;

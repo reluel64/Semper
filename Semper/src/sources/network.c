@@ -166,7 +166,6 @@ static size_t network_get_bytes(network *n)
 
     if(n->best)
     {
-
         if(GetBestInterface(INADDR_ANY,(DWORD*)&n->if_index)!=NO_ERROR)
         {
             n->if_index=0; //get the data from all the interfaces (until next call)
@@ -355,9 +354,6 @@ static size_t network_interface_index(unsigned char *iname)
 
 #ifdef WIN32
     MIB_IF_TABLE2 *tbl=NULL;
-
-
-
     unsigned short *uc=utf8_to_ucs(iname);
 
     if(GetIfTable2(&tbl)!=NO_ERROR)

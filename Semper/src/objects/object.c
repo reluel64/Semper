@@ -193,6 +193,7 @@ static void object_render_internal(object* o, cairo_t* cr)
     }
 
     cairo_save(cr);
+    cairo_new_path(cr);
     cairo_set_matrix(cr, &m);
 
     object_render_background(o, cr);
@@ -305,8 +306,8 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
         if(lo!=o)
         {
             mouse_status dms = { 0 }; // dummy mouse status to signal that other objects are not important so they should trigger  MouseLeaveAction
-            dms.state = -2;
-            dms.hover = 0;
+            dms.state = mouse_button_state_unpressed;
+            dms.hover = mouse_unhover;
 
             if(lo->object_type==9) //Button
             {

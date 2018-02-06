@@ -36,6 +36,7 @@ void*          get_private_data(void* ip);
 void*          get_parent(unsigned char* str, void* ip);
 void           tokenize_string_free(tokenize_string_info *tsi);
 void           send_command(void* ir, unsigned char* command);
+void           send_command_ex(void* ir, unsigned char* cmd,size_t timeout,char unique);
 double         param_double(unsigned char* pn, void* ip, double def);
 size_t         param_size_t(unsigned char* pn, void* ip, size_t def);
 

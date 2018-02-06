@@ -18,9 +18,12 @@
 #include <semper.h>
 #include <mem.h>
 
+
+static int crosswin_mouse_handle(crosswin_window *cw);
 void crosswin_init(crosswin* c)
 {
     list_entry_init(&c->windows);
+    c->handle_mouse= crosswin_mouse_handle;
 #ifdef WIN32
     win32_init_class();
     c->sh = GetSystemMetrics(SM_CYSCREEN);
@@ -285,39 +288,111 @@ static size_t crosswin_get_time(void)
 #endif
 }
 
-
-int crosswin_mouse_handle(crosswin_window *cw)
+static void test_mouse_signal(mouse_status *ms)
 {
-    size_t diff=0;
-    
-    if(cw->mouse_func==NULL)
-        return(-1);
+      ms->handled=1;
 
-    if(cw->mbt.button!=cw->mouse.button&&cw->mouse.state==1)
-    {
-        cw->mbt.button=cw->mouse.button;
-        cw->mbt.last_click_tm=crosswin_get_time();
-    }
+    printf("Button %d State %d Hover %d\n",ms->button,ms->state,ms->hover);
+}
 
-    diff = labs(crosswin_get_time()- cw->mbt.last_click_tm);
-    
-    if(diff<500&&diff>100&&cw->mouse.state==1&&cw->mouse.button==cw->mbt.button)
+
+static int crosswin_mouse_handle(crosswin_window *cw)
+{
+    mouse_data *md=&cw->md;
+    mouse_status ms= {0};
+    long lx = cw->cposx;
+    long ly = cw->cposy;
+    cw->cposx = md->root_x;
+    cw->cposy = md->root_y;
+
+
+
+    //printf("Button %d State %d Hover %d\n",md->button,md->state,md->hover);
+
+    /*stuff stuff stuff*/
+
+    /*we're just come from a 'move' operation so just discard this event*/
+
+
+    if(md->state==mouse_button_state_unpressed&&md->drag)
     {
-        cw->mouse.state=2;
-        cw->mouse_func(cw,&cw->mouse);
-        memset(&cw->mbt,0,sizeof(mouse_button_data));
+        md->drag=0;
         return(0);
     }
-    else if(diff>500)
+    else if(!md->ctrl)
     {
-        memset(&cw->mbt,0,sizeof(mouse_button_data));
+
+        ms.state=md->state;
+        ms.button=md->button;
+        ms.hover=md->hover;
+        ms.x=md->x;
+        ms.y=md->y;
+        ms.scroll_dir=md->scroll_dir;
+        test_mouse_signal(&ms);
+       // cw->mouse_func(cw,&ms);
+        md->scroll_dir=0;
+        md->handled=ms.handled;
+    }
+    else
+    {
+        md->handled=0;
     }
 
-    cw->mouse_func(cw,&cw->mouse);
-
-    if(cw->mouse.handled==1&&cw->mouse.state==1)
+    if(md->hover==mouse_unhover)
     {
-        memset(&cw->mbt,0,sizeof(mouse_button_data));
+       // memset(md,0,sizeof(mouse_data));
+        return(0);
     }
+
+
+
+
+    /*left mouse was not handled so if the user will move the pointer while clicking,
+     * then we'll move the window. Obvious, isn't it?
+     * */
+    if(md->button==mouse_button_left &&
+            !ms.handled &&
+            cw->draggable &&
+            md->state==mouse_button_state_pressed)
+    {
+        long x = cw->x + (md->root_x - lx);
+        long y = cw->y + (md->root_y  - ly);
+
+        if(cw->x != x || cw->y != y)
+        {
+            md->drag = 1;
+            crosswin_set_position(cw,x,y);
+        }
+    }
+
     return(0);
 }
+
+#if 0
+static void crosswin_move_window(crosswin_window *w,long cx,long cy,unsigned char move)
+{
+    if(move>1)
+    {
+        w->cposx =  w->cposx==0?cx: w->cposx;
+        w->cposy =  w->cposy==0?cy : w->cposy;
+    }
+    if(move==0)
+    {
+        w->dragging=0;
+    }
+    else if(w->draggable && !w->mouse.handled)
+    {
+        long x = w->x + (cx - w->cposx);
+        long y = w->y + (cy - w->cposy);
+
+        if(w->x != x || w->y != y)
+        {
+            w->dragging = 1;
+        }
+        crosswin_set_position(w,x,y);
+    }
+    w->cposx = cx;
+    w->cposy = cy;
+}
+
+#endif

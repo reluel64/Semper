@@ -176,7 +176,7 @@ static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
         mouse_handle_button(sd, MOUSE_SURFACE, ms);
     }
 
-    sd->mouse_hover=ms->hover; //this will be used by SurfaceOverAction
+    sd->mhs=ms->hover; //this will be used by SurfaceOverAction
 
     return (1);
 }
@@ -1036,11 +1036,11 @@ int surface_update(surface_data* sd)
         sd->update_act_lock = 0;
     }
 
-    if(sd->old_mouse_hover != sd->mouse_hover)
+    if(sd->omhs != sd->mhs)
     {
-        sd->mouse_hover ?(sd->focus_act ? command(sd, &sd->focus_act):0) :
+        sd->mhs ?(sd->focus_act ? command(sd, &sd->focus_act):0) :
         (sd->focus_act ? command(sd, &sd->unfocus_act):0);
-        sd->old_mouse_hover = sd->mouse_hover;
+        sd->omhs = sd->mhs;
     }
 
     sd->cycle++; // increment the surface update cycle

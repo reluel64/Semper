@@ -198,10 +198,12 @@ static int extension_command_handler(extension_command* ec)
     return (0);
 }
 
-SEMPER_API void send_command(void* ir, unsigned char* cmd)
+SEMPER_API void send_command_ex(void* ir, unsigned char* cmd,size_t timeout,char unique)
 {
     if(ir && cmd)
     {
+        unsigned char flags=unique?EVENT_REMOVE_BY_DATA_HANDLER:0;
+        flags|=timeout>0?EVENT_PUSH_TIMER:0;
         source* s = ir;
         surface_data* sd = s->sd;
         control_data* cd = sd->cd;
@@ -209,9 +211,16 @@ SEMPER_API void send_command(void* ir, unsigned char* cmd)
         ec->sd = sd;
         ec->cd=cd;
         ec->comm = clone_string(cmd);
-        event_push(cd->eq, (event_handler)extension_command_handler, (void*)ec, 0, 0); //we will queue this event to be processed later
+        event_push(cd->eq, (event_handler)extension_command_handler, (void*)ec, timeout, flags); //we will queue this event to be processed later
     }
 }
+
+SEMPER_API void send_command(void* ir, unsigned char* cmd)
+{
+    send_command_ex(ir,cmd,0,0);
+}
+
+
 
 SEMPER_API int has_parent(unsigned char* str)
 {

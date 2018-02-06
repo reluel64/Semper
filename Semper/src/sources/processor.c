@@ -231,12 +231,13 @@ void processor_reset(void* spv, void* ip)
 #ifdef WIN32
 static inline double processor_usage_calculate_win32(void* spv, size_t idle, size_t system)
 {
+    double usage=0.0;
     processor* p = spv;
 
     size_t system_delta = system - p->system_time_old;
     size_t idle_delta = idle - p->idle_time_old;
-
-    double usage = 100.0 - ((double)idle_delta / (double)system_delta) * 100.0;
+    if(system_delta!=0.0)
+        usage = 100.0 - ((double)idle_delta / (double)system_delta) * 100.0;
 
 
     p->idle_time_old = idle;
@@ -433,9 +434,6 @@ static size_t processor_process_count(processor *p)
     return (processes);
 }
 
-
-
-
 static double processor_frequency(processor* p, unsigned char max)
 {
 #ifdef WIN32
@@ -484,20 +482,20 @@ double processor_update(void* spv)
 
     switch(p->inf_type)
     {
-        case processor_process_count_t:
-            return ((double)processor_process_count(spv));
+    case processor_process_count_t:
+        return ((double)processor_process_count(spv));
 
-        case processor_core_count_t:
-            return ((double)p->core_count);
+    case processor_core_count_t:
+        return ((double)p->core_count);
 
-        case processor_freq_t:
-            return (processor_frequency(p, p->total));
+    case processor_freq_t:
+        return (processor_frequency(p, p->total));
 
-        case processor_is_running_t:
-            return((double)processor_process_count(spv));
+    case processor_is_running_t:
+        return((double)processor_process_count(spv));
 
-        default:
-            return (processor_usage(spv));
+    default:
+        return (processor_usage(spv));
 
     }
 

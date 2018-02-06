@@ -14,25 +14,35 @@
 #include <event.h>
 
 /*This routine handles the mouse events for the button as it has
- *to be the most responvive object when it comes to transitions
+ *to be the most responsive object when it comes to transitions
  */
+
 int button_mouse(object *o,mouse_status *ms)
 {
     surface_data *sd=o->sd;
     button_object *bto=o->pv;
-
-
-    if(ms->state<=0&&ms->hover)
-        bto->im_index=1;
-
-    else if(ms->hover&&ms->button)
+#if 0
+    ms->handled=1;
+    if(bto->ombs==ms->state&&ms->state!=0&&ms->state==mouse_hover)
+        return(0);
+    bto->ombs=ms->state;
+    if(ms->hover==mouse_hover&&ms->state==mouse_button_state_pressed)
+    {
+        ms->handled=1;
         bto->im_index=2;
-
+    }
+    else if(ms->hover==mouse_hover)
+    {
+        bto->im_index=1;
+    }
     else
+    {
         bto->im_index=0;
+    }
 
     surface_adjust_size(sd);
     event_push(sd->cd->eq,(event_handler)crosswin_draw,sd->sw,0,0);
+#endif	
     return(0);
 }
 
@@ -61,7 +71,11 @@ int button_update(object *o)
 
     image_cache_unref_image(sd->cd->ich, &bto->ia,0);
 
-    sfree((void**)&bto->ia.path);
+    if(bto->ia.path!=bto->image_path)
+    {
+        sfree((void**)&bto->ia.path);
+    }
+
     sb.s_in = bto->image_path;
 
     bind_update_string(o, &sb);
@@ -70,10 +84,9 @@ int button_update(object *o)
     {
         return (-1);
     }
-
+    bto->ia.path=sb.s_out;
     image_cache_query_image(sd->cd->ich, &bto->ia, NULL, o->w*3, o->h*3);
 
-    //sfree((void**)&sb.s_out);
 
     if(bto->ia.width>bto->ia.height)
     {
@@ -106,14 +119,12 @@ int button_render(object *o,cairo_t *cr)
     {
         cairo_rectangle(cr,0,0,w/3.0,h);
         cairo_clip(cr);
-        cairo_new_path(cr);
         cairo_translate(cr,(double)(bto->im_index*(-w/3)),0);
     }
     else
     {
         cairo_rectangle(cr,0,0,w,h/3.0);
         cairo_clip(cr);
-        cairo_new_path(cr);
         cairo_translate(cr,0.0,(double)(bto->im_index*(h/3)));
     }
 
@@ -140,8 +151,11 @@ void button_destroy(object *o)
     if(o)
     {
         button_object *bto=o->pv;
+        if(bto->ia.path!=bto->image_path)
+        {
+            sfree((void**)&bto->ia.path);
+        }
         sfree((void**)&bto->image_path);
-        sfree((void**)&bto->ia.path);
         sfree((void**)&o->pv);
     }
 }

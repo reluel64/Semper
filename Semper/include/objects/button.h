@@ -5,6 +5,7 @@
 typedef struct
 {
     image_attributes ia;
+    mouse_button_state ombs;
     unsigned char *image_path;
     unsigned char im_index;
 } button_object;

@@ -10,88 +10,6 @@
 #include <event.h>
 #include <dwmapi.h>
 
-static int win32_prepare_mouse_event(crosswin_window* w, unsigned int message, WPARAM wpm, LPARAM lpm)
-{
-    memset(&w->mouse, 0, sizeof(mouse_status));
-
-    w->mouse.x = GET_X_LPARAM(lpm);
-    w->mouse.y = GET_Y_LPARAM(lpm);
-    w->mouse.state = -1;
-
-    if(w->dragging)
-        return (0);
-
-    switch(message)
-    {
-    case WM_MOUSEWHEEL:
-        w->mouse.x -= w->x;
-        w->mouse.y -= w->y;
-        w->mouse.scroll_dir = GET_WHEEL_DELTA_WPARAM(wpm) > 0 ? 1 : -1;
-        break;
-
-    case WM_LBUTTONDOWN:
-        w->mouse.button = MOUSE_LEFT_BUTTON;
-        w->mouse.state = 1;
-        break;
-
-    case WM_LBUTTONUP:
-        w->mouse.button = MOUSE_LEFT_BUTTON;
-        w->mouse.state = 0;
-        break;
-
-    case WM_RBUTTONDOWN:
-        w->mouse.button = MOUSE_RIGHT_BUTTON;
-        w->mouse.state = 1;
-        break;
-
-    case WM_RBUTTONUP:
-        w->mouse.button = MOUSE_RIGHT_BUTTON;
-        w->mouse.state = 0;
-        break;
-
-    case WM_MBUTTONDOWN:
-        w->mouse.button = MOUSE_MIDDLE_BUTTON;
-        w->mouse.state = 1;
-        break;
-
-    case WM_MBUTTONUP:
-        w->mouse.button = MOUSE_MIDDLE_BUTTON;
-        w->mouse.state = 0;
-        break;
-    }
-
-    switch(message)
-    {
-    case WM_MBUTTONDBLCLK:
-    case WM_LBUTTONDBLCLK:
-    case WM_RBUTTONDBLCLK:
-    case WM_MOUSEWHEEL:
-    case WM_LBUTTONDOWN:
-    case WM_LBUTTONUP:
-    case WM_RBUTTONDOWN:
-    case WM_RBUTTONUP:
-    case WM_MBUTTONDOWN:
-    case WM_MBUTTONUP:
-    case WM_MOUSEHOVER:
-        w->mouse.hover = 1;
-
-    case WM_MOUSELEAVE:
-        crosswin_mouse_handle(w);
-        return(1);
-#if 0
-        if(w->mouse_func)
-        {
-
-            w->mouse_func(w, &w->mouse);
-            return (1);
-        }
-#endif
-        break;
-    }
-
-    return (0);
-}
-
 static inline HWND win32_zpos(crosswin_window* w)
 {
     switch(w->zorder)
@@ -114,11 +32,8 @@ static inline HWND win32_zpos(crosswin_window* w)
     }
 }
 
-
-
 static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, WPARAM wpm, LPARAM lpm)
 {
-
     crosswin_window* w = (crosswin_window*)GetWindowLongPtrW(win, GWLP_USERDATA);
 
     if(w == NULL)
@@ -126,47 +41,70 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
 
     switch(message)
     {
-
-    case WM_MBUTTONDBLCLK:
-    case WM_LBUTTONDBLCLK:
-    case WM_RBUTTONDBLCLK:
     case WM_MOUSEWHEEL:
+        w->md.x = GET_X_LPARAM(lpm);
+        w->md.y = GET_Y_LPARAM(lpm);
+        w->md.scroll_dir = GET_WHEEL_DELTA_WPARAM(wpm) > 0 ? 1 : -1;
+        w->c->handle_mouse(w);
+        return(0);
+
     case WM_LBUTTONDOWN:
+        SetCapture(w->window);
+        w->md.x = GET_X_LPARAM(lpm);
+        w->md.y = GET_Y_LPARAM(lpm);
+        w->md.button = mouse_button_left ;
+        w->md.state = mouse_button_state_pressed;
+        w->c->handle_mouse(w);
+        return(0);
+
     case WM_LBUTTONUP:
-    {
-        if(w->dragging == 1)
-        {
-            ReleaseCapture();
-            win32_prepare_mouse_event(w, message, wpm, lpm);
-            w->dragging = 0;
-            return (0);
-        }
-    }
+        ReleaseCapture();
+        w->md.x = GET_X_LPARAM(lpm);
+        w->md.y = GET_Y_LPARAM(lpm);
+        w->md.button = mouse_button_left;
+        w->md.state = mouse_button_state_unpressed;
+        w->c->handle_mouse(w);
+        return(0);
 
     case WM_RBUTTONDOWN:
+        w->md.x = GET_X_LPARAM(lpm);
+        w->md.y = GET_Y_LPARAM(lpm);
+        w->md.button = mouse_button_right;
+        w->md.state = mouse_button_state_pressed;
+        w->c->handle_mouse(w);
+        return(0);
+
     case WM_RBUTTONUP:
+        w->md.x = GET_X_LPARAM(lpm);
+        w->md.y = GET_Y_LPARAM(lpm);
+        w->md.button = mouse_button_right;
+        w->md.state = mouse_button_state_unpressed;
+        w->c->handle_mouse(w);
+        return(0);
+
     case WM_MBUTTONDOWN:
+        w->md.x = GET_X_LPARAM(lpm);
+        w->md.y = GET_Y_LPARAM(lpm);
+        w->md.button = mouse_button_middle;
+        w->md.state = mouse_button_state_pressed;
+        w->c->handle_mouse(w);
+        return(0);
+
     case WM_MBUTTONUP:
-    case WM_MOUSEHOVER:
+        w->md.x = GET_X_LPARAM(lpm);
+        w->md.y = GET_Y_LPARAM(lpm);
+        w->md.button = mouse_button_middle;
+        w->md.state = mouse_button_state_unpressed;
+        w->c->handle_mouse(w);
+        return(0);
+
     case WM_MOUSELEAVE:
-    {
-        if(message == WM_LBUTTONUP)
-        {
-            ReleaseCapture();
-        }
+        w->md.x = GET_X_LPARAM(lpm);
+        w->md.y = GET_Y_LPARAM(lpm);
+        w->md.hover = mouse_unhover;
+        w->c->handle_mouse(w);
+        return(0);
 
-        if(message == WM_LBUTTONDOWN)
-        {
-            SetCapture(w->window);
-        }
-
-        if(!(wpm & MK_CONTROL))
-        {
-            win32_prepare_mouse_event(w, message, wpm, lpm);
-        }
-
-        return (0);
-    }
     case WM_KEYDOWN:
     {
         if(lpm&1000000)
@@ -203,38 +141,22 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
     case WM_MOUSEMOVE:
     {
         TRACKMOUSEEVENT ev = { 0 };
-        ev.dwFlags = 0x3;
+        w->md.x = GET_X_LPARAM(lpm);
+        w->md.y = GET_Y_LPARAM(lpm);
+        POINT p= { w->md.x, w->md.y};
+        w->md.hover = mouse_hover;
+
+        ev.dwFlags = 0x2;
         ev.cbSize = sizeof(TRACKMOUSEEVENT);
         ev.hwndTrack = win;
         ev.dwHoverTime = 1;
         TrackMouseEvent(&ev);
 
-        if(wpm & MK_LBUTTON)
-        {
-            if(w->draggable)
-            {
-                w->ccposx = GET_X_LPARAM(lpm);
-                w->ccposy = GET_Y_LPARAM(lpm);
-                long x = w->x + (w->ccposx - w->cposx);
-                long y = w->y + (w->ccposy - w->cposy);
-
-                if(w->x != x || w->y != y)
-                {
-                    w->dragging = 1;
-                }
-
-                crosswin_set_position(w,x,y);
-            }
-        }
-        else
-        {
-            w->dragging = 0;
-            w->cposx = GET_X_LPARAM(lpm);
-            w->cposy = GET_Y_LPARAM(lpm);
-        }
-
-        w->mouse.x = GET_X_LPARAM(lpm);
-        w->mouse.y = GET_Y_LPARAM(lpm);
+        MapWindowPoints(win,NULL,&p,1);
+        w->md.ctrl=!!(wpm&MK_CONTROL);
+        w->md.root_x=p.x;
+        w->md.root_y=p.y;
+        w->c->handle_mouse(w);
         return (0);
     }
 

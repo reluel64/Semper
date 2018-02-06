@@ -93,7 +93,8 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
     long y=0;
     long w=0;
     long h=0;
-    unsigned char *fcomm=NULL;
+
+    unsigned char *mcomm=NULL;
     unsigned char tbuf[256]= {0};
 
     /****************/
@@ -131,73 +132,103 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
     snprintf(tbuf,255,"(@MouseX,%ld);(@MouseY,%ld);(@%%MouseX,%ld);(@%%MouseY,%ld)",\
              ms->x-x,ms->y-y,w>0?(((ms->x-x)*100)/w):0,h>0?(((ms->y-y)*100)/h):0);
 
-    if(ms->state < 2 && ms->state > -1)
+    if(ma->ombs==ms->state&&ms->state!=0)
+        return(0);
+
+    ma->ombs=ms->state;
+
+    switch(ms->button)
     {
-        switch(ms->button)
+    case mouse_button_left:
+        switch(ms->state)
         {
-        case MOUSE_LEFT_BUTTON:
-            fcomm=replace(ms->state == 0 ? ma->lcu : ma->lcd,tbuf,0);
+        case mouse_button_state_pressed:
+            mcomm=ma->lcd;
             break;
-
-        case MOUSE_MIDDLE_BUTTON:
-            fcomm=replace(ms->state == 0 ? ma->mcu : ma->mcd,tbuf,0);
+        case mouse_button_state_unpressed:
+            mcomm=ma->lcu;
             break;
-
-        case MOUSE_RIGHT_BUTTON:
-            fcomm=replace(ms->state == 0 ? ma->rcu : ma->rcd,tbuf,0);
+        case mouse_button_state_2x:
+            mcomm=ma->lcdd;
+        default:
             break;
         }
-    }
-    else if(ms->state == 2)
-    {
-        switch(ms->button)
+        break;
+    case mouse_button_middle:
+        switch(ms->state)
         {
-        case MOUSE_LEFT_BUTTON:
-            fcomm=replace(ma->lcdd,tbuf,0);
+        case mouse_button_state_pressed:
+            mcomm=ma->mcd;
             break;
 
-        case MOUSE_MIDDLE_BUTTON:
-            fcomm=replace(ma->mcdd,tbuf,0);
+        case mouse_button_state_unpressed:
+            mcomm=ma->mcu;
             break;
 
-        case MOUSE_RIGHT_BUTTON:
-            fcomm=replace(ma->rcdd,tbuf,0);
+        case mouse_button_state_2x:
+            mcomm=ma->mcdd;
+        default:
             break;
         }
-    }
-    else if(ms->scroll_dir)
-    {
-        fcomm=replace(ms->scroll_dir == -1 ? ma->scrl_down : ma->scrl_up,tbuf,0);
-    }
-
-    else if(ms->hover&&ma->old_hover != ms->hover)
-    {
-        if(mode==MOUSE_OBJECT)
+        break;
+    case mouse_button_right:
+        switch(ms->state)
         {
-            surface_builtin_init(pv,1);
-        }
+        case mouse_button_state_pressed:
+            mcomm=ma->rcd;
+            break;
 
-        fcomm=replace(ma->ha,tbuf, 0);
-        ma->old_hover = ms->hover;
-    }
-    else if(ms->hover==0&&ma->old_hover != ms->hover)
-    {
-        if(mode==MOUSE_OBJECT)
+        case mouse_button_state_unpressed:
+            mcomm=ma->rcu;
+            break;
+
+        case mouse_button_state_2x:
+            mcomm=ma->rcdd;
+        default:
+            break;
+
+        }
+        break;
+    default:
+        if(ms->scroll_dir)
         {
-            surface_builtin_destroy(&((object*)pv)->ttip);
+            mcomm=(ms->scroll_dir == -1 ? ma->scrl_down : ma->scrl_up);
         }
+        else if(ms->hover!=ma->omhs&&ms->hover!=0)
+        {
+            if(ms->hover==mouse_hover)
+            {
+                if(mode==MOUSE_OBJECT)
+                {
+                    surface_builtin_init(pv,1);
+                }
+                mcomm=ma->ha;
+            }
+            else if(ms->hover==mouse_unhover)
+            {
+                if(mode==MOUSE_OBJECT)
+                {
+                    surface_builtin_destroy(&((object*)pv)->ttip);
+                }
+                mcomm=ma->nha;
+            }
+            ma->omhs=ms->hover;
+        }
+        break;
 
-        fcomm=replace(ma->nha,tbuf, 0);
-        ma->old_hover = ms->hover;
     }
 
-    if(fcomm)
+    if(mcomm)
     {
-        ms->handled=1;
-        ret=1;
-        command(sd,&fcomm);
-        sfree((void**)&fcomm);
+        printf("Mouse %s\n",mcomm);
+        unsigned char *fcomm=replace(mcomm,tbuf, 0);
+        if(fcomm)
+        {
+            ms->handled=1;
+            ret=1;
+            command(sd,&fcomm);
+            sfree((void**)&fcomm);
+        }
     }
-
     return (ret);
 }

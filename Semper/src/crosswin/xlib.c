@@ -117,7 +117,7 @@ static void xlib_render(crosswin_window *w)
         }
 
         cairo_t* cr= cairo_create(w->offscreen_buffer); // create a cairo context to gain access to surface rendering routine
-        
+
         if(w->opacity!=255)
         {
             cairo_set_operator(cr,CAIRO_OPERATOR_CLEAR);
@@ -198,29 +198,29 @@ void xlib_draw(crosswin_window* w)
 int xlib_mouse_handle(crosswin_window *w,XEvent *ev)
 {
     memset(&w->mouse,0,sizeof(mouse_status));
-    w->mouse.button=ev->xbutton.button;
-    w->mouse.scroll_dir=0;
-    w->mouse.x=ev->xbutton.x;
-    w->mouse.y=ev->xbutton.y;
-    w->mouse.state=-1;
+    w->md.button=ev->xbutton.button;
+    w->md.scroll_dir=0;
+    w->md.x=ev->xbutton.x;
+    w->md.y=ev->xbutton.y;
+    w->md.state=-1;
 
     switch(ev->xany.type)
     {
     case ButtonPress:
     {
 
-        w->mouse.state=1;
+        w->md.state=1;
 
         if(ev->xbutton.button==2)
-            w->mouse.button=3;
+            w->md.button=3;
         else if(ev->xbutton.button==3)
-            w->mouse.button=2;
+            w->md.button=2;
 
         if(ev->xbutton.button==Button5||ev->xbutton.button==Button4)
         {
-            w->mouse.state=-1;
-            w->mouse.button=0;
-            w->mouse.scroll_dir=(ev->xbutton.button==Button5?-1:1);
+            w->md.state=-1;
+            w->md.button=0;
+            w->md.scroll_dir=(ev->xbutton.button==Button5?-1:1);
         }
 
         break;
@@ -237,29 +237,29 @@ int xlib_mouse_handle(crosswin_window *w,XEvent *ev)
         XWindowChanges wc= {0};
         wc.stack_mode=Above;
 
-        if(w->mouse.hover==0)
+        if(w->md.hover==0)
             XConfigureWindow(w->c->display,w->window,CWStackMode,&wc);
 
-        w->mouse.state=0;
+        w->md.state=0;
 
         if(ev->xbutton.button==2)
-            w->mouse.button=3;
+            w->md.button=3;
         else if(ev->xbutton.button==3)
-            w->mouse.button=2;
+            w->md.button=2;
 
         break;
     }
 
     case MotionNotify:
     {
-        
-        w->mouse.hover=1;
+
+        w->md.hover=1;
         break;
     }
 
     case LeaveNotify:
     {
-        w->mouse.hover=0;
+        w->md.hover=0;
         memset(&w->mouse,0,sizeof(mouse_status));
 
     }

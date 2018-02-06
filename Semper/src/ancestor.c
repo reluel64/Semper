@@ -57,38 +57,38 @@ static inline section ancestor_dispatch_section(void* r, section* shead, unsigne
 
     switch(flag & 0x1C)
     {
-        case XPANDER_REQUESTOR_OBJECT:
+    case XPANDER_REQUESTOR_OBJECT:
+    {
+        object* ro = r;
+        surface_data* sd = ro->sd;
+        *shead = &sd->skhead;
+        return (ro->os);
+    }
+
+    case XPANDER_REQUESTOR_SOURCE:
+    {
+        source* rs = r;
+        surface_data* sd = rs->sd;
+        *shead = &sd->skhead;
+        return (rs->cs);
+    }
+
+    case XPANDER_REQUESTOR_SURFACE:
+    {
+        surface_data* sd = r;
+        *shead = &sd->skhead;
+
+        if(flag & 0x20)
         {
-            object* ro = r;
-            surface_data* sd = ro->sd;
-            *shead = &sd->skhead;
-            return (ro->os);
+            *shead = &sd->cd->shead;
+            return (sd->scd);
         }
 
-        case XPANDER_REQUESTOR_SOURCE:
-        {
-            source* rs = r;
-            surface_data* sd = rs->sd;
-            *shead = &sd->skhead;
-            return (rs->cs);
-        }
+        return (sd->spm);
+    }
 
-        case XPANDER_REQUESTOR_SURFACE:
-        {
-            surface_data* sd = r;
-            *shead = &sd->skhead;
-
-            if(flag & 0x20)
-            {
-                *shead = &sd->cd->shead;
-                return (sd->scd);
-            }
-
-            return (sd->spm);
-        }
-
-        default:
-            return (NULL);
+    default:
+        return (NULL);
     }
 }
 
@@ -289,7 +289,7 @@ void *ancestor_fusion(void *r,unsigned char  *npm,unsigned char xpander_flags,un
         }
     }
 
-//Make sure that we clean the stack
+
     ancestor_status *pcas=NULL;
     list_enum_part_safe(as,pcas,&status_stack,current)
     {
