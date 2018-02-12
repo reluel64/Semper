@@ -288,14 +288,6 @@ static size_t crosswin_get_time(void)
 #endif
 }
 
-static void test_mouse_signal(mouse_status *ms)
-{
-      ms->handled=1;
-
-    printf("Button %d State %d Hover %d\n",ms->button,ms->state,ms->hover);
-}
-
-
 static int crosswin_mouse_handle(crosswin_window *cw)
 {
     mouse_data *md=&cw->md;
@@ -305,42 +297,74 @@ static int crosswin_mouse_handle(crosswin_window *cw)
     cw->cposx = md->root_x;
     cw->cposy = md->root_y;
 
-
-
-    //printf("Button %d State %d Hover %d\n",md->button,md->state,md->hover);
-
-    /*stuff stuff stuff*/
-
-    /*we're just come from a 'move' operation so just discard this event*/
-
-
     if(md->state==mouse_button_state_unpressed&&md->drag)
     {
         md->drag=0;
         return(0);
     }
-    else if(!md->ctrl)
-    {
 
-        ms.state=md->state;
-        ms.button=md->button;
+    if(!md->ctrl&&md->drag==0)
+    {
+        unsigned char was_double=0;
+        long delta=0;
+
+        if(md->button!=mouse_button_none)
+        {
+            if(md->state==mouse_button_state_pressed)
+            {
+                size_t current_press=crosswin_get_time();
+                if(md->button==md->obtn)
+                    delta=labs(current_press-md->last_press);
+                else
+                    md->obtn=md->button;
+
+                md->last_press=current_press;
+            }
+        }
+        /*Pass the status*/
         ms.hover=md->hover;
         ms.x=md->x;
         ms.y=md->y;
-        ms.scroll_dir=md->scroll_dir;
-        test_mouse_signal(&ms);
-       // cw->mouse_func(cw,&ms);
+
+        /*Validate the command by checking if the coordinates have changed*/
+        if(lx==cw->cposx&&ly==cw->cposy)
+        {
+            ms.state=md->state;
+            ms.button=md->button;
+            ms.scroll_dir=md->scroll_dir;
+            /*Was double click? if yes, the handle it*/
+            if(delta>=100&&delta<=500)
+            {
+                md->last_press=0;
+                ms.state=mouse_button_state_2x;
+                cw->mouse_func(cw,&ms);
+                was_double=!!ms.handled;
+                if(was_double==0)
+                    ms.state=mouse_button_state_pressed;
+            }
+        }
+
+        if(was_double==0)
+        {
+            cw->mouse_func(cw,&ms);
+        }
+
         md->scroll_dir=0;
-        md->handled=ms.handled;
+
+        if(!!ms.handled)
+        {
+            md->button=mouse_button_none;
+            md->state=mouse_button_state_none;
+            md->last_press=0;
+        }
     }
     else
     {
-        md->handled=0;
+        md->last_press=0;
     }
 
     if(md->hover==mouse_unhover)
     {
-       // memset(md,0,sizeof(mouse_data));
         return(0);
     }
 

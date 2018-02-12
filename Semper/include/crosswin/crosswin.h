@@ -67,11 +67,11 @@ typedef struct
     long root_x;
     long root_y;
     char scroll_dir;        // scroll direction 1->up -1->down
-    size_t last_time;
     mouse_button button;
+    mouse_button obtn;
+    size_t last_press;
     mouse_button_state state;
     mouse_hover_state hover;
-    unsigned char handled;
     unsigned char ctrl;
     unsigned char drag;
 } mouse_data;

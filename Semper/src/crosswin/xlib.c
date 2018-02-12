@@ -24,8 +24,7 @@ typedef struct Hints
     long            inputMode;
     unsigned long   status;
 } Hints;
-static void xlib_set_above(crosswin_window *w,unsigned char clear);
-static void xlib_set_below(crosswin_window *w,unsigned char clear);
+
 void xlib_init_window(crosswin_window *w)
 {
     XSetWindowAttributes attr;
@@ -195,162 +194,6 @@ void xlib_draw(crosswin_window* w)
     XSync(w->c->display,0);
 }
 
-int xlib_mouse_handle(crosswin_window *w,XEvent *ev)
-{
-    memset(&w->mouse,0,sizeof(mouse_status));
-    w->md.button=ev->xbutton.button;
-    w->md.scroll_dir=0;
-    w->md.x=ev->xbutton.x;
-    w->md.y=ev->xbutton.y;
-    w->md.state=-1;
-
-    switch(ev->xany.type)
-    {
-    case ButtonPress:
-    {
-
-        w->md.state=1;
-
-        if(ev->xbutton.button==2)
-            w->md.button=3;
-        else if(ev->xbutton.button==3)
-            w->md.button=2;
-
-        if(ev->xbutton.button==Button5||ev->xbutton.button==Button4)
-        {
-            w->md.state=-1;
-            w->md.button=0;
-            w->md.scroll_dir=(ev->xbutton.button==Button5?-1:1);
-        }
-
-        break;
-    }
-
-    case ButtonRelease:
-    {
-        if(w->dragging)
-        {
-            w->dragging=0;
-            return(0);
-        }
-
-        XWindowChanges wc= {0};
-        wc.stack_mode=Above;
-
-        if(w->md.hover==0)
-            XConfigureWindow(w->c->display,w->window,CWStackMode,&wc);
-
-        w->md.state=0;
-
-        if(ev->xbutton.button==2)
-            w->md.button=3;
-        else if(ev->xbutton.button==3)
-            w->md.button=2;
-
-        break;
-    }
-
-    case MotionNotify:
-    {
-
-        w->md.hover=1;
-        break;
-    }
-
-    case LeaveNotify:
-    {
-        w->md.hover=0;
-        memset(&w->mouse,0,sizeof(mouse_status));
-
-    }
-    break;
-
-    }
-    crosswin_mouse_handle(w);
-    return(0);
-}
-
-static void xlib_set_above(crosswin_window *w,unsigned char clear)
-{
-    return;
-    if(clear==0)
-    {
-        xlib_set_below(w,1);
-    }
-
-    XEvent xev;
-    memset(&xev,0,sizeof(xev));
-    xev.xclient.type = ClientMessage;
-    xev.xclient.window = w->window;
-    xev.xclient.message_type = XInternAtom(w->c->display,"_NET_WM_STATE", False);
-    xev.xclient.serial = 0;
-    xev.xclient.display = w->c->display;
-    xev.xclient.send_event = True;
-    xev.xclient.format = 32;
-    xev.xclient.data.l[0] = 1; /* x coord */
-    xev.xclient.data.l[1] = XInternAtom(w->c->display,"_NET_WM_STATE_ABOVE", False); /* y coord */
-    xev.xclient.data.l[2] = 0; /* direction */
-    xev.xclient.data.l[3] =0; /* button */
-    // XSendEvent(w->c->display, DefaultRootWindow(w->c->display), False, SubstructureRedirectMask|SubstructureNotifyMask, &xev);
-}
-
-static void xlib_set_below(crosswin_window *w,unsigned char clear)
-{
-    return;
-    if(clear==0)
-    {
-        xlib_set_above(w,1);
-    }
-
-    XEvent xev;
-    memset(&xev,0,sizeof(xev));
-    xev.xclient.type = ClientMessage;
-    xev.xclient.window = w->window;
-    xev.xclient.message_type = XInternAtom(w->c->display,"_NET_WM_STATE", False);
-    xev.xclient.serial = 0;
-    xev.xclient.display = w->c->display;
-    xev.xclient.send_event = True;
-    xev.xclient.format = 32;
-    xev.xclient.data.l[0] = 1; /* x coord */
-    xev.xclient.data.l[1] = XInternAtom(w->c->display,"_NET_WM_STATE_BELOW", False); /* y coord */
-    xev.xclient.data.l[2] = 0; /* direction */
-    xev.xclient.data.l[3] =0; /* button */
-    // XSendEvent(w->c->display, DefaultRootWindow(w->c->display), False, SubstructureRedirectMask|SubstructureNotifyMask, &xev);
-}
-
-static void xlib_set_normal(crosswin_window *w)
-{
-    return;
-    xlib_set_below(w,1);
-    xlib_set_above(w,1);
-    XRaiseWindow(w->c->display,w->window);
-}
-
-static int xlib_move_internal(int x,int y,crosswin_window *w,unsigned char start)
-{
-    if(w->dragging==start)
-        return(0);
-
-    w->dragging=start;
-    XUngrabPointer(w->c->display,0);
-
-    XEvent xev;
-    xev.xclient.type = ClientMessage;
-    xev.xclient.window = w->window;
-    xev.xclient.message_type = XInternAtom(w->c->display,"_NET_WM_MOVERESIZE", False);
-    xev.xclient.serial = 0;
-    xev.xclient.display = w->c->display;
-    xev.xclient.send_event = True;
-    xev.xclient.format = 32;
-    xev.xclient.data.l[0] = x; /* x coord */
-    xev.xclient.data.l[1] = y; /* y coord */
-    xev.xclient.data.l[2] = start?8:11; /* direction */
-    xev.xclient.data.l[3] = Button1Mask; /* button */
-    xev.xclient.data.l[4] = 0; /* unused */
-    XSendEvent(w->c->display, DefaultRootWindow(w->c->display), False, SubstructureRedirectMask|SubstructureNotifyMask, &xev);
-    return(0);
-}
-
 int xlib_message_dispatch(crosswin *c)
 {
     do
@@ -370,15 +213,13 @@ int xlib_message_dispatch(crosswin *c)
         case KeyPress:
         {
             /*This is pretty ugly as I did not want to call the utf8_to_ucs() but for the moment it does the job*/
+            if(ev.xkey.keycode==105||ev.xkey.keycode==37)
+                w->md.ctrl=1;
             if(w->xInputContext)
             {
                 unsigned short symbol=0;
-
-                if(ev.xkey.keycode==105||ev.xkey.keycode==37)
-                    w->ctrl_down=1;
-
-
-                if(w->ctrl_down&&ev.xkey.keycode==36)
+                
+                if(w->md.ctrl&&ev.xkey.keycode==36)
                     symbol='\n';
                 else
                 {
@@ -404,42 +245,72 @@ int xlib_message_dispatch(crosswin *c)
         case KeyRelease:
         {
             if(ev.xkey.keycode==105||ev.xkey.keycode==37)
-                w->ctrl_down=0;
+                w->md.ctrl=0;
 
             break;
         }
 
         case MotionNotify:
         {
-
-            if(ev.xmotion.state&Button1Mask)
-            {
-                if(w->draggable==0)
-                    continue;
-
-                w->ccposx = ev.xmotion.x_root;
-                w->ccposy = ev.xmotion.y_root;
-
-                long x = w->x + (w->ccposx - w->cposx);
-                long y = w->y + (w->ccposy - w->cposy);
-                w->cposx = ev.xmotion.x_root;
-                w->cposy = ev.xmotion.y_root;
-                w->dragging=1;
-                crosswin_set_position(w,x,y);
-
-            }
-            else
-            {
-                w->dragging = 0;
-                w->cposx = ev.xmotion.x_root;
-                w->cposy = ev.xmotion.y_root;
-            }
+            w->md.x=ev.xbutton.x;
+            w->md.y=ev.xbutton.y;
+            w->md.root_x=ev.xmotion.x_root;
+            w->md.root_y=ev.xmotion.y_root;
+            w->md.hover=mouse_hover;
+            w->c->handle_mouse(w);
+            break;
         }
 
         case ButtonRelease:
+            w->md.x=ev.xbutton.x;
+            w->md.y=ev.xbutton.y;
+            w->md.state=mouse_button_state_unpressed;
+            switch(ev.xbutton.button)
+            {
+            case Button1:
+                w->md.button=mouse_button_left;
+                break;
+            case Button2:
+                w->md.button=mouse_button_middle;
+                break;
+            case Button3:
+                w->md.button=mouse_button_right;
+                break;
+            case Button4:
+                w->md.state=mouse_button_state_none;
+                w->md.scroll_dir=-1;
+                break;
+            case Button5:
+                w->md.state=mouse_button_state_none;
+                w->md.scroll_dir=1;
+                break;
+
+            }
+            w->c->handle_mouse(w);
+            break;
         case ButtonPress:
+            XSetInputFocus(w->c->display,w->window,RevertToParent,0);
+            w->md.x=ev.xbutton.x;
+            w->md.y=ev.xbutton.y;
+            w->md.state=mouse_button_state_pressed;
+            switch(ev.xbutton.button)
+            {
+            case Button1:
+                w->md.button=mouse_button_left;
+                break;
+            case Button2:
+                w->md.button=mouse_button_middle;
+                break;
+            case Button3:
+                w->md.button=mouse_button_right;
+                break;
+            }
+            w->c->handle_mouse(w);
+            break;
         case LeaveNotify:
-            xlib_mouse_handle(w,&ev);
+            XSetInputFocus(w->c->display,None,RevertToParent,0);
+            w->md.hover=mouse_unhover;
+            w->c->handle_mouse(w);
             break;
 
         case DestroyNotify:

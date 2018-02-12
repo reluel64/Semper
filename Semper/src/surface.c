@@ -171,7 +171,7 @@ static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
         }
     }
 
-    if(object_hit_testing(sd, ms)==0||ms->hover==0)
+    if(object_hit_testing(sd, ms)==0||ms->hover==mouse_unhover)
     {
         mouse_handle_button(sd, MOUSE_SURFACE, ms);
     }
@@ -1036,9 +1036,9 @@ int surface_update(surface_data* sd)
         sd->update_act_lock = 0;
     }
 
-    if(sd->omhs != sd->mhs)
+    if(sd->omhs != sd->mhs&&sd->mhs!=mouse_none)
     {
-        sd->mhs ?(sd->focus_act ? command(sd, &sd->focus_act):0) :
+        sd->mhs==mouse_hover ?(sd->focus_act ? command(sd, &sd->focus_act):0) :
         (sd->focus_act ? command(sd, &sd->unfocus_act):0);
         sd->omhs = sd->mhs;
     }

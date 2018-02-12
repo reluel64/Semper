@@ -132,11 +132,6 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
     snprintf(tbuf,255,"(@MouseX,%ld);(@MouseY,%ld);(@%%MouseX,%ld);(@%%MouseY,%ld)",\
              ms->x-x,ms->y-y,w>0?(((ms->x-x)*100)/w):0,h>0?(((ms->y-y)*100)/h):0);
 
-    if(ma->ombs==ms->state&&ms->state!=0)
-        return(0);
-
-    ma->ombs=ms->state;
-
     switch(ms->button)
     {
     case mouse_button_left:
@@ -194,7 +189,7 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
         {
             mcomm=(ms->scroll_dir == -1 ? ma->scrl_down : ma->scrl_up);
         }
-        else if(ms->hover!=ma->omhs&&ms->hover!=0)
+        else if(ms->hover!=ma->omhs)
         {
             if(ms->hover==mouse_hover)
             {
@@ -204,7 +199,7 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
                 }
                 mcomm=ma->ha;
             }
-            else if(ms->hover==mouse_unhover)
+            else if(ms->hover==mouse_unhover&&ma->omhs!=mouse_none)
             {
                 if(mode==MOUSE_OBJECT)
                 {
@@ -220,7 +215,6 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
 
     if(mcomm)
     {
-        printf("Mouse %s\n",mcomm);
         unsigned char *fcomm=replace(mcomm,tbuf, 0);
         if(fcomm)
         {

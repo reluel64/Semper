@@ -21,28 +21,30 @@ int button_mouse(object *o,mouse_status *ms)
 {
     surface_data *sd=o->sd;
     button_object *bto=o->pv;
-#if 0
-    ms->handled=1;
-    if(bto->ombs==ms->state&&ms->state!=0&&ms->state==mouse_hover)
+
+
+
+    if(bto->im_index&&ms->state==mouse_button_state_none)
+    {
         return(0);
-    bto->ombs=ms->state;
+    }
+
     if(ms->hover==mouse_hover&&ms->state==mouse_button_state_pressed)
     {
-        ms->handled=1;
         bto->im_index=2;
     }
     else if(ms->hover==mouse_hover)
     {
         bto->im_index=1;
     }
-    else
+    else if(ms->hover==mouse_unhover)
     {
         bto->im_index=0;
     }
 
     surface_adjust_size(sd);
     event_push(sd->cd->eq,(event_handler)crosswin_draw,sd->sw,0,0);
-#endif	
+
     return(0);
 }
 
