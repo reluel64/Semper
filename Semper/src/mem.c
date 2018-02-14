@@ -3,9 +3,8 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  */
-
-#include <mem.h>
 #define ALLOC_FACTOR 1
+#include <mem.h>
 #include <stdio.h>
 #include <string_util.h>
 
@@ -15,7 +14,7 @@ void* zmalloc(size_t bytes)
     {
         return (NULL);
     }
-    return (calloc(bytes ,ALLOC_FACTOR));
+    return (calloc(bytes, ALLOC_FACTOR));
 }
 
 void sfree(void** p)

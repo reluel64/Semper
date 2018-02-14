@@ -179,6 +179,7 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
 
         case mouse_button_state_2x:
             mcomm=ma->rcdd;
+
         default:
             break;
 

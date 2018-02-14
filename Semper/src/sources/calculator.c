@@ -22,7 +22,6 @@ typedef struct
     unsigned short max_random;
     size_t la;                    // last accessed
     size_t vec_count;             // elements in vector
-    size_t rcount;                // reset number of the unique generator
     unsigned char* frm; 			// formula
     void* sd; 						// surface data
 
@@ -49,47 +48,6 @@ static void calculator_knuth_shuffle(unsigned short* v, size_t n)
     }
 }
 
-static unsigned short calculator_random_unique_set(calculator* c)
-{
-    size_t tcount = (c->max_random - c->min_random) + 1;
-    c->rcount++;
-
-    if(c->vec == NULL)
-    {
-        c->vec = zmalloc(tcount * sizeof(unsigned short));
-    }
-
-    if(c->vec_count != tcount)
-    {
-        sfree((void**)&c->vec);
-        c->vec = zmalloc(tcount * sizeof(unsigned short));
-    }
-
-    c->vec_count = tcount;
-    c->la = tcount;
-
-    for(size_t i = 0; i < tcount; i++)
-    {
-        c->vec[i] = i + c->min_random;
-    }
-
-    calculator_knuth_shuffle(c->vec, tcount);
-    c->rnum = c->vec[--c->la];
-    return (c->rnum);
-}
-
-static inline unsigned short calculator_random_unique(calculator* c)
-{
-    if(c->la == 0)
-    {
-        return (calculator_random_unique_set(c));
-    }
-    else
-    {
-        c->rnum = c->vec[--c->la];
-        return (c->rnum);
-    }
-}
 
 static inline unsigned short calculator_random(calculator* c)
 {
@@ -97,7 +55,37 @@ static inline unsigned short calculator_random(calculator* c)
     {
         if(c->unique)
         {
-            return (calculator_random_unique(c));
+            if(c->la == 0)
+            {
+                size_t tcount = (c->max_random - c->min_random) + 1;
+
+                if(c->vec == NULL)
+                {
+                    c->vec = zmalloc(tcount * sizeof(unsigned short));
+                }
+
+                if(c->vec_count != tcount)
+                {
+                    sfree((void**)&c->vec);
+                    c->vec = zmalloc(tcount * sizeof(unsigned short));
+                }
+
+                c->vec_count = tcount;
+                c->la = tcount;
+
+                for(size_t i = 0; i < tcount; i++)
+                {
+                    c->vec[i] = i + c->min_random;
+                }
+
+                calculator_knuth_shuffle(c->vec, tcount);
+                c->rnum = c->vec[--c->la];
+            }
+            else
+            {
+                c->rnum = c->vec[--c->la];
+            }
+            return (c->rnum);
         }
         else
         {

@@ -156,15 +156,16 @@ int object_calculate_coordinates(object* o)
     long ny=o->y;
     unsigned char reps[260] = { 0 };
     unsigned char* out = NULL;
+
     snprintf(reps, sizeof(reps), "(r,+%ld);(R,+%ld)", pox, pow + pox);
     out = replace(o->sx, reps, 0);
     nx = (long)compute_formula(out);
     sfree((void**)&out);
 
     memset(reps, 0, sizeof(reps));
+
     snprintf(reps, sizeof(reps), "(r,+%ld);(R,+%ld)", poy, poh + poy);
     out = replace(o->sy, reps, 0);
-
     ny = (long)compute_formula(out);
     sfree((void**)&out);
 
@@ -277,7 +278,7 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
 
             size_t pos_in_buf = (size_t)ms->x +(size_t)ms->y*(size_t)stride;
 
-            if(imgb[pos_in_buf])
+            if(imgb&&imgb[pos_in_buf])
             {
                 if(o->object_type==9) //Button
                 {
@@ -419,12 +420,12 @@ int object_tooltip_update(object *o)
 
     unsigned char *show_fade="ShowFade()";
     /*The tooltip relies on the parent object to update its contents.
-     * Therefore, we need 3 update cycles to have everything nice
+     * Therefore, we need 3 fast update cycles to have everything nice
      * Cycles:
      * 1) Update the Title and the Text with the parameters set above
      * 2) Update the backround size
      * 3) Update the reflect the new content*/
-    for(int iter=0; iter<3; iter++)
+    for(char cycle=0; cycle<3; cycle++)
     {
         surface_update(o->ttip);
     }

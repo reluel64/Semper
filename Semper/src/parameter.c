@@ -22,30 +22,20 @@ static inline section parameter_dispatch_section(void* r, unsigned char flag)
 
     switch(flag & 0x1C)
     {
-        case XPANDER_REQUESTOR_OBJECT:
-        {
-            object* ro = r;
-            return (ro->os);
-        }
+    case XPANDER_REQUESTOR_OBJECT:
+        return (((object*)r)->os);
 
-        case XPANDER_REQUESTOR_SOURCE:
-        {
-            source* rs = r;
-            return (rs->cs);
-        }
+    case XPANDER_REQUESTOR_SOURCE:
+        return (((source*)r)->cs);
 
-        case XPANDER_REQUESTOR_SURFACE:
-        {
-            surface_data* sd = r;
-            if(flag & XPANDER_CONFIG)
-            {
-                return (sd->scd);
-            }
-            return (sd->spm);
-        }
+    case XPANDER_REQUESTOR_SURFACE:
+        if(flag & XPANDER_CONFIG)
+            return (((surface_data*)r)->scd);
+        else
+            return (((surface_data*)r)->spm);
 
-        default:
-            return (NULL);
+    default:
+        return (NULL);
     }
 }
 
@@ -91,7 +81,7 @@ double parameter_double(void* req, unsigned char* npm, double def, unsigned char
 size_t parameter_size_t(void* req, unsigned char* npm, size_t def, unsigned char xpander_flags)
 {
     size_t ret = def;
-   section s = parameter_dispatch_section(req, xpander_flags);
+    section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !s)
     {
@@ -138,13 +128,13 @@ unsigned char parameter_byte(void* req, unsigned char* npm, unsigned char def, u
 
 unsigned char parameter_bool(void* req, unsigned char* npm, unsigned char def, unsigned char xpander_flags)
 {
-    return (parameter_size_t(req, npm, (size_t)def, xpander_flags)>0);
+    return (parameter_size_t(req, npm, (size_t)def, xpander_flags)!=0);
 }
 
 unsigned char* parameter_string(void* req, unsigned char* npm, unsigned char* def, unsigned char xpander_flags)
 {
     unsigned char* ret = NULL;
-   section s = parameter_dispatch_section(req, xpander_flags);
+    section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !s)
     {
@@ -186,7 +176,7 @@ unsigned int parameter_color(void* req, unsigned char* npm, unsigned int def, un
 {
     unsigned int ret = def;
 
-   section s = parameter_dispatch_section(req, xpander_flags);
+    section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !s)
     {
@@ -223,7 +213,7 @@ unsigned int parameter_color(void* req, unsigned char* npm, unsigned int def, un
 int parameter_image_tile(void* req, unsigned char* npm, image_tile* param, unsigned char xpander_flags)
 {
     int ret = 1;
-   section s = parameter_dispatch_section(req, xpander_flags);
+    section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !param || !s)
     {
@@ -261,7 +251,7 @@ int parameter_image_tile(void* req, unsigned char* npm, image_tile* param, unsig
 int parameter_object_padding(void* req, unsigned char* npm, object_padding* param, unsigned char xpander_flags)
 {
     int ret = -1;
-  section s = parameter_dispatch_section(req, xpander_flags);
+    section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !param || !s)
     {
@@ -301,7 +291,7 @@ int parameter_object_padding(void* req, unsigned char* npm, object_padding* para
 int parameter_image_crop(void* req, unsigned char* npm, image_crop* param, unsigned char xpander_flags)
 {
     int ret = -1;
-   section s = parameter_dispatch_section(req, xpander_flags);
+    section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !param || !s)
     {
@@ -341,7 +331,7 @@ int parameter_image_crop(void* req, unsigned char* npm, image_crop* param, unsig
 int parameter_color_matrix(void* req, unsigned char* npm, double* cm, unsigned char xpander_flags)
 {
     int ret = -1;
-   section s = parameter_dispatch_section(req, xpander_flags);
+    section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !cm || !s)
     {
@@ -382,7 +372,7 @@ int parameter_color_matrix(void* req, unsigned char* npm, double* cm, unsigned c
 unsigned int parameter_self_scaling(void* req, unsigned char* npm, unsigned int def, unsigned char xpander_flags)
 {
     unsigned int ret = def;
-   section s = parameter_dispatch_section(req, xpander_flags);
+    section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !s)
     {

@@ -13,6 +13,7 @@
 #include <windows.h>
 #elif __linux__
 #include <sys/sysinfo.h>
+#include <ctype.h>
 #endif
 
 void memory_init(void** spv, void* ip)
@@ -36,7 +37,7 @@ static size_t memory_get_linux(char *field)
             if(!strncasecmp(field,buf,fieldsz))
             {
                 unsigned char *unit=NULL;
-                res= strtoull(buf+fieldsz,&unit,10);
+                res= strtoull(buf+fieldsz,(char**)&unit,10);
 
                 if(unit&&unit!=buf+fieldsz)
                 {

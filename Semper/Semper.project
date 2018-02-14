@@ -19,7 +19,6 @@
         <File Name="src/sources/script/lua.c"/>
       </VirtualDirectory>
       <File Name="src/sources/action.c"/>
-      <File Name="src/sources/average.c"/>
       <File Name="src/sources/calculator.c"/>
       <File Name="src/sources/disk.c"/>
       <File Name="src/sources/folderinfo.c"/>
@@ -418,6 +417,7 @@
         <IncludePath Value="$(CompilerLib)/glib-2.0/include"/>
         <Preprocessor Value="__USE_MINGW_ANSI_STDIO=1"/>
         <Preprocessor Value="__linux__"/>
+        <Preprocessor Value="__USE_LARGEFILE64"/>
       </Compiler>
       <Linker Options="-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,--export-dynamic" Required="yes">
         <LibraryPath Value="$(CompilerLib)"/>

@@ -55,6 +55,21 @@ typedef struct
 
 } source_table;
 
+typedef struct _avg_val
+{
+    double value;
+    list_entry current;
+} source_average_val;
+
+typedef struct _average
+{
+    size_t count; // current number of elements in list
+    size_t target; // the target of elements that have to be in the list
+    list_entry values;
+    double total;
+} source_average;
+
+
 static size_t source_routines_table(unsigned char* s,source_table **st)
 {
     static source_table table[]=
@@ -99,6 +114,96 @@ static size_t source_routines_table(unsigned char* s,source_table **st)
 
     return(0);
 }
+
+void source_average_destroy(source* s)
+{
+    source_average* sa = s->avg_pv;
+
+    if(sa)
+    {
+        source_average_val* sav = NULL;
+        source_average_val* tsav = NULL;
+
+        list_enum_part_backward_safe(sav, tsav, &sa->values, current)
+        {
+            linked_list_remove(&sav->current);
+            sfree((void**)&sav);
+        }
+        sfree((void**)&s->avg_pv);
+    }
+}
+
+static int source_average_resize(source_average* sa, size_t avg_count)
+{
+    sa->target = avg_count;
+    source_average_val* sav = NULL;
+    source_average_val* tsav = NULL;
+
+    list_enum_part_backward_safe(sav, tsav, &sa->values, current)
+    {
+        if((sa->target >= sa->count) || sa->count == 0)
+        {
+            break;
+        }
+
+        linked_list_remove(&sav->current);
+        sfree((void**)&sav);
+        sa->count--;
+    }
+    return (1);
+}
+
+static double source_average_update(source *s, size_t avg_count, double value)
+{
+    source_average* sa = s->avg_pv;
+    if(avg_count == 0)
+    {
+        if(s->avg_pv)
+        {
+            source_average_destroy(s);
+        }
+        return (value);
+    }
+    else if(s->avg_pv == NULL)
+    {
+        s->avg_pv = zmalloc(sizeof(source_average));
+        sa = s->avg_pv;
+        list_entry_init(&sa->values);
+    }
+
+
+    source_average_resize(s->avg_pv, avg_count);
+
+    if(sa->count < sa->target)
+    {
+        source_average_val* sav = zmalloc(sizeof(source_average_val));
+        list_entry_init(&sav->current);
+        sav->value = value;
+        sa->count++;
+        sa->total += value;
+        linked_list_add(&sav->current, &sa->values);
+    }
+    else
+    {
+        double old_value = 0.0;
+        double new_value = value;
+        source_average_val* sav = zmalloc(sizeof(source_average_val));
+        list_entry_init(&sav->current);
+        source_average_val* psav = element_of(sa->values.prev, source_average_val, current);
+        old_value = psav->value;
+        sa->total -= old_value;
+        sa->total += new_value;
+
+        sav->value = value;
+        linked_list_remove(&psav->current);
+        sfree((void**)&psav);
+        linked_list_add(&sav->current, &sa->values);
+    }
+
+    return (sa->total / (double)sa->count);
+}
+
+
 
 
 unsigned char* source_variable(source* s, size_t* len, unsigned char flags)
@@ -345,7 +450,7 @@ void source_destroy(source** s)
     bind_unbind(ts->sd, ts);
     source_destroy_routines(ts); // call the source routines to perform internal cleanup
     action_destroy(ts);
-    average_destroy(&ts->avg_struct);
+    source_average_destroy(ts);
 
     /*Remove source information*/
     sfree((void**)&ts->team);
@@ -501,7 +606,7 @@ int source_update(source* s)
 
         if(s->avg_count)
         {
-            double avg = average_update(&s->avg_struct, s->avg_count, cv);
+            double avg = source_average_update(s, s->avg_count, cv);
             svc = avg != s->d_info;
             s->d_info = avg;
         }

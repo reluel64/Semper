@@ -4,7 +4,6 @@
 #include <stddef.h>
 #include <surface.h>
 #include <skeleton.h>
-#include <sources/average.h>
 #include <linked_list.h>
 #define SOURCE_VARIABLE_EXPAND 0x1
 #define SOURCE_VARIABLE_DOUBLE 0x2
@@ -40,7 +39,7 @@ typedef struct _source
     unsigned char always_do;
     unsigned char* team;
     size_t avg_count;
-    average* avg_struct;
+    void* avg_pv;
     unsigned char* update_act; // action to be perfomed when the source is updated
     unsigned char* change_act; // action to be performed when the value is changed (can be the numerical or the string)
     unsigned char change_act_lock;
@@ -72,3 +71,4 @@ void update_source_table(source* s);
 unsigned char* source_variable(source* s, size_t* len, unsigned char flags);
 unsigned char* formula(void* sd, unsigned char* in);
 void source_reset(source* s);
+void source_average_destroy(source* s);

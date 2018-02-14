@@ -58,34 +58,24 @@ static inline section ancestor_dispatch_section(void* r, section* shead, unsigne
     switch(flag & 0x1C)
     {
     case XPANDER_REQUESTOR_OBJECT:
-    {
-        object* ro = r;
-        surface_data* sd = ro->sd;
-        *shead = &sd->skhead;
-        return (ro->os);
-    }
+        *shead = &((surface_data*)((object*)r)->sd)->skhead;
+        return (((object*)r)->os);
 
     case XPANDER_REQUESTOR_SOURCE:
-    {
-        source* rs = r;
-        surface_data* sd = rs->sd;
-        *shead = &sd->skhead;
-        return (rs->cs);
-    }
+        *shead = &((surface_data*)((source*)r)->sd)->skhead;
+        return (((source*)r)->cs);
 
     case XPANDER_REQUESTOR_SURFACE:
-    {
-        surface_data* sd = r;
-        *shead = &sd->skhead;
-
         if(flag & 0x20)
         {
-            *shead = &sd->cd->shead;
-            return (sd->scd);
+            *shead = &((surface_data*)r)->cd->shead;
+            return (((surface_data*)r)->scd);
         }
-
-        return (sd->spm);
-    }
+        else
+        {
+            *shead = &((surface_data*)r)->skhead;
+            return (((surface_data*)r)->spm);
+        }
 
     default:
         return (NULL);
