@@ -115,7 +115,7 @@ void *ancestor_fusion(void *r,unsigned char  *npm,unsigned char xpander_flags,un
 
     list_entry_init(&status_stack);
 
-    as->rhead = ancestor_dispatch_section(r, &shead, xpander_flags); //obtain the section of the calling item (source,object)
+    as->rhead = ancestor_dispatch_section(r, &shead, xpander_flags); //obtain the section of the calling item (source/object)
 
     //Retrieve the list with ancestors
     while(iter<ANCESTOR_MAX_ITER_COUNT&&as)

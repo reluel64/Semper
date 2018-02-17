@@ -64,7 +64,6 @@ typedef struct _avg_val
 typedef struct _average
 {
     size_t count; // current number of elements in list
-    size_t target; // the target of elements that have to be in the list
     list_entry values;
     double total;
 } source_average;
@@ -133,30 +132,12 @@ void source_average_destroy(source* s)
     }
 }
 
-static int source_average_resize(source_average* sa, size_t avg_count)
-{
-    sa->target = avg_count;
-    source_average_val* sav = NULL;
-    source_average_val* tsav = NULL;
-
-    list_enum_part_backward_safe(sav, tsav, &sa->values, current)
-    {
-        if((sa->target >= sa->count) || sa->count == 0)
-        {
-            break;
-        }
-
-        linked_list_remove(&sav->current);
-        sfree((void**)&sav);
-        sa->count--;
-    }
-    return (1);
-}
-
-static double source_average_update(source *s, size_t avg_count, double value)
+static double source_average_update(source *s, double value)
 {
     source_average* sa = s->avg_pv;
-    if(avg_count == 0)
+    source_average_val* sav = NULL;
+    source_average_val* tsav = NULL;
+    if(s->avg_count == 0)
     {
         if(s->avg_pv)
         {
@@ -171,91 +152,87 @@ static double source_average_update(source *s, size_t avg_count, double value)
         list_entry_init(&sa->values);
     }
 
-
-    source_average_resize(s->avg_pv, avg_count);
-
-    if(sa->count < sa->target)
+    /*Resize the list if needed*/
+    list_enum_part_backward_safe(sav, tsav, &sa->values, current)
     {
-        source_average_val* sav = zmalloc(sizeof(source_average_val));
-        list_entry_init(&sav->current);
-        sav->value = value;
+        if((s->avg_count >= sa->count) || sa->count == 0)
+        {
+            break;
+        }
+
+        linked_list_remove(&sav->current);
+        sfree((void**)&sav);
+        sa->count--;
+    }
+
+    sav = zmalloc(sizeof(source_average_val));
+    list_entry_init(&sav->current);
+    sav->value=value;
+
+    if(sa->count<s->avg_count)
+    {
         sa->count++;
-        sa->total += value;
-        linked_list_add(&sav->current, &sa->values);
     }
     else
     {
-        double old_value = 0.0;
-        double new_value = value;
-        source_average_val* sav = zmalloc(sizeof(source_average_val));
-        list_entry_init(&sav->current);
-        source_average_val* psav = element_of(sa->values.prev, source_average_val, current);
-        old_value = psav->value;
-        sa->total -= old_value;
-        sa->total += new_value;
-
-        sav->value = value;
-        linked_list_remove(&psav->current);
-        sfree((void**)&psav);
-        linked_list_add(&sav->current, &sa->values);
+        tsav = element_of(sa->values.prev, source_average_val, current);
+        linked_list_remove(&tsav->current);
+        sa->total-=tsav->value;
+        sfree((void**)&tsav);
     }
+
+    sa->total += sav->value;
+
+    linked_list_add(&sav->current, &sa->values);
 
     return (sa->total / (double)sa->count);
 }
 
-
-
-
 unsigned char* source_variable(source* s, size_t* len, unsigned char flags)
 {
-    if(s && len)
+    if(s == NULL|| len ==NULL||s->die)
     {
-        if(s->die)
-        {
-            *len = 0;
-            return (NULL);
-        }
+        if(len)
+            *len=0;
+        return(NULL);
+    }
 
-        if(flags & SOURCE_VARIABLE_DOUBLE)
+
+    if(flags & SOURCE_VARIABLE_DOUBLE)
+    {
+        *len = s->inf_double_len;
+        return (s->inf_double);
+    }
+    else if(flags & SOURCE_VARIABLE_EXPAND)
+    {
+        if(s->inf_exp)
+        {
+            *len = s->inf_exp_len;
+            return (s->inf_exp);
+        }
+        else if(s->s_info)
+        {
+            *len = s->s_info_len;
+            return (s->s_info);
+        }
+        else
         {
             *len = s->inf_double_len;
             return (s->inf_double);
         }
-        else if(flags & SOURCE_VARIABLE_EXPAND)
+    }
+    else
+    {
+        if(s->s_info)
         {
-            if(s->inf_exp)
-            {
-                *len = s->inf_exp_len;
-                return (s->inf_exp);
-            }
-            else if(s->s_info)
-            {
-                *len = s->s_info_len;
-                return (s->s_info);
-            }
-            else
-            {
-                *len = s->inf_double_len;
-                return (s->inf_double);
-            }
+            *len = s->s_info_len;
+            return (s->s_info);
         }
         else
         {
-            if(s->s_info)
-            {
-                *len = s->s_info_len;
-                return (s->s_info);
-            }
-            else
-            {
-                *len = s->inf_double_len;
-                return (s->inf_double);
-            }
+            *len = s->inf_double_len;
+            return (s->inf_double);
         }
-    }
-    else if(len)
-    {
-        *len = 0;
     }
 
     return (NULL);
@@ -461,7 +438,7 @@ void source_destroy(source** s)
     sfree((void**)&ts->extension);
     sfree((void**)&ts->update_act);
     sfree((void**)&ts->change_act);
-    skeleton_remove_section(&ts->cs); //remove the source section from the
+    skeleton_remove_section(&ts->cs); //remove the source section from the skeleton
 
     /*Remove source from chain*/
     linked_list_remove(&ts->current);
@@ -565,13 +542,12 @@ void source_reset(source* s)
 int source_update(source* s)
 {
     surface_data* sd = s->sd;
+    unsigned char svc = 0; // source value changed flag
 
     if(s->vol_var)
     {
         source_reset(s);
     }
-
-    unsigned char svc = 0; // source value changed flag
 
     if(s->disabled || s->paused)
     {
@@ -604,17 +580,13 @@ int source_update(source* s)
         /*Calculate the new result*/
         cv = (s->inverted ? s->max_val - cv + s->min_val : cv);
 
-        if(s->avg_count)
+        if(s->avg_pv||s->avg_count>0)
         {
-            double avg = source_average_update(s, s->avg_count, cv);
-            svc = avg != s->d_info;
-            s->d_info = avg;
+            cv=source_average_update(s, cv);
         }
-        else
-        {
-            svc = cv != s->d_info;
-            s->d_info = cv;
-        }
+
+        svc = (cv != s->d_info);
+        s->d_info = cv;
     }
 
     if(s->source_string_rtn)
@@ -624,7 +596,7 @@ int source_update(source* s)
         if(str==NULL||s->s_info==NULL || strcmp(s->s_info, str))
         {
             sfree((void**)&s->s_info);
-
+            s->s_info_len=0;
             if(str)
             {
                 s->s_info=(str[0]!=0?clone_string(str):zmalloc(1));
@@ -634,13 +606,17 @@ int source_update(source* s)
             svc = 1;
         }
     }
-    //make sure that if the source was changed and does not have a string function we do clear the string information
+    /*
+     * make sure that if the source was changed and does
+     * not have a string function we do clear the string information
+     * */
     else if(s->s_info||s->s_info_len)
     {
         sfree((void**)&s->s_info);
         s->s_info_len=0;
     }
 
+    /*Create a string to help out xpander.c*/
     if(svc || s->update_cycle == 0)
     {
         s->inf_double_len = snprintf(s->inf_double, 64, "%lf", s->d_info);
