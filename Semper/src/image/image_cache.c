@@ -139,20 +139,20 @@ static void image_cache_flip(image_cache_decoded* icd, int flip)
 
     switch(flip)
     {
-        case 1:
-            cairo_translate(cr, icd->width, 0.0);
-            cairo_scale(cr, -1.0, 1.0);
-            break;
+    case 1:
+        cairo_translate(cr, icd->width, 0.0);
+        cairo_scale(cr, -1.0, 1.0);
+        break;
 
-        case 2:
-            cairo_translate(cr, 0.0, icd->height);
-            cairo_scale(cr, 1.0, -1.0);
-            break;
+    case 2:
+        cairo_translate(cr, 0.0, icd->height);
+        cairo_scale(cr, 1.0, -1.0);
+        break;
 
-        case 3:
-            cairo_translate(cr, (double)icd->width, (double)icd->height);
-            cairo_scale(cr, -1.0, -1.0);
-            break;
+    case 3:
+        cairo_translate(cr, (double)icd->width, (double)icd->height);
+        cairo_scale(cr, -1.0, -1.0);
+        break;
     }
 
     cairo_set_source_surface(cr, image, 0, 0);
@@ -308,33 +308,33 @@ static int image_cache_crop(image_cache_decoded* icd, image_crop* itcd)
 
     switch(itcd->origin)
     {
-        case 1:
-            cropx = cx;
-            cropy = cy;
-            break;
+    case 1:
+        cropx = cx;
+        cropy = cy;
+        break;
 
-        case 2:
-            cropx = (icd->width) - cx - cw;
-            cropy = cy;
-            break;
+    case 2:
+        cropx = (icd->width) - cx - cw;
+        cropy = cy;
+        break;
 
-        case 3:
-            cropx = cx;
-            cropy = (icd->height) - cy - ch;
-            break;
+    case 3:
+        cropx = cx;
+        cropy = (icd->height) - cy - ch;
+        break;
 
-        case 4:
-            cropy = (icd->height) - cy - ch;
-            cropx = (icd->width) - cx - cw;
-            break;
+    case 4:
+        cropy = (icd->height) - cy - ch;
+        cropx = (icd->width) - cx - cw;
+        break;
 
-        case 5:
-            cropx = (icd->width / 2) + cx;
-            cropy = (icd->height / 2) + cy;
-            break;
+    case 5:
+        cropx = (icd->width / 2) + cx;
+        cropy = (icd->height / 2) + cy;
+        break;
 
-        default:
-            return (-1);
+    default:
+        return (-1);
     }
 
     int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, icd->width);
@@ -398,14 +398,18 @@ static inline image_types image_cache_detect_format(FILE *fh)
 static inline FILE *image_cache_open_image(unsigned char *f)
 {
     FILE* fh = NULL;
+    unsigned char *gf=clone_string(f);
+    uniform_slashes(gf);
 #ifdef WIN32
-    wchar_t* fp = utf8_to_ucs(f);
+    windows_slahses(gf);
+    wchar_t* fp = utf8_to_ucs(gf);
     fh = _wfopen(fp, L"rb");
     sfree((void**)&fp);
 #elif __linux__
-    fh = fopen(f, "rb");
+    unix_slashes(gf);
+    fh = fopen(gf, "rb");
 #endif
-
+    sfree((void**)&gf);
     return(fh);
 }
 
@@ -423,21 +427,21 @@ static inline int image_cache_decode(unsigned char* path, image_cache_decoded* i
 
     switch(image_cache_detect_format(fh))
     {
-        case jpeg:
-            ret = image_cache_decode_jpeg(fh, icd);
-            break;
+    case jpeg:
+        ret = image_cache_decode_jpeg(fh, icd);
+        break;
 
-        case png:
-            ret = image_cache_decode_png(fh, icd);
-            break;
+    case png:
+        ret = image_cache_decode_png(fh, icd);
+        break;
 
-        case bitmap:
-            ret = image_cache_decode_bmp(fh, icd);
-            break;
+    case bitmap:
+        ret = image_cache_decode_bmp(fh, icd);
+        break;
 
-        case none:
-            ret=image_cache_decode_svg(fh,icd);
-            break;
+    case none:
+        ret=image_cache_decode_svg(fh,icd);
+        break;
     }
 
     fseek(fh,0,SEEK_SET);
@@ -502,18 +506,18 @@ static int image_cache_load_image(image_cache_decoded *icd,image_attributes *ia)
 
     switch(ia->tile)
     {
-        case 1:
-            image_cache_tile(icd, ia->rw, ia->rh);
-            break;
+    case 1:
+        image_cache_tile(icd, ia->rw, ia->rh);
+        break;
 
-        case 2:
-            image_cache_scale(icd, ia->tpm.w, ia->tpm.h,ia->keep_ratio);
-            image_cache_tile(icd, ia->rw, ia->rh);
-            break;
+    case 2:
+        image_cache_scale(icd, ia->tpm.w, ia->tpm.h,ia->keep_ratio);
+        image_cache_tile(icd, ia->rw, ia->rh);
+        break;
 
-        default:
-            image_cache_scale(icd, ia->rw, ia->rh,ia->keep_ratio);
-            break;
+    default:
+        image_cache_scale(icd, ia->rw, ia->rh,ia->keep_ratio);
+        break;
     }
 
     if(ia->opacity != 255)
