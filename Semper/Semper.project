@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Project Name="Semper" Version="10.0.0" InternalType="Console">
   <Plugins>
-    <Plugin Name="CppCheck"/>
     <Plugin Name="qmake">
       <![CDATA[00050001N0005Debug0000000000000001N0011Debug Linux0000000000000001N0012Debug(Linux)0000000000000001N0011Debug_Linux0000000000000001N0007Release000000000000]]>
     </Plugin>
+    <Plugin Name="CppCheck"/>
   </Plugins>
   <VirtualDirectory Name="src">
     <File Name="src/watcher.c"/>

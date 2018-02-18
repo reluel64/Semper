@@ -390,6 +390,7 @@ void destroy(void **spv)
         SetEvent(r->me);
         CloseHandle(r->me);
     }
+
     if(r->qth)
         pthread_join(r->qth,NULL);
 

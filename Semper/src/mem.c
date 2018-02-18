@@ -10,11 +10,7 @@
 
 void* zmalloc(size_t bytes)
 {
-    if(bytes == 0)
-    {
-        return (NULL);
-    }
-    return (calloc(bytes, ALLOC_FACTOR));
+    return (bytes?calloc(bytes, ALLOC_FACTOR):NULL);
 }
 
 void sfree(void** p)
@@ -29,13 +25,18 @@ void sfree(void** p)
 int put_file_in_memory(unsigned char* file, void** out, size_t* sz)
 {
     FILE* f = NULL;
+     unsigned char *gf=clone_string(file);
+    uniform_slashes(gf);
 #ifdef WIN32
-    wchar_t* fp = utf8_to_ucs(file);
+    windows_slahses(gf);
+    wchar_t* fp = utf8_to_ucs(gf);
     f = _wfopen(fp, L"rb");
     sfree((void**)&fp);
 #elif __linux__
-    f = fopen(file, "rb");
+    unix_slashes(gf);
+    f = fopen(gf, "rb");
 #endif
+    sfree((void**)&gf);
 
     if(f)
     {

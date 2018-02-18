@@ -219,22 +219,22 @@ static void vector_parser_apply_matrix(vector_parser_info *vpi, vector_path_comm
         cairo_path_data_t *data = &path->data[i];
         switch (data->header.type)
         {
-            case CAIRO_PATH_MOVE_TO:
-                cairo_matrix_transform_point(mtx,&data[1].point.x,&data[1].point.y);
-                break;
+        case CAIRO_PATH_MOVE_TO:
+            cairo_matrix_transform_point(mtx,&data[1].point.x,&data[1].point.y);
+            break;
 
-            case CAIRO_PATH_LINE_TO:
-                cairo_matrix_transform_point(mtx,&data[1].point.x,&data[1].point.y);
-                break;
+        case CAIRO_PATH_LINE_TO:
+            cairo_matrix_transform_point(mtx,&data[1].point.x,&data[1].point.y);
+            break;
 
-            case CAIRO_PATH_CURVE_TO:
-                cairo_matrix_transform_point(mtx,&data[1].point.x,&data[1].point.y);
-                cairo_matrix_transform_point(mtx,&data[2].point.x,&data[2].point.y);
-                cairo_matrix_transform_point(mtx,&data[3].point.x,&data[3].point.y);
-                break;
+        case CAIRO_PATH_CURVE_TO:
+            cairo_matrix_transform_point(mtx,&data[1].point.x,&data[1].point.y);
+            cairo_matrix_transform_point(mtx,&data[2].point.x,&data[2].point.y);
+            cairo_matrix_transform_point(mtx,&data[3].point.x,&data[3].point.y);
+            break;
 
-            case CAIRO_PATH_CLOSE_PATH:
-                break;
+        case CAIRO_PATH_CLOSE_PATH:
+            break;
         }
 
     }
@@ -269,52 +269,52 @@ static int vector_parse_path_set(vector_parser_info *vpi)
     {
         switch(vpi->vpt)
         {
-            case vector_path_set_line_to:
+        case vector_path_set_line_to:
+        {
+            if(vpi->param>=2)
             {
-                if(vpi->param>=2)
-                {
-                    cairo_line_to(vpi->cr, vpi->params[0], vpi->params[1]);
-                }
-                break;
+                cairo_line_to(vpi->cr, vpi->params[0], vpi->params[1]);
             }
-            case vector_path_set_curve_to:
+            break;
+        }
+        case vector_path_set_curve_to:
+        {
+            if(vpi->param >= 4)
             {
-                if(vpi->param >= 4)
+                if(vpi->param>=6)
                 {
-                    if(vpi->param>=6)
-                    {
-                        cairo_curve_to(vpi->cr, vpi->params[0],vpi->params[1],vpi->params[2],vpi->params[3],vpi->params[4],vpi->params[5]);
-                    }
-                    else
-                    {
-                        cairo_curve_to(vpi->cr, vpi->params[0],vpi->params[1],vpi->params[0],vpi->params[1],vpi->params[4],vpi->params[5]);
-                    }
+                    cairo_curve_to(vpi->cr, vpi->params[0],vpi->params[1],vpi->params[2],vpi->params[3],vpi->params[4],vpi->params[5]);
                 }
-                break;
-            }
-            case vector_path_set_arc_to:
-            {
-                if(vpi->param>=7)
+                else
                 {
-                    double cpx=0.0;
-                    double cpy=0.0;
-                    cairo_get_current_point(vpi->cr,&cpx,&cpy);
+                    cairo_curve_to(vpi->cr, vpi->params[0],vpi->params[1],vpi->params[0],vpi->params[1],vpi->params[4],vpi->params[5]);
+                }
+            }
+            break;
+        }
+        case vector_path_set_arc_to:
+        {
+            if(vpi->param>=7)
+            {
+                double cpx=0.0;
+                double cpy=0.0;
+                cairo_get_current_point(vpi->cr,&cpx,&cpy);
 
-                    vector_arc_path(vpi->cr,
-                                    cpx,
-                                    cpy,
-                                    vpi->params[0],
-                                    vpi->params[1],
-                                    vpi->params[2],
-                                    vpi->params[3]==0.0,
-                                    vpi->params[4]!=0.0,
-                                    vpi->params[5],
-                                    vpi->params[6]);
-                }
-                break;
+                vector_arc_path(vpi->cr,
+                                cpx,
+                                cpy,
+                                vpi->params[0],
+                                vpi->params[1],
+                                vpi->params[2],
+                                vpi->params[3]==0.0,
+                                vpi->params[4]!=0.0,
+                                vpi->params[5],
+                                vpi->params[6]);
             }
-            default:
-                break;
+            break;
+        }
+        default:
+            break;
         }
     }
     return(0);
@@ -492,127 +492,127 @@ static int vector_parse_paths(vector_parser_info *vpi)
     {
         switch(vpi->vpt)
         {
-            case vector_path_line:
+        case vector_path_line:
+        {
+            if(vpi->param>=4)
             {
-                if(vpi->param>=4)
-                {
-                    vpc=zmalloc(sizeof(vector_path_common));
-                    cairo_move_to(vpi->cr,vpi->params[0],vpi->params[1]);
-                    cairo_line_to(vpi->cr,vpi->params[2],vpi->params[3]);
-                    vpc->cr_path=cairo_copy_path_flat(vpi->cr);
-                }
-                break;
+                vpc=zmalloc(sizeof(vector_path_common));
+                cairo_move_to(vpi->cr,vpi->params[0],vpi->params[1]);
+                cairo_line_to(vpi->cr,vpi->params[2],vpi->params[3]);
+                vpc->cr_path=cairo_copy_path_flat(vpi->cr);
             }
-            case vector_path_curve:
+            break;
+        }
+        case vector_path_curve:
+        {
+            if(vpi->param>=6)
             {
-                if(vpi->param>=6)
+                vpc=zmalloc(sizeof(vector_path_common));
+                cairo_move_to(vpi->cr,vpi->params[0],vpi->params[1]);
+
+                if(vpi->param>=8)
                 {
-                    vpc=zmalloc(sizeof(vector_path_common));
-                    cairo_move_to(vpi->cr,vpi->params[0],vpi->params[1]);
-
-                    if(vpi->param>=8)
-                    {
-                        cairo_curve_to(vpi->cr, vpi->params[2], vpi->params[3], vpi->params[4], vpi->params[5], vpi->params[6], vpi->params[7]);
-                    }
-                    else
-                    {
-                        cairo_curve_to(vpi->cr, vpi->params[2], vpi->params[3], vpi->params[2], vpi->params[3], vpi->params[4], vpi->params[5]);
-                    }
-
-                    if((vpi->params[6]>0.0))
-                    {
-                        cairo_close_path(vpi->cr);
-                    }
-                    vpc->cr_path=cairo_copy_path_flat(vpi->cr);
+                    cairo_curve_to(vpi->cr, vpi->params[2], vpi->params[3], vpi->params[4], vpi->params[5], vpi->params[6], vpi->params[7]);
                 }
-                break;
-            }
-            case vector_path_arc:
-            {
-                if(vpi->param>=4)
+                else
                 {
-                    vpc=zmalloc(sizeof(vector_path_common));
-                    cairo_move_to(vpi->cr,vpi->params[0],vpi->params[1]);
-                    vector_arc_path(vpi->cr,
-                                    vpi->params[0],
-                                    vpi->params[1],
-                                    vpi->params[2],vpi->params[3],
-                                    vpi->params[4],
-                                    vpi->params[5]==0.0,
-                                    vpi->params[6]!=0.0,
-                                    vpi->params[7],
-                                    vpi->params[8]);
-
-                    (vpi->params[9]>0.0)?cairo_close_path(vpi->cr):0;
-                    vpc->cr_path=cairo_copy_path_flat(vpi->cr);
+                    cairo_curve_to(vpi->cr, vpi->params[2], vpi->params[3], vpi->params[2], vpi->params[3], vpi->params[4], vpi->params[5]);
                 }
-                break;
-            }
-            case vector_path_rectangle:
-            {
-                if(vpi->param>=4)
+
+                if((vpi->params[6]>0.0))
                 {
-                    vpc=zmalloc(sizeof(vector_path_common));
-
-                    if(vpi->param==4)
-                    {
-                        cairo_rectangle(vpi->cr,vpi->params[0],vpi->params[1],vpi->params[2],vpi->params[3]);
-                    }
-                    /*See implementation notes at
-                     * https://www.w3.org/TR/SVG/shapes.html#RectElement
-                     * */
-                    double x=vpi->params[0];
-                    double y=vpi->params[1];
-                    double width=vpi->params[2];
-                    double height=vpi->params[3];
-                    double rx=vpi->params[4];
-                    double ry=vpi->param>=6?vpi->params[5]:rx;
-
-                    cairo_move_to(vpi->cr, x + rx, y);
-                    cairo_line_to(vpi->cr, x + width - rx, y);
-                    vector_arc_path(vpi->cr,x + width - rx, y, rx, ry, 0, 1, 0, x + width, y + ry);
-
-                    cairo_line_to(vpi->cr,x+width,y+height-ry);
-                    vector_arc_path(vpi->cr,x+width,y+height-ry,rx,ry,0,1,0,x+width-rx,y+height);
-
-                    cairo_line_to(vpi->cr,x+rx,y+height);
-                    vector_arc_path(vpi->cr,x+rx,y+height,rx,ry,0,1,0,x,y+height-ry);
-
-                    cairo_line_to(vpi->cr,x,y+ry);
-                    vector_arc_path(vpi->cr,x,y+ry,rx,ry,0,1,0,x+rx,y);
-
-                    vpc->cr_path=cairo_copy_path_flat(vpi->cr);
-                }
-                break;
-            }
-            case vector_path_ellipse:
-            {
-                if(vpi->param>=3)
-                {
-                    vpc=zmalloc(sizeof(vector_path_common));
-
-                    double alpha = 0;
-                    double alpha_step = 0.01;
-
-                    double px1 = vpi->params[0] + vpi->params[2] * cos (alpha);
-                    double py1 = vpi->params[1] +  vpi->params[vpi->param>=4?3:2] * sin (alpha);
-                    cairo_move_to (vpi->cr,px1, py1); // cr is the cairo context
-
-                    for (double alpha = 0; alpha <= 2 * M_PI; alpha+=alpha_step)
-                    {
-                        double px = vpi->params[0] + vpi->params[2] * cos (alpha);
-                        double py = vpi->params[1] + vpi->params[vpi->param>=4?3:2] * sin (alpha);
-                        cairo_line_to (vpi->cr,px, py); // cr is the cairo context
-                    }
-
                     cairo_close_path(vpi->cr);
-                    vpc->cr_path=cairo_copy_path_flat(vpi->cr);
                 }
-                break;
+                vpc->cr_path=cairo_copy_path_flat(vpi->cr);
             }
+            break;
+        }
+        case vector_path_arc:
+        {
+            if(vpi->param>=4)
+            {
+                vpc=zmalloc(sizeof(vector_path_common));
+                cairo_move_to(vpi->cr,vpi->params[0],vpi->params[1]);
+                vector_arc_path(vpi->cr,
+                                vpi->params[0],
+                                vpi->params[1],
+                                vpi->params[2],vpi->params[3],
+                                vpi->params[4],
+                                vpi->params[5]==0.0,
+                                vpi->params[6]!=0.0,
+                                vpi->params[7],
+                                vpi->params[8]);
 
-            default:
-                break;
+                (vpi->params[9]>0.0)?cairo_close_path(vpi->cr):0;
+                vpc->cr_path=cairo_copy_path_flat(vpi->cr);
+            }
+            break;
+        }
+        case vector_path_rectangle:
+        {
+            if(vpi->param>=4)
+            {
+                vpc=zmalloc(sizeof(vector_path_common));
+
+                if(vpi->param==4)
+                {
+                    cairo_rectangle(vpi->cr,vpi->params[0],vpi->params[1],vpi->params[2],vpi->params[3]);
+                }
+                /*See implementation notes at
+                 * https://www.w3.org/TR/SVG/shapes.html#RectElement
+                 * */
+                double x=vpi->params[0];
+                double y=vpi->params[1];
+                double width=vpi->params[2];
+                double height=vpi->params[3];
+                double rx=vpi->params[4];
+                double ry=vpi->param>=6?vpi->params[5]:rx;
+
+                cairo_move_to(vpi->cr, x + rx, y);
+                cairo_line_to(vpi->cr, x + width - rx, y);
+                vector_arc_path(vpi->cr,x + width - rx, y, rx, ry, 0, 1, 0, x + width, y + ry);
+
+                cairo_line_to(vpi->cr,x+width,y+height-ry);
+                vector_arc_path(vpi->cr,x+width,y+height-ry,rx,ry,0,1,0,x+width-rx,y+height);
+
+                cairo_line_to(vpi->cr,x+rx,y+height);
+                vector_arc_path(vpi->cr,x+rx,y+height,rx,ry,0,1,0,x,y+height-ry);
+
+                cairo_line_to(vpi->cr,x,y+ry);
+                vector_arc_path(vpi->cr,x,y+ry,rx,ry,0,1,0,x+rx,y);
+
+                vpc->cr_path=cairo_copy_path_flat(vpi->cr);
+            }
+            break;
+        }
+        case vector_path_ellipse:
+        {
+            if(vpi->param>=3)
+            {
+                vpc=zmalloc(sizeof(vector_path_common));
+
+                double alpha = 0;
+                double alpha_step = 0.01;
+
+                double px1 = vpi->params[0] + vpi->params[2] * cos (alpha);
+                double py1 = vpi->params[1] +  vpi->params[vpi->param>=4?3:2] * sin (alpha);
+                cairo_move_to (vpi->cr,px1, py1); // cr is the cairo context
+
+                for (double alpha = 0; alpha <= 2 * M_PI; alpha+=alpha_step)
+                {
+                    double px = vpi->params[0] + vpi->params[2] * cos (alpha);
+                    double py = vpi->params[1] + vpi->params[vpi->param>=4?3:2] * sin (alpha);
+                    cairo_line_to (vpi->cr,px, py); // cr is the cairo context
+                }
+
+                cairo_close_path(vpi->cr);
+                vpc->cr_path=cairo_copy_path_flat(vpi->cr);
+            }
+            break;
+        }
+
+        default:
+            break;
         }
     }
 
@@ -814,149 +814,149 @@ static int vector_parse_attributes(vector_parser_info *vpi)
     {
         switch(vpi->vpmt)
         {
-            case vector_param_rotate:
-            {
-                if(vpi->param>=1)
-                {
-                    cairo_matrix_t mtx= {0};
-
-                    if(vpi->param>=3)
-                    {
-                        cairo_matrix_init_translate(&mtx,vpi->params[0]+vpc->ext.x,vpi->params[1]+vpc->ext.y);
-                        cairo_matrix_rotate(&mtx,DEG2RAD(fmod(vpi->params[2],360.0)));
-                        cairo_matrix_translate(&mtx,-(vpi->params[0]+vpc->ext.x),-(vpi->params[1]+vpc->ext.y));
-                    }
-                    else
-                    {
-                        cairo_matrix_init_translate(&mtx,(vpc->ext.width+vpc->ext.x)/2.0,(vpc->ext.height+vpc->ext.y)/2.0);
-                        cairo_matrix_rotate(&mtx,DEG2RAD(fmod(vpi->params[0],360.0)));
-                        cairo_matrix_translate(&mtx,-(vpc->ext.width+vpc->ext.x)/2.0,-(vpc->ext.height+vpc->ext.y)/2.0);
-                    }
-
-                    vector_parser_apply_matrix(vpi,vpc,&mtx);
-                }
-                break;
-            }
-            case vector_param_scale:
-            {
-                if(vpi->param>=2)
-                {
-                    cairo_matrix_t mtx= {0};
-
-                    if(vpi->param>=4)
-                    {
-                        cairo_matrix_init_translate(&mtx,vpi->params[0]+vpc->ext.x,vpi->params[1]+vpc->ext.y);
-                        cairo_matrix_scale(&mtx,vpi->params[2],vpi->params[3]);
-                        cairo_matrix_translate(&mtx,-(vpi->params[0]+vpc->ext.x),-(vpi->params[1]+vpc->ext.y));
-                    }
-                    else
-                    {
-                        cairo_matrix_init_translate(&mtx,(vpc->ext.width+vpc->ext.x)/2.0,(vpc->ext.height+vpc->ext.y)/2.0);
-                        cairo_matrix_scale(&mtx,vpi->params[0],vpi->params[1]);
-                        cairo_matrix_translate(&mtx,-(vpc->ext.width+vpc->ext.x)/2.0,-(vpc->ext.height+vpc->ext.y)/2.0);
-                    }
-
-                    vector_parser_apply_matrix(vpi,vpc,&mtx);
-                }
-                break;
-            }
-            case vector_param_offset:
+        case vector_param_rotate:
+        {
+            if(vpi->param>=1)
             {
                 cairo_matrix_t mtx= {0};
 
-                if(vpi->param>=2)
+                if(vpi->param>=3)
                 {
-                    cairo_matrix_init_translate(&mtx,vpi->params[0],vpi->params[1]);
-                    vector_parser_apply_matrix(vpi,vpc,&mtx);
+                    cairo_matrix_init_translate(&mtx,vpi->params[0]+vpc->ext.x,vpi->params[1]+vpc->ext.y);
+                    cairo_matrix_rotate(&mtx,DEG2RAD(fmod(vpi->params[2],360.0)));
+                    cairo_matrix_translate(&mtx,-(vpi->params[0]+vpc->ext.x),-(vpi->params[1]+vpc->ext.y));
                 }
-                break;
-            }
-            case vector_param_skew:
-            {
-                if(vpi->param>=2)
+                else
                 {
-                    cairo_matrix_t mtx= {0};
                     cairo_matrix_init_translate(&mtx,(vpc->ext.width+vpc->ext.x)/2.0,(vpc->ext.height+vpc->ext.y)/2.0);
-                    mtx.xy=tan(DEG2RAD(vpi->params[0]));
-                    mtx.yx=tan(DEG2RAD(vpi->params[1]));
+                    cairo_matrix_rotate(&mtx,DEG2RAD(fmod(vpi->params[0],360.0)));
                     cairo_matrix_translate(&mtx,-(vpc->ext.width+vpc->ext.x)/2.0,-(vpc->ext.height+vpc->ext.y)/2.0);
-                    vector_parser_apply_matrix(vpi,vpc,&mtx);
                 }
-                break;
+
+                vector_parser_apply_matrix(vpi,vpc,&mtx);
             }
-            case vector_param_fill:
-            case vector_param_stroke:
+            break;
+        }
+        case vector_param_scale:
+        {
+            if(vpi->param>=2)
             {
-                cairo_pattern_t *srcp=vpi->vpmt==vector_param_fill?vpc->fill_gradient:vpc->stroke_gradient;
-                cairo_pattern_t *destp=NULL;
+                cairo_matrix_t mtx= {0};
 
-                if(srcp)
+                if(vpi->param>=4)
                 {
-
-                    if(vpi->params[PARAMS_LENGTH-1]==82071082.0)
-                    {
-                        double coffx=0.0;
-                        double coffy=0.0;
-                        double r=max((vpc->ext.width-vpc->ext.x)/2.0,(vpc->ext.height-vpc->ext.y)/2.0);
-
-                        if(vpi->param-3>=2)
-                        {
-                            coffx=vpi->params[0];
-                            coffy=vpi->params[1];
-                        }
-
-                        if(vpi->param-3>=3)
-                        {
-                            if(vpi->params[2]>0.0)
-                                r=vpi->params[2];
-                        }
-
-                        double cx=(vpc->ext.x+vpc->ext.width)/2.0+coffx;
-                        double cy=(vpc->ext.y+vpc->ext.height)/2.0+coffy;
-                        double cx1=cx;
-                        double cy1=cy;
-
-                        if(vpi->param-3>=4)
-                        {
-                            cx1+=vpi->params[3];
-                            cy1+=vpi->params[4];
-                        }
-
-                        double r1=0.0;
-
-                        destp=cairo_pattern_create_radial(cx,cy,r,cx1,cy1,r1);
-                    }
-
-                    if(vpi->params[PARAMS_LENGTH-1]==76071082.0)
-                    {
-                        if(vpi->param-2>=4)
-                            destp=cairo_pattern_create_linear(vpc->ext.x+vpi->params[0],vpc->ext.y+vpi->params[1],vpc->ext.x+vpi->params[2],vpc->ext.y+vpi->params[3]);
-
-                        else if(vpi->param-2>=2)
-                            destp=cairo_pattern_create_linear(vpc->ext.x+vpi->params[0],vpc->ext.y+vpi->params[1],vpc->ext.width,vpc->ext.y);
-
-                        else
-                            destp=cairo_pattern_create_linear(vpc->ext.x,vpc->ext.y,vpc->ext.width,vpc->ext.y);
-                    }
-
-                    vector_parse_clone_gradient(srcp,destp);
-
-                    cairo_pattern_destroy(srcp);
-
-                    if(vpi->vpmt==vector_param_fill)
-                    {
-                        vpc->fill_gradient=destp;
-                    }
-                    else
-                    {
-                        vpc->stroke_gradient=destp;
-                    }
+                    cairo_matrix_init_translate(&mtx,vpi->params[0]+vpc->ext.x,vpi->params[1]+vpc->ext.y);
+                    cairo_matrix_scale(&mtx,vpi->params[2],vpi->params[3]);
+                    cairo_matrix_translate(&mtx,-(vpi->params[0]+vpc->ext.x),-(vpi->params[1]+vpc->ext.y));
                 }
-                break;
-            }
+                else
+                {
+                    cairo_matrix_init_translate(&mtx,(vpc->ext.width+vpc->ext.x)/2.0,(vpc->ext.height+vpc->ext.y)/2.0);
+                    cairo_matrix_scale(&mtx,vpi->params[0],vpi->params[1]);
+                    cairo_matrix_translate(&mtx,-(vpc->ext.width+vpc->ext.x)/2.0,-(vpc->ext.height+vpc->ext.y)/2.0);
+                }
 
-            default:
-                break;
+                vector_parser_apply_matrix(vpi,vpc,&mtx);
+            }
+            break;
+        }
+        case vector_param_offset:
+        {
+            cairo_matrix_t mtx= {0};
+
+            if(vpi->param>=2)
+            {
+                cairo_matrix_init_translate(&mtx,vpi->params[0],vpi->params[1]);
+                vector_parser_apply_matrix(vpi,vpc,&mtx);
+            }
+            break;
+        }
+        case vector_param_skew:
+        {
+            if(vpi->param>=2)
+            {
+                cairo_matrix_t mtx= {0};
+                cairo_matrix_init_translate(&mtx,(vpc->ext.width+vpc->ext.x)/2.0,(vpc->ext.height+vpc->ext.y)/2.0);
+                mtx.xy=tan(DEG2RAD(vpi->params[0]));
+                mtx.yx=tan(DEG2RAD(vpi->params[1]));
+                cairo_matrix_translate(&mtx,-(vpc->ext.width+vpc->ext.x)/2.0,-(vpc->ext.height+vpc->ext.y)/2.0);
+                vector_parser_apply_matrix(vpi,vpc,&mtx);
+            }
+            break;
+        }
+        case vector_param_fill:
+        case vector_param_stroke:
+        {
+            cairo_pattern_t *srcp=vpi->vpmt==vector_param_fill?vpc->fill_gradient:vpc->stroke_gradient;
+            cairo_pattern_t *destp=NULL;
+
+            if(srcp)
+            {
+
+                if(vpi->params[PARAMS_LENGTH-1]==82071082.0)
+                {
+                    double coffx=0.0;
+                    double coffy=0.0;
+                    double r=max((vpc->ext.width-vpc->ext.x)/2.0,(vpc->ext.height-vpc->ext.y)/2.0);
+
+                    if(vpi->param-3>=2)
+                    {
+                        coffx=vpi->params[0];
+                        coffy=vpi->params[1];
+                    }
+
+                    if(vpi->param-3>=3)
+                    {
+                        if(vpi->params[2]>0.0)
+                            r=vpi->params[2];
+                    }
+
+                    double cx=(vpc->ext.x+vpc->ext.width)/2.0+coffx;
+                    double cy=(vpc->ext.y+vpc->ext.height)/2.0+coffy;
+                    double cx1=cx;
+                    double cy1=cy;
+
+                    if(vpi->param-3>=4)
+                    {
+                        cx1+=vpi->params[3];
+                        cy1+=vpi->params[4];
+                    }
+
+                    double r1=0.0;
+
+                    destp=cairo_pattern_create_radial(cx,cy,r,cx1,cy1,r1);
+                }
+
+                if(vpi->params[PARAMS_LENGTH-1]==76071082.0)
+                {
+                    if(vpi->param-2>=4)
+                        destp=cairo_pattern_create_linear(vpc->ext.x+vpi->params[0],vpc->ext.y+vpi->params[1],vpc->ext.x+vpi->params[2],vpc->ext.y+vpi->params[3]);
+
+                    else if(vpi->param-2>=2)
+                        destp=cairo_pattern_create_linear(vpc->ext.x+vpi->params[0],vpc->ext.y+vpi->params[1],vpc->ext.width,vpc->ext.y);
+
+                    else
+                        destp=cairo_pattern_create_linear(vpc->ext.x,vpc->ext.y,vpc->ext.width,vpc->ext.y);
+                }
+
+                vector_parse_clone_gradient(srcp,destp);
+
+                cairo_pattern_destroy(srcp);
+
+                if(vpi->vpmt==vector_param_fill)
+                {
+                    vpc->fill_gradient=destp;
+                }
+                else
+                {
+                    vpc->stroke_gradient=destp;
+                }
+            }
+            break;
+        }
+
+        default:
+            break;
         }
     }
     return(0);
@@ -1116,6 +1116,7 @@ int vector_parser_init(object *o)
         VPI_COLOR_ATTR
     };
 
+    /*Generate simple paths*/
     do
     {
         vector_parser_info vpi= {0};
@@ -1123,7 +1124,7 @@ int vector_parser_init(object *o)
         if(eval==NULL)
             break;
 
-        if(strncasecmp("Path",eval,4))
+        if(strncasecmp("Path",eval,4)||!strncasecmp("PathSet",eval,7))
             continue;
 
         unsigned char *val=parameter_string(o,eval,NULL,XPANDER_OBJECT);
@@ -1145,6 +1146,7 @@ int vector_parser_init(object *o)
             if(vpi.pv==NULL)
                 break;
         }
+        /*Add the path to list*/
         if(vpi.pv)
         {
             vector *v=o->pv;
@@ -1160,6 +1162,7 @@ int vector_parser_init(object *o)
     enumerator_finish(&es);
     merge_sort(&v->paths,vector_parser_sort,NULL);
 
+    /*We do have paths that must be joined*/
     if(v->check_join)
     {
 
@@ -1168,6 +1171,7 @@ int vector_parser_init(object *o)
         size_t join_count=0;
         list_enum_part_safe(vpc,tvpc,&v->paths,current)
         {
+            /*We found a path that has to be joined*/
             if(vpc->must_join)
             {
                 join_count++;
@@ -1180,10 +1184,11 @@ int vector_parser_init(object *o)
                     diag_error("%s %d Cannot join paths as the root path is missing\n",__FUNCTION__,__LINE__);
                     continue;
                 }
-
+                /*We have a subject to clip*/
                 vector_join_path *vjp=NULL;
                 vector_join_path *tvjp=NULL;
                 cairo_new_path(cr);
+                /*initialize the clipper library*/
                 void *clipper=vector_init_clipper();
                 void *paths=vector_init_paths();
 
@@ -1192,7 +1197,7 @@ int vector_parser_init(object *o)
                 cairo_close_path(cr);
                 vector_cairo_to_clip(cr,paths);
 
-
+                /*Look for paths to clip the subject*/
                 list_enum_part_safe(vjp,tvjp,&vjl->join,current)
                 {
                     cairo_new_path(cr);
@@ -1239,8 +1244,6 @@ int vector_parser_init(object *o)
                 vector_path_common *new_vpc=zmalloc(sizeof(vector_path_common));
                 memcpy(new_vpc,vpc,sizeof(vector_path_common));                                                //copy attributes
 
-
-
                 memcpy(new_vpc,vpc_root,offsetof(vector_path_common,reserved));         //copy inherited attributes (Step 1)
                 cairo_path_extents(cr,&new_vpc->ext.x,&new_vpc->ext.y,&new_vpc->ext.width,&new_vpc->ext.height);        //get the initial extents
 
@@ -1250,11 +1253,7 @@ int vector_parser_init(object *o)
                 list_entry_init(&new_vpc->current);
                 linked_list_replace(&vpc->current,&new_vpc->current);               //replace with the cleaner vector_path_common
                 vector_parser_destroy_join_list((vector_join_list*)vpc);
-
                 sfree((void**)&vpc);
-
-
-
 
                 /*Step 2 - overwrite attributes*/
                 vector_parser_info vpi= {0};
@@ -1264,6 +1263,7 @@ int vector_parser_init(object *o)
                 vpi.o=o;
                 vpi.pv=new_vpc;
                 vpi.cr=cr;
+
                 if(vpi.pm)
                 {
                     for(unsigned char i=1; i<sizeof(ppf)/sizeof(param_parse_func); i++)

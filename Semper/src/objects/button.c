@@ -22,8 +22,6 @@ int button_mouse(object *o,mouse_status *ms)
     surface_data *sd=o->sd;
     button_object *bto=o->pv;
 
-
-
     if(bto->im_index&&ms->state==mouse_button_state_none)
     {
         return(0);

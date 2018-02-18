@@ -24,7 +24,15 @@ void vector_reset(object *o)
 
 int vector_update(object *o)
 {
-    unused_parameter(o);
+    vector *v=o->pv;
+    vector_path_common *vpc = NULL;
+    o->auto_h=0;
+    o->auto_w=0;
+    list_enum_part(vpc,&v->paths,current)
+    {
+        o->auto_h=max(o->auto_h,vpc->ext.height+vpc->ext.y);
+        o->auto_w=max(o->auto_w,vpc->ext.width+vpc->ext.x);
+    }
     return(0);
 }
 

@@ -184,18 +184,25 @@ void folderview_reset(void *spv,void *ip)
         {
             if(strcasecmp(temp,"Name")==0)
                 fc->type=t_name;
+
             else if(strcasecmp(temp,"Icon")==0)
                 fc->type=t_icon;
+
             else if(strcasecmp(temp,"Size")==0)
                 fc->type=t_size;
+
             else if(strcasecmp(temp,"Extension")==0)
                 fc->type=t_ext;
+
             else if(!strcasecmp(temp,"DateAccessed"))
                 fc->type=t_date_acces;
+
             else if(!strcasecmp(temp,"DateCreated"))
                 fc->type=t_date_creat;
+
             else if(!strcasecmp(temp,"DateModified"))
                 fc->type=t_date_mod;
+
         }
 
         if(fp)
