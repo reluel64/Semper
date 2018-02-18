@@ -137,7 +137,7 @@ static double source_average_update(source *s, double value)
     source_average* sa = s->avg_pv;
     source_average_val* sav = NULL;
     source_average_val* tsav = NULL;
-    if(s->avg_count == 0)
+    if(s->avg_count < 2)
     {
         if(s->avg_pv)
         {
@@ -165,12 +165,12 @@ static double source_average_update(source *s, double value)
         sa->count--;
     }
 
-    sav = zmalloc(sizeof(source_average_val));
-    list_entry_init(&sav->current);
-    sav->value=value;
 
     if(sa->count<s->avg_count)
     {
+        sav = zmalloc(sizeof(source_average_val));
+        list_entry_init(&sav->current);
+        sav->value=value;
         sa->count++;
     }
     else
@@ -178,11 +178,13 @@ static double source_average_update(source *s, double value)
         tsav = element_of(sa->values.prev, source_average_val, current);
         linked_list_remove(&tsav->current);
         sa->total-=tsav->value;
-        sfree((void**)&tsav);
+        list_entry_init(&tsav->current);
+        tsav->value=value;
+        sav=tsav;
+       // sfree((void**)&tsav);
     }
 
     sa->total += sav->value;
-
     linked_list_add(&sav->current, &sa->values);
 
     return (sa->total / (double)sa->count);
@@ -580,7 +582,7 @@ int source_update(source* s)
         /*Calculate the new result*/
         cv = (s->inverted ? s->max_val - cv + s->min_val : cv);
 
-        if(s->avg_pv||s->avg_count>0)
+        if(s->avg_pv||s->avg_count>1)
         {
             cv=source_average_update(s, cv);
         }

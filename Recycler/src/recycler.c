@@ -35,6 +35,7 @@ typedef struct
     pthread_mutex_t mtx;
     recycler_query_t rq;       //query type
     unsigned char kill;        //kill the query
+    unsigned char can_empty;
     unsigned char mon_mode;    //monitoring mode
     unsigned char qa;          //query active
     unsigned char *cq_cmd;     //command when query is completed
@@ -303,6 +304,7 @@ double update(void *spv)
     recycler *r=spv;
     double lret=0.0;
 
+
     if(r->mon_mode==0)
     {
         if(r->mh==NULL||recycler_notifier_check(r))
@@ -338,6 +340,47 @@ double update(void *spv)
     return(lret);
 }
 
+static void *dialog_thread(void *p)
+{
+    SHEmptyRecycleBin(NULL,NULL,0);
+    return(NULL);
+}
+
+void command(void *spv,unsigned char *cmd)
+{
+    recycler *r=spv;
+    if(cmd&&spv)
+    {
+        if(r->can_empty)
+        {
+            if(!strcasecmp("Empty",cmd))
+            {
+                /*Shitty workaround as the SHEmptyRecycleBin() will put the thread
+                 * in a non-alertable state which will cause the event queue to stall while
+                 * the dialog is up
+                 * This issue could be handled in two ways:
+                 * 1) Start a separate thread to handle the dialog - this is actually implemented
+                 * 2) Redesign the event processing mechanism - hell no*/
+                pthread_t dummy;
+                pthread_attr_t th_att= {0};
+                pthread_attr_init(&th_att);
+                pthread_attr_setdetachstate(&th_att,PTHREAD_CREATE_DETACHED);
+                pthread_create(&dummy,&th_att,dialog_thread,spv);
+                pthread_attr_destroy(&th_att);
+            }
+
+            else if(!strcasecmp("EmptySilent",cmd))
+            {
+                SHEmptyRecycleBin(NULL,NULL,SHERB_NOCONFIRMATION|SHERB_NOPROGRESSUI|SHERB_NOSOUND);
+            }
+        }
+        else if(!strcasecmp("Open",cmd))
+        {
+            ShellExecuteW(NULL, L"open", L"explorer.exe", L"/N,::{645FF040-5081-101B-9F08-00AA002F954E}", NULL, SW_SHOW);
+        }
+    }
+}
+
 void destroy(void **spv)
 {
     recycler *r=*spv;
@@ -349,6 +392,7 @@ void destroy(void **spv)
     }
     if(r->qth)
         pthread_join(r->qth,NULL);
+
 
     pthread_mutex_destroy(&r->mtx);
     sfree((void**)&r->cq_cmd);
@@ -666,6 +710,7 @@ static int recycler_query_user(recycler *r)
     sfree((void**)&buf);
 
     pthread_mutex_lock(&r->mtx);
+    r->can_empty=(file_count!=0);
     switch(r->rq)
     {
     case recycler_query_items:

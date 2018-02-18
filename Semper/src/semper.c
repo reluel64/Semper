@@ -638,6 +638,7 @@ static int semper_check_screen(control_data *cd)
 int main(void)
 {
     control_data* cd = zmalloc(sizeof(control_data));
+
     semper_create_paths(cd);
 
     if(semper_single_instance(cd)==0)

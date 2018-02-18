@@ -339,6 +339,7 @@ static int crosswin_mouse_handle(crosswin_window *cw)
                 ms.state=mouse_button_state_2x;
                 cw->mouse_func(cw,&ms);
                 was_double=!!ms.handled;
+
                 if(was_double==0)
                     ms.state=mouse_button_state_pressed;
             }
@@ -346,7 +347,18 @@ static int crosswin_mouse_handle(crosswin_window *cw)
 
         if(was_double==0)
         {
+            if(ms.hover==mouse_unhover)
+            {
+                ms.button=mouse_button_none;
+                ms.state=mouse_button_state_none;
+            }
+            mouse_button_state lmbs=md->state;
+            mouse_button lmb=md->button;
+            md->button=mouse_button_none;
+            md->state=mouse_button_state_none;
             cw->mouse_func(cw,&ms);
+            md->button=lmb;
+            md->state=lmbs;
         }
 
         md->scroll_dir=0;
@@ -367,9 +379,6 @@ static int crosswin_mouse_handle(crosswin_window *cw)
     {
         return(0);
     }
-
-
-
 
     /*left mouse was not handled so if the user will move the pointer while clicking,
      * then we'll move the window. Obvious, isn't it?

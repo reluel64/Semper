@@ -372,6 +372,7 @@ int parameter_color_matrix(void* req, unsigned char* npm, double* cm, unsigned c
 unsigned int parameter_self_scaling(void* req, unsigned char* npm, unsigned int def, unsigned char xpander_flags)
 {
     unsigned int ret = def;
+
     section s = parameter_dispatch_section(req, xpander_flags);
 
     if(!npm || !s)

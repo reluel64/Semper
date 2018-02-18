@@ -240,6 +240,7 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
 {
     object* o = NULL;
     object *lo=NULL;
+
     unsigned char found = 0;
     unsigned char mouse_ret=0;
 
@@ -307,7 +308,7 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
         if(lo!=o)
         {
             mouse_status dms = { 0 }; // dummy mouse status to signal that other objects are not important so they should trigger  MouseLeaveAction
-            dms.state = mouse_button_state_unpressed;
+            dms.state = mouse_button_state_none;
             dms.hover = mouse_unhover;
 
             if(lo->object_type==9) //Button
