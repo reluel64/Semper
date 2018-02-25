@@ -1,1 +1,1 @@
-D:/Semper_Workspace/build/Sample/sample.c.o   
+/media/alex/Data/Semper_Workspace/build/Sample/sample.c.o

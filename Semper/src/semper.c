@@ -376,7 +376,7 @@ static void semper_create_paths(control_data* cd)
 #ifdef WIN32
 
     wchar_t* pth = zmalloc(4096 * 2);
-    unsigned long mod_p_sz = 4096;
+    unsigned long mod_p_sz = 4095;
 
     QueryFullProcessImageNameW(GetCurrentProcess(), 0, pth, &mod_p_sz);
 

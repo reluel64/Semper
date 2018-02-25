@@ -63,6 +63,11 @@ static int object_routines_table(object_routine_entry **ore,unsigned char *on)
         if(!strcasecmp(tbl[i].obj_name,on))
         {
             *ore=tbl+i;
+            if(i==0)
+            {
+                diag_error("%s %d Object Type: %s is not implemented yet",__FUNCTION__,__LINE__,tbl[i].obj_name);
+                return(0);
+            }
             return(i+1);
         }
     }

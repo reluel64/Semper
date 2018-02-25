@@ -55,7 +55,6 @@ typedef struct _object
     unsigned char* team;
     unsigned char* update_act; // update action
     unsigned char update_act_lock:1;
-    unsigned char pos_adj:1;
     object_padding op;
     mouse_actions ma;
     /*****************************/
@@ -73,15 +72,6 @@ typedef struct _object
     void (*object_reset_rtn)(object* o);
 
 } object;
-
-typedef struct
-{
-    long x;
-    long y;
-    long w;
-    long h;
-} object_box;
-
 
 int object_update(object* o);
 object* object_by_name(surface_data* sd, unsigned char* on,size_t len);

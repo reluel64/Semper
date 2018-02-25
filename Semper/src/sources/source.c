@@ -42,7 +42,7 @@ Written by Alexandru-Daniel Mărgărit
 #ifdef WIN32
 #include <windows.h>
 #endif
-
+typedef unsigned char *(*src_str_rtn)(void *ip,unsigned char **pms,size_t pms_len);
 typedef struct
 {
     unsigned char *source_name;
@@ -181,7 +181,7 @@ static double source_average_update(source *s, double value)
         list_entry_init(&tsav->current);
         tsav->value=value;
         sav=tsav;
-       // sfree((void**)&tsav);
+        // sfree((void**)&tsav);
     }
 
     sa->total += sav->value;
@@ -293,6 +293,40 @@ static void source_unload_lib(void* lib)
 #elif __linux__
     dlclose(lib);
 #endif
+}
+
+unsigned char  *source_call_str_rtn(source *s,unsigned char *rtn,unsigned char **pms,size_t pm_len)
+{
+    unsigned char *str=NULL;
+    static char *rsr_rtn[6]=
+    {
+        "init",
+        "update",
+        "command",
+        "destroy",
+        "reset",
+        "string"
+    };
+
+    if(s->library)
+    {
+        char go=1;
+        for(unsigned char i=0; i<sizeof(rsr_rtn)/sizeof(unsigned char*); i++)
+        {
+            if(rtn&&!strcasecmp(rtn,rsr_rtn[i]))
+                go=0;
+        }
+        if(go)
+        {
+            src_str_rtn src_rtn=source_get_proc(s->library,rtn);
+
+            if(src_rtn)
+            {
+                str=src_rtn(s->pv,pms,pm_len);
+            }
+        }
+    }
+    return(str);
 }
 
 static int source_load_extension(source* s)
@@ -446,8 +480,6 @@ void source_destroy(source** s)
     linked_list_remove(&ts->current);
     sfree((void**)s);
 }
-
-
 
 void source_reset(source* s)
 {

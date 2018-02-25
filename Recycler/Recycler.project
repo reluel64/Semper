@@ -30,6 +30,7 @@
         <IncludePath Value="."/>
         <IncludePath Value="$(WorkspacePath)"/>
         <IncludePath Value="include"/>
+        <Preprocessor Value="WINPTHREAD_STATIC"/>
       </Compiler>
       <Linker Options="" Required="yes">
         <LibraryPath Value="$(WorkspacePath)/SDK"/>

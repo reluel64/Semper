@@ -469,7 +469,8 @@ static int recycler_notifier_setup(recycler *r)
         {
             continue;
         }
-        void *tmh=FindFirstChangeNotificationA(buf, 1, 0x1 | 0x2 | 0x4 | 0x8 | 0x10);
+           printf("Notification %s\n",buf);
+        void *tmh=FindFirstChangeNotificationA(buf, 0, 0x1 | 0x2 | 0x4 | 0x8 | 0x10);
         if(tmh!=INVALID_HANDLE_VALUE&&tmh!=NULL)
         {
             void *tmp=realloc(r->mh,sizeof(void*)*(r->mc+1));

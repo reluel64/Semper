@@ -1,1 +1,1 @@
-D:/Semper_Workspace/build/Debug/SpeedFan/src_speedfan.c.o   
+/media/alex/Data/Semper_Workspace/build/Release/SpeedFan/src_speedfan.c.o

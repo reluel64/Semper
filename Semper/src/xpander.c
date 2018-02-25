@@ -14,6 +14,14 @@
 #include <sources/source.h>
 #include <bind.h>
 
+
+#define XPANDER_MODIFIER_SCALE    (1<<0)
+#define XPANDER_MODIFIER_PERCENT  (1<<1)
+#define XPANDER_MODIFIER_DECIMALS (1<<2)
+#define XPANDER_MODIFIER_MAX_MIN  (1<<3)
+#define XPANDER_SOURCE_RTN_PARAMETER_STACK 1024
+
+
 typedef struct
 {
     unsigned char *vn;
@@ -42,6 +50,15 @@ typedef struct
     string_tokenizer_info sti;
 } xpander_data;
 
+
+typedef struct
+{
+    size_t op;
+    size_t quotes;
+    unsigned char quote_type;
+} xpander_source_tokenizer_status;
+
+
 static size_t xpander_convert_long(void *in,unsigned char **out)
 {
     long val=*((long*)in);
@@ -58,7 +75,7 @@ static size_t xpander_convert_long(void *in,unsigned char **out)
 
     return(len);
 }
-
+#if 0
 static size_t xpander_convert_double(void *in,unsigned char **out)
 {
     double val=*((double*)in);
@@ -73,6 +90,166 @@ static size_t xpander_convert_double(void *in,unsigned char **out)
     snprintf(*out,len+1,"%lf",val);
 
     return(len);
+}
+#endif
+
+static int xpander_token_section_variables(string_tokenizer_status *sts,void *pv)
+{
+    if(sts->buf[sts->pos]==',')
+    {
+        return(1);
+    }
+
+    return(0);
+}
+
+/*Adapted from command.c*/
+static int xpander_source_func_filter(string_tokenizer_status *pi, void* pv)
+{
+    xpander_source_tokenizer_status* xsts = pv;
+
+    if(pi->reset)
+    {
+        memset(xsts,0,sizeof(xpander_source_tokenizer_status));
+        return(0);
+    }
+
+    if(xsts->quote_type==0 && (pi->buf[pi->pos]=='"'||pi->buf[pi->pos]=='\''))
+        xsts->quote_type=pi->buf[pi->pos];
+
+    if(pi->buf[pi->pos]==xsts->quote_type)
+        xsts->quotes++;
+
+    if(xsts->quotes%2)
+        return(0);
+    else
+        xsts->quote_type=0;
+
+
+    if(pi->buf[pi->pos] == '(')
+        if(++xsts->op==1)
+            return(1);
+
+    if(xsts->op&&pi->buf[pi->pos] == ')')
+        if(--xsts->op==0)
+            return(0);
+
+    if(pi->buf[pi->pos] == ';')
+        return (xsts->op==0);
+
+    if(xsts->op%2&&pi->buf[pi->pos] == ',')
+        return (1);
+
+    return (0);
+}
+
+
+
+static unsigned char *xpander_call_source_string(source *s, unsigned char *sub)
+{
+    unsigned char push_params=0;
+    unsigned char *ret_str=NULL;
+    unsigned char execute=0;
+    unsigned char stack_pos=0;
+    unsigned char *func_name=NULL;
+    unsigned char **pms=NULL;
+
+
+    xpander_source_tokenizer_status xsts = { 0 };
+    string_tokenizer_info    sti=
+    {
+        .buffer                  = sub, //store the string address here
+        .filter_data             = &xsts,
+        .string_tokenizer_filter = xpander_source_func_filter,
+        .ovecoff                 = NULL,
+        .oveclen                 = 0
+    };
+
+
+    string_tokenizer(&sti);
+
+    for(size_t i=0; i<sti.oveclen/2; i++)
+    {
+        size_t start = sti.ovecoff[2*i];
+        size_t end   = sti.ovecoff[2*i+1];
+
+        if(start==end)
+        {
+            continue;
+        }
+
+        /*Clean spaces*/
+        if(string_strip_space_offsets(sti.buffer,&start,&end)==0)
+        {
+
+            if(sti.buffer[start]=='(')
+            {
+                start++;
+                push_params=1;
+            }
+            else if(sti.buffer[start]==',')
+            {
+                start++;
+            }
+            else if(sti.buffer[start]==';')
+            {
+                push_params=0;
+                execute=0;
+                start++;
+            }
+
+            if(sti.buffer[end-1]==')')
+            {
+                end--;
+                execute=1;
+            }
+        }
+
+        if(string_strip_space_offsets(sti.buffer,&start,&end)==0)
+        {
+            if(sti.buffer[start]=='"'||sti.buffer[start]=='\'')
+                start++;
+
+            if(sti.buffer[end-1]=='"'||sti.buffer[end-1]=='\'')
+                end--;
+        }
+
+        if(push_params&&stack_pos<XPANDER_SOURCE_RTN_PARAMETER_STACK)
+        {
+            if((execute&&end!=start)||execute==0)
+            {
+                unsigned char **tmp=realloc(pms,sizeof(unsigned char*)*(stack_pos+1));
+                if(tmp)
+                {
+                    pms=tmp;
+                    pms[stack_pos]=zmalloc((end-start)+1);
+                    strncpy(pms[stack_pos], sti.buffer+start, end-start);
+                    stack_pos++;
+                }
+            }
+        }
+        else if(func_name==NULL)
+        {
+            func_name = zmalloc((end-start)+1);
+            strncpy(func_name, sti.buffer+start, end-start);
+        }
+
+        if(execute)
+        {
+            ret_str =source_call_str_rtn(s,func_name,pms,stack_pos);
+            break;
+        }
+    }
+
+    for(size_t i=0; i<stack_pos; i++)
+    {
+        sfree((void**)&pms[i]);
+    }
+    sfree((void**)&pms);
+    sfree((void**)&func_name);
+    sfree((void**)&sti.ovecoff);
+
+    return (ret_str);
 }
 
 static int xpander_section_variables(xpander_section_variable_info *xsvi)
@@ -147,15 +324,128 @@ static int xpander_section_variables(xpander_section_variable_info *xsvi)
     }
     else if(s)
     {
-        if(strncasecmp("MaxValue",req_var_start,req_var_len)==0)
+        unsigned char error=0;
+        unsigned char mode=XPANDER_MODIFIER_MAX_MIN  |
+                           XPANDER_MODIFIER_DECIMALS |
+                           XPANDER_MODIFIER_PERCENT  |
+                           XPANDER_MODIFIER_SCALE;
+
+        double value=s->d_info;
+        double scale=1.0;
+        int decimals=0;
+        string_tokenizer_info sti=
         {
-            xsvi->out_len=xpander_convert_double(&s->max_val,&xsvi->out_buf);
-            ret=0;
+            .buffer=req_var_start,
+            .oveclen=0,
+            .ovecoff=NULL,
+            .filter_data=NULL,
+            .string_tokenizer_filter=xpander_token_section_variables
+        };
+
+        string_tokenizer(&sti);
+
+        size_t *ovec=0;
+        size_t ovecl=0;
+        ovec=sti.ovecoff;
+        ovecl=sti.oveclen;
+
+        for(size_t i=0; i<ovecl/2; i++)
+        {
+            size_t start=ovec[2*i];
+            size_t end=ovec[2*i+1];
+            unsigned char *buf=NULL;
+            if(sti.buffer[start]==',')
+            {
+                start++;
+            }
+            if(sti.buffer[end-1]==']')
+            {
+                end--;
+            }
+            if(string_strip_space_offsets(sti.buffer,&start,&end)==0)
+            {
+                if(sti.buffer[start]=='"'||sti.buffer[start]=='\'')
+                    start++;
+
+                if(sti.buffer[end-1]=='"'||sti.buffer[end-1]=='\'')
+                    end--;
+            }
+
+            buf=sti.buffer+start;
+
+            if((mode & XPANDER_MODIFIER_MAX_MIN)&&strncasecmp("MaxValue",buf,8)==0)
+            {
+                mode&=~(XPANDER_MODIFIER_MAX_MIN|XPANDER_MODIFIER_PERCENT);
+                value=s->max_val;
+            }
+
+            else if((mode & XPANDER_MODIFIER_MAX_MIN)&&strncasecmp("MinValue",buf,8)==0)
+            {
+                mode&=~(XPANDER_MODIFIER_MAX_MIN|XPANDER_MODIFIER_PERCENT);
+                value=s->min_val;
+            }
+            else if((mode & XPANDER_MODIFIER_SCALE)&&buf[0]=='/')
+            {
+                mode&=~XPANDER_MODIFIER_SCALE;
+                unsigned char *res=NULL;
+                scale=strtod(buf+1,(char**)&res);
+
+                if(res==buf)
+                    error=1;
+            }
+            else if((mode & XPANDER_MODIFIER_PERCENT)&& buf[0]=='%')
+            {
+                mode&=~(XPANDER_MODIFIER_MAX_MIN|XPANDER_MODIFIER_PERCENT);
+                value=bind_percentual_value(s->d_info,s->min_val,s->max_val);
+            }
+            else if((mode & XPANDER_MODIFIER_DECIMALS))
+            {
+                unsigned char *res=NULL;
+                decimals=(int)strtod(buf,(char**)&res);
+
+                if(res==buf)
+                    error=1;
+                else
+                    mode&=~XPANDER_MODIFIER_DECIMALS;
+            }
+            else
+                error=1;
         }
-        else if(strncasecmp("MinValue",req_var_start,req_var_len)==0)
+
+        if(!error)
         {
-            xsvi->out_len=xpander_convert_double(&s->min_val,&xsvi->out_buf);
-            ret=0;
+            int len=0;
+            char fmt[33]= {0};
+            value=value/(scale==0.0?1.0:scale);
+            snprintf(fmt, 33, "%%.%ulf", decimals);
+            xsvi->out_buf=zmalloc(33);
+            if((len=snprintf(xsvi->out_buf,33,fmt,value))<0)
+            {
+                sfree((void**)&xsvi->out_buf);
+                xsvi->out_len=0;
+            }
+            else
+            {
+                xsvi->out_len=len;
+                ret=0;
+            }
+        }
+        else /*let's do a expensive call*/
+        {
+            unsigned char *tmp=zmalloc(req_var_len+1);
+            if(tmp)
+            {
+                strncpy(tmp,req_var_start,req_var_len);
+                unsigned char *var = xpander_call_source_string(s,tmp);
+                sfree((void**)&tmp);
+
+                if(var)
+                {
+                    xsvi->out_buf=clone_string(var);
+                    xsvi->out_len=string_length(var);
+                    ret=0;
+                }
+            }
         }
     }
 
@@ -172,6 +462,7 @@ static int xpander_var_token_filter(string_tokenizer_status *sts,void *pv)
 
     return(0);
 }
+
 
 static int xpander_src_token_filter(string_tokenizer_status *sts,void *pv)
 {
@@ -218,26 +509,26 @@ int xpander(xpander_request *xr)
 
     switch(xr->req_type & 0x1C)
     {
-        case XPANDER_REQUESTOR_OBJECT:
-        {
-            sd=((object*)xr->requestor)->sd;
-            sect=((object*)xr->requestor)->os;
-            break;
-        }
+    case XPANDER_REQUESTOR_OBJECT:
+    {
+        sd=((object*)xr->requestor)->sd;
+        sect=((object*)xr->requestor)->os;
+        break;
+    }
 
-        case XPANDER_REQUESTOR_SOURCE:
-        {
-            sd = ((source*)xr->requestor)->sd;
-            sect=((source*)xr->requestor)->cs;
-            break;
-        }
+    case XPANDER_REQUESTOR_SOURCE:
+    {
+        sd = ((source*)xr->requestor)->sd;
+        sect=((source*)xr->requestor)->cs;
+        break;
+    }
 
-        case XPANDER_REQUESTOR_SURFACE:
-        {
-            sd=xr->requestor;
-            sect=sd->spm;
-            break;
-        }
+    case XPANDER_REQUESTOR_SURFACE:
+    {
+        sd=xr->requestor;
+        sect=sd->spm;
+        break;
+    }
     }
 
     cd=sd->cd;
@@ -348,7 +639,7 @@ int xpander(xpander_request *xr)
                                 buf_start=tbl[ti].vv;
                                 end=string_length(tbl[ti].vv);
                             }
-                             break;
+                            break;
                         }
                     }
 
