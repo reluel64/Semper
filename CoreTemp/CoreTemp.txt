@@ -1,1 +1,1 @@
-/media/alex/Data/Semper_Workspace/build/Release/CoreTemp/src_coretemp.c.o
+D:/Semper_Workspace/build/Debug/CoreTemp/src_coretemp.c.o   

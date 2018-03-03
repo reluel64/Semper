@@ -1,1 +1,1 @@
-/media/alex/Data/Semper_Workspace/build/Release/MSIAfterburner/src_MSIAfterburner.c.o
+D:/Semper_Workspace/build/Debug/MSIAfterburner/src_MSIAfterburner.c.o   

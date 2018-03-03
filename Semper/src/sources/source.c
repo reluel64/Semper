@@ -152,7 +152,7 @@ static double source_average_update(source *s, double value)
         list_entry_init(&sa->values);
     }
 
-    /*Resize the list if needed*/
+    /*Shrink the list if needed*/
     list_enum_part_backward_safe(sav, tsav, &sa->values, current)
     {
         if((s->avg_count >= sa->count) || sa->count == 0)
@@ -181,7 +181,6 @@ static double source_average_update(source *s, double value)
         list_entry_init(&tsav->current);
         tsav->value=value;
         sav=tsav;
-        // sfree((void**)&tsav);
     }
 
     sa->total += sav->value;

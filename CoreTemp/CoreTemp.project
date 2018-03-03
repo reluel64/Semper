@@ -10,7 +10,6 @@
   <VirtualDirectory Name="src">
     <File Name="src/coretemp.c"/>
   </VirtualDirectory>
-  <Dependencies Name="Debug"/>
   <Dependencies Name="Release">
     <Project Name="Semper"/>
   </Dependencies>
@@ -111,4 +110,7 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug">
+    <Project Name="Semper"/>
+  </Dependencies>
 </CodeLite_Project>

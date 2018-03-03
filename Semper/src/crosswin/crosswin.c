@@ -347,13 +347,15 @@ static int crosswin_mouse_handle(crosswin_window *cw)
 
         if(was_double==0)
         {
+            mouse_button_state lmbs=md->state;
+            mouse_button lmb=md->button;
+
             if(ms.hover==mouse_unhover)
             {
                 ms.button=mouse_button_none;
                 ms.state=mouse_button_state_none;
             }
-            mouse_button_state lmbs=md->state;
-            mouse_button lmb=md->button;
+
             md->button=mouse_button_none;
             md->state=mouse_button_state_none;
             cw->mouse_func(cw,&ms);
@@ -394,6 +396,8 @@ static int crosswin_mouse_handle(crosswin_window *cw)
         if(cw->x != x || cw->y != y)
         {
             md->drag = 1;
+
+
             crosswin_set_position(cw,x,y);
         }
     }

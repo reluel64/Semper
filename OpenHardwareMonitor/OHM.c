@@ -19,7 +19,6 @@ typedef struct
 } open_hardware_monitor;
 
 static void * ohm_query(void *pv);
-
 static unsigned char *ucs_to_utf8(wchar_t *s_in, size_t *bn, unsigned char be);
 
 void init(void **spv,void *ip)

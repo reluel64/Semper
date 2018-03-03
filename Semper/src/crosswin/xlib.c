@@ -150,7 +150,6 @@ static void xlib_render(crosswin_window *w)
 
 void xlib_set_mask(crosswin_window *w)
 {
-    return;
     cairo_surface_t *xs=cairo_xlib_surface_create_for_bitmap (w->c->display,w->pixmap,DefaultScreenOfDisplay(w->c->display),w->w,w->h);
     cairo_t *cr=cairo_create(xs);
 
@@ -191,11 +190,13 @@ void xlib_draw(crosswin_window* w)
 {
     xlib_render(w);
     xlib_set_mask(w);
-    XSync(w->c->display,0);
+    XSync(w->c->display,1);
 }
 
 int xlib_message_dispatch(crosswin *c)
 {
+
+  
     do
     {
 
@@ -252,8 +253,10 @@ int xlib_message_dispatch(crosswin *c)
 
         case MotionNotify:
         {
-            w->md.x=ev.xbutton.x;
-            w->md.y=ev.xbutton.y;
+            
+            
+            w->md.x=ev.xmotion.x;
+            w->md.y=ev.xmotion.y;
             w->md.root_x=ev.xmotion.x_root;
             w->md.root_y=ev.xmotion.y_root;
             w->md.hover=mouse_hover;
@@ -289,6 +292,7 @@ int xlib_message_dispatch(crosswin *c)
             w->c->handle_mouse(w);
             break;
         case ButtonPress:
+      
             XSetInputFocus(w->c->display,w->window,RevertToParent,0);
             w->md.x=ev.xbutton.x;
             w->md.y=ev.xbutton.y;
@@ -296,6 +300,7 @@ int xlib_message_dispatch(crosswin *c)
             switch(ev.xbutton.button)
             {
             case Button1:
+           
                 w->md.button=mouse_button_left;
                 break;
             case Button2:
@@ -320,7 +325,9 @@ int xlib_message_dispatch(crosswin *c)
             break;
         }
 
+
         }
+        
     }
     while(XPending(c->display));
 
@@ -329,14 +336,56 @@ int xlib_message_dispatch(crosswin *c)
 
 int xlib_set_opacity(crosswin_window *w)
 {
-
     xlib_draw(w);
     return(0);
 }
 
 void  xlib_set_position(crosswin_window *w)
 {
-    XMoveWindow(w->c->display,w->window,w->x,w->y);
+   
+    int found=0;
+    size_t evt_count=0;
+    XEvent *evts=NULL;
+   XMoveWindow(w->c->display,w->window,w->x,w->y); /*Move the window*/
+    while(XPending(w->c->display))
+    {
+        
+        XEvent *tmp=realloc(evts,sizeof(XEvent)*(evt_count+1));
+        
+        if(tmp)
+            evts=tmp;
+        else
+            break;
+        
+        
+        XNextEvent(w->c->display,evts+evt_count);
+evt_count++; 
+     }
+    
+  
+     //XSync(w->c->display,1);
+    
+    
+  for(size_t i=0;i<evt_count;i++)
+  {
+    XSendEvent(w->c->display,w->window,1,KeyPressMask 		    |
+                    KeymapStateMask         |
+                    StructureNotifyMask     |
+                    SubstructureNotifyMask  |
+                    SubstructureRedirectMask|
+                    ButtonReleaseMask 	    |
+                    KeyReleaseMask 		    |
+                    EnterWindowMask 	    |
+                    LeaveWindowMask 	    |
+                    PointerMotionMask 	    |
+                    ButtonMotionMask 	    |
+                    VisibilityChangeMask    |
+                    ExposureMask            |
+                    ButtonPressMask,evts+i);
+    
+  }
+  
+  sfree((void**)&evts);
 }
 
 void xlib_destroy_window(crosswin_window **w)

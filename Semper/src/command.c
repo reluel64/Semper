@@ -1189,7 +1189,7 @@ int command(surface_data* sd, unsigned char **pa)
 
     sfree((void**)&sti.ovecoff);
 
-    /*If the string has been set during command processing then *pa will not be NULL and we could free the stored action.
+    /*If the string has been set during command processing then *pa will not be NULL and we could free the stored command.
      * Otherwise we just  restore the value
      * In this way we do not have to allocate additional memory to store a copy of the string*/
 

@@ -50,11 +50,11 @@ typedef struct
 
 static int recycler_notifier_check(recycler *r);
 static void *recycler_query_thread(void *p);
-static int recycler_query_user(recycler *r);
+static int recycler_query_user(recycler *r, double *val);
 static unsigned char *recycler_query_user_sid(size_t *len);
 static void recycler_notifier_destroy(recycler *r);
 static int recycler_notifier_setup(recycler *r);
-
+static size_t recycler_get_time(void);
 #define string_length(s) (((s) == NULL ? 0 : strlen((s))))
 
 static void *zmalloc(size_t m)
@@ -407,9 +407,12 @@ static void *recycler_query_thread(void *p)
 {
     char first=0;
     recycler *r=p;
+    time_t start=recycler_get_time();
     do
     {
+        time_t diff=start;
         r->qa=2;
+        double val=0.0;
         if(r->mon_mode)
         {
             if(first!=0)
@@ -419,13 +422,39 @@ static void *recycler_query_thread(void *p)
 
             recycler_notifier_destroy(r);
             recycler_notifier_setup(r);
+
         }
 
-        recycler_query_user(r);
+        recycler_query_user(r,&val);
 
-        pthread_mutex_lock(&r->mtx);
-        send_command_ex(r->ip,r->cq_cmd,100,1);
-        pthread_mutex_unlock(&r->mtx);
+        if(r->mon_mode)
+            diff=recycler_get_time()-start;
+
+        /*In monitoring mode, without this condition (val!=r->inf), the monitoring thread might flood the main event queue
+         * which would lead to sluggish response of the application and/or undefined results from other
+         * sources that are time sensitive (CPU, Network, etc)
+         * This behaviour could occur when deleting huge amounts of small files or if
+         * ghost events (1) are reported.
+         *
+         * (1) the notifier detects a change but it does not exist on the disk
+         * */
+        if(val!=r->inf)
+        {
+            size_t timeout=0;
+
+
+            pthread_mutex_lock(&r->mtx);
+
+            if(diff >= 1000 || !r->mon_mode)
+                send_command(r->ip,r->cq_cmd);
+            else if(r->mon_mode)
+                send_command_ex(r->ip,r->cq_cmd,1000-diff,1);
+
+
+            r->inf=val;
+            pthread_mutex_unlock(&r->mtx);
+
+        }
 
         r->qa=0;
         if(first==0)
@@ -469,7 +498,7 @@ static int recycler_notifier_setup(recycler *r)
         {
             continue;
         }
-           printf("Notification %s\n",buf);
+
         void *tmh=FindFirstChangeNotificationA(buf, 0, 0x1 | 0x2 | 0x4 | 0x8 | 0x10);
         if(tmh!=INVALID_HANDLE_VALUE&&tmh!=NULL)
         {
@@ -545,7 +574,7 @@ static unsigned char *recycler_query_user_sid(size_t *len)
 }
 
 /*In-house replacement for SHQueryRecycleBinW*/
-static int recycler_query_user(recycler *r)
+static int recycler_query_user(recycler *r,double *val)
 {
     /*Get the user SID*/
 
@@ -558,7 +587,6 @@ static int recycler_query_user(recycler *r)
     if(str_sid==NULL)
     {
         diag_error("%s %d Failed to get user SID",__FUNCTION__,__LINE__);
-        r->inf=0.0;
         return(-1);
     }
 
@@ -716,13 +744,25 @@ static int recycler_query_user(recycler *r)
     switch(r->rq)
     {
     case recycler_query_items:
-        r->inf=(double)file_count;
+        *val=(double)file_count;
         break;
     case recycler_query_size:
-        r->inf=(double)size;
+        *val=(double)size;
         break;
     }
     pthread_mutex_unlock(&r->mtx);
     return(1);
 }
+
+static size_t recycler_get_time(void)
+{
+#ifdef WIN32
+    return(clock());
+#elif __linux__
+    struct timespec t= {0};
+    clock_gettime(CLOCK_MONOTONIC_RAW,&t);
+    return(t.tv_sec*1000+t.tv_nsec/1000000);
+#endif
+}
+
 #endif
