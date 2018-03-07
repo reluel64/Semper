@@ -10,26 +10,27 @@
   <Project Name="SpeedFan" Path="SpeedFan/SpeedFan.project" Active="No"/>
   <Project Name="Registry" Path="Registry/Registry.project" Active="No"/>
   <Project Name="DiskSpeed" Path="DiskSpeed/DiskSpeed.project" Active="No"/>
-  <Project Name="Sample" Path="Sample/Sample.project"/>
-  <Project Name="ocv_sniff" Path="ocv_sniff/ocv_sniff.project"/>
-  <Project Name="OpenHardwareMonitor" Path="OpenHardwareMonitor/OpenHardwareMonitor.project"/>
+  <Project Name="Sample" Path="Sample/Sample.project" Active="No"/>
+  <Project Name="ocv_sniff" Path="ocv_sniff/ocv_sniff.project" Active="No"/>
+  <Project Name="OpenHardwareMonitor" Path="OpenHardwareMonitor/OpenHardwareMonitor.project" Active="No"/>
+  <Project Name="test" Path="test/test.project" Active="No"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Debug" Selected="no">
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Environment/>
       <Project Name="CoreTemp" ConfigName="Debug"/>
       <Project Name="DiskSpeed" ConfigName="NoBuild"/>
       <Project Name="GPU-Z" ConfigName="Debug"/>
       <Project Name="MSIAfterburner" ConfigName="Debug"/>
+      <Project Name="OpenHardwareMonitor" ConfigName="Debug"/>
       <Project Name="PerfCounter" ConfigName="Debug"/>
       <Project Name="Ping" ConfigName="Debug"/>
       <Project Name="Recycler" ConfigName="Debug"/>
       <Project Name="Registry" ConfigName="Debug"/>
+      <Project Name="Sample" ConfigName="Debug"/>
       <Project Name="Semper" ConfigName="Debug"/>
       <Project Name="SpeedFan" ConfigName="Debug"/>
-      <Project Name="2geom" ConfigName="Debug"/>
-      <Project Name="Sample" ConfigName="Debug"/>
       <Project Name="ocv_sniff" ConfigName="Debug"/>
-      <Project Name="OpenHardwareMonitor" ConfigName="Debug"/>
+      <Project Name="test" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="Release" Selected="yes">
       <Environment/>
@@ -47,8 +48,9 @@
       <Project Name="Sample" ConfigName="Release"/>
       <Project Name="ocv_sniff" ConfigName="Release"/>
       <Project Name="OpenHardwareMonitor" ConfigName="Release"/>
+      <Project Name="test" ConfigName="Release"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Debug(Linux)" Selected="no">
+    <WorkspaceConfiguration Name="Debug(Linux)" Selected="yes">
       <Environment/>
       <Project Name="SpeedFan" ConfigName="Release"/>
       <Project Name="Semper" ConfigName="Debug_Linux"/>
@@ -64,6 +66,7 @@
       <Project Name="Sample" ConfigName="Debug"/>
       <Project Name="ocv_sniff" ConfigName="Debug"/>
       <Project Name="OpenHardwareMonitor" ConfigName="Debug"/>
+      <Project Name="test" ConfigName="Debug"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>

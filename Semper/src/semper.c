@@ -184,6 +184,7 @@ static size_t semper_load_surfaces(control_data* cd)
     while((s = skeleton_next_section(s, &cd->shead)));
 
     surface_data *sd=NULL;
+
     /*do the last step for  initialization*/
     list_enum_part(sd,&cd->surfaces,current)
     {
@@ -635,7 +636,9 @@ static int semper_check_screen(control_data *cd)
 }
 
 
-int main(void)
+
+
+int semper_main(void)
 {
     control_data* cd = zmalloc(sizeof(control_data));
 
@@ -685,4 +688,34 @@ int main(void)
 
     semper_save_configuration(cd);
     return (0);
+}
+
+
+#ifdef WIN32
+int main( int argc, wchar_t *argv[])
+#elif __linux__
+int wmain( int argc, char *argv[])
+#endif
+{
+    unsigned char **args=NULL;
+    size_t arg_cnt=argc-1;
+    if(argc<2)
+        return(semper_main());
+
+    args=zmalloc(sizeof(void *)*arg_cnt);
+
+    if(args==NULL)
+    {
+        return(-1);
+    }
+
+    for(size_t i=0;i<arg_cnt;i++)
+    {
+        args[i]=ucs_to_utf8(argv[i+1],NULL,0);
+    }
+
+    for(size_t i=0;i<arg_cnt;i++)
+    {
+        printf("%s\n",args[i]);
+    }
 }

@@ -2,7 +2,7 @@
 <CodeLite_Project Name="Semper" Version="10.0.0" InternalType="Console">
   <Plugins>
     <Plugin Name="qmake">
-      <![CDATA[00050001N0005Debug0000000000000001N0011Debug Linux0000000000000001N0012Debug(Linux)0000000000000001N0011Debug_Linux0000000000000001N0007Release000000000000]]>
+      <![CDATA[00060001N0005Debug0000000000000001N0011Debug Linux0000000000000001N0012Debug(Linux)0000000000000001N0013Debug(Shared)0000000000000001N0011Debug_Linux0000000000000001N0007Release000000000000]]>
     </Plugin>
     <Plugin Name="CppCheck"/>
   </Plugins>
@@ -280,7 +280,7 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Debug" CompilerType="gcc.exe (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 7.1.0" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g;-Wall;-fpermissive" C_Options="-g;-Wall;-Wno-pointer-sign" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-g;-Wall;-fpermissive" C_Options="-g;-Wall;-Wno-pointer-sign;" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <IncludePath Value="include"/>
         <IncludePath Value="$(CompilerInclude)/pango-1.0"/>
@@ -291,6 +291,7 @@
         <Preprocessor Value="__USE_MINGW_ANSI_STDIO=1"/>
         <Preprocessor Value="WIN32"/>
         <Preprocessor Value="DEBUG"/>
+        <Preprocessor Value="_UNICODE"/>
       </Compiler>
       <Linker Options="-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,-static;" Required="yes">
         <LibraryPath Value="$(CompilerLib)"/>
@@ -369,7 +370,63 @@
         <Library Value="dwmapi"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" IntermediateDirectory="$(WorkspacePath)/build/$(ConfigurationName)/$(ProjectName)" Command="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" CommandArguments="-f" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(WorkspacePath)/bin/$(ConfigurationName)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <General OutputFile="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" IntermediateDirectory="$(WorkspacePath)/build/$(ConfigurationName)/$(ProjectName)" Command="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(WorkspacePath)/bin/$(ConfigurationName)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <BuildSystem Name="Default"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="" IsExtended="no">
+        <DebuggerSearchPaths/>
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild>
+        <Command Enabled="yes">rmdir /s /q $(WorkspacePath)\SDK</Command>
+        <Command Enabled="yes">mkdir $(WorkspacePath)\SDK</Command>
+      </PreBuild>
+      <PostBuild>
+        <Command Enabled="yes">copy $(ProjectPath)\include\semper_api.h $(WorkspacePath)\SDK\semper_api.h</Command>
+      </PostBuild>
+      <CustomBuild Enabled="no">
+        <RebuildCommand/>
+        <CleanCommand/>
+        <BuildCommand/>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName>None</ThirdPartyToolName>
+        <WorkingDirectory/>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion EnableCpp11="no" EnableCpp14="no">
+        <ClangCmpFlagsC/>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
+    </Configuration>
+    <Configuration Name="Debug(Shared)" CompilerType="MinGW ( gcc.exe (Rev1, Built by MSYS2 project) 7.3.0 )" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="-g;-Wall;-fpermissive" C_Options="-O1;-O;-O2;-Wall;-Wno-pointer-sign;$(shell pkg-config --cflags gtk+-3.0)" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+        <IncludePath Value="."/>
+        <IncludePath Value="include"/>
+        <Preprocessor Value="__USE_MINGW_ANSI_STDIO=1"/>
+        <Preprocessor Value="WIN32"/>
+        <Preprocessor Value="DEBUG"/>
+        <Preprocessor Value="_UNICODE"/>
+      </Compiler>
+      <Linker Options="-s;-mwindows;$(shell pkg-config --libs gtk+-3.0)" Required="yes">
+        <Library Value="pcre"/>
+        <Library Value="jpeg"/>
+        <Library Value="fontconfig"/>
+        <Library Value="curl"/>
+        <Library Value="Iphlpapi"/>
+        <Library Value="Wlanapi"/>
+      </Linker>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" IntermediateDirectory="$(WorkspacePath)/build/$(ConfigurationName)/$(ProjectName)" Command="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(WorkspacePath)/bin/$(ConfigurationName)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
       <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
@@ -509,7 +566,7 @@
       </Completion>
     </Configuration>
     <Configuration Name="Release" CompilerType="MinGW ( gcc.exe (Rev2, Built by MSYS2 project) 7.1.0 )" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-O1;-O;-O2;-Wall" C_Options="-O1;-O;-O2;-Wall;-Wno-pointer-sign;-Wl,--exclude-all-symbols" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-O1;-O;-O2;-Wall" C_Options="-O1;-O;-O2;-Wall;-Wno-pointer-sign;-Wl,--exclude-all-symbols;-Wl,-municode " Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <IncludePath Value="include"/>
         <IncludePath Value="$(CompilerInclude)/pango-1.0"/>
@@ -520,7 +577,7 @@
         <Preprocessor Value="__USE_MINGW_ANSI_STDIO=1"/>
         <Preprocessor Value="WIN32"/>
       </Compiler>
-      <Linker Options="-s;-mwindows;-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,-static" Required="yes">
+      <Linker Options="-s;-mwindows;-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,-static;" Required="yes">
         <LibraryPath Value="$(CompilerLib)"/>
         <Library Value="Iphlpapi"/>
         <Library Value="curl"/>

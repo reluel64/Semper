@@ -15,7 +15,6 @@
 typedef struct
 {
     unsigned char th_active;
-    unsigned char solve_active;
     unsigned char* exec;
     unsigned char *link;
     unsigned int addr;
@@ -29,88 +28,8 @@ typedef struct
     pthread_mutex_t mutex;
 } ping;
 
+static void *ping_calculate(void *spv);
 
-static void *ping_solve_address(void *spv)
-{
-    ping* p = spv;
-    p->solve_active=1;
-    unsigned int addr=0;
-    unsigned char buf[256]= {0};
-
-    pthread_mutex_lock(&p->mutex);
-    strncpy(buf,p->link,255);
-    pthread_mutex_unlock(&p->mutex);
-
-    addr = inet_addr(buf);
-
-    if(addr == INADDR_NONE)
-    {
-        WSADATA wsaData= {0};
-
-        if(WSAStartup(0x0101, &wsaData) == 0)
-        {
-            struct hostent* host = gethostbyname(buf);
-            if(host)
-            {
-                addr = *(DWORD*)host->h_addr;
-            }
-            WSACleanup();
-        }
-    }
-
-    pthread_mutex_lock(&p->mutex);
-    p->addr=addr;
-    pthread_mutex_unlock(&p->mutex);
-    p->solve_active=0;
-    return(NULL);
-}
-
-static void *ping_calculate(void *spv)
-{
-    ping* p = spv;
-    p->th_active = 1;
-    unsigned int addr=0;
-    unsigned int timeout=0;
-    unsigned int def_timeout=0;
-
-    pthread_mutex_lock(&p->mutex);
-    addr=p->addr;
-    timeout=p->timeout;
-    def_timeout=p->rep_timeout;
-    pthread_mutex_unlock(&p->mutex);
-
-    if(p->addr==INADDR_NONE||p->addr==0)
-    {
-        p->ping_val = -1;
-        p->th_active = 0;
-
-        pthread_exit(NULL);
-    }
-
-    unsigned int buf_sz = sizeof(ICMP_ECHO_REPLY32);
-    ICMP_ECHO_REPLY32 buf = { 0 };
-    void *icmp_handle= IcmpCreateFile();
-
-    if(icmp_handle != INVALID_HANDLE_VALUE)
-    {
-        if(IcmpSendEcho(icmp_handle, addr, NULL, 0, NULL, &buf, buf_sz, timeout))
-        {
-            p->ping_val = (double)buf.RoundTripTime;
-        }
-        else
-        {
-            p->ping_val = (double)def_timeout;
-        }
-        IcmpCloseHandle(icmp_handle);
-    }
-    else
-    {
-        p->ping_val = (double)def_timeout;
-    }
-
-    p->th_active = 0;
-    return(NULL);
-}
 void init(void** spv, void* ip)
 {
     ping* p = malloc(sizeof(ping));
@@ -140,6 +59,7 @@ void reset(void* spv, void* ip)
 
     free(p->exec);
     p->exec = NULL;
+    p->addr = 0;
     p->timeout = param_size_t("Timeout", ip, 30000);
     p->period = param_size_t("Period", ip, 64);
     p->rep_timeout = param_size_t("TimeoutValue", ip, 30000);
@@ -150,48 +70,36 @@ void reset(void* spv, void* ip)
         p->exec = strdup(t);
     }
 
-    if(p->solve_active==0)
-    {
-        size_t solve_th=0;
-        pthread_attr_t th_att= {0};
-        pthread_attr_init(&th_att);
-        pthread_attr_setdetachstate(&th_att,PTHREAD_CREATE_DETACHED);
-        pthread_create(&solve_th,&th_att,ping_solve_address,spv);
-        pthread_attr_destroy(&th_att);
-    }
 }
 
 double update(void* spv)
 {
     ping* p = spv;
 
-    pthread_mutex_lock(&p->mutex);
-    unsigned int addr=p->addr;
-    pthread_mutex_unlock(&p->mutex);
-
-    if(addr!=0&&addr!=-1)
+    if(p->current == 0&&p->th==0)
     {
-        if(p->current == 0&&p->th==0)
-        {
-            p->th_active = 1;
-            pthread_create(&p->th, NULL, ping_calculate, p);
+        p->th_active = 1;
+        int status=pthread_create(&p->th, NULL, ping_calculate, p);
 
-        }
-        else if(p->th_active == 0 && p->th)
+        if(!status)
         {
-            pthread_join(p->th, NULL);
-            send_command(p->ip, p->exec);
-            p->th = 0;
+            while(p->th_active==1)
+                sched_yield();
         }
-        if(++p->current == p->period)
-            p->current = 0;
+        else
+        {
+            p->th_active=0;
+            diag_error("Failed to start ping thread");
+        }
     }
-    else if(p->solve_active==0)
+    else if(p->th_active == 0 && p->th)
     {
-        size_t solve_th=0;
-        pthread_create(&solve_th,NULL,ping_solve_address,spv);
-        pthread_detach(solve_th);
+        pthread_join(p->th, NULL);
+        send_command(p->ip, p->exec);
+        p->th = 0;
     }
+    if(++p->current == p->period)
+        p->current = 0;
 
     return (p->ping_val);
 }
@@ -213,4 +121,86 @@ void destroy(void** spv)
     free(*spv);
     *spv = NULL;
 }
+
+
+
+
+static void *ping_calculate(void *spv)
+{
+    ping* p = spv;
+    p->th_active = 2;
+    unsigned int addr=0;
+    unsigned int timeout=0;
+    unsigned int def_timeout=0;
+
+    pthread_mutex_lock(&p->mutex);
+    addr=p->addr;
+    timeout=p->timeout;
+    def_timeout=p->rep_timeout;
+    pthread_mutex_unlock(&p->mutex);
+
+    if(p->addr==INADDR_NONE||p->addr==0)
+    {
+        unsigned char buf[256]= {0};
+        pthread_mutex_lock(&p->mutex);
+        strncpy(buf,p->link,255);
+        pthread_mutex_unlock(&p->mutex);
+        addr = inet_addr(buf);
+
+        if(addr == INADDR_NONE)
+        {
+            WSADATA wsaData= {0};
+
+            if(WSAStartup(0x0101, &wsaData) == 0)
+            {
+                struct hostent* host = gethostbyname(buf);
+                if(host)
+                {
+                    addr = *(DWORD*)host->h_addr;
+                }
+                WSACleanup();
+            }
+        }
+
+        if(addr==INADDR_NONE||addr==0)
+        {
+            pthread_mutex_lock(&p->mutex);
+            p->ping_val = -1;
+            p->addr=0;
+            p->th_active = 0;
+            pthread_mutex_unlock(&p->mutex);
+            return(NULL);
+        }
+
+        pthread_mutex_lock(&p->mutex);
+        p->addr=addr;
+        pthread_mutex_unlock(&p->mutex);
+    }
+
+    unsigned int buf_sz = sizeof(ICMP_ECHO_REPLY32);
+    ICMP_ECHO_REPLY32 buf = { 0 };
+    void *icmp_handle= IcmpCreateFile();
+
+    if(icmp_handle != INVALID_HANDLE_VALUE)
+    {
+        if(IcmpSendEcho(icmp_handle, addr, NULL, 0, NULL, &buf, buf_sz, timeout))
+        {
+            p->ping_val = (double)buf.RoundTripTime;
+        }
+        else
+        {
+            p->ping_val = (double)def_timeout;
+        }
+        IcmpCloseHandle(icmp_handle);
+    }
+    else
+    {
+        p->ping_val = (double)def_timeout;
+    }
+
+    p->th_active = 0;
+    return(NULL);
+}
+
+
 #endif

@@ -18,22 +18,19 @@ void vector_init(object *o)
 
 void vector_reset(object *o)
 {
+    vector *v=o->pv;
     vector_parser_destroy(o);
     vector_parser_init(o);
-}
 
-int vector_update(object *o)
-{
-    vector *v=o->pv;
     vector_path_common *vpc = NULL;
-    o->auto_h=0;
-    o->auto_w=0;
+    o->auto_h=o->h;
+    o->auto_w=o->w;
     list_enum_part(vpc,&v->paths,current)
     {
         o->auto_h=max(o->auto_h,vpc->ext.height+vpc->ext.y);
         o->auto_w=max(o->auto_w,vpc->ext.width+vpc->ext.x);
     }
-    return(0);
+
 }
 
 int vector_render(object *o,cairo_t *cr)

@@ -263,7 +263,7 @@ static int vector_parse_path_set(vector_parser_info *vpi)
     {
         unsigned char lpm[256]= {0};
         strncpy(lpm,vpi->pm,min(vpi->pm_len,255));
-        vpi->params[vpi->param-1]=atof(lpm);
+        vpi->params[vpi->param-1]=compute_formula(lpm);
     }
     else if(vpi->pm==NULL)
     {
@@ -327,7 +327,7 @@ static int vector_parse_gradient(vector_parser_info *vpi)
         unsigned char lpm[256]= {0};
         strncpy(lpm,vpi->pm,min(vpi->pm_len,255));
 
-        vpi->params[vpi->param-1]=vpi->param==1?string_to_color(lpm):atof(lpm);
+        vpi->params[vpi->param-1]=vpi->param==1?string_to_color(lpm):compute_formula(lpm);
     }
 
     else if(vpi->pm==NULL)
@@ -485,7 +485,7 @@ static int vector_parse_paths(vector_parser_info *vpi)
 
         else if(vpi->param <= PARAMS_LENGTH)
         {
-            vpi->params[vpi->param-1]=atof(lpm);
+            vpi->params[vpi->param-1]=compute_formula(lpm);
         }
     }
     else if(vpi->pm==NULL)
@@ -694,14 +694,13 @@ static int vector_parse_attributes(vector_parser_info *vpi)
         {
             vector_parser_info lvpi= {0};
             unsigned char *lval=parameter_string(vpi->o,lpm,NULL,XPANDER_OBJECT);
-
             if(lval)
             {
                 lvpi.lvl=1;
                 lvpi.pm=lval;
                 lvpi.o=vpi->o;
                 lvpi.flags=vpi->flags;
-                lvpi.pv=NULL; /*should be vpi->pv?*/
+                lvpi.pv=vpi->pv; /*should be vpi->pv?*/
                 lvpi.func=vector_parse_attributes;
                 vector_parse_option(&lvpi);
                 sfree((void**)&lval);
@@ -797,17 +796,17 @@ static int vector_parse_attributes(vector_parser_info *vpi)
             }
             else if(vpi->param>=3&&vpi->param<PARAMS_LENGTH-1)
             {
-                vpi->params[vpi->param-3]=atof(lpm);
+                vpi->params[vpi->param-3]=compute_formula(lpm);
                 //printf("Param %d\n",vpi->param);
             }
         }
         else if(vpi->vpmt== vector_param_stroke_width)
         {
-            vpc->stroke_w=atof(lpm);
+            vpc->stroke_w=compute_formula(lpm);
         }
         else if(vpi->param<=PARAMS_LENGTH)
         {
-            vpi->params[vpi->param-1]=atof(lpm);
+            vpi->params[vpi->param-1]=compute_formula(lpm);
         }
     }
     else if(vpi->pm==NULL)
@@ -1113,7 +1112,7 @@ int vector_parser_init(object *o)
     {
         0,
         VPI_NORMAL_ATTR,
-        VPI_COLOR_ATTR
+        VPI_COLOR_ATTR|VPI_NORMAL_ATTR
     };
 
     /*Generate simple paths*/
@@ -1306,7 +1305,6 @@ int vector_parser_init(object *o)
             }
         }
     }
-
 
     cairo_destroy(cr);
     cairo_surface_destroy(dummy_surface);

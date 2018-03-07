@@ -50,7 +50,7 @@ static int object_routines_table(object_routine_entry **ore,unsigned char *on)
         {"Arc",         arc_init,       arc_reset,          arc_update,         arc_render,                   arc_destroy},
         {"Spinner",     spinner_init,   spinner_reset,      spinner_update,     spinner_render,           spinner_destroy},
         {"Button",      button_init,    button_reset,       button_update,      button_render,             button_destroy},
-        {"Vector",      vector_init,    vector_reset,       vector_update,      vector_render,             vector_destroy},
+        {"Vector",      vector_init,    vector_reset,       NULL,               vector_render,             vector_destroy},
     };
 
     if(on==NULL||ore==NULL)

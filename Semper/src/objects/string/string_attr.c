@@ -415,7 +415,7 @@ static int string_attr_fill_user(object *o,string_format_type *fmt_type,string_a
         {
             sfree((void**)&sa->pattern);
             sa->pattern=zmalloc(len+1);
-            strncpy(sa->pattern,str,len);
+            strncpy(sa->pattern,str+start,len);
             *fmt_type=type_invalid;
         }
 
