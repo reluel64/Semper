@@ -144,11 +144,11 @@
       </Completion>
     </Configuration>
   </Settings>
-  <Dependencies Name="NoBuild"/>
-  <Dependencies Name="Release">
+  <Dependencies Name="Debug_Linux">
     <Project Name="Semper"/>
   </Dependencies>
-  <Dependencies Name="Debug_Linux">
+  <Dependencies Name="NoBuild"/>
+  <Dependencies Name="Release">
     <Project Name="Semper"/>
   </Dependencies>
 </CodeLite_Project>

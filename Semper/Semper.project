@@ -170,6 +170,7 @@
     <File Name="src/semper_api.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
+    <File Name="include/tooltip.h"/>
     <File Name="include/watcher.h"/>
     <VirtualDirectory Name="sources">
       <VirtualDirectory Name="internal">
@@ -266,9 +267,6 @@
   </VirtualDirectory>
   <Description/>
   <Dependencies/>
-  <Dependencies Name="Debug"/>
-  <Dependencies Name="Debug_Linux"/>
-  <Dependencies Name="Release"/>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="" C_Options="" Assembler="">
@@ -566,7 +564,7 @@
       </Completion>
     </Configuration>
     <Configuration Name="Release" CompilerType="MinGW ( gcc.exe (Rev2, Built by MSYS2 project) 7.1.0 )" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-O1;-O;-O2;-Wall" C_Options="-O1;-O;-O2;-Wall;-Wno-pointer-sign;-Wl,--exclude-all-symbols;-Wl,-municode " Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-O1;-O;-O2;-Wall" C_Options="-O1;-O;-O2;-Wall;-Wno-pointer-sign;-Wl,--exclude-all-symbols;" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <IncludePath Value="include"/>
         <IncludePath Value="$(CompilerInclude)/pango-1.0"/>
@@ -577,7 +575,7 @@
         <Preprocessor Value="__USE_MINGW_ANSI_STDIO=1"/>
         <Preprocessor Value="WIN32"/>
       </Compiler>
-      <Linker Options="-s;-mwindows;-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,-static;" Required="yes">
+      <Linker Options="-s;-mwindows;-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,-static;-municode " Required="yes">
         <LibraryPath Value="$(CompilerLib)"/>
         <Library Value="Iphlpapi"/>
         <Library Value="curl"/>
@@ -689,4 +687,8 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Debug(Shared)"/>
+  <Dependencies Name="Debug_Linux"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>

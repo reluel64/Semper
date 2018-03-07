@@ -10,9 +10,6 @@
   <VirtualDirectory Name="src">
     <File Name="src/coretemp.c"/>
   </VirtualDirectory>
-  <Dependencies Name="Release">
-    <Project Name="Semper"/>
-  </Dependencies>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
       <Compiler Options="" C_Options="" Assembler="">
@@ -111,6 +108,9 @@
     </Configuration>
   </Settings>
   <Dependencies Name="Debug">
+    <Project Name="Semper"/>
+  </Dependencies>
+  <Dependencies Name="Release">
     <Project Name="Semper"/>
   </Dependencies>
 </CodeLite_Project>

@@ -692,7 +692,7 @@ int semper_main(void)
 
 
 #ifdef WIN32
-int main( int argc, wchar_t *argv[])
+int wmain( int argc, wchar_t *argv[])
 #elif __linux__
 int wmain( int argc, char *argv[])
 #endif

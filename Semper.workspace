@@ -13,9 +13,8 @@
   <Project Name="Sample" Path="Sample/Sample.project" Active="No"/>
   <Project Name="ocv_sniff" Path="ocv_sniff/ocv_sniff.project" Active="No"/>
   <Project Name="OpenHardwareMonitor" Path="OpenHardwareMonitor/OpenHardwareMonitor.project" Active="No"/>
-  <Project Name="test" Path="test/test.project" Active="No"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Debug" Selected="yes">
+    <WorkspaceConfiguration Name="Debug" Selected="no">
       <Environment/>
       <Project Name="CoreTemp" ConfigName="Debug"/>
       <Project Name="DiskSpeed" ConfigName="NoBuild"/>
@@ -30,7 +29,6 @@
       <Project Name="Semper" ConfigName="Debug"/>
       <Project Name="SpeedFan" ConfigName="Debug"/>
       <Project Name="ocv_sniff" ConfigName="Debug"/>
-      <Project Name="test" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="Release" Selected="yes">
       <Environment/>
@@ -48,7 +46,6 @@
       <Project Name="Sample" ConfigName="Release"/>
       <Project Name="ocv_sniff" ConfigName="Release"/>
       <Project Name="OpenHardwareMonitor" ConfigName="Release"/>
-      <Project Name="test" ConfigName="Release"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="Debug(Linux)" Selected="yes">
       <Environment/>
@@ -66,7 +63,6 @@
       <Project Name="Sample" ConfigName="Debug"/>
       <Project Name="ocv_sniff" ConfigName="Debug"/>
       <Project Name="OpenHardwareMonitor" ConfigName="Debug"/>
-      <Project Name="test" ConfigName="Debug"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>
