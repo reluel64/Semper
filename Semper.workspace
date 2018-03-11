@@ -47,7 +47,7 @@
       <Project Name="ocv_sniff" ConfigName="Release"/>
       <Project Name="OpenHardwareMonitor" ConfigName="Release"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Debug(Linux)" Selected="yes">
+    <WorkspaceConfiguration Name="Debug(Linux)" Selected="no">
       <Environment/>
       <Project Name="SpeedFan" ConfigName="Release"/>
       <Project Name="Semper" ConfigName="Debug_Linux"/>

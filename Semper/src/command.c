@@ -311,6 +311,9 @@ COMMAND_HANDLER(handler_show_command)
 
     skeleton_add_key(sd->scd, "hidden", "0");
     sd->hidden = 0;
+    sd->co=sd->ro;
+    sd->visible=1;
+    crosswin_set_opacity(sd->sw,sd->co);
     crosswin_show(sd->sw);
     return (0);
 }
@@ -329,6 +332,9 @@ COMMAND_HANDLER(handler_hide_command)
 
     skeleton_add_key(sd->scd, "Hidden", "1");
     sd->hidden = 1;
+    sd->co=0;
+    sd->visible=0;
+    crosswin_set_opacity(sd->sw,sd->co);
     crosswin_hide(sd->sw);
     return (0);
 }
@@ -347,6 +353,8 @@ COMMAND_HANDLER(handler_hide_fade_command)
 
     skeleton_add_key(sd->scd, "Hidden", "1");
     sd->hidden = 1;
+    sd->fade_direction=-1;
+
     surface_fade(sd);
     return (0);
 }
@@ -365,6 +373,7 @@ COMMAND_HANDLER(handler_show_fade_command)
 
     skeleton_add_key(sd->scd, "Hidden", "0");
     sd->hidden = 0;
+    sd->fade_direction=1;
     surface_fade(sd);
     return (0);
 }
@@ -957,6 +966,14 @@ COMMAND_HANDLER(handler_defer)
     return(0);
 }
 
+COMMAND_HANDLER(handler_quit_app)
+{
+    control_data* cd = sd->cd;
+    cd->c.quit=1;
+    event_push(cd->eq,NULL,NULL,0,0);
+}
+
+
 /******************************************************************************/
 
 static int command_execute(command_handler_status* chs)
@@ -980,6 +997,7 @@ static int command_execute(command_handler_status* chs)
         { "HideFade",           handler_hide_fade_command,  0 },
         { "LoadRegistry",       handler_load_registry,      0 },
         { "UnLoadRegistry",     handler_unload_registry,    0 },
+        { "Quit",               handler_quit_app,           0 },
 //---------------------------------------------------------------------
         { "Execute",            handler_execute,            1 },
         { "Variable",           handler_change_variable,    1 },
@@ -1012,12 +1030,13 @@ static int command_execute(command_handler_status* chs)
 
             if(ci[i].handler && chs->comm_name && (strcasecmp(chs->comm_name, ci[i].act_name) == 0))
             {
+                found=1;
                 if((ci[i].min_parameters == 0) || (ci[i].min_parameters <= chs->cpm.plength))
                 {
                     ret = ci[i].handler(chs->sd, &chs->cpm);
                     break;
                 }
-                found=1;
+
             }
         }
     }
@@ -1080,9 +1099,9 @@ int command(surface_data* sd, unsigned char **pa)
     unsigned char execute=0;
     unsigned char stack_pos=0;
 
-    if(pa == NULL ||*pa==NULL|| sd == NULL)
+    if(pa == NULL ||*pa==NULL|| sd == NULL || sd->cd==NULL)
     {
-        diag_warn("%s %d surface_data %p action %p",__FUNCTION__,__LINE__,sd,pa);
+        diag_warn("%s %d control_data %p surface_data %p action %p",__FUNCTION__,__LINE__,sd->cd,sd,pa);
         return (-1);
     }
 

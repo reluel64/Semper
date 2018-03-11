@@ -96,88 +96,108 @@ crosswin_window* crosswin_init_window(crosswin* c)
 
 void crosswin_set_window_data(crosswin_window* w, void* pv)
 {
-    w->user_data = pv;
+    if(w)
+        w->user_data = pv;
 }
 
 void* crosswin_get_window_data(crosswin_window* w)
 {
-    return (w->user_data);
+    return (w?w->user_data:NULL);
 }
 
 void crosswin_click_through(crosswin_window* w, unsigned char state)
 {
+    if(w)
+    {
 #ifdef WIN32
-    win32_click_through(w, state);
+        win32_click_through(w, state);
 #elif __linux__
-    w->click_through=state;
-
+        w->click_through=state;
 #endif
+    }
 }
-
 void crosswin_draw(crosswin_window* w)
 {
-    crosswin_set_position(w, w->x, w->y);
+    if(w)
+    {
+        crosswin_set_position(w, w->x, w->y);
 
 #ifdef WIN32
-    win32_draw(w);
+        win32_draw(w);
 #elif __linux__
-    xlib_draw(w);
+        xlib_draw(w);
 #endif
+    }
 }
 
 void crosswin_set_render(crosswin_window* w, void (*render)(crosswin_window* pv, void* cr))
 {
-    w->render_func = render;
+    if(w)
+        w->render_func = render;
 }
 
 void crosswin_set_position(crosswin_window* w, long x, long y)
 {
-    crosswin* c = w->c;
-    w->x = x;
-    w->y = y;
-
-    if(w->keep_on_screen == 1)
+    if(w)
     {
-        if(w->x < 0)
-            w->x = 0;
+        crosswin* c = w->c;
+        w->x = x;
+        w->y = y;
 
-        else if(w->x + w->w > c->sw)
-            w->x = max(c->sw - w->w, 0);
+        if(w->keep_on_screen == 1)
+        {
+            if(w->x < 0)
+                w->x = 0;
 
-        if(w->y < 0)
-            w->y = 0;
+            else if(w->x + w->w > c->sw)
+                w->x = max(c->sw - w->w, 0);
 
-        else if(w->y + w->h > c->sh)
-            w->y = max(c->sh - w->h, 0);
-    }
+            if(w->y < 0)
+                w->y = 0;
+
+            else if(w->y + w->h > c->sh)
+                w->y = max(c->sh - w->h, 0);
+        }
 
 #ifdef WIN32
-    win32_set_position(w);
+        win32_set_position(w);
 #elif __linux__
-    xlib_set_position(w);
+        xlib_set_position(w);
 #endif
+
+    }
 }
 
 void crosswin_get_position(crosswin_window* w, long* x, long* y)
 {
-    *x = w->x;
-    *y = w->y;
+    if(w&&x&&y)
+    {
+        *x = w->x;
+        *y = w->y;
+    }
 }
 
 void crosswin_set_opacity(crosswin_window* w, unsigned char opacity)
 {
-    w->opacity=opacity;
+    if(w)
+    {
+        w->opacity=opacity;
 #ifdef WIN32
-    win32_set_opacity(w);
+        win32_set_opacity(w);
 #elif __linux__
-    xlib_set_opacity(w);
+        xlib_set_opacity(w);
 #endif
+
+    }
 }
 
 void crosswin_set_dimension(crosswin_window* w, long width, long height)
 {
-    w->w = labs(width);
-    w->h = labs(height);
+    if(w)
+    {
+        w->w = labs(width);
+        w->h = labs(height);
+    }
 #ifdef __linux__
     xlib_set_dimmension(w);
 #endif
@@ -185,16 +205,22 @@ void crosswin_set_dimension(crosswin_window* w, long width, long height)
 
 void crosswin_set_mouse_handler(crosswin_window* w, int (*mouse_handler)(crosswin_window* w, mouse_status* ms))
 {
-    w->mouse_func = mouse_handler;
+    if(w)
+    {
+        w->mouse_func = mouse_handler;
+    }
 }
 
 void crosswin_set_kbd_handler(crosswin_window *w,int(*kbd_func)(unsigned  int key_code,void *p),void *kb_data)
 {
-    w->kbd_func=kbd_func;
-    w->kb_data=kb_data;
+    if(w)
+    {
+        w->kbd_func=kbd_func;
+        w->kb_data=kb_data;
 #ifdef __linux__
-    w->kbd_func?xlib_create_input_context(w):xlib_destroy_input_context(w);
+        w->kbd_func?xlib_create_input_context(w):xlib_destroy_input_context(w);
 #endif
+    }
 }
 
 void crosswin_hide(crosswin_window* w)
@@ -227,13 +253,17 @@ void crosswin_destroy(crosswin_window** w)
 
 void crosswin_draggable(crosswin_window* w, unsigned char draggable)
 {
-    w->draggable = draggable;
+    if(w)
+        w->draggable = draggable;
 }
 
 void crosswin_keep_on_screen(crosswin_window* w, unsigned char keep_on_screen)
 {
-    w->keep_on_screen = keep_on_screen;
-    crosswin_set_position(w,w->x,w->y);
+    if(w)
+    {
+        w->keep_on_screen = keep_on_screen;
+        crosswin_set_position(w,w->x,w->y);
+    }
 }
 
 static int crosswin_sort_callback(list_entry *le1,list_entry *le2,void *pv)

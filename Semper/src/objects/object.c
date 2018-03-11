@@ -467,6 +467,7 @@ int object_init(section s, surface_data* sd)
     }
 
     o->vol_var = 1;
+    o->divider = 1;
     o->object_type = obj_type;
     o->os = s;
     o->sd = sd;

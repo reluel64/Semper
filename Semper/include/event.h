@@ -52,3 +52,4 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
 void event_remove(event_queue* eq, event_handler eh, void* pv, unsigned char flags);
 void event_queue_clear(event_queue* eq);
 void event_process(event_queue* eq);
+int event_queue_empty(event_queue *eq);

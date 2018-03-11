@@ -422,6 +422,7 @@ int source_init(section s, surface_data* sd)
     source* ss = zmalloc(sizeof(source));
     ss->sd = sd;
     ss->cs = s;
+    ss->divider=1;
     ss->vol_var = 1; // mark as volatile so the source_reset() will be called on the first update cycle
     action_init(ss);
     list_entry_init(&ss->current);

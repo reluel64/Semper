@@ -23,7 +23,6 @@
 #else
 #define SEMPER_API
 #endif
-
 diag_status *diag_get_struct(void)
 {
     static diag_status sts= {0};

@@ -343,11 +343,11 @@ int xlib_set_opacity(crosswin_window *w)
 void  xlib_set_position(crosswin_window *w)
 {
    
-    int found=0;
+   /* int found=0;
     size_t evt_count=0;
-    XEvent *evts=NULL;
+    XEvent *evts=NULL;*/
    XMoveWindow(w->c->display,w->window,w->x,w->y); /*Move the window*/
-    while(XPending(w->c->display))
+  /*  while(XPending(w->c->display))
     {
         
         XEvent *tmp=realloc(evts,sizeof(XEvent)*(evt_count+1));
@@ -385,7 +385,7 @@ evt_count++;
     
   }
   
-  sfree((void**)&evts);
+  sfree((void**)&evts);*/
 }
 
 void xlib_destroy_window(crosswin_window **w)

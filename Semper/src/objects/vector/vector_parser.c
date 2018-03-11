@@ -246,7 +246,7 @@ static void vector_parser_apply_matrix(vector_parser_info *vpi, vector_path_comm
 
 static int vector_parse_path_set(vector_parser_info *vpi)
 {
-    if(vpi->param==0)
+    if(vpi->param==0&&vpi->pm)
     {
         memset(&vpi->params,0,sizeof(vpi->params));
 
@@ -344,7 +344,7 @@ static int vector_parse_gradient(vector_parser_info *vpi)
 
 static int vector_parse_fused_paths(vector_parser_info *vpi)
 {
-    if(vpi->param==0)
+    if(vpi->param==0&&vpi->pm)
     {
         if(!strncasecmp(vpi->pm,"XOR",3))
             vpi->vct=vector_clip_xor;
@@ -383,7 +383,7 @@ static int vector_parse_fused_paths(vector_parser_info *vpi)
 static int vector_parse_paths(vector_parser_info *vpi)
 {
     vector_path_common *vpc=NULL;
-    if(vpi->param==0)
+    if(vpi->param==0&&vpi->pm)
     {
         memset(&vpi->params,0,sizeof(vpi->params));
 
@@ -637,7 +637,7 @@ static int vector_parse_attributes(vector_parser_info *vpi)
     if(vpc->cr_path==NULL)
         return(1);
 
-    if(vpi->param==0)
+    if(vpi->param==0&&vpi->pm)
     {
         memset(&vpi->params,0,sizeof(vpi->params));
 

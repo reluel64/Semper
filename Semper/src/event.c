@@ -389,6 +389,17 @@ void event_queue_destroy(event_queue** eq)
     }
 }
 
+int event_queue_empty(event_queue *eq)
+{
+    int empty=0;
+    if(eq==NULL)
+        return(1);
+    pthread_mutex_lock(&eq->mutex);
+    empty=linked_list_empty(&eq->events);
+    pthread_mutex_unlock(&eq->mutex);
+    return(empty);
+}
+
 void event_process(event_queue* eq)
 {
     event* e = NULL;
