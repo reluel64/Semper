@@ -7,6 +7,7 @@
     <Plugin Name="CppCheck"/>
   </Plugins>
   <VirtualDirectory Name="src">
+    <File Name="src/semper.c"/>
     <File Name="src/watcher.c"/>
     <VirtualDirectory Name="sources">
       <VirtualDirectory Name="internal">
@@ -160,7 +161,6 @@
     <File Name="src/mem.c"/>
     <File Name="src/mouse.c"/>
     <File Name="src/parameter.c"/>
-    <File Name="src/semper.c" ExcludeProjConfig=""/>
     <File Name="src/skeleton.c"/>
     <File Name="src/string_util.c"/>
     <File Name="src/surface.c"/>

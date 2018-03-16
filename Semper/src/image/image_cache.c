@@ -401,12 +401,10 @@ static inline FILE *image_cache_open_image(unsigned char *f)
     unsigned char *gf=clone_string(f);
     uniform_slashes(gf);
 #ifdef WIN32
-    windows_slahses(gf);
     wchar_t* fp = utf8_to_ucs(gf);
     fh = _wfopen(fp, L"rb");
     sfree((void**)&fp);
 #elif __linux__
-    unix_slashes(gf);
     fh = fopen(gf, "rb");
 #endif
     sfree((void**)&gf);

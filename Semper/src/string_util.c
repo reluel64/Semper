@@ -214,33 +214,6 @@ unsigned char* string_upper(unsigned char* s)
 }
 
 
-int uniform_slashes(unsigned char *str)
-{
-    if(str == NULL)
-    {
-        return (-1);
-    }
-
-    for(size_t i = 0; str[i]; i++)
-    {
-        if((str[i] == '/'||str[i] == '\\')&&(str[i+1]=='\\'||str[i+1]=='/'))
-        {
-            for(size_t cpos = i; str[cpos]; cpos++)
-            {
-                str[cpos] = str[cpos + 1];
-            }
-
-            if(i != 0)
-            {
-                i--;
-            }
-
-            continue;
-        }
-    }
-
-    return (0);
-}
 
 unsigned short* utf8_to_ucs(unsigned char* str)
 {
@@ -506,6 +479,130 @@ unsigned char* ucs32_to_utf8(unsigned int* s_in, size_t* bn, unsigned char be)
     return (out);
 }
 
+
+#ifdef __linux__
+static int variable_tokenizer(string_tokenizer_status *sti,int  *fl)
+{
+    if(sti->reset)
+    {
+        *fl=0;
+        return(0);
+    }
+    if(sti->buf[sti->pos]=='$')
+    {
+        *fl=1;
+        return(1);
+    }
+    if(sti->buf[sti->pos]=='/'&&*fl==1)
+    {
+        *fl=0;
+        return(1);
+    }
+
+
+    return(0);
+}
+
+static char *string_util_xpand_linux_env(unsigned char *str)
+{
+    if(str==NULL)
+    {
+        return(NULL);
+    }
+
+
+    unsigned char *res=str;
+    size_t len=0;
+
+    for(unsigned char stage=0; stage<255; stage++)
+    {
+        char more=0;
+        int p=0;
+        string_tokenizer_info sti= {0};
+        sti.buffer=res;
+        sti.string_tokenizer_filter=variable_tokenizer;
+        sti.filter_data=&p;
+        string_tokenizer(&sti);
+        res=NULL;
+        for(size_t i=0; i<sti.oveclen/2; i++)
+        {
+            char bbb[256]= {0};
+            size_t start=sti.ovecoff[i*2];
+            size_t end=sti.ovecoff[i*2+1];
+
+            if(end==start)
+                continue;
+
+            strncpy(bbb,sti.buffer+start,end-start);
+
+
+            if(sti.buffer[start]=='$')
+            {
+                unsigned char *vname=zmalloc((end-start)+1);
+                unsigned char *vval=NULL;
+                size_t vlen=end-start;
+                strncpy(vname,sti.buffer+start+1,end-(start+1));
+                vval=getenv(vname);
+
+                if(vval)
+                {
+                    vlen=string_length(vval);
+                    if(vval[0]=='$')
+                        more=1;
+                }
+                else
+                {
+                    vval=sti.buffer+start;
+                }
+
+                unsigned char *tmp=realloc(res,vlen+len+1);
+
+                if(tmp)
+                {
+                    res=tmp;
+                    strncpy(res+len,vval,vlen);
+                    len+=vlen;
+                    res[len]=0;
+                }
+
+
+                fflush(NULL);
+                sfree((void**)&vname);
+            }
+            else
+            {
+                size_t vlen=end-start;
+                unsigned char *tmp=realloc(res,vlen+len+1);
+
+                if(tmp)
+                {
+                    res=tmp;
+                    strncpy(res+len,sti.buffer+start,vlen);
+                    len+=vlen;
+                    res[len]=0;
+                }
+            }
+        }
+
+
+        if(sti.buffer!=str)
+        {
+            sfree((void**)&sti.buffer);
+        }
+
+        sfree((void**)&sti.ovecoff);
+
+        if(more==0)
+            break;
+
+
+    }
+
+    return(res);
+}
+#endif
+
+
 unsigned char* expand_env_var(unsigned char* path)
 {
     size_t mem_n = 0;
@@ -520,7 +617,7 @@ unsigned char* expand_env_var(unsigned char* path)
     sfree((void**)&expanded_var);
     sfree((void**)&unip);
 #elif __linux__
-    ret = clone_string(path);
+    ret = string_util_xpand_linux_env(path);
 #endif
     return (ret);
 }
@@ -648,42 +745,46 @@ int string_to_color_matrix(unsigned char* str, double* cm)
     return (0);
 }
 
-int unix_slashes(unsigned char* s)
+
+int uniform_slashes(unsigned char *str)
 {
-    if(s == NULL)
+    if(str == NULL)
     {
         return (-1);
     }
 
-    for(size_t i = 0; s[i]; i++)
+    for(size_t i = 0; str[i]; i++)
     {
-        if(s[i] == '\\')
+#ifdef WIN32
+        if(str[i] == '/')
         {
-            s[i] = '/';
+            str[i] = '\\';
+        }
+#elif __linux__
+        if(str[i] == '\\')
+        {
+            str[i] = '/';
+        }
+#endif
+        if((str[i] == '/'||str[i] == '\\')&&(str[i+1]=='\\'||str[i+1]=='/'))
+        {
+            for(size_t cpos = i; str[cpos]; cpos++)
+            {
+                str[cpos] = str[cpos + 1];
+            }
+
+            if(i != 0)
+            {
+                i--;
+            }
+
+            continue;
         }
     }
 
     return (0);
 }
 
-
-int windows_slahses(unsigned char* s)
-{
-    if(s == NULL)
-    {
-        return (-1);
-    }
-
-    for(size_t i = 0; s[i]; i++)
-    {
-        if(s[i] == '/')
-        {
-            s[i] = '\\';
-        }
-    }
-
-    return (0);
-}
 
 
 int string_tokenizer(string_tokenizer_info *sti)
@@ -704,7 +805,12 @@ int string_tokenizer(string_tokenizer_info *sti)
         return(-1);
     }
 
-    size_t buf_len = string_length(sti->buffer);
+    size_t buf_len = 0;
+
+    if(sti->buf_len>0&&sti->buf_len!=(size_t)-1)
+        buf_len=sti->buf_len;
+    else
+        buf_len=string_length(sti->buffer);
 
     for(unsigned char step=sti->oveclen>0?1:0; step<2; step++)
     {

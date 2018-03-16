@@ -242,6 +242,7 @@ unsigned char* source_variable(source* s, size_t* len, unsigned char flags)
 static void* source_load_lib(unsigned char* path)
 {
     void* lib = NULL;
+    uniform_slashes(path);
 #ifdef WIN32
     wchar_t* wp = utf8_to_ucs(path);
     lib = LoadLibraryW(wp);
@@ -344,12 +345,19 @@ static int source_load_extension(source* s)
 
     snprintf(modp,pln,"%s/%s",sd->cd->ext_dir,s->extension);
     s->library = source_load_lib(modp);
-
     sfree((void**)&modp);
+
 
     if(s->library == NULL)
     {
-        return (-1);
+        pln=sd->cd->ext_app_dir_len + srcnl + 2;
+        modp= zmalloc(pln);
+        snprintf(modp,pln,"%s/%s",sd->cd->ext_app_dir,s->extension);
+        s->library = source_load_lib(modp);
+        sfree((void**)&modp);
+
+        if(s->library==NULL)
+            return (-1);
     }
 
     return (0);

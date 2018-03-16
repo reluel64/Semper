@@ -58,6 +58,9 @@ typedef struct
 {
     char buf[32*1024];
     int status;
+#ifdef __linux__
+    size_t timestamp; //we will use this under Linux to avoid a nasty limitation
+#endif
 } listener_data;
 
 typedef struct
@@ -67,7 +70,14 @@ typedef struct
     unsigned char *cmd;
 } ldp_data;
 
-
+#ifdef __linux__
+static size_t semper_timestamp_get(void)
+{
+    struct timespec t= {0};
+    clock_gettime(CLOCK_MONOTONIC_RAW,&t);
+    return(t.tv_sec*1000+t.tv_nsec/1000000);
+}
+#endif
 static int semper_skeleton_ini_handler(unsigned char* sn, unsigned char* kn, unsigned char* kv, unsigned char* comm, void* pv)
 {
     unused_parameter(comm);
@@ -388,10 +398,32 @@ int semper_save_configuration(control_data* cd)
     return (1);
 }
 
+static unsigned char semper_is_portable(unsigned char *app_dir,size_t len)
+{
+    unsigned char portable=0;
+    size_t ini_len=string_length("/Semper.ini");
+    unsigned char *semp_ini=zmalloc(len+ini_len+1);
+    snprintf(semp_ini,ini_len+len+1,"%s/Semper.ini",app_dir);
+    uniform_slashes(semp_ini);
+#ifdef WIN32
+
+    unsigned short *ucs=utf8_to_ucs(semp_ini);
+    if(_waccess(ucs,0)==0)
+        portable=1;
+    sfree((void**)&ucs);
+#elif __linux__
+    if(access(semp_ini,0)==0)
+        portable=1;
+#endif
+    sfree((void**)&semp_ini);
+    return(portable);
+}
+
+
 static void semper_create_paths(control_data* cd)
 {
     unsigned char* buf = NULL;
-
+    unsigned char portable=0;;
 #ifdef WIN32
 
     wchar_t* pth = zmalloc(4096 * 2);
@@ -433,42 +465,90 @@ static void semper_create_paths(control_data* cd)
 
 #endif
     size_t rdl = string_length(buf);
-    cd->root_dir = zmalloc(rdl + 1);
-    cd->root_dir_length=rdl;
-    strcpy(cd->root_dir, buf);
+    cd->app_dir=zmalloc(rdl+1);
+    cd->app_dir_len=rdl;
+    strcpy(cd->app_dir,buf);
 
-    sfree((void**)&buf);
-    //////////////////////////////////////////////////////////
+
+    /*Decide where the "Semper" directory is located*/
+    portable=semper_is_portable(cd->app_dir,cd->app_dir_len);
+
+    if(portable)
+    {
+        /*Is located where the executable is*/
+        cd->root_dir = zmalloc(rdl + 1);
+        cd->root_dir_length=rdl;
+        strcpy(cd->root_dir, cd->app_dir);
+    }
+    else
+    {
+        /*Is located in the user directory*/
+        #ifdef WIN32
+        cd->root_dir=expand_env_var("%userprofile%/Semper");
+        #elif __linux__
+
+         cd->root_dir=expand_env_var("$HOME/Semper");
+         #endif
+        cd->root_dir_length=string_length(cd->root_dir);
+        rdl=cd->root_dir_length;
+    }
+
+
+    /*Create the path for Extensions*/
     size_t tsz = rdl + string_length("/Extensions") + 1;
     cd->ext_dir = zmalloc(tsz + 1);
     snprintf(cd->ext_dir,tsz,"%s/Extensions",cd->root_dir);
     cd->ext_dir_length = tsz - 1;
-#ifdef WIN32
-    windows_slahses(cd->ext_dir);
-#elif __linux__
-    unix_slashes(cd->ext_dir);
-#endif
+
+
+
     /////////////////////////////////////////////////////////
     tsz = rdl + string_length("/Semper.ini") + 1;
     cd->cf = zmalloc(tsz);
     snprintf(cd->cf,tsz,"%s/Semper.ini",cd->root_dir);
 
-#ifdef WIN32
-    windows_slahses(cd->cf);
-#elif __linux__
-    unix_slashes(cd->cf);
-#endif
+
     /////////////////////////////////////////////////////////
     tsz = rdl + string_length("/Surfaces") + 1;
     cd->surface_dir = zmalloc(tsz);
     snprintf(cd->surface_dir,tsz,"%s/Surfaces",cd->root_dir);
     cd->surface_dir_length = tsz - 1;
 
+
+    rdl=cd->app_dir_len;
+    tsz = rdl + string_length("/Extensions") + 1;
+    cd->ext_app_dir = zmalloc(tsz + 1);
+    snprintf(cd->ext_app_dir,tsz,"%s/Extensions",cd->app_dir);
+    cd->ext_app_dir_len = tsz - 1;
+
+
+    uniform_slashes(cd->root_dir);
+    uniform_slashes(cd->ext_dir);
+    uniform_slashes(cd->cf);
+    uniform_slashes(cd->surface_dir);
+    uniform_slashes(cd->app_dir);
+    uniform_slashes(cd->ext_app_dir);
+
+    unsigned char *paths[]=
+    {
+        cd->root_dir,
+        cd->ext_dir,
+        cd->surface_dir,
+        cd->ext_app_dir
+    };
+
+    for(unsigned char i=0; i<sizeof(paths)/sizeof(unsigned char*); i++)
+    {
 #ifdef WIN32
-    windows_slahses(cd->surface_dir);
+        unsigned short *tmp=utf8_to_ucs(paths[i]);
+        if(_waccess(tmp,0)!=0)
+            _wmkdir(tmp);
+        sfree((void**)&tmp);
 #elif __linux__
-    unix_slashes(cd->surface_dir);
+        if(access(paths[i],0)!=0)
+            mkdir(paths[i],S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 #endif
+    }
     ////////////////////////////////////////////////////////
 }
 
@@ -484,7 +564,6 @@ static int semper_font_cache_fix(unsigned char *path)
 
     unsigned char *fltp=zmalloc(path_len+4);
     snprintf(fltp,path_len+4,"%s/*",path);
-    windows_slahses(fltp);
     uniform_slashes(fltp);
     WIN32_FIND_DATAW wfd= {0};
     unsigned short *uc=utf8_to_ucs(fltp);
@@ -511,7 +590,6 @@ static int semper_font_cache_fix(unsigned char *path)
         unsigned char *ffp=zmalloc(fsz+path_len+3);
         snprintf(ffp,fsz+path_len+3,"%s/%s",path,temp);
         uniform_slashes(ffp);
-        windows_slahses(ffp);
 
         sfree((void**)&temp);
 
@@ -609,13 +687,41 @@ static int semper_single_instance(control_data *cd)
         CloseHandle(pp);
     }
 #elif __linux__
-   //  int rr= shm_unlink("/SemperCommandListener");
-    int mem_fd=shm_open("/SemperCommandListener",O_RDWR,0777);
+    //  int rr= shm_unlink("/SemperCommandListener");
+    unsigned char usr[256]= {0};
+    unsigned char buf[280]= {0};
+    getlogin_r(usr,255);
+    snprintf(buf,280,"/SemperCommandListener_%s",usr);
+
+    int mem_fd=shm_open(buf,O_RDWR,0777);
 
 
     if(mem_fd>0)
     {
-        ret=0;
+
+        struct stat st= {0};
+        fstat(mem_fd,&st);
+
+        if(st.st_size==0)
+        {
+            ftruncate(mem_fd,sizeof(listener_data));
+        }
+
+        listener_data *pl=mmap(NULL,sizeof(listener_data),PROT_READ|PROT_WRITE, MAP_SHARED,mem_fd,0);
+
+        if(pl)
+        {
+            size_t ct=semper_timestamp_get();
+            if((pl->timestamp<=ct)&&(ct-pl->timestamp)>1000)
+                ret=1;
+            else
+                ret=0;
+            munmap(pl,sizeof(listener_data));
+        }
+        else
+        {
+            ret=0;
+        }
         close(mem_fd);
     }
 
@@ -677,8 +783,11 @@ static int semper_shm_writer(unsigned char *comm)
         CloseHandle(pp);
     }
 #elif __linux__
-
-    int mem_fd=shm_open("/SemperCommandListener",O_RDWR,0777);
+    unsigned char usr[256]= {0};
+    unsigned char buf[280]= {0};
+    getlogin_r(usr,255);
+    snprintf(buf,280,"/SemperCommandListener_%s",usr);
+    int mem_fd=shm_open(buf,O_RDWR,0777);
 
     if(mem_fd>=0)
     {
@@ -691,6 +800,7 @@ static int semper_shm_writer(unsigned char *comm)
                 sched_yield();
 
             strncpy(p->buf,comm,32*1024);
+
             while(p->status)
                 sched_yield();
             p->status=1;
@@ -747,7 +857,11 @@ static void *semper_listener(void *p)
 
 
 #elif __linux__
-    int mem_fd=shm_open("/SemperCommandListener",O_RDWR|O_CREAT,0777);
+    unsigned char usr[256]= {0};
+    unsigned char buf[280]= {0};
+    getlogin_r(usr,255);
+    snprintf(buf,280,"/SemperCommandListener_%s",usr);
+    int mem_fd=shm_open(buf,O_RDWR|O_CREAT,0777);
 
 
     if(mem_fd<0)
@@ -772,14 +886,19 @@ static void *semper_listener(void *p)
 
     while(pl&&cd->c.quit==0)
     {
+#ifdef __linux__
+        pl->timestamp=semper_timestamp_get();
+#endif
         if(pl->status==1)
         {
+
             pl->status=2;
             ldp_data* ldpd = zmalloc(sizeof(ldp_data));
             ldpd->cd=cd;
             ldpd->sd=dummy;
             ldpd->cmd = zmalloc(32*1024+4);
             strncpy(ldpd->cmd,pl->buf,32*1024);
+            memset(pl->buf,0,32*1024);
             event_push(cd->eq, (event_handler)semper_listener_dispatcher, (void*)ldpd, 0, 0); //we will queue this event to be processed later
             pl->status=0;
         }
@@ -799,21 +918,23 @@ static void *semper_listener(void *p)
     if(pp)
         CloseHandle(pp);
 #elif __linux__
-    close(mem_fd);
     munmap(pl,sizeof(listener_data));
-    shm_unlink("/SemperCommandListener");
+    close(mem_fd);
+
+    shm_unlink(buf);
 #endif
     return(NULL);
 }
 #endif
 
+
 int semper_main(void)
 {
+
     control_data* cd = zmalloc(sizeof(control_data));
     pthread_t th;
     surface_data *sd=NULL;
     surface_data *tsd=NULL;
-
 
     semper_create_paths(cd);
 #ifndef DEBUG
@@ -848,6 +969,9 @@ int semper_main(void)
     diag_info("Initializing font cache...this takes time on some machines");
     semper_init_fonts(cd);
     diag_info("Fonts initialized");
+#elif __linux__
+
+
 #endif
 
 
@@ -888,23 +1012,24 @@ int main( int argc, wchar_t *argv[])
 int wmain( int argc, wchar_t *argv[])
 #endif
 #elif __linux__
+
+
 int main( int argc, char *argv[])
 #endif
 {
 
-    size_t arg_cnt=argc-1;
     if(argc<2)
         return(semper_main());
 
 
-    for(size_t i=0; i<arg_cnt; i++)
+    for(size_t i=1; i<argc; i++)
     {
 #ifdef WIN32
         unsigned char *cmd=ucs_to_utf8(argv[i+1],NULL,0);
         semper_shm_writer(cmd);
         sfree((void**)&cmd);
 #elif __linux__
-        semper_shm_writer(argv[i+1]);
+        semper_shm_writer(argv[i]);
 #endif
     }
     return(0);

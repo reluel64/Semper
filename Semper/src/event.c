@@ -297,6 +297,7 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
         SetWaitableTimer(e->timer, &li, 0, (PTIMERAPCROUTINE)event_start_processing, eq, 0);
 
 #elif __linux__
+        
         struct itimerspec tval= {0};
         struct sigevent ev= {0};
 

@@ -28,12 +28,10 @@ int put_file_in_memory(unsigned char* file, void** out, size_t* sz)
      unsigned char *gf=clone_string(file);
     uniform_slashes(gf);
 #ifdef WIN32
-    windows_slahses(gf);
     wchar_t* fp = utf8_to_ucs(gf);
     f = _wfopen(fp, L"rb");
     sfree((void**)&fp);
 #elif __linux__
-    unix_slashes(gf);
     f = fopen(gf, "rb");
 #endif
     sfree((void**)&gf);

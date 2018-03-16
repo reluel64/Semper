@@ -174,7 +174,7 @@ static int folderinfo_collect(unsigned char* root, folderinfo* fi)
                     list_entry_init(&fdl->current);
                     linked_list_add(&fdl->current,&qbase);
                     fdl->dir=ndir;
-                    windows_slahses(ndir);
+                    uniform_slashes(ndir);
                 }
             }
 

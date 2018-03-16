@@ -404,15 +404,15 @@ void xlib_set_zpos(crosswin_window *w)
     switch(w->zorder)
     {
     case crosswin_topmost:
-        xlib_set_above(w,0);
+       // xlib_set_above(w,0);
         break;
 
     case crosswin_desktop:
-        xlib_set_below(w,0);
+        //xlib_set_below(w,0);
         break;
 
     case crosswin_normal:
-        xlib_set_normal(w);
+       // xlib_set_normal(w);
         break;
 
     case crosswin_bottom:

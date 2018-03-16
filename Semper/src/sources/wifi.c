@@ -154,9 +154,10 @@ static unsigned char* wifi_get_phy(I_DOT11_PHY_TYPE value)
 void wifi_init(void **spv,void*ip)
 {
     unused_parameter(ip);
-    unsigned long nver=0;
+   
     wifi_data *wd=zmalloc(sizeof(wifi_data));
 #ifdef WIN32
+ unsigned long nver=0;
     WlanOpenHandle(2,NULL,&nver,&wd->wifi_handle);
 #endif
     *spv=wd;
@@ -215,10 +216,10 @@ double wifi_update(void *spv)
 {
     double ret=-1.0;
     wifi_data *wd=spv;
-    unsigned long nver=0;
+   
     sfree((void**)&wd->str_val);
 #ifdef WIN32
-
+ unsigned long nver=0;
     if(wd->wifi_handle==NULL&&WlanOpenHandle(2,NULL,&nver,&wd->wifi_handle)!=ERROR_SUCCESS)
     {
         return(-1.0);

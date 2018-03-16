@@ -1,4 +1,7 @@
-
+/*Image cache SVG decoding
+ * Part of Project 'Semper'
+ * Written by Alexandru-Daniel Margarit
+ * */
 #include <stdio.h>
 #include <image/image_cache.h>
 #include <mem.h>

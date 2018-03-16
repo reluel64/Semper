@@ -383,18 +383,14 @@ static int webget_curl_download(unsigned char *link,webget_worker *ww)
             size_t len=string_length(tmp_path)+sizeof("Semper_Webget")+1;
             unsigned char *dir_path=zmalloc(len+1);
             snprintf(dir_path,len,"%s/Semper_Webget",tmp_path);
-#ifdef WIN32
-            windows_slahses(dir_path);
-#endif
+
             uniform_slashes(dir_path);
             webget_mkdir(dir_path);
 
             len=string_length(dir_path)+string_length(fn)+6;
             fp=zmalloc(len);
             snprintf(fp,len,"%s/%s.tmp",dir_path,fn);
-#ifdef WIN32
-            windows_slahses(fp);
-#endif
+
             uniform_slashes(fp);
             ww->f=webget_create_file(fp);
             sfree((void**)&dir_path);

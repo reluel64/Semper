@@ -349,9 +349,6 @@ SEMPER_API unsigned char *absolute_path(void *ip,unsigned char *rp,unsigned char
         sfree((void**)&s->ext_str);
         s->ext_str=zmalloc(rootl+rpl+2); //null + /
         snprintf(s->ext_str,rootl+rpl+2,"%s/%s",root,rp);
-#ifdef WIN32
-        windows_slahses(s->ext_str);
-#endif
         uniform_slashes(s->ext_str);
         return(s->ext_str);
     }

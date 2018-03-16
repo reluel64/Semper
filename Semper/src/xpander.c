@@ -490,7 +490,7 @@ static int xpander_src_token_filter(string_tokenizer_status *sts,void *pv)
 
 int xpander(xpander_request *xr)
 {
-
+    
     surface_data *sd=NULL;
     control_data *cd=NULL;
     section sect=NULL;
@@ -756,14 +756,13 @@ int xpander(xpander_request *xr)
         while(has_var);
     }
 
-
+    
     if(escapments&&xr->es)
     {
         for(size_t i = 0; xr->es[i]; i++)
         {
             int p1 = (xr->es[i] == '[' && xr->es[i + 1] == '~') || (xr->es[i] == '$' && xr->es[i + 1] == '~');
             int p2 = (xr->es[i] == '~' && xr->es[i + 1] == ']') || (xr->es[i] == '~' && xr->es[i + 1] == '$');
-
             if(p1)
             {
                 for(size_t j = i + 1; xr->es[j]; j++)
@@ -781,6 +780,18 @@ int xpander(xpander_request *xr)
             }
         }
     }
-
+    
+   if(xr->es==NULL)
+   {
+       xr->es=expand_env_var(xr->os);
+   }
+   else
+   {
+    unsigned char *temp=expand_env_var(xr->es);
+    sfree((void**)&xr->es);
+    xr->es=temp;
+   }
+    
+    
     return(xr->es!=NULL);
 }

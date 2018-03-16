@@ -971,6 +971,7 @@ COMMAND_HANDLER(handler_quit_app)
     control_data* cd = sd->cd;
     cd->c.quit=1;
     event_push(cd->eq,NULL,NULL,0,0);
+    return(0);
 }
 
 

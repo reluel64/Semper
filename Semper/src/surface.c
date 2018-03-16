@@ -582,13 +582,6 @@ static int surface_create_paths(control_data* cd, surface_paths* sp, size_t vari
     uniform_slashes(sp->surface_file);
     uniform_slashes(sp->surface_rel_dir);
 
-#ifdef WIN32
-    windows_slahses(sp->data_dir);
-    windows_slahses(sp->file_path);
-    windows_slahses(sp->surface_dir);
-    windows_slahses(sp->surface_file);
-    windows_slahses(sp->surface_rel_dir);
-#endif
     return (1);
 }
 

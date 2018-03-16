@@ -458,9 +458,6 @@ void folderview_command(void* spv, unsigned char* command)
 
                     snprintf(temp,path_len+dir_len+2,"%s/%s",fp->path,fc->item->name);
                     uniform_slashes(temp);
-#ifdef WIN32
-                    windows_slahses(temp);
-#endif
 
                     if(fp->path!=fp->base_path)
                     {
@@ -780,12 +777,6 @@ static int folderview_collect(unsigned char *root,folderview_parent *f,foldervie
                     fi->file_path=zmalloc(temp_len+fpsz+2);
                     snprintf(fi->file_path,temp_len+fpsz+2,"%s/%s",file,temp);
 
-#ifdef WIN32
-                    windows_slahses(fi->file_path);
-#elif __linux__
-                    unix_slashes(fi->file_path);
-#endif
-
                     if(dir==0&&f->hide_ext)
                     {
                         unsigned char *dot=strrchr(temp,'.');
@@ -818,7 +809,7 @@ static int folderview_collect(unsigned char *root,folderview_parent *f,foldervie
                     list_entry_init(&fdl->current);
                     linked_list_add(&fdl->current,&qbase);
                     fdl->dir=ndir;
-                    windows_slahses(ndir);
+                    uniform_slashes(ndir);
                     sfree((void**)&temp);
                 }
                 else if(f->collect_mode==1&&fi)
@@ -950,7 +941,6 @@ static int folderview_create_icon(unsigned char *store_root,unsigned char *file_
             fc->icon_path=zmalloc(srlen+80);
             snprintf(fc->icon_path,srlen+66,"%s/%llu.png",store_root,fc->index);
 
-            windows_slahses(fc->icon_path);
             uniform_slashes(fc->icon_path);
             unsigned short *uni=utf8_to_ucs(fc->icon_path);
 

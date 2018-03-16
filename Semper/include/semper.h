@@ -55,10 +55,12 @@ typedef struct
 typedef struct
 {
     crosswin c;
+    unsigned char *app_dir;
     unsigned char* root_dir;            // root directory path
     unsigned char* cf;                  // configuration file
     unsigned char* surface_dir;         // surfaces directory
     unsigned char* ext_dir;             // extensions directory
+    unsigned char *ext_app_dir;
     unsigned char* font_cache_dir;
     list_entry shead;                   // config skeleton
     list_entry surfaces;                // surfaces head
@@ -66,7 +68,9 @@ typedef struct
     void *srf_reg;                      // surface registry
     size_t surface_dir_length;
     size_t ext_dir_length;
+    size_t ext_app_dir_len;
     size_t root_dir_length;
+    size_t app_dir_len;
     event_queue* eq;                    //main event queue
     void *ich;                          //image cache holder
     unsigned char shutdown;
