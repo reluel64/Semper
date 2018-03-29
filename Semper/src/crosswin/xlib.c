@@ -7,15 +7,9 @@
 #include <surface.h>
 #include <event.h>
 #include <mem.h>
+#include <X11/extensions/Xinerama.h>
 #define CONTEXT_ID 0x2712
 
-void xlib_init_display(crosswin *c)
-{
-    c->display=XOpenDisplay(NULL);
-
-    XMatchVisualInfo(c->display, DefaultScreen(c->display), 32, TrueColor, &c->vinfo);
-    c->disp_fd=(void*)(size_t)XConnectionNumber(c->display);
-}
 typedef struct Hints
 {
     unsigned long   flags;
@@ -24,6 +18,44 @@ typedef struct Hints
     long            inputMode;
     unsigned long   status;
 } Hints;
+
+
+void xlib_init_display(crosswin *c)
+{
+    c->display=XOpenDisplay(NULL);
+    
+    XMatchVisualInfo(c->display, DefaultScreen(c->display), 32, TrueColor, &c->vinfo);
+    c->disp_fd=(void*)(size_t)XConnectionNumber(c->display);
+}
+
+int xlib_get_monitors(crosswin *c,crosswin_monitor **cm,size_t *cnt)
+{
+    if(cm == NULL || cnt == NULL || c == NULL || c->display == NULL)
+    {
+        return(-1);
+    }
+    XineramaScreenInfo *sinfo=NULL;
+    
+   sinfo = XineramaQueryScreens(c->display,cnt);
+   
+   if(sinfo)
+   {
+       *cm=zmalloc(sizeof(crosswin_monitor)*(*cnt));
+       for(size_t i=0;i<*cnt;i++)
+       {
+           (*cm)[i].h=sinfo[i].height;
+           (*cm)[i].w=sinfo[i].width;
+           (*cm)[i].x=sinfo[i].x_org;
+           (*cm)[i].y=sinfo[i].y_org;
+            (*cm)[i].index=i;
+       }
+       XFree(sinfo);
+       return(0);
+   }
+   return(-1);
+    
+}
+
 
 void xlib_init_window(crosswin_window *w)
 {
@@ -92,6 +124,7 @@ void xlib_set_dimmension(crosswin_window *w)
     wc.height=w->h;
     XConfigureWindow(w->c->display,w->window,CWWidth|CWHeight,&wc);
 }
+
 
 
 static void xlib_render(crosswin_window *w)
@@ -204,9 +237,9 @@ int xlib_message_dispatch(crosswin *c)
         crosswin_window *w=NULL;
 
         XNextEvent(c->display,&ev);
-
+        
         XFindContext(c->display,ev.xany.window,CONTEXT_ID,(char**)&w);
-
+    
         if(c==NULL||w==NULL)
             continue;
         switch(ev.xany.type)
@@ -253,8 +286,6 @@ int xlib_message_dispatch(crosswin *c)
 
         case MotionNotify:
         {
-            
-            
             w->md.x=ev.xmotion.x;
             w->md.y=ev.xmotion.y;
             w->md.root_x=ev.xmotion.x_root;
@@ -287,7 +318,6 @@ int xlib_message_dispatch(crosswin *c)
                 w->md.state=mouse_button_state_none;
                 w->md.scroll_dir=1;
                 break;
-
             }
             w->c->handle_mouse(w);
             break;
@@ -342,57 +372,16 @@ int xlib_set_opacity(crosswin_window *w)
 
 void  xlib_set_position(crosswin_window *w)
 {
-   
-   /* int found=0;
-    size_t evt_count=0;
-    XEvent *evts=NULL;*/
    XMoveWindow(w->c->display,w->window,w->x,w->y); /*Move the window*/
-  /*  while(XPending(w->c->display))
-    {
-        
-        XEvent *tmp=realloc(evts,sizeof(XEvent)*(evt_count+1));
-        
-        if(tmp)
-            evts=tmp;
-        else
-            break;
-        
-        
-        XNextEvent(w->c->display,evts+evt_count);
-evt_count++; 
-     }
-    
-  
-     //XSync(w->c->display,1);
-    
-    
-  for(size_t i=0;i<evt_count;i++)
-  {
-    XSendEvent(w->c->display,w->window,1,KeyPressMask 		    |
-                    KeymapStateMask         |
-                    StructureNotifyMask     |
-                    SubstructureNotifyMask  |
-                    SubstructureRedirectMask|
-                    ButtonReleaseMask 	    |
-                    KeyReleaseMask 		    |
-                    EnterWindowMask 	    |
-                    LeaveWindowMask 	    |
-                    PointerMotionMask 	    |
-                    ButtonMotionMask 	    |
-                    VisibilityChangeMask    |
-                    ExposureMask            |
-                    ButtonPressMask,evts+i);
-    
-  }
-  
-  sfree((void**)&evts);*/
 }
 
 void xlib_destroy_window(crosswin_window **w)
 {
     xlib_destroy_input_context(*w);
+    
+    XDeleteContext((*w)->c->display,(XID)(*w)->window,CONTEXT_ID);
     XDestroyWindow((*w)->c->display,(*w)->window);
-    XDeleteContext((*w)->c->display,(XID)*w,CONTEXT_ID);
+   
     XFreePixmap((*w)->c->display,(*w)->pixmap);
     cairo_surface_destroy((*w)->offscreen_buffer);
     free(*w);

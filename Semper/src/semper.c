@@ -774,8 +774,10 @@ static int semper_shm_writer(unsigned char *comm)
                 sched_yield();
 
             strncpy(p->buf,comm,32*1024);
+
             while(p->status)
                 sched_yield();
+
             p->status=1;
             UnmapViewOfFile(pmap);
 
@@ -903,9 +905,9 @@ static void *semper_listener(void *p)
             pl->status=0;
         }
 #ifdef WIN32
-        Sleep(10);
+        Sleep(100);
 #elif __linux__
-        usleep(10000);
+        usleep(100000);
 #endif
     }
 
@@ -937,23 +939,24 @@ int semper_main(void)
     surface_data *tsd=NULL;
 
     semper_create_paths(cd);
+#if 0
 #ifndef DEBUG
     if(semper_single_instance(cd)==0)
     {
         return(0);
     }
 #endif
-
+#endif
     if(pthread_create(&th,NULL,semper_listener,cd))
     {
         diag_error("Failed to create listener thread");
     }
+
     crosswin_init(&cd->c);
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
     cd->eq = event_queue_init();
     cd->watcher=watcher_init(cd->surface_dir);
-
 
     event_add_wait(cd->eq,(event_wait_handler)crosswin_message_dispatch,&cd->c,cd->c.disp_fd,0x1);
     event_add_wait(cd->eq,(event_wait_handler)semper_check_screen,cd,NULL,0);
@@ -974,7 +977,6 @@ int semper_main(void)
 
 #endif
 
-
     if(semper_load_surfaces(cd)==0)
     {
         /*launch the catalog if no surface has been loaded due to various reasons*/
@@ -983,9 +985,9 @@ int semper_main(void)
 
     while(cd->c.quit == 0) //nothing fancy, just the main event loop
     {
-        if(event_wait(cd->eq))                 // wait for an event to occur
+        if(event_wait(cd->eq))                 /* wait for an event to occur */
         {
-            event_process(cd->eq);             // process the queue
+            event_process(cd->eq);             /* process the queue */
         }
     }
     /*We left the main loop so we will clean things up*/
@@ -996,7 +998,7 @@ int semper_main(void)
 
     while(!event_queue_empty(cd->eq))
     {
-        event_process(cd->eq);             // process the queue
+        event_process(cd->eq);             /* process the queue */
     }
 
     semper_save_configuration(cd);
@@ -1012,9 +1014,10 @@ int main( int argc, wchar_t *argv[])
 int wmain( int argc, wchar_t *argv[])
 #endif
 #elif __linux__
-
+#include <spawn.h>
 
 int main( int argc, char *argv[])
+
 #endif
 {
 
@@ -1025,7 +1028,7 @@ int main( int argc, char *argv[])
     for(size_t i=1; i<argc; i++)
     {
 #ifdef WIN32
-        unsigned char *cmd=ucs_to_utf8(argv[i+1],NULL,0);
+        unsigned char *cmd=ucs_to_utf8(argv[i],NULL,0);
         semper_shm_writer(cmd);
         sfree((void**)&cmd);
 #elif __linux__

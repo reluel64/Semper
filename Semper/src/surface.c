@@ -138,6 +138,7 @@ void surface_reset(surface_data* sd)
     sd->ro = parameter_byte(sd, "Opacity", 255, XPANDER_SURFACE_CONFIG);
     sd->order = (long)parameter_long_long(sd, "Order", 0, XPANDER_SURFACE_CONFIG);
     sd->zorder = parameter_byte(sd, "ZOrder", crosswin_normal, XPANDER_SURFACE_CONFIG);
+    sd->monitor=parameter_size_t(sd,"Monitor",0,XPANDER_SURFACE_CONFIG);
 
     sd->fade_direction = (sd->hidden ? -1 : 1);
     sd->uf=sd->uf==0?1000:sd->uf;
@@ -238,6 +239,8 @@ int surface_destroy(surface_data* sd)
     {
         return (-1);
     }
+
+    event_remove(sd->cd->eq, NULL, sd, EVENT_REMOVE_BY_DATA); //stop updating the surface
 
     if(!linked_list_empty(&sd->current))
     {
@@ -650,13 +653,15 @@ size_t surface_load(control_data* cd, unsigned char* name, size_t variant)
             linked_list_add(&sd->current, &cd->surfaces);
         else
             _linked_list_add(&p->current, &sd->current, &n->current);
+
+        return(0);
     }
     else
     {
         surface_create_paths(NULL, &sp, 0, NULL);
     }
 
-    return (0);
+    return (-1);
 }
 
 /*Loads a surface that was stored in a buffer*/
@@ -829,7 +834,7 @@ void surface_init_update(surface_data *sd)
     surface_window_init(sd);                                                   // initialize window
     surface_reset(sd); // set or reset the surface parameters
     surface_init_items(sd);                                                    // initialize sources and objects
-
+    crosswin_set_monitor(sd->sw,sd->monitor);
     crosswin_click_through(sd->sw, sd->clkt);
     crosswin_set_position(sd->sw, sd->x, sd->y);
     crosswin_draggable(sd->sw, sd->draggable);

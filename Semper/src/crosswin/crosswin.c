@@ -20,6 +20,7 @@
 
 
 static int crosswin_mouse_handle(crosswin_window *cw);
+static crosswin_monitor *crosswin_get_monitor(crosswin *c,size_t index);
 void crosswin_init(crosswin* c)
 {
     list_entry_init(&c->windows);
@@ -28,12 +29,12 @@ void crosswin_init(crosswin* c)
     win32_init_class();
     c->sh = GetSystemMetrics(SM_CYSCREEN);
     c->sw = GetSystemMetrics(SM_CXSCREEN);
-
+    crosswin_get_monitors(c,&c->pm,&c->mon_cnt);
 #elif __linux__
 
     xlib_init_display(c);
     Screen *s=DefaultScreenOfDisplay(c->display);
-
+  crosswin_get_monitors(c,&c->pm,&c->mon_cnt);
     if(s)
     {
         c->sw=s->width;
@@ -63,10 +64,12 @@ int crosswin_update(crosswin* c)
     return(oh!=c->sh||ow!=c->sw);
 }
 
-void crosswin_monitor_resolution(crosswin* c, long* w, long* h)
+void crosswin_monitor_resolution(crosswin* c, crosswin_window *cw, long* w, long* h)
 {
-    *w = c->sw;
-    *h = c->sh;
+    crosswin_monitor *cm=crosswin_get_monitor(c,cw->mon);
+
+    *w=cm->w+cm->x;
+    *h=cm->h+cm->y;
 }
 void crosswin_message_dispatch(crosswin *c)
 {
@@ -93,6 +96,17 @@ crosswin_window* crosswin_init_window(crosswin* c)
 
     return (w);
 }
+
+int crosswin_get_monitors(crosswin *c,crosswin_monitor **cm,size_t *len)
+{
+#ifdef WIN32
+    unused_parameter(c);
+   return(win32_get_monitors(cm,len));
+#elif __linux__
+return(xlib_get_monitors(c,cm,len));
+#endif
+}
+
 
 void crosswin_set_window_data(crosswin_window* w, void* pv)
 {
@@ -136,27 +150,55 @@ void crosswin_set_render(crosswin_window* w, void (*render)(crosswin_window* pv,
         w->render_func = render;
 }
 
+static crosswin_monitor *crosswin_get_monitor(crosswin *c,size_t index)
+{
+    if(c->mon_cnt<=index)
+        return(c->pm);
+    else
+        return(c->pm+index);
+}
+
+
 void crosswin_set_position(crosswin_window* w, long x, long y)
 {
+
     if(w)
     {
         crosswin* c = w->c;
+        crosswin_monitor *cm=crosswin_get_monitor(c,w->mon);
         w->x = x;
         w->y = y;
 
+
+
         if(w->keep_on_screen == 1)
         {
+#if 0
             if(w->x < 0)
                 w->x = 0;
 
-            else if(w->x + w->w > c->sw)
-                w->x = max(c->sw - w->w, 0);
+            else if(w->x + w->w > cm->w)
+                w->x = max(cm->w - w->w, 0);
 
             if(w->y < 0)
                 w->y = 0;
 
-            else if(w->y + w->h > c->sh)
-                w->y = max(c->sh - w->h, 0);
+            else if(w->y + w->h > cm->h)
+                w->y = max(cm->h - w->h, 0);
+#endif
+
+            if(w->x < cm->x)
+                w->x = cm->x;
+
+            else if(w->x + w->w > cm->w)
+                w->x = cm->w - w->w;
+
+            if(w->y < cm->y)
+                w->y = cm->y;
+
+            else if(w->y + w->h > cm->h)
+                w->y = cm->h - w->h;
+
         }
 
 #ifdef WIN32
@@ -201,6 +243,15 @@ void crosswin_set_dimension(crosswin_window* w, long width, long height)
 #ifdef __linux__
     xlib_set_dimmension(w);
 #endif
+}
+
+
+void crosswin_set_monitor(crosswin_window *w,size_t mon)
+{
+    if(w)
+    {
+        w->mon=mon;
+    }
 }
 
 void crosswin_set_mouse_handler(crosswin_window* w, int (*mouse_handler)(crosswin_window* w, mouse_status* ms))
@@ -320,12 +371,13 @@ static size_t crosswin_get_time(void)
 
 static int crosswin_mouse_handle(crosswin_window *cw)
 {
-    mouse_data *md=&cw->md;
+    crosswin *c=cw->c;
+    mouse_data *md=&c->md;
     mouse_status ms= {0};
-    long lx = cw->cposx;
-    long ly = cw->cposy;
-    cw->cposx = md->root_x;
-    cw->cposy = md->root_y;
+    long lx = md->cposx;
+    long ly = md->cposy;
+    md->cposx = md->root_x;
+    md->cposy = md->root_y;
 
     if(md->state==mouse_button_state_unpressed&&md->drag)
     {
@@ -357,7 +409,7 @@ static int crosswin_mouse_handle(crosswin_window *cw)
         ms.y=md->y;
 
         /*Validate the command by checking if the coordinates have changed*/
-        if(lx==cw->cposx&&ly==cw->cposy)
+        if(lx==md->cposx&&ly==md->cposy)
         {
             ms.state=md->state;
             ms.button=md->button;
@@ -435,6 +487,7 @@ static int crosswin_mouse_handle(crosswin_window *cw)
     return(0);
 }
 
+
 #if 0
 static void crosswin_move_window(crosswin_window *w,long cx,long cy,unsigned char move)
 {
@@ -446,6 +499,7 @@ static void crosswin_move_window(crosswin_window *w,long cx,long cy,unsigned cha
     if(move==0)
     {
         w->dragging=0;
+
     }
     else if(w->draggable && !w->mouse.handled)
     {

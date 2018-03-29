@@ -71,6 +71,7 @@ typedef struct _surface_data
     unsigned char visible:1;
     unsigned char lock_w;
     unsigned char lock_h;
+    size_t monitor;
     //*************************************************
     size_t cycle;             // update cycle counter (it is used for dividers)
     section spm;              //[surface]

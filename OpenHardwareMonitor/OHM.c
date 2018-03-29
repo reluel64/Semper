@@ -11,7 +11,7 @@ typedef struct
 {
     unsigned char *name;
     unsigned char *type;
-    unsigned char work;
+    void *work;
     pthread_mutex_t mutex;
     double value;
     pthread_t qth;
@@ -31,6 +31,7 @@ void init(void **spv,void *ip)
     pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
     pthread_mutex_init(&ohm->mutex,&mutex_attr);
     pthread_mutexattr_destroy(&mutex_attr);
+    ohm->work=semper_safe_flag_init();
     *spv=ohm;
 }
 
@@ -68,22 +69,19 @@ double update(void *spv)
 
     if(ohm->qth==0)
     {
-        ohm->work=1;
+        semper_safe_flag_set(ohm->work,1);
         if(pthread_create(&ohm->qth, NULL, ohm_query, ohm)==0)
         {
-            while(ohm->work==1)
-            {
-                sched_yield();
-            }
+            while(semper_safe_flag_get(ohm->work)==1);
         }
         else
         {
-            ohm->work=0;
+            semper_safe_flag_set(ohm->work,0);
             diag_error("Failed to start WMI query thread");
         }
     }
 
-    if(ohm->work==0&&ohm->qth)
+    if(semper_safe_flag_get(ohm->work)==0&&ohm->qth)
     {
         pthread_join(ohm->qth,NULL);
         memset(&ohm->qth,0,sizeof(pthread_t));
@@ -103,7 +101,7 @@ void destroy(void **spv)
     if(ohm->qth)
         pthread_join(ohm->qth,NULL);
     pthread_mutex_destroy(&ohm->mutex);
-
+    semper_safe_flag_destroy(&ohm->work);
     free(ohm->name);
     free(ohm->type);
     free(*spv);
@@ -118,7 +116,7 @@ static void * ohm_query(void *pv)
     IEnumWbemClassObject *results  = NULL;
     IWbemServices        *services=NULL;
     IWbemLocator         *locator=NULL;
-    ohm->work=2;
+    semper_safe_flag_set(ohm->work,2);
 
 
     CoInitializeEx(0, 0);
@@ -192,7 +190,8 @@ static void * ohm_query(void *pv)
     }
     locator->lpVtbl->Release(locator);
     CoUninitialize();
-    ohm->work=0;
+
+    semper_safe_flag_set(ohm->work,0);
 
     return(NULL);
 }

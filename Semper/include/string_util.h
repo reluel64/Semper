@@ -22,7 +22,7 @@ typedef struct
     size_t *ovecoff;                                                            //offset vector (in_out)
     int (*string_tokenizer_filter)(string_tokenizer_status *sts, void* pv);     //filtering function (mandatory)
     void *filter_data;                                                          //user data for the filtering function
-    size_t buf_len;
+
 } string_tokenizer_info;
 
 

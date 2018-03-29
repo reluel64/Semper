@@ -508,6 +508,8 @@
         <Library Value="X11"/>
         <Library Value="Xext"/>
         <Library Value="rt"/>
+        <Library Value="Xrandr"/>
+        <Library Value="Xinerama"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName).bin" IntermediateDirectory="$(WorkspacePath)/build/$(ProjectName)" Command="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName).bin" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(WorkspacePath)/bin/$(ConfigurationName)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>

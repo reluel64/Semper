@@ -81,7 +81,7 @@ VOID WINAPI FreeMibTable(_In_ PVOID Memory);
 #elif __linux__
 #include <dirent.h>
 #endif
-static size_t network_interface_index(unsigned char *iname);
+
 typedef enum
 {
     total,
@@ -101,6 +101,9 @@ typedef struct
     size_t qty_bytes;
     double v;
 } network;
+
+static size_t network_interface_index(unsigned char *iname);
+static size_t network_get_bytes(network *n);
 
 void network_init(void**spv,void *ip)
 {
@@ -151,6 +154,51 @@ void network_reset(void *spv,void *ip)
 #endif
 
 }
+
+
+
+double network_update(void *spv)
+{
+
+    network *n=spv;
+    time_t ct=time(NULL);
+
+    size_t new_value=0;
+
+    if(ct-n->t<1)
+    {
+        return(n->v); //we'll not update the speed if the interval is less than a second
+    }
+
+    new_value=network_get_bytes(n);
+
+    if(new_value>=n->old_bytes&&n->old_bytes)
+    {
+        n->v=(double)(new_value-n->old_bytes);
+        n->qty_bytes+=(new_value-n->old_bytes);
+        n->old_bytes=new_value;
+
+        if(n->qty)
+        {
+            n->v=(double)n->qty_bytes;
+        }
+    }
+    else
+    {
+        n->old_bytes=new_value;
+    }
+
+    n->t=ct; //set the new time
+
+    return(n->v);
+}
+
+void network_destroy(void **spv)
+{
+    sfree(spv);
+}
+
+
 
 static size_t network_get_bytes(network *n)
 {
@@ -297,48 +345,6 @@ static size_t network_get_bytes(network *n)
 
 #endif
     return(c_bytes);
-}
-
-
-double network_update(void *spv)
-{
-
-    network *n=spv;
-    time_t ct=time(NULL);
-
-    size_t new_value=0;
-
-    if(ct-n->t<1)
-    {
-        return(n->v); //we'll not update the speed if the interval is less than a second
-    }
-
-    new_value=network_get_bytes(n);
-
-    if(new_value>=n->old_bytes&&n->old_bytes)
-    {
-        n->v=(double)(new_value-n->old_bytes);
-        n->qty_bytes+=(new_value-n->old_bytes);
-        n->old_bytes=new_value;
-
-        if(n->qty)
-        {
-            n->v=(double)n->qty_bytes;
-        }
-    }
-    else
-    {
-        n->old_bytes=new_value;
-    }
-
-    n->t=ct; //set the new time
-
-    return(n->v);
-}
-
-void network_destroy(void **spv)
-{
-    sfree(spv);
 }
 
 

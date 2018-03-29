@@ -103,7 +103,7 @@ unsigned char event_wait(event_queue* eq)
 {
 
     unsigned char event_p=0;
-     event_waiter *ew=NULL;
+    event_waiter *ew=NULL;
 #ifdef WIN32
 
 
@@ -260,7 +260,6 @@ void event_remove(event_queue* eq, event_handler eh, void* pv, unsigned char fla
     pthread_mutex_unlock(&eq->mutex);
 }
 
-
 int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout, unsigned char flags)
 {
     if(flags & EVENT_REMOVE_BY_DATA_HANDLER)
@@ -297,7 +296,7 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
         SetWaitableTimer(e->timer, &li, 0, (PTIMERAPCROUTINE)event_start_processing, eq, 0);
 
 #elif __linux__
-        
+
         struct itimerspec tval= {0};
         struct sigevent ev= {0};
 
@@ -389,6 +388,7 @@ void event_queue_destroy(event_queue** eq)
 
     }
 }
+
 
 int event_queue_empty(event_queue *eq)
 {

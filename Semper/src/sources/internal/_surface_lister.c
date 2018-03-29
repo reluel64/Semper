@@ -211,7 +211,11 @@ double surface_lister_update(void* spv)
             return(1.0);
         }
     }
+#if 0
     else if(sl->parent==NULL&&sl->update)
+#else
+    else if(sl->parent==NULL)
+#endif
     {
         surface_lister_collect(spv);
         sl->update=0;

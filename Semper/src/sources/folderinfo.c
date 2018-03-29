@@ -12,8 +12,8 @@ typedef struct _folderinfo
 {
     struct _folderinfo* parent;
     unsigned char* path;
-    unsigned char working;
-    unsigned char stop;
+    void *working;
+    void *stop;
     pthread_t th;
     size_t folder_count;
     size_t size;
@@ -44,8 +44,14 @@ static size_t file_size(size_t low, size_t high)
 
 void folderinfo_init(void** spv, void* ip)
 {
+    folderinfo* fi = NULL;
+
+    fi = zmalloc(sizeof(folderinfo));
+
+    fi->working=safe_flag_init();
+    fi->stop=safe_flag_init();
     unused_parameter(ip);
-    *spv = zmalloc(sizeof(folderinfo));
+    *spv=fi;
 }
 
 void folderinfo_reset(void* spv, void* ip)
@@ -56,9 +62,9 @@ void folderinfo_reset(void* spv, void* ip)
 
     if(fi->th)
     {
-        fi->stop=1;
+        safe_flag_set(fi->stop,1);
         pthread_join(fi->th,NULL);
-        fi->stop=0;
+        safe_flag_set(fi->stop,0);
         fi->th = 0;
     }
 
@@ -105,7 +111,7 @@ static int folderinfo_collect(unsigned char* root, folderinfo* fi)
         WIN32_FIND_DATAW wfd = { 0 };
         void* fh =NULL;
 
-        if(fi->stop==0)
+        if(safe_flag_get(fi->stop)==0)
         {
             fpsz= string_length(file);
             unsigned char* filtered = zmalloc(fpsz + 6);
@@ -120,7 +126,7 @@ static int folderinfo_collect(unsigned char* root, folderinfo* fi)
 
         do
         {
-            if(fi->stop||fh==INVALID_HANDLE_VALUE)
+            if(safe_flag_get(fi->stop)||fh==INVALID_HANDLE_VALUE)
             {
                 break;
             }
@@ -188,7 +194,7 @@ static int folderinfo_collect(unsigned char* root, folderinfo* fi)
             sfree((void**)&res);
 
         }
-        while(fi->stop==0&&FindNextFileW(fh, &wfd));
+        while(safe_flag_get(fi->stop)==0&&FindNextFileW(fh, &wfd));
 
         if(fh!=NULL&&fh!=INVALID_HANDLE_VALUE)
         {
@@ -240,10 +246,10 @@ double folderinfo_update(void* spv)
 
     folderinfo* fi = spv;
 
-    if(fi->working==0&&fi->parent == NULL && fi->th == 0)
+    if(safe_flag_get(fi->working)==0&&fi->parent == NULL && fi->th == 0)
     {
         int status=0;
-        fi->working=1;
+        safe_flag_set(fi->working,1);
 #ifdef WIN32
         status=pthread_create(&fi->th, NULL, folderinfo_collect_thread, fi);
 #endif
@@ -255,14 +261,11 @@ double folderinfo_update(void* spv)
         }
         else
         {
-             while(fi->working==1)
-            {
-                sched_yield();
-            }
+            while(safe_flag_get(fi->working)==1);
         }
     }
 
-    if(fi->working == 0&&fi->th)
+    if(safe_flag_get(fi->working) == 0&&fi->th)
     {
         pthread_join(fi->th, NULL);
         fi->th = 0;
@@ -293,13 +296,15 @@ double folderinfo_update(void* spv)
 void folderinfo_destroy(void** spv)
 {
     folderinfo* fi = *spv;
-    fi->stop = 1;
+    safe_flag_set(fi->stop,1);
+
 
     if(fi->th!=0)
     {
         pthread_join(fi->th,NULL);
     }
-
+    safe_flag_destroy(&fi->stop);
+    safe_flag_destroy(&fi->working);
     sfree((void**)&fi->path);
     sfree(spv);
 }

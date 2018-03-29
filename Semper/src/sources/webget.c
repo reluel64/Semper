@@ -33,7 +33,7 @@ typedef struct
     size_t buf_pos;
     size_t buf_sz;
     unsigned char status;
-    unsigned char *stop;
+    void *stop;
     unsigned char dwl_mode;
     unsigned char *save_root_dir;
     unsigned char *fp;
@@ -68,9 +68,9 @@ typedef struct webget
     unsigned char *temp;           //temporary holder which is used to update the children (basically it's contents depend on primary_index)
     unsigned char dwl;             //should we download this?
     unsigned char dwl_local;         //should we download this to a file? (it implies dwl)
-    unsigned char update;           //valid only for children
-    unsigned char stop;	   		//signal the worker to stop
-    unsigned char work;    		//worker status
+    void *update;           //valid only for children
+    void *stop;	   		//signal the worker to stop
+    void *work;    		//worker status
     size_t pr_index;                //primary index  (extracted from the parent)
     size_t sec_index;               //secondary index (extracted after applying regexp on the primary index)
     size_t u_rate;                  //update rate
@@ -78,6 +78,183 @@ typedef struct webget
     webget *parent;				   //used if the child has a parent
     webget_worker *ww;			   //status for the worker
 } webget;
+
+static int webget_post_worker_update(webget *w);
+static int webget_apply_regexp(unsigned char *buffer,size_t buf_sz,unsigned char *regexp,int *ovector,size_t ovec_sz,int *match_count);
+static void *webget_worker_thread(void *p);
+
+void webget_init(void **spv,void *ip)
+{
+    unused_parameter(ip);
+    webget *w=zmalloc(sizeof(webget));
+    pthread_mutexattr_t mutex_attr;
+    pthread_mutexattr_init(&mutex_attr);
+    pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
+    pthread_mutex_init(&w->mutex,&mutex_attr);
+    pthread_mutexattr_destroy(&mutex_attr);
+    list_entry_init(&w->children);
+    list_entry_init(&w->current);
+    w->update=safe_flag_init();
+    w->work=safe_flag_init();
+    w->stop=safe_flag_init();
+    *spv=w;
+}
+
+void webget_reset(void *spv,void *ip)
+{
+    webget *w=spv;
+    void *pip=NULL;
+    unsigned char *temp=NULL;
+
+    pthread_mutex_lock(&w->mutex);
+    sfree((void**)&w->address);
+    sfree((void**)&w->regexp);
+    sfree((void**)&w->success_act);
+    sfree((void**)&w->parse_fail_act);
+    sfree((void**)&w->dwl_fail);
+    sfree((void**)&w->connect_fail);
+    sfree((void**)&w->srf_dir);
+    w->regexp=clone_string(param_string("Regexp",EXTENSION_XPAND_ALL,ip,NULL));
+    w->sec_index=param_size_t("SecondaryIndex",ip,0);
+    w->pr_index=param_size_t("PrimaryIndex",ip,0);
+    w->u_rate=param_size_t("UpdateRate",ip,1000);
+    w->dwl_local=param_bool("DownloadLocal",ip,0);
+    w->dwl=param_size_t("Download",ip, 0);
+    w->srf_dir=clone_string(absolute_path(ip,"",EXTENSION_PATH_SURFACE));
+    temp=param_string("URL",EXTENSION_XPAND_VARIABLES,ip,NULL);
+
+    if((pip=get_parent(temp,ip))!=NULL&&w->parent==NULL)
+    {
+        w->parent=get_private_data(pip);
+
+        if(linked_list_empty(&w->current))
+            linked_list_add_last(&w->current,&w->parent->children);
+    }
+    else if(pip==NULL)
+    {
+        linked_list_remove(&w->current);
+        list_entry_init(&w->current);
+        w->address=clone_string(temp);
+    }
+
+    if(pip==NULL||(pip&&w->dwl))
+    {
+        w->success_act=clone_string(param_string("SuccessAction",EXTENSION_XPAND_ALL,ip,NULL));
+        w->parse_fail_act=clone_string(param_string("ParseFailAction",EXTENSION_XPAND_ALL,ip,NULL));
+        w->dwl_fail=clone_string(param_string("DownloadFailAction",EXTENSION_XPAND_ALL,ip,NULL));
+        w->connect_fail=clone_string(param_string("ConnetionFailAction",EXTENSION_XPAND_ALL,ip,NULL));
+    }
+
+    pthread_mutex_unlock(&w->mutex);
+}
+
+
+
+
+double webget_update(void *spv)
+{
+    webget *w=spv;
+
+    if((w->work==0&&w->worker)||w->update)
+    {
+        if(w->worker)
+        {
+            pthread_join(w->worker,NULL);
+            memset(&w->worker,0,sizeof(pthread_t));
+            w->c_rate=w->u_rate;
+        }
+
+        int ret=webget_post_worker_update(w); //do the update of the parent and its children
+
+        if(w->ww)
+        {
+            ret==0?send_command(w->ip,w->success_act):0;
+            sfree((void**)&w->ww->buf);
+            sfree((void**)&w->ww);
+        }
+    }
+
+    if(w->worker==0&&w->address&&(w->c_rate==0||w->update))
+    {
+
+        int status=0;
+        safe_flag_set(w->work,1);
+        status=pthread_create(&w->worker, NULL, webget_worker_thread, w);
+
+        if(status)
+        {
+            safe_flag_set(w->work,0);
+            diag_crit("%s %d Failed to start webget_worker_thread. Status %x",__FUNCTION__,__LINE__,status);
+        }
+        else
+        {
+            while(safe_flag_get(w->work)==1)
+            {
+                sched_yield();
+            }
+
+            if(w->c_rate)
+                w->c_rate--;
+        }
+    }
+
+    return(0.0);
+}
+
+unsigned char *webget_string(void *spv)
+{
+    webget *w=spv;
+    return(w->result==NULL?w->err_str:w->result);
+}
+
+
+void webget_destroy(void **spv)
+{
+    webget *w=*spv;
+    webget *wc=NULL;
+
+    if(safe_flag_get(w->work))
+    {
+        safe_flag_set(w->stop,1);
+        pthread_join(w->worker,NULL);
+    }
+
+    if(w->ww)
+    {
+        sfree((void**)&w->ww->buf);
+        sfree((void**)&w->ww->fp);
+
+        if(w->ww->f)
+            fclose(w->ww->f);
+
+        sfree((void**)&w->ww);
+    }
+
+    pthread_mutex_destroy(&w->mutex);
+
+    sfree((void**)&w->err_str);
+    sfree((void**)&w->address);
+    sfree((void**)&w->temp);
+    sfree((void**)&w->result);
+    sfree((void**)&w->regexp);
+    sfree((void**)&w->success_act);
+    sfree((void**)&w->parse_fail_act);
+    sfree((void**)&w->dwl_fail);
+    sfree((void**)&w->connect_fail);
+    sfree((void**)&w->srf_dir);
+    safe_flag_destroy(&w->work);
+    safe_flag_destroy(&w->update);
+    safe_flag_destroy(&w->stop);
+    if(linked_list_empty(&w->current)==0)
+        linked_list_remove(&w->current);
+
+    list_enum_part(wc,&w->children,current) //make the children orphan
+    {
+        wc->parent=NULL;
+    }
+    sfree(spv);
+}
+
 
 static FILE *webget_create_file(unsigned char *fp)
 {
@@ -171,67 +348,141 @@ static webget_encoding webget_check_text_encoding(unsigned char *buf,size_t len)
         return(enc_utf8);
 }
 
-void webget_init(void **spv,void *ip)
-{
-    unused_parameter(ip);
-    webget *w=zmalloc(sizeof(webget));
-    pthread_mutexattr_t mutex_attr;
-    pthread_mutexattr_init(&mutex_attr);
-    pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
-    pthread_mutex_init(&w->mutex,&mutex_attr);
-    pthread_mutexattr_destroy(&mutex_attr);
-    list_entry_init(&w->children);
-    list_entry_init(&w->current);
-    *spv=w;
-}
 
-void webget_reset(void *spv,void *ip)
-{
-    webget *w=spv;
-    void *pip=NULL;
-    unsigned char *temp=NULL;
 
+static int webget_post_worker_update(webget *w)
+{
+    int ret=0;
+    webget *c=NULL;
     pthread_mutex_lock(&w->mutex);
-    sfree((void**)&w->address);
-    sfree((void**)&w->regexp);
-    sfree((void**)&w->success_act);
-    sfree((void**)&w->parse_fail_act);
-    sfree((void**)&w->dwl_fail);
-    sfree((void**)&w->connect_fail);
-    sfree((void**)&w->srf_dir);
-    w->regexp=clone_string(param_string("Regexp",EXTENSION_XPAND_ALL,ip,NULL));
-    w->sec_index=param_size_t("SecondaryIndex",ip,0);
-    w->pr_index=param_size_t("PrimaryIndex",ip,0);
-    w->u_rate=param_size_t("UpdateRate",ip,1000);
-    w->dwl_local=param_bool("DownloadLocal",ip,0);
-    w->dwl=param_size_t("Download",ip, 0);
-    w->srf_dir=clone_string(absolute_path(ip,"",EXTENSION_PATH_SURFACE));
-    temp=param_string("URL",EXTENSION_XPAND_VARIABLES,ip,NULL);
-
-    if((pip=get_parent(temp,ip))!=NULL&&w->parent==NULL)
-    {
-        w->parent=get_private_data(pip);
-
-        if(linked_list_empty(&w->current))
-            linked_list_add_last(&w->current,&w->parent->children);
-    }
-    else if(pip==NULL)
-    {
-        linked_list_remove(&w->current);
-        list_entry_init(&w->current);
-        w->address=clone_string(temp);
-    }
-
-    if(pip==NULL||(pip&&w->dwl))
-    {
-        w->success_act=clone_string(param_string("SuccessAction",EXTENSION_XPAND_ALL,ip,NULL));
-        w->parse_fail_act=clone_string(param_string("ParseFailAction",EXTENSION_XPAND_ALL,ip,NULL));
-        w->dwl_fail=clone_string(param_string("DownloadFailAction",EXTENSION_XPAND_ALL,ip,NULL));
-        w->connect_fail=clone_string(param_string("ConnetionFailAction",EXTENSION_XPAND_ALL,ip,NULL));
-    }
-
+    webget_worker *ww=w->ww;
     pthread_mutex_unlock(&w->mutex);
+    unsigned char *buf=NULL;
+    size_t buf_len=0;
+    int ovector[OVECTOR_LIMIT]= {0};
+    int match_count=0;
+    size_t ovec_sz=OVECTOR_LIMIT;
+    size_t len=0;
+
+    if(ww)
+    {
+        buf=ww->buf;
+        buf_len=ww->buf_pos;
+    }
+    else
+    {
+        buf=w->temp;
+        buf_len=string_length(buf);
+    }
+
+    if(buf&&ww) //we have a buffer that came from the worker thread
+    {
+        sfree((void**)&w->result);
+
+        if(webget_apply_regexp(buf,buf_len,w->regexp,(int*)ovector,ovec_sz,&match_count)==0) //apply regexp to get the offsets
+        {
+            //update the return value for the parent
+            if(w->pr_index<match_count&&w->pr_index>0&&ww&&ww->fp==NULL)
+            {
+                len=ovector[w->pr_index*2+1]-ovector[w->pr_index*2];
+                w->result=zmalloc(len+1);
+                strncpy(w->result,buf+ovector[w->pr_index*2],len);
+            }
+            else if(ww&&ww->fp)
+            {
+                w->result=ww->fp;
+            }
+        }
+        else
+        {
+            ret=1;
+            send_command(w->ip,w->parse_fail_act);
+        }
+    }
+    else if(ww&&ww->fp&&ww->dwl_mode&DOWNLOAD_TO_FILE) //no buffer? let's see if we do have a file downloaded for us
+    {
+        sfree((void**)&w->result);
+        w->result=ww->fp;
+    }
+
+    //let's update the children (we might only destroy their info)
+    list_enum_part(c,&w->children,current)
+    {
+
+        int ovector2[OVECTOR_LIMIT]= {0};
+        size_t ovec_sz_2=OVECTOR_LIMIT;
+        int match_count_2=0;
+        pthread_mutex_lock(&c->mutex);
+
+        safe_flag_set(c->update,1);
+        sfree((void**)&c->temp);
+        sfree((void**)&c->result);
+        sfree((void**)&c->address);
+
+        if(c->pr_index<match_count&&c->pr_index>0)
+        {
+            len=ovector[c->pr_index*2+1]-ovector[c->pr_index*2];
+            c->temp=zmalloc(len+1);
+            strncpy(c->temp,buf+ovector[c->pr_index*2],len);
+        }
+
+        if(c->sec_index==0)
+        {
+            if(c->dwl)
+            {
+                safe_flag_set(c->update,2);
+                c->address=c->temp;
+                c->temp=NULL;
+            }
+            else
+                c->result=c->temp;
+        }
+        else if(webget_apply_regexp(c->temp,len,c->regexp,(int*)ovector2,ovec_sz_2,&match_count_2)==0)
+        {
+            if(c->sec_index<match_count_2)
+            {
+                len=ovector2[c->sec_index*2+1]-ovector2[c->sec_index*2];
+                c->result=zmalloc(len+1);
+                strncpy(c->result,c->temp+ovector2[c->sec_index*2],len);
+            }
+
+            if(c->dwl)
+            {
+               safe_flag_set(c->update,2);
+                c->address=c->result;
+                c->result=NULL;
+            }
+
+            if(linked_list_empty(&c->children))
+            {
+                sfree((void**)&c->temp);
+            }
+        }
+        else
+        {
+            ret=1;
+            send_command(c->ip,c->parse_fail_act);
+        }
+
+        pthread_mutex_unlock(&c->mutex);
+    }
+
+
+    if(w->result!=w->temp) //our result is not the temporary value so we can safely free it
+    {
+        sfree((void**)&w->temp);
+    }
+    else //it looks that the temporary value is actually our result. we will not free it but instead we will mark it as NULL
+    {
+        w->temp=NULL;
+    }
+
+    if(w->update)
+        w->update--;
+
+    return(ret);
 }
+
 
 
 static int webget_apply_regexp(unsigned char *buffer,size_t buf_sz,unsigned char *regexp,int *ovector,size_t ovec_sz,int *match_count)
@@ -272,7 +523,7 @@ static size_t webget_curl_worker_callback(char *buf, size_t size, size_t nmemb, 
     unsigned char err=0;
 
 //------------------------------
-    if(*ww->stop==1||ww->dwl_mode==0)
+    if(safe_flag_get(ww->stop)==1||ww->dwl_mode==0)
         return(0);
 
     if(ww->dwl_mode&DOWNLOAD_TO_BUFFER)
@@ -454,11 +705,10 @@ static void *webget_worker_thread(void *p)
     webget *w=p;
     webget_worker *ww=zmalloc(sizeof(webget_worker));
     unsigned char *address=NULL;
-    w->work=2;
+    safe_flag_set(w->work,2);
 
     pthread_mutex_lock(&w->mutex);
-
-    ww->stop=&w->stop;
+    ww->stop=w->stop;
     ww->dwl_mode=(w->dwl==0&&w->parent==NULL)?DOWNLOAD_TO_BUFFER:w->dwl;
     ww->old_fp=clone_string(w->result); //assume that the result has the old filename
 
@@ -470,7 +720,7 @@ static void *webget_worker_thread(void *p)
     pthread_mutex_unlock(&w->mutex);
 
 
-    if(w->stop==0&&address)
+    if(safe_flag_get(w->stop)==0&&address)
     {
         ret=webget_curl_download(address,ww);
     }
@@ -511,240 +761,4 @@ static void *webget_worker_thread(void *p)
     w->work=0;
     return(NULL);
 
-}
-
-static int webget_post_worker_update(webget *w)
-{
-    int ret=0;
-    webget *c=NULL;
-    pthread_mutex_lock(&w->mutex);
-    webget_worker *ww=w->ww;
-    pthread_mutex_unlock(&w->mutex);
-    unsigned char *buf=NULL;
-    size_t buf_len=0;
-    int ovector[OVECTOR_LIMIT]= {0};
-    int match_count=0;
-    size_t ovec_sz=OVECTOR_LIMIT;
-    size_t len=0;
-
-    if(ww)
-    {
-        buf=ww->buf;
-        buf_len=ww->buf_pos;
-    }
-    else
-    {
-        buf=w->temp;
-        buf_len=string_length(buf);
-    }
-
-    if(buf&&ww) //we have a buffer that came from the worker thread
-    {
-        sfree((void**)&w->result);
-
-        if(webget_apply_regexp(buf,buf_len,w->regexp,(int*)ovector,ovec_sz,&match_count)==0) //apply regexp to get the offsets
-        {
-            //update the return value for the parent
-            if(w->pr_index<match_count&&w->pr_index>0&&ww&&ww->fp==NULL)
-            {
-                len=ovector[w->pr_index*2+1]-ovector[w->pr_index*2];
-                w->result=zmalloc(len+1);
-                strncpy(w->result,buf+ovector[w->pr_index*2],len);
-            }
-            else if(ww&&ww->fp)
-            {
-                w->result=ww->fp;
-            }
-        }
-        else
-        {
-            ret=1;
-            send_command(w->ip,w->parse_fail_act);
-        }
-    }
-    else if(ww&&ww->fp&&ww->dwl_mode&DOWNLOAD_TO_FILE) //no buffer? let's see if we do have a file downloaded for us
-    {
-        sfree((void**)&w->result);
-        w->result=ww->fp;
-    }
-
-    //let's update the children (we might only destroy their info)
-    list_enum_part(c,&w->children,current)
-    {
-
-        int ovector2[OVECTOR_LIMIT]= {0};
-        size_t ovec_sz_2=OVECTOR_LIMIT;
-        int match_count_2=0;
-        pthread_mutex_lock(&c->mutex);
-
-        c->update=1;
-        sfree((void**)&c->temp);
-        sfree((void**)&c->result);
-        sfree((void**)&c->address);
-
-        if(c->pr_index<match_count&&c->pr_index>0)
-        {
-            len=ovector[c->pr_index*2+1]-ovector[c->pr_index*2];
-            c->temp=zmalloc(len+1);
-            strncpy(c->temp,buf+ovector[c->pr_index*2],len);
-        }
-
-        if(c->sec_index==0)
-        {
-            if(c->dwl)
-            {
-                c->update=2;
-                c->address=c->temp;
-                c->temp=NULL;
-            }
-            else
-                c->result=c->temp;
-        }
-        else if(webget_apply_regexp(c->temp,len,c->regexp,(int*)ovector2,ovec_sz_2,&match_count_2)==0)
-        {
-            if(c->sec_index<match_count_2)
-            {
-                len=ovector2[c->sec_index*2+1]-ovector2[c->sec_index*2];
-                c->result=zmalloc(len+1);
-                strncpy(c->result,c->temp+ovector2[c->sec_index*2],len);
-            }
-
-            if(c->dwl)
-            {
-                c->update=2;
-                c->address=c->result;
-                c->result=NULL;
-            }
-
-            if(linked_list_empty(&c->children))
-            {
-                sfree((void**)&c->temp);
-            }
-        }
-        else
-        {
-            ret=1;
-            send_command(c->ip,c->parse_fail_act);
-        }
-
-        pthread_mutex_unlock(&c->mutex);
-    }
-
-
-    if(w->result!=w->temp) //our result is not the temporary value so we can safely free it
-    {
-        sfree((void**)&w->temp);
-    }
-    else //it looks that the temporary value is actually our result. we will not free it but instead we will mark it as NULL
-    {
-        w->temp=NULL;
-    }
-
-    if(w->update)
-        w->update--;
-
-    return(ret);
-}
-
-
-double webget_update(void *spv)
-{
-    webget *w=spv;
-
-    if((w->work==0&&w->worker)||w->update)
-    {
-        if(w->worker)
-        {
-            pthread_join(w->worker,NULL);
-            memset(&w->worker,0,sizeof(pthread_t));
-            w->c_rate=w->u_rate;
-        }
-
-        int ret=webget_post_worker_update(w); //do the update of the parent and its children
-
-        if(w->ww)
-        {
-            ret==0?send_command(w->ip,w->success_act):0;
-            sfree((void**)&w->ww->buf);
-            sfree((void**)&w->ww);
-        }
-    }
-
-    if(w->worker==0&&w->address&&(w->c_rate==0||w->update))
-    {
-
-        int status=0;
-        w->work=1;
-        status=pthread_create(&w->worker, NULL, webget_worker_thread, w);
-
-        if(status)
-        {
-            w->work=0;
-            diag_crit("%s %d Failed to start webget_worker_thread. Status %x",__FUNCTION__,__LINE__,status);
-        }
-        else
-        {
-            while(w->work==1)
-            {
-                sched_yield();
-            }
-
-            if(w->c_rate)
-                w->c_rate--;
-        }
-    }
-
-    return(0.0);
-}
-
-unsigned char *webget_string(void *spv)
-{
-    webget *w=spv;
-    return(w->result==NULL?w->err_str:w->result);
-}
-
-
-void webget_destroy(void **spv)
-{
-    webget *w=*spv;
-    webget *wc=NULL;
-
-    if(w->work)
-    {
-        w->stop=1;
-        pthread_join(w->worker,NULL);
-    }
-
-    if(w->ww)
-    {
-        sfree((void**)&w->ww->buf);
-        sfree((void**)&w->ww->fp);
-
-        if(w->ww->f)
-            fclose(w->ww->f);
-
-        sfree((void**)&w->ww);
-    }
-
-    pthread_mutex_destroy(&w->mutex);
-
-    sfree((void**)&w->err_str);
-    sfree((void**)&w->address);
-    sfree((void**)&w->temp);
-    sfree((void**)&w->result);
-    sfree((void**)&w->regexp);
-    sfree((void**)&w->success_act);
-    sfree((void**)&w->parse_fail_act);
-    sfree((void**)&w->dwl_fail);
-    sfree((void**)&w->connect_fail);
-    sfree((void**)&w->srf_dir);
-
-    if(linked_list_empty(&w->current)==0)
-        linked_list_remove(&w->current);
-
-    list_enum_part(wc,&w->children,current) //make the children orphan
-    {
-        wc->parent=NULL;
-    }
-    sfree(spv);
 }

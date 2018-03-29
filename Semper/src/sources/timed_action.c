@@ -37,7 +37,7 @@ typedef enum
 
 typedef struct
 {
-    pthread_mutex_t mtx; /*this mutex will allow us to play dirty by changing the command in the last moment before passing it to the core*/
+    pthread_mutex_t cmd_mtx; /*this mutex will allow us to play dirty by changing the command in the last moment before passing it to the core*/
     size_t index;
     size_t wait_timeout;
     size_t repeat_count;
@@ -51,8 +51,8 @@ typedef struct
     list_entry current;
     list_entry act_chain;
     size_t action_index;
-    unsigned char running;
-    pthread_mutex_t mutex;	/*This will prevent nasty stuff to happen*/
+    void  *running;
+    pthread_mutex_t mutex;
     pthread_cond_t cond;    /*signal this when the timed action has to be killed*/
     pthread_t time_thread;
 } timed_list;
@@ -64,7 +64,165 @@ typedef struct
     unsigned char quote_type;
 } timed_action_tokenizer_status;
 
-/*Structure used by the TimedList parsing routine*/
+static timed_list *timed_list_entry(list_entry *list,size_t index);
+static void timed_action_destroy_list(list_entry *head);
+static void *timed_action_exec(void *pv);
+static int timed_action_string_filter(string_tokenizer_status *pi, void* pv);
+size_t timed_action_fill_list(list_entry *head,string_tokenizer_info *sti,void *ip);
+
+
+/*Generic routines*/
+
+void timed_action_init(void **spv, void *ip)
+{
+    list_entry *ta=zmalloc(sizeof(list_entry));
+    list_entry_init(ta);
+    *spv=ta;
+}
+
+void timed_action_reset(void *spv,void *ip)
+{
+    void *en=NULL;
+    list_entry *ta=spv;
+    unsigned char *kn=enumerator_first_value(ip,ENUMERATOR_SOURCE,&en);
+    source *s=ip;
+
+    do
+    {
+
+        key k=NULL;
+        size_t act_index=0;
+
+        if(kn==NULL)
+        {
+            break;
+        }
+
+        if(strncasecmp("TimedList",kn,9))
+        {
+            continue;
+        }
+
+        k=skeleton_get_key(s->cs,kn);
+
+        if(k==NULL)
+        {
+            continue;
+        }
+
+        sscanf(kn,"TimedList%llu",&act_index);
+        timed_action_tokenizer_status tats = {0};
+
+        string_tokenizer_info sti=
+        {
+            .buffer= clone_string(param_string(kn,EXTENSION_XPAND_ALL,ip,NULL)),
+            .oveclen=0,
+            .ovecoff=NULL,
+            .filter_data=&tats,
+            .string_tokenizer_filter=timed_action_string_filter
+        };
+
+        string_tokenizer(&sti);
+
+        timed_list *tl=timed_list_entry(ta,act_index);
+        tl->ip=ip;
+        timed_action_fill_list(&tl->act_chain,&sti,ip);
+        sfree((void**)&sti.ovecoff);
+        sfree((void**)&sti.buffer);
+    }
+    while((kn=enumerator_next_value(en))!=NULL);
+
+    enumerator_finish(&en);
+
+}
+
+void timed_action_command(void *spv,unsigned char *command)
+{
+    list_entry *ta=spv;
+
+    if(command)
+    {
+        if(!strncasecmp("Start ",command,6))
+        {
+            unsigned char *end=NULL;
+            size_t comm_index=strtoull((char*)command+6,(char**)&end,10);
+
+            if(end!=command+6)
+            {
+                timed_list *tl=NULL;
+                list_enum_part(tl,ta,current)
+                {
+                    if(tl->action_index==comm_index)
+                    {
+                        if(tl->running)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            pthread_t tth;
+                            memset(&tth,0,sizeof(pthread_t));
+                            if(memcmp(&tth,&tl->time_thread,sizeof(pthread_t))==0)
+                            {
+                                pthread_join(tl->time_thread,NULL);
+                                memset(&tl->time_thread,0,sizeof(pthread_t));
+                            }
+
+                        }
+                        int status=0;
+                        safe_flag_set(tl->running,1);
+
+                        if((status=pthread_create(&tl->time_thread,NULL,timed_action_exec,tl))!=0)
+                        {
+                           safe_flag_set(tl->running,0);
+                            diag_crit("%s %d Failed to start timed_action_exec. Status %x",__FUNCTION__,__LINE__,status);
+                        }
+                        else
+                        {
+                            while(safe_flag_get(tl->running)==1)
+                            {
+                                sched_yield();
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        if(!strncasecmp("Stop ",command,5))
+        {
+            unsigned char *end=NULL;
+            size_t comm_index=strtoull((char*)command+5,(char**)&end,10);
+
+            if(end!=command+5)
+            {
+                timed_list *tl=NULL;
+                list_enum_part(tl,ta,current)
+                {
+                    if(tl->action_index==comm_index)
+                    {
+                        pthread_cond_signal(&tl->cond);
+                        if(tl->time_thread)
+                        {
+                            pthread_join(tl->time_thread,NULL);
+                            memset(&tl->time_thread,0,sizeof(pthread_t));
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void timed_action_destroy(void **spv)
+{
+    list_entry *ta=*spv;
+    timed_action_destroy_list(ta);
+    sfree(spv);
+}
+
 
 static timed_action_list *timed_action_list_entry(list_entry *act_head,size_t index)
 {
@@ -85,7 +243,7 @@ static timed_action_list *timed_action_list_entry(list_entry *act_head,size_t in
         pthread_mutexattr_t mutex_attr;
         pthread_mutexattr_init(&mutex_attr);
         pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
-        pthread_mutex_init(&tal->mtx,&mutex_attr);
+        pthread_mutex_init(&tal->cmd_mtx,&mutex_attr);
         pthread_mutexattr_destroy(&mutex_attr);
         list_entry_init(&tal->current);
         tal->index=index;
@@ -112,6 +270,12 @@ static timed_list *timed_list_entry(list_entry *list,size_t index)
     {
         tl=zmalloc(sizeof(timed_list));
         pthread_cond_init(&tl->cond,NULL);
+        tl->running=safe_flag_init();
+        pthread_mutexattr_t mutex_attr;
+        pthread_mutexattr_init(&mutex_attr);
+        pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
+        pthread_mutex_init(&tl->mutex,&mutex_attr);
+        pthread_mutexattr_destroy(&mutex_attr);
         list_entry_init(&tl->current);
         list_entry_init(&tl->act_chain);
         tl->action_index=index;
@@ -121,24 +285,66 @@ static timed_list *timed_list_entry(list_entry *list,size_t index)
     return(tl);
 }
 
+
+
+static void timed_action_destroy_list(list_entry *head)
+{
+    timed_list *tl=NULL;
+    timed_list *ttl=NULL;
+    list_enum_part_safe(tl,ttl,head,current)
+    {
+        timed_action_list *tal=NULL;
+        timed_action_list *ttal=NULL;
+        pthread_mutex_lock(&tl->mutex);
+        pthread_cond_signal(&tl->cond);                         /*signal the thread to end*/
+
+        if(tl->time_thread)
+        {
+            pthread_join(tl->time_thread,NULL);
+            memset(&tl->time_thread,0,sizeof(pthread_t));
+        }
+        linked_list_remove(&tl->current);                       /*remove the timed list from the chain*/
+        pthread_cond_destroy(&tl->cond);                        /*destroy the condition variable*/
+        pthread_mutex_unlock(&tl->mutex);
+        pthread_mutex_destroy(&tl->mutex);
+        safe_flag_destroy(&tl->running);
+        /*destroy the action list for the timed action*/
+        list_enum_part_safe(tal,ttal,&tl->act_chain,current)
+        {
+            linked_list_remove(&tal->current);                  /*remove the action*/
+            pthread_mutex_lock(&tal->cmd_mtx);                      /*make sure we own the mutex*/
+            sfree((void**)&tal->act);                           /*free the action string*/
+            pthread_mutex_unlock(&tal->cmd_mtx);                    /*unlock the mutex*/
+            pthread_mutex_destroy(&tal->cmd_mtx);                   /*destroy the mutex*/
+            sfree((void**)&tal);                                /*free the slot*/
+        }
+        sfree((void**)&tl);                                     /*remove the timed entry*/
+    }
+}
+
+
+
 static void *timed_action_exec(void *pv)
 {
     timed_list *tl=pv;
     timed_action_list *tal=NULL;
-    tl->running=2;
-
+    safe_flag_set(tl->running,2);
+    int ret=-1;
 
     list_enum_part(tal,&tl->act_chain,current)
     {
-        for(size_t i=0; i<tal->repeat_count; i++)
+        for(size_t i=0; i<=tal->repeat_count; i++)
         {
             struct timeval tv;
             struct timespec ts;
-            pthread_mutex_t lmtx;
-            int ret=0;
-            pthread_mutex_lock(&tal->mtx);
+
+
+            pthread_mutex_t mtx;
+            pthread_mutex_init(&mtx,NULL);
+
+            pthread_mutex_lock(&tal->cmd_mtx);
             tal->act!=NULL?send_command(tl->ip,tal->act):0;
-            pthread_mutex_unlock(&tal->mtx);
+            pthread_mutex_unlock(&tal->cmd_mtx);
 
             gettimeofday(&tv, NULL);
             ts.tv_sec = time(NULL) + tal->wait_timeout / 1000;
@@ -146,18 +352,19 @@ static void *timed_action_exec(void *pv)
             ts.tv_sec += ts.tv_nsec / (1000 * 1000 * 1000);
             ts.tv_nsec %= (1000 * 1000 * 1000);
 
-            pthread_mutex_init(&lmtx,NULL);
-            pthread_mutex_lock(&lmtx);
-            ret=pthread_cond_timedwait(&tl->cond, &lmtx, &ts);
-            pthread_mutex_unlock(&lmtx);
-            pthread_mutex_destroy(&lmtx);
+            pthread_mutex_lock(&mtx);
+            ret=pthread_cond_timedwait(&tl->cond, &mtx, &ts);
+            pthread_mutex_unlock(&mtx);
+            pthread_mutex_destroy(&mtx);
 
             if(ret==0)
                 break;
         }
+        if(ret==0)
+            break;
     }
 
-    tl->running=0;
+    safe_flag_set(tl->running,0);
     return(NULL);
 }
 
@@ -302,7 +509,7 @@ size_t timed_action_fill_list(list_entry *head,string_tokenizer_info *sti,void *
         else if(push_params==0&&finished==0) //we've receiving the Wait/Repeat or just a simple action
         {
             tal=timed_action_list_entry(head,entries++);
-            pthread_mutex_lock(&tal->mtx);
+            pthread_mutex_lock(&tal->cmd_mtx);
             sfree((void**)&tal->act);
             tal->wait_timeout=0;
             tal->repeat_count=1;
@@ -326,181 +533,9 @@ size_t timed_action_fill_list(list_entry *head,string_tokenizer_info *sti,void *
         else
         {
             tal->wait_timeout=((type==repeat||type==wait)?strtoull(sti->buffer+start,NULL,10):0);
-            pthread_mutex_unlock(&tal->mtx);
+            pthread_mutex_unlock(&tal->cmd_mtx);
         }
     }
 
     return (entries);
-}
-
-static void timed_action_destroy_list(list_entry *head)
-{
-    timed_list *tl=NULL;
-    timed_list *ttl=NULL;
-    list_enum_part_safe(tl,ttl,head,current)
-    {
-        timed_action_list *tal=NULL;
-        timed_action_list *ttal=NULL;
-        pthread_cond_signal(&tl->cond);                         /*signal the thread to end*/
-        if(tl->time_thread)
-        {
-            pthread_join(tl->time_thread,NULL);
-            memset(&tl->time_thread,0,sizeof(pthread_t));
-        }
-        linked_list_remove(&tl->current);                       /*remove the timed list from the chain*/
-        pthread_cond_destroy(&tl->cond);                        /*destroy the condition variable*/
-
-        list_enum_part_safe(tal,ttal,&tl->act_chain,current)
-        {
-            linked_list_remove(&tal->current);                  /*remove the action*/
-            pthread_mutex_lock(&tal->mtx);                      /*make sure we own the mutex*/
-            sfree((void**)&tal->act);                           /*free the action string*/
-            pthread_mutex_unlock(&tal->mtx);                    /*unlock the mutex*/
-            pthread_mutex_destroy(&tal->mtx);                   /*destroy the mutex*/
-            sfree((void**)&tal);                                /*free the slot*/
-        }
-        sfree((void**)&tl);                                     /*remove the timed entry*/
-    }
-}
-
-
-/*Generic routines*/
-
-void timed_action_init(void **spv, void *ip)
-{
-    list_entry *ta=zmalloc(sizeof(list_entry));
-    list_entry_init(ta);
-    *spv=ta;
-}
-
-void timed_action_reset(void *spv,void *ip)
-{
-    void *en=NULL;
-    list_entry *ta=spv;
-    unsigned char *kn=enumerator_first_value(ip,ENUMERATOR_SOURCE,&en);
-    source *s=ip;
-
-    do
-    {
-
-        key k=NULL;
-        size_t act_index=0;
-
-        if(kn==NULL)
-        {
-            break;
-        }
-
-        if(strncasecmp("TimedList",kn,9))
-        {
-            continue;
-        }
-
-        k=skeleton_get_key(s->cs,kn);
-
-        if(k==NULL)
-        {
-            continue;
-        }
-
-        sscanf(kn,"TimedList%llu",&act_index);
-        timed_action_tokenizer_status tats = {0};
-
-        string_tokenizer_info sti=
-        {
-            .buffer= clone_string(param_string(kn,EXTENSION_XPAND_ALL,ip,NULL)),
-            .oveclen=0,
-            .ovecoff=NULL,
-            .filter_data=&tats,
-            .string_tokenizer_filter=timed_action_string_filter
-        };
-
-        string_tokenizer(&sti);
-
-        timed_list *tl=timed_list_entry(ta,act_index);
-        tl->ip=ip;
-        timed_action_fill_list(&tl->act_chain,&sti,ip);
-        sfree((void**)&sti.ovecoff);
-        sfree((void**)&sti.buffer);
-    }
-    while((kn=enumerator_next_value(en))!=NULL);
-
-    enumerator_finish(&en);
-
-}
-
-void timed_action_command(void *spv,unsigned char *command)
-{
-    list_entry *ta=spv;
-
-    if(command)
-    {
-        if(!strncasecmp("Start ",command,6))
-        {
-            unsigned char *end=NULL;
-            size_t comm_index=strtoull((char*)command+6,(char**)&end,10);
-
-            if(end!=command+6)
-            {
-                timed_list *tl=NULL;
-                list_enum_part(tl,ta,current)
-                {
-                    if(tl->action_index==comm_index)
-                    {
-                        if(tl->running)
-                        {
-                            break;
-                        }
-
-                        int status=0;
-                        tl->running=1;
-                        if((status=pthread_create(&tl->time_thread,NULL,timed_action_exec,tl))!=0)
-                        {
-                            tl->running=0;
-                            diag_crit("%s %d Failed to start timed_action_exec. Status %x",__FUNCTION__,__LINE__,status);
-                        }
-                        else
-                        {
-                            while(tl->running==1)
-                            {
-                                sched_yield();
-                            }
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        if(!strncasecmp("Stop ",command,5))
-        {
-            unsigned char *end=NULL;
-            size_t comm_index=strtoull((char*)command+5,(char**)&end,10);
-
-            if(end!=command+5)
-            {
-                timed_list *tl=NULL;
-                list_enum_part(tl,ta,current)
-                {
-                    if(tl->action_index==comm_index)
-                    {
-                        pthread_cond_signal(&tl->cond);
-                        if(tl->time_thread)
-                        {
-                            pthread_join(tl->time_thread,NULL);
-                            memset(&tl->time_thread,0,sizeof(pthread_t));
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-    }
-}
-
-void timed_action_destroy(void **spv)
-{
-    list_entry *ta=*spv;
-    timed_action_destroy_list(ta);
-    sfree(spv);
 }

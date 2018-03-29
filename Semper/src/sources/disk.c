@@ -13,6 +13,18 @@
 #include <sys/statfs.h>
 #endif
 
+typedef struct _disk
+{
+    unsigned char* name;
+    unsigned char type;
+    unsigned char label;
+    void* free_bytes;
+    void* total_bytes;
+    unsigned char total;
+    unsigned char* ret_str;
+} disk;
+
+
 #ifdef __linux__
 static unsigned char disk_check_removable(unsigned char *p)
 {
@@ -35,7 +47,7 @@ static unsigned char disk_check_removable(unsigned char *p)
 }
 #endif
 
-void disk_create(void** spv, void* ip)
+void disk_init(void** spv, void* ip)
 {
     unused_parameter(ip);
     disk* d = zmalloc(sizeof(disk));

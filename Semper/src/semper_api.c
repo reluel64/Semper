@@ -286,20 +286,20 @@ SEMPER_API unsigned char *get_path(void *ip,unsigned char pth)
 
     switch(pth)
     {
-        default:
-            return(NULL);
+    default:
+        return(NULL);
 
-        case EXTENSION_PATH_SEMPER:
-            return(cd->root_dir);
+    case EXTENSION_PATH_SEMPER:
+        return(cd->root_dir);
 
-        case EXTENSION_PATH_EXTENSIONS:
-            return(cd->ext_dir);
+    case EXTENSION_PATH_EXTENSIONS:
+        return(cd->ext_dir);
 
-        case EXTENSION_PATH_SURFACE:
-            return(sd->sp.surface_dir);
+    case EXTENSION_PATH_SURFACE:
+        return(sd->sp.surface_dir);
 
-        case EXTENSION_PATH_SURFACES:
-            return(cd->surface_dir);
+    case EXTENSION_PATH_SURFACES:
+        return(cd->surface_dir);
     }
 }
 
@@ -319,28 +319,28 @@ SEMPER_API unsigned char *absolute_path(void *ip,unsigned char *rp,unsigned char
 
     switch(pth)
     {
-        default:
-            return(NULL);
+    default:
+        return(NULL);
 
-        case EXTENSION_PATH_SEMPER:
-            root=cd->root_dir;
-            rootl=cd->root_dir_length;
-            break;
+    case EXTENSION_PATH_SEMPER:
+        root=cd->root_dir;
+        rootl=cd->root_dir_length;
+        break;
 
-        case EXTENSION_PATH_EXTENSIONS:
-            root=cd->ext_dir;
-            rootl=cd->ext_dir_length;
-            break;
+    case EXTENSION_PATH_EXTENSIONS:
+        root=cd->ext_dir;
+        rootl=cd->ext_dir_length;
+        break;
 
-        case EXTENSION_PATH_SURFACE:
-            root=sd->sp.surface_dir;
-            rootl=string_length(sd->sp.surface_dir);
-            break;
+    case EXTENSION_PATH_SURFACE:
+        root=sd->sp.surface_dir;
+        rootl=string_length(sd->sp.surface_dir);
+        break;
 
-        case EXTENSION_PATH_SURFACES:
-            root=cd->surface_dir;
-            rootl=cd->surface_dir_length;
-            break;
+    case EXTENSION_PATH_SURFACES:
+        root=cd->surface_dir;
+        rootl=cd->surface_dir_length;
+        break;
     }
 
     if(root)
@@ -354,4 +354,55 @@ SEMPER_API unsigned char *absolute_path(void *ip,unsigned char *rp,unsigned char
     }
 
     return(NULL);
+}
+
+SEMPER_API int semper_event_remove(void *ip,event_handler eh, void* pv, unsigned char flags)
+{
+    source *s=ip;
+    control_data *cd=NULL;
+    if(s&&s->sd)
+    {
+        cd=((surface_data*)s->sd)->cd;
+    }
+    if(cd==NULL)
+    {
+        return(-1);
+    }
+
+    event_remove(cd->eq,eh,pv,flags);
+    return(0);
+}
+
+SEMPER_API int semper_event_push(void *ip,event_handler handler, void* pv, size_t timeout, unsigned char flags)
+{
+    source *s=ip;
+    control_data *cd=NULL;
+    if(s&&s->sd)
+    {
+        cd=((surface_data*)s->sd)->cd;
+    }
+    if(cd==NULL)
+    {
+        return(-1);
+    }
+
+    return(event_push(cd->eq,handler,pv,timeout,flags));
+}
+
+SEMPER_API void semper_safe_flag_destroy(void **psf)
+{
+    safe_flag_destroy(psf);
+}
+SEMPER_API size_t semper_safe_flag_get(void *sf)
+{
+    return(safe_flag_get(sf));
+}
+SEMPER_API void semper_safe_flag_set(void *sf,size_t flag)
+{
+    safe_flag_set(sf,flag);
+}
+
+SEMPER_API void *semper_safe_flag_init(void)
+{
+    return(safe_flag_init());
 }

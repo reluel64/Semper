@@ -73,7 +73,9 @@ int surface_builtin_init(void *holder,surface_builtin_type tp)
             size_t buf_sz=0;
             unsigned char *buf=surface_builtin_code(&buf_sz,tp);
             surface_data* sd =surface_load_memory(cd,buf,buf_sz,NULL);
-            crosswin_monitor_resolution(&cd->c, &w, &h);
+            crosswin_set_monitor(sd->sw,1);
+            crosswin_monitor_resolution(&cd->c,sd->sw, &w, &h);
+
             crosswin_set_position(sd->sw, w / 2 - sd->w / 2, h / 2 - sd->h / 2);
             cd->srf_reg = sd;
             return(0);

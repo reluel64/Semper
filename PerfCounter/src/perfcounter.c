@@ -9,7 +9,7 @@
 #include <wchar.h>
 #include <pdhmsg.h>
 #include <time.h>
-
+#include <winperf.h>
 typedef struct
 {
     PDH_HQUERY phq;                 //query handle

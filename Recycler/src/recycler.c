@@ -14,7 +14,6 @@
 #include <Sddl.h>
 #include <io.h>
 #include <time.h>
-
 typedef enum
 {
     recycler_query_items,
@@ -34,10 +33,10 @@ typedef struct
     pthread_t qth;              //query thread
     pthread_mutex_t mtx;
     recycler_query_t rq;       //query type
-    unsigned char kill;        //kill the query
+    void *kill;
+    void *tha;
     unsigned char can_empty;
     unsigned char mon_mode;    //monitoring mode
-    unsigned char qa;          //query active
     unsigned char *cq_cmd;     //command when query is completed
 } recycler;
 
@@ -236,6 +235,7 @@ static size_t file_size(size_t low, size_t high)
 
 void init(void **spv,void *ip)
 {
+
     diag_info("Initializing Recycler with context 0x%p",ip);
     recycler *r=zmalloc(sizeof(recycler));
     r->ip=ip;
@@ -244,6 +244,8 @@ void init(void **spv,void *ip)
     pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
     pthread_mutex_init(&r->mtx,&mutex_attr);
     pthread_mutexattr_destroy(&mutex_attr);
+    r->kill=semper_safe_flag_init();
+    r->tha=semper_safe_flag_init();
     *spv=r;
 }
 
@@ -273,10 +275,9 @@ void reset(void *spv, void *ip)
         r->mon_mode=new_monitor;
         if(r->me)
         {
-            SetEvent(r->me);
+            SetEvent(r->me); /*wake the thread if it is in monitoring mode*/
         }
-        r->kill=1;
-
+        semper_safe_flag_set(r->kill,1);
         pthread_join(r->qth,NULL);
         r->qth=0;
         CloseHandle(r->me);
@@ -286,15 +287,10 @@ void reset(void *spv, void *ip)
     {
         r->me=CreateEvent(NULL,0,0,NULL);
         r->mon_mode=new_monitor;
-        r->qa=1;
+        semper_safe_flag_set(r->tha,1);
         if(pthread_create(&r->qth,NULL,recycler_query_thread,r)==0)
         {
-            while(r->qa==1)
-                sched_yield(); /*be kind - lend CPU cycles to other processes*/
-        }
-        else
-        {
-            r->qa=0;
+            while(semper_safe_flag_get(r->tha)==1);
         }
     }
 }
@@ -317,26 +313,22 @@ double update(void *spv)
         if( r->lc!=r->cc && r->qth==0)
         {
             r->lc=r->cc;
-            r->qa=1;
-
+            semper_safe_flag_set(r->tha,1);
             if(pthread_create(&r->qth,NULL,recycler_query_thread,r)==0)
             {
-                while(r->qa==1)
-                    sched_yield(); /*be kind - lend CPU cycles to other processes*/
+                while(semper_safe_flag_get(r->tha)==1);
             }
-            else
-                r->qa=0;
         }
 
-        if(r->qa==0&&r->qth)
+        if(semper_safe_flag_get(r->tha)==0&&r->qth)
         {
             pthread_join(r->qth,NULL);
             r->qth=0;
         }
     }
-    pthread_mutex_lock(&r->mtx);
+
     lret=r->inf;
-    pthread_mutex_unlock(&r->mtx);
+
     return(lret);
 }
 
@@ -384,7 +376,7 @@ void command(void *spv,unsigned char *cmd)
 void destroy(void **spv)
 {
     recycler *r=*spv;
-    r->kill=1;
+    semper_safe_flag_set(r->kill,1);
     if(r->me)
     {
         SetEvent(r->me);
@@ -394,7 +386,8 @@ void destroy(void **spv)
     if(r->qth)
         pthread_join(r->qth,NULL);
 
-
+    semper_safe_flag_destroy(&r->tha);
+    semper_safe_flag_destroy(&r->kill);
     pthread_mutex_destroy(&r->mtx);
     sfree((void**)&r->cq_cmd);
     recycler_notifier_destroy(r);
@@ -405,13 +398,14 @@ void destroy(void **spv)
 
 static void *recycler_query_thread(void *p)
 {
+
     char first=0;
     recycler *r=p;
     time_t start=recycler_get_time();
+    semper_safe_flag_set(r->tha,2);
     do
     {
         time_t diff=start;
-        r->qa=2;
         double val=0.0;
         if(r->mon_mode)
         {
@@ -456,11 +450,12 @@ static void *recycler_query_thread(void *p)
 
         }
 
-        r->qa=0;
         if(first==0)
             first=1;
     }
-    while(r->mon_mode&&r->kill==0);
+    while(r->mon_mode&&!semper_safe_flag_get(r->kill));
+    semper_safe_flag_set(r->tha,0);
+    semper_safe_flag_set(r->kill,0);
     return (NULL);
 }
 
@@ -612,7 +607,7 @@ static int recycler_query_user(recycler *r,double *val)
             WIN32_FIND_DATAW wfd = { 0 };
             void* fh =NULL;
 
-            if(r->kill==0)
+            if(!semper_safe_flag_get(r->kill))
             {
                 fpsz= string_length(file);
                 unsigned char* filtered = zmalloc(fpsz + 6);
@@ -631,7 +626,7 @@ static int recycler_query_user(recycler *r,double *val)
 
             do
             {
-                if(r->kill||fh==INVALID_HANDLE_VALUE)
+                if(semper_safe_flag_get(r->kill)||fh==INVALID_HANDLE_VALUE)
                     break;
 
                 unsigned char* res = ucs_to_utf8(wfd.cFileName, NULL, 0);
@@ -708,7 +703,7 @@ static int recycler_query_user(recycler *r,double *val)
                 sfree((void**)&res);
 
             }
-            while(r->kill==0&&FindNextFileW(fh, &wfd));
+            while(!semper_safe_flag_get(r->kill)&&FindNextFileW(fh, &wfd));
 
             if(fh!=NULL&&fh!=INVALID_HANDLE_VALUE)
             {

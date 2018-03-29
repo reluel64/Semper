@@ -137,6 +137,7 @@ static int input_get_command(input_text *it)
                     tokenize_string(&it->tsi);
                     it->tsi.tokenize_string_filter=NULL;
                     it->tsi.filter_data=NULL;
+
                 }
                 else
                 {

@@ -39,69 +39,72 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
     if(w == NULL)
         return (DefWindowProc(win, message, wpm, lpm));
 
+    crosswin *c=w->c;
+    mouse_data *md=&c->md;
+
     switch(message)
     {
     case WM_MOUSEWHEEL:
-        w->md.x = GET_X_LPARAM(lpm);
-        w->md.y = GET_Y_LPARAM(lpm);
-        w->md.scroll_dir = GET_WHEEL_DELTA_WPARAM(wpm) > 0 ? 1 : -1;
+        md->x = GET_X_LPARAM(lpm);
+        md->y = GET_Y_LPARAM(lpm);
+        md->scroll_dir = GET_WHEEL_DELTA_WPARAM(wpm) > 0 ? 1 : -1;
         w->c->handle_mouse(w);
         return(0);
 
     case WM_LBUTTONDOWN:
         SetCapture(w->window);
-        w->md.x = GET_X_LPARAM(lpm);
-        w->md.y = GET_Y_LPARAM(lpm);
-        w->md.button = mouse_button_left ;
-        w->md.state = mouse_button_state_pressed;
+        md->x = GET_X_LPARAM(lpm);
+        md->y = GET_Y_LPARAM(lpm);
+        md->button = mouse_button_left ;
+        md->state = mouse_button_state_pressed;
         w->c->handle_mouse(w);
         return(0);
 
     case WM_LBUTTONUP:
         ReleaseCapture();
-        w->md.x = GET_X_LPARAM(lpm);
-        w->md.y = GET_Y_LPARAM(lpm);
-        w->md.button = mouse_button_left;
-        w->md.state = mouse_button_state_unpressed;
+        md->x = GET_X_LPARAM(lpm);
+        md->y = GET_Y_LPARAM(lpm);
+        md->button = mouse_button_left;
+        md->state = mouse_button_state_unpressed;
         w->c->handle_mouse(w);
         return(0);
 
     case WM_RBUTTONDOWN:
-        w->md.x = GET_X_LPARAM(lpm);
-        w->md.y = GET_Y_LPARAM(lpm);
-        w->md.button = mouse_button_right;
-        w->md.state = mouse_button_state_pressed;
+        md->x = GET_X_LPARAM(lpm);
+        md->y = GET_Y_LPARAM(lpm);
+        md->button = mouse_button_right;
+        md->state = mouse_button_state_pressed;
         w->c->handle_mouse(w);
         return(0);
 
     case WM_RBUTTONUP:
-        w->md.x = GET_X_LPARAM(lpm);
-        w->md.y = GET_Y_LPARAM(lpm);
-        w->md.button = mouse_button_right;
-        w->md.state = mouse_button_state_unpressed;
+        md->x = GET_X_LPARAM(lpm);
+        md->y = GET_Y_LPARAM(lpm);
+        md->button = mouse_button_right;
+        md->state = mouse_button_state_unpressed;
         w->c->handle_mouse(w);
         return(0);
 
     case WM_MBUTTONDOWN:
-        w->md.x = GET_X_LPARAM(lpm);
-        w->md.y = GET_Y_LPARAM(lpm);
-        w->md.button = mouse_button_middle;
-        w->md.state = mouse_button_state_pressed;
+        md->x = GET_X_LPARAM(lpm);
+        md->y = GET_Y_LPARAM(lpm);
+        md->button = mouse_button_middle;
+        md->state = mouse_button_state_pressed;
         w->c->handle_mouse(w);
         return(0);
 
     case WM_MBUTTONUP:
-        w->md.x = GET_X_LPARAM(lpm);
-        w->md.y = GET_Y_LPARAM(lpm);
-        w->md.button = mouse_button_middle;
-        w->md.state = mouse_button_state_unpressed;
+        md->x = GET_X_LPARAM(lpm);
+        md->y = GET_Y_LPARAM(lpm);
+        md->button = mouse_button_middle;
+        md->state = mouse_button_state_unpressed;
         w->c->handle_mouse(w);
         return(0);
 
     case WM_MOUSELEAVE:
-        w->md.x = GET_X_LPARAM(lpm);
-        w->md.y = GET_Y_LPARAM(lpm);
-        w->md.hover = mouse_unhover;
+        md->x = GET_X_LPARAM(lpm);
+        md->y = GET_Y_LPARAM(lpm);
+        md->hover = mouse_unhover;
         w->c->handle_mouse(w);
         return(0);
 
@@ -141,10 +144,10 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
     case WM_MOUSEMOVE:
     {
         TRACKMOUSEEVENT ev = { 0 };
-        w->md.x = GET_X_LPARAM(lpm);
-        w->md.y = GET_Y_LPARAM(lpm);
-        POINT p= { w->md.x, w->md.y};
-        w->md.hover = mouse_hover;
+        md->x = GET_X_LPARAM(lpm);
+        md->y = GET_Y_LPARAM(lpm);
+        POINT p= { md->x, md->y};
+        md->hover = mouse_hover;
 
         ev.dwFlags = 0x2;
         ev.cbSize = sizeof(TRACKMOUSEEVENT);
@@ -153,9 +156,9 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
         TrackMouseEvent(&ev);
 
         MapWindowPoints(win,NULL,&p,1);
-        w->md.ctrl=!!(wpm&MK_CONTROL);
-        w->md.root_x=p.x;
-        w->md.root_y=p.y;
+        md->ctrl=!!(wpm&MK_CONTROL);
+        md->root_x=p.x;
+        md->root_y=p.y;
         w->c->handle_mouse(w);
         return (0);
     }
@@ -214,6 +217,40 @@ void win32_message_dispatch(crosswin *c)
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
+}
+
+static int win32_get_monitors_callback(HMONITOR mon,HDC dcmon,LPRECT prect,LPARAM pv)
+{
+    if(prect==NULL)
+        return(1);
+
+    void **data=(void**)pv;
+    size_t *cnt=(size_t*)data[1];
+    crosswin_monitor **cm=(crosswin_monitor**)data[0];
+
+    crosswin_monitor *tcm=realloc(*cm,((*cnt)+1)*sizeof(crosswin_monitor));
+
+    if(tcm)
+    {
+        *cm=tcm;
+
+        tcm[*cnt].x=prect->left;
+        tcm[*cnt].y=prect->top;
+        tcm[*cnt].h=prect->bottom;
+        tcm[*cnt].w=prect->right;
+        tcm[*cnt].index=(*cnt);
+        (*cnt)++;
+    }
+
+    return(1);
+
+}
+
+int win32_get_monitors(crosswin_monitor **cm,size_t *cnt)
+{
+    *cnt=0;
+    void *data[2]= {cm,cnt};
+    return( EnumDisplayMonitors(NULL,NULL,win32_get_monitors_callback,(LPARAM)data)==1?0:-1);
 }
 
 void win32_draw(crosswin_window* w)

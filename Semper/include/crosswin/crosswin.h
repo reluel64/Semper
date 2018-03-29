@@ -67,6 +67,8 @@ typedef struct
     long root_x;
     long root_y;
     char scroll_dir;        // scroll direction 1->up -1->down
+    long cposx; // current cursor x
+    long cposy; // current cursor y
     mouse_button button;
     mouse_button obtn;
     size_t last_press;
@@ -80,11 +82,24 @@ typedef struct
 
 typedef struct
 {
+    long x;
+    long y;
+    long w;
+    long h;
+    size_t index;
+} crosswin_monitor;
+
+
+typedef struct
+{
+    crosswin_monitor *pm;            //parent monitor (used for keep on screen)
+    size_t mon_cnt;
     long sw; // screen width
     long sh; // screen height
     unsigned char update_z;
     unsigned char quit;
     void *disp_fd;
+    mouse_data md;
     int (*handle_mouse)(crosswin_window *w);
     crosswin_window *helper;
     list_entry windows;
@@ -99,6 +114,7 @@ typedef struct _crosswin_window
 {
     crosswin* c;
     list_entry current;
+    size_t mon;
 
     unsigned char opacity;
     void* user_data;
@@ -108,14 +124,11 @@ typedef struct _crosswin_window
     long y;
     long h;
     long w;
-    long cposx; // current cursor x
-    long cposy; // current cursor y
     unsigned char keep_on_screen;
     unsigned char lock_z;
     crosswin_position zorder;
     size_t offw;
     size_t offh;
-    mouse_data md;
     void (*render_func)(crosswin_window* w, void* cr);
     int (*mouse_func)(crosswin_window* w, mouse_status* ms);
     int (*kbd_func)(unsigned  int key_code, void* ms);
@@ -132,6 +145,7 @@ typedef struct _crosswin_window
     XIC xInputContext;
 #endif
 } crosswin_window;
+
 void crosswin_init(crosswin* c);
 void crosswin_message_dispatch(crosswin *c);
 void crosswin_set_window_data(crosswin_window* w, void* pv);
@@ -151,7 +165,9 @@ void crosswin_get_position(crosswin_window* w, long* x, long* y);
 void crosswin_draggable(crosswin_window* w, unsigned char draggable);
 void crosswin_keep_on_screen(crosswin_window* w, unsigned char keep_on_screen);
 int crosswin_update(crosswin* c);
-void crosswin_monitor_resolution(crosswin* c, long* w, long* h);
+void crosswin_monitor_resolution(crosswin* c, crosswin_window *cw, long* w, long* h);
 void crosswin_set_window_z_order(crosswin_window* w, unsigned char zorder);
 void crosswin_set_kbd_handler(crosswin_window *w,int(*kbd_handler)(unsigned  int key_code,void *p),void *kb_data);
 void crosswin_set_window_z_order(crosswin_window* w, unsigned char zorder);
+int crosswin_get_monitors(crosswin *c,crosswin_monitor **cm,size_t *len);
+void crosswin_set_monitor(crosswin_window *w,size_t mon);

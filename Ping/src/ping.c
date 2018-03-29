@@ -14,7 +14,7 @@
 
 typedef struct
 {
-    unsigned char th_active;
+    void *th_active;
     unsigned char* exec;
     unsigned char *link;
     unsigned int addr;
@@ -37,9 +37,9 @@ void init(void** spv, void* ip)
     pthread_mutexattr_t mutex_attr=0;
     pthread_mutexattr_init(&mutex_attr);
     pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
-
     pthread_mutex_init(&p->mutex,&mutex_attr);
     pthread_mutexattr_destroy(&mutex_attr);
+    p->th_active=semper_safe_flag_init();
     p->ip = ip;
     *spv = p;
 }
@@ -63,13 +63,12 @@ void reset(void* spv, void* ip)
     p->timeout = param_size_t("Timeout", ip, 30000);
     p->period = param_size_t("Period", ip, 64);
     p->rep_timeout = param_size_t("TimeoutValue", ip, 30000);
-    pthread_mutex_unlock(&p->mutex);
 
     if((t = param_string("FinishAction", 0x3, ip, NULL))!=NULL)
     {
         p->exec = strdup(t);
     }
-
+    pthread_mutex_unlock(&p->mutex);
 }
 
 double update(void* spv)
@@ -78,24 +77,23 @@ double update(void* spv)
 
     if(p->current == 0&&p->th==0)
     {
-        p->th_active = 1;
+        semper_safe_flag_set(p->th_active, 1);
         int status=pthread_create(&p->th, NULL, ping_calculate, p);
 
         if(!status)
         {
-            while(p->th_active==1)
+            while(semper_safe_flag_get(p->th_active)==1)
                 sched_yield();
         }
         else
         {
-            p->th_active=0;
+            semper_safe_flag_set(p->th_active, 0);
             diag_error("Failed to start ping thread");
         }
     }
-    else if(p->th_active == 0 && p->th)
+    else if(semper_safe_flag_get(p->th_active) == 0 && p->th)
     {
         pthread_join(p->th, NULL);
-        send_command(p->ip, p->exec);
         p->th = 0;
     }
     if(++p->current == p->period)
@@ -114,29 +112,26 @@ void destroy(void** spv)
         p->th = 0;
     }
 
-    pthread_mutex_unlock(&p->mutex); //Unlocking
     pthread_mutex_destroy(&p->mutex); //destroying
-
+    semper_safe_flag_destroy(p->th_active);
     free(p->exec);
     free(*spv);
     *spv = NULL;
 }
 
-
-
-
 static void *ping_calculate(void *spv)
 {
     ping* p = spv;
-    p->th_active = 2;
+    semper_safe_flag_set(p->th_active, 2);
     unsigned int addr=0;
     unsigned int timeout=0;
     unsigned int def_timeout=0;
-
+    unsigned char *finish_act=NULL;
     pthread_mutex_lock(&p->mutex);
     addr=p->addr;
     timeout=p->timeout;
     def_timeout=p->rep_timeout;
+    finish_act=strdup(p->exec);
     pthread_mutex_unlock(&p->mutex);
 
     if(p->addr==INADDR_NONE||p->addr==0)
@@ -186,6 +181,7 @@ static void *ping_calculate(void *spv)
         if(IcmpSendEcho(icmp_handle, addr, NULL, 0, NULL, &buf, buf_sz, timeout))
         {
             p->ping_val = (double)buf.RoundTripTime;
+            send_command(p->ip, finish_act);
         }
         else
         {
@@ -198,7 +194,9 @@ static void *ping_calculate(void *spv)
         p->ping_val = (double)def_timeout;
     }
 
-    p->th_active = 0;
+
+    free(finish_act);
+   semper_safe_flag_set(p->th_active, 0);
     return(NULL);
 }
 

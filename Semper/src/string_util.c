@@ -807,9 +807,7 @@ int string_tokenizer(string_tokenizer_info *sti)
 
     size_t buf_len = 0;
 
-    if(sti->buf_len>0&&sti->buf_len!=(size_t)-1)
-        buf_len=sti->buf_len;
-    else
+
         buf_len=string_length(sti->buffer);
 
     for(unsigned char step=sti->oveclen>0?1:0; step<2; step++)

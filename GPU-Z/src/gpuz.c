@@ -10,7 +10,7 @@
 #define string_length(s) ((s==NULL?0:strlen(s)))
 
 /*
- * https://www.techpowerup.com/forums/threads/gpu-z-shared-memory-layout.65258/
+ * https://www.techpowerup.com/forums/threads/gpu-z-shared-memory-layout.65258
  * */
 #define MAX_RECORDS 128
 #pragma pack(push, 1)
@@ -45,9 +45,90 @@ typedef struct
     unsigned char *str_val;
     unsigned char found;
 } gpuz_data;
+
+
+static inline int gpuz_gather_data(GPUZ_SH_MEM *data);
+static wchar_t *utf8_to_ucs(unsigned char *str);
+static unsigned char *ucs_to_utf8(wchar_t *s_in, size_t *bn, unsigned char be);
+/*********************************************/
+
+void init(void **spv,void *ip)
+{
+    *spv=malloc(sizeof(gpuz_data));
+
+    memset(*spv,0,sizeof(gpuz_data));
+}
+
+void reset(void *spv,void *ip)
+{
+    gpuz_data *gd=spv;
+    free(gd->str_val);
+    free(gd->opt);
+
+    gd->str_val=NULL;
+    gd->opt=NULL;
+
+    unsigned char *s=param_string("GPUZInfo",EXTENSION_XPAND_SOURCES|EXTENSION_XPAND_VARIABLES,ip,"GPU Temperature");
+    gd->opt=utf8_to_ucs(s);
+}
+
+double update(void *spv)
+{
+    static GPUZ_SH_MEM data= {0};
+
+    gpuz_data *gd=spv;
+    gd->found=0;
+    gd->dp=&data;
+
+    if(gpuz_gather_data(&data))
+    {
+        gd->found=1;                    //nah, we did not find anything....not even some useful data
+        return(-1.0);
+    }
+
+    for(size_t i=0; i<MAX_RECORDS; i++)
+    {
+        if(!_wcsicmp(gd->dp->sensors[i].name,gd->opt))
+        {
+            gd->found=1;
+            return(gd->dp->sensors[i].value);
+        }
+    }
+    return(0.0);
+}
+
+unsigned char *string(void *spv)
+{
+    gpuz_data *gd=spv;
+    free(gd->str_val);
+    gd->str_val=NULL;
+
+    if(gd->found==1)
+        return(NULL);
+
+    for(size_t i=0; i<MAX_RECORDS; i++)
+    {
+        if(!_wcsicmp(gd->dp->data[i].key,gd->opt))
+        {
+            gd->str_val=ucs_to_utf8(gd->dp->data[i].value,NULL,0);
+            return(gd->str_val);
+        }
+    }
+
+    return(NULL);
+}
+
+void destroy(void **spv)
+{
+    gpuz_data *gd=*spv;
+    free(gd->str_val);
+    free(gd->opt);
+    free(*spv);
+
+    *spv=NULL;
+}
+
 /*Copied from Semper*/
-
-
 static wchar_t *utf8_to_ucs(unsigned char *str)
 {
     size_t len = string_length(str);
@@ -182,81 +263,7 @@ static inline int gpuz_gather_data(GPUZ_SH_MEM *data)
     return(ret);
 }
 
-/*********************************************/
 
-void init(void **spv,void *ip)
-{
-    *spv=malloc(sizeof(gpuz_data));
 
-    memset(*spv,0,sizeof(gpuz_data));
-}
 
-void reset(void *spv,void *ip)
-{
-    gpuz_data *gd=spv;
-    free(gd->str_val);
-    free(gd->opt);
-
-    gd->str_val=NULL;
-    gd->opt=NULL;
-
-    unsigned char *s=param_string("GPUZInfo",EXTENSION_XPAND_SOURCES|EXTENSION_XPAND_VARIABLES,ip,"GPU Temperature");
-    gd->opt=utf8_to_ucs(s);
-}
-
-double update(void *spv)
-{
-    static GPUZ_SH_MEM data= {0};
-
-    gpuz_data *gd=spv;
-    gd->found=0;
-    gd->dp=&data;
-
-    if(gpuz_gather_data(&data))
-    {
-        gd->found=1;                    //nah, we did not find anything....not even some useful data
-        return(-1.0);
-    }
-
-    for(size_t i=0; i<MAX_RECORDS; i++)
-    {
-        if(!_wcsicmp(gd->dp->sensors[i].name,gd->opt))
-        {
-            gd->found=1;
-            return(gd->dp->sensors[i].value);
-        }
-    }
-    return(0.0);
-}
-
-unsigned char *string(void *spv)
-{
-    gpuz_data *gd=spv;
-    free(gd->str_val);
-    gd->str_val=NULL;
-
-    if(gd->found==1)
-        return(NULL);
-
-    for(size_t i=0; i<MAX_RECORDS; i++)
-    {
-        if(!_wcsicmp(gd->dp->data[i].key,gd->opt))
-        {
-            gd->str_val=ucs_to_utf8(gd->dp->data[i].value,NULL,0);
-            return(gd->str_val);
-        }
-    }
-
-    return(NULL);
-}
-
-void destroy(void **spv)
-{
-    gpuz_data *gd=*spv;
-    free(gd->str_val);
-    free(gd->opt);
-    free(*spv);
-
-    *spv=NULL;
-}
 #endif

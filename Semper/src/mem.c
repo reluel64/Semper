@@ -8,6 +8,59 @@
 #include <stdio.h>
 #include <string_util.h>
 
+typedef struct
+{
+    pthread_mutex_t mtx;
+    size_t flag;
+} safe_flag;
+
+void *safe_flag_init(void)
+{
+    safe_flag *sf=zmalloc(sizeof(safe_flag));
+    pthread_mutexattr_t mutex_attr;
+    pthread_mutexattr_init(&mutex_attr);
+    pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
+    pthread_mutex_init(&sf->mtx,&mutex_attr);
+    pthread_mutexattr_destroy(&mutex_attr);
+    return(sf);
+}
+
+void safe_flag_set(void *sf,size_t flag)
+{
+    if(sf&&flag!=-1)
+    {
+        safe_flag *lsf=sf;
+        pthread_mutex_lock(&lsf->mtx);
+        lsf->flag=flag;
+        pthread_mutex_unlock(&lsf->mtx);
+    }
+}
+
+size_t safe_flag_get(void *sf)
+{
+
+    size_t ret=-1;
+    if(sf)
+    {
+        safe_flag *lsf=sf;
+        pthread_mutex_lock(&lsf->mtx);
+        ret= lsf->flag;
+        pthread_mutex_unlock(&lsf->mtx);
+    }
+    return(ret);
+}
+
+void safe_flag_destroy(void **psf)
+{
+    if(psf&&*psf)
+    {
+        safe_flag *sf=*psf;
+        pthread_mutex_destroy(&sf->mtx);
+        sfree(psf);
+    }
+}
+
+
 void* zmalloc(size_t bytes)
 {
     return (bytes?calloc(bytes, ALLOC_FACTOR):NULL);
@@ -25,7 +78,7 @@ void sfree(void** p)
 int put_file_in_memory(unsigned char* file, void** out, size_t* sz)
 {
     FILE* f = NULL;
-     unsigned char *gf=clone_string(file);
+    unsigned char *gf=clone_string(file);
     uniform_slashes(gf);
 #ifdef WIN32
     wchar_t* fp = utf8_to_ucs(gf);

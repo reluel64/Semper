@@ -9,7 +9,7 @@ typedef struct _string_source_info
     size_t len;
 } string_source_info;
 
-void string_source_create(void** pv, void* ip)
+void string_source_init(void** pv, void* ip)
 {
     unused_parameter(ip);
     * pv = zmalloc(sizeof(string_source_info));

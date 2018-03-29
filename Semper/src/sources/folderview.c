@@ -92,10 +92,10 @@ typedef struct
     folderview_sort_type stype;
     folderview_parent_type ptype;
     unsigned char s_desc;
-    unsigned char work;
+    void* work;
     unsigned char collect_mode;
-    unsigned char update;
-    unsigned char stop; //trigger for child synchronization
+    void *update;
+    void *stop; //trigger for child synchronization
     unsigned char sys;
     unsigned char hidden;
     unsigned char show_files;
@@ -133,7 +133,6 @@ typedef struct
 static int folderview_collect(unsigned char *root,folderview_parent *f,folderview_item *fi,list_entry *head);
 static void* folderview_collect_thread(void* vfi);
 static void folderview_item_child_sync(folderview_parent *fp,unsigned char flag);
-size_t ts;
 
 #ifdef WIN32
 static size_t dword_qword(size_t low, size_t high)
@@ -202,12 +201,11 @@ void folderview_reset(void *spv,void *ip)
 
             else if(!strcasecmp(temp,"DateModified"))
                 fc->type=t_date_mod;
-
         }
 
         if(fp)
         {
-            fp->update=UPDATE_FILE_LIST;
+            safe_flag_set(fp->update,UPDATE_FILE_LIST);
             fc->parent=fp;
         }
 
@@ -256,16 +254,24 @@ void folderview_reset(void *spv,void *ip)
         }
         else
         {
-            fp->stop=1;
+            safe_flag_set(fp->stop,1);
 
             if(fp->thread)
                 pthread_join(fp->thread,NULL);
 
-            fp->stop=0;
+            safe_flag_set(fp->stop,0);
         }
 
         sfree((void**)&fp->base_path);
         sfree((void**)&fp->qcomplete_act);
+
+        safe_flag_destroy(&fp->update);
+        safe_flag_destroy(&fp->work);
+        safe_flag_destroy(&fp->stop);
+
+        fp->update= safe_flag_init();
+        fp->work=safe_flag_init();
+        fp->stop=safe_flag_init();
 
         fp->qcomplete_act=clone_string(param_string("CompletionAction",EXTENSION_XPAND_ALL,ip,NULL));
         fp->collect_mode=param_size_t("CollectType",ip,0);
@@ -278,10 +284,10 @@ void folderview_reset(void *spv,void *ip)
         fp->show_folders=param_bool("ShowFolders",ip,1);
         fp->path=fp->base_path;
         fp->base_len=string_length(fp->base_path);
-        fp->update=1;
         fp->ip=ip;
         fh->data=fp;
         fh->type=_parent;
+        safe_flag_set(fp->update,1);
         temp=param_string("SortBy",EXTENSION_XPAND_ALL,ip,"Name");
 
         if(temp)
@@ -353,12 +359,12 @@ double folderview_update(void *spv)
         if(fp->work==0&&fp->update&&fp->thread==0)
         {
             int status=0;
-            fp->work=1;
+            safe_flag_set(fp->work,1);
             status=pthread_create(&fp->thread, NULL, folderview_collect_thread, fp);
 
             if(status)
             {
-                fp->work=0;
+                safe_flag_set(fp->work,0);
                 diag_crit("%s %d Failed to start folderview_collect_thread. Status %x",__FUNCTION__,__LINE__,status);
             }
             else
@@ -369,10 +375,8 @@ double folderview_update(void *spv)
                 * chance for it to start by polling the
                 * work variable until is no longer 1
                 */
-                while(fp->work==1)
-                {
-                    sched_yield(); //don't be greedy, give some time to other threads
-                }
+                while(safe_flag_get(fp->work)==1);
+
             }
         }
 
@@ -465,7 +469,7 @@ void folderview_command(void* spv, unsigned char* command)
                     }
 
                     fp->path=temp;
-                    fp->update=UPDATE_FILE_LIST;
+                    safe_flag_set(fp->update,UPDATE_FILE_LIST);
                 }
                 else
                 {
@@ -513,7 +517,7 @@ void folderview_command(void* spv, unsigned char* command)
                     lo[0]=0;
                 }
 
-                fp->update=UPDATE_FILE_LIST;
+                safe_flag_set(fp->update,UPDATE_FILE_LIST);
 
             }
             else if(fp->start)
@@ -536,7 +540,7 @@ void folderview_command(void* spv, unsigned char* command)
                             fp->start= element_of(fp->start->current.next,folderview_item,current);
                         }
 
-                        fp->update=UPDATE_SYNC;
+                        safe_flag_set(fp->update,UPDATE_SYNC);
                     }
                 }
             }
@@ -568,8 +572,7 @@ void folderview_destroy(void **spv)
     if(fh->type==_parent) //clean the parent and any references to it
     {
         fp =fh->data;
-        fp->stop=1;
-
+        safe_flag_set(fp->stop,1);
 
         if(fp->thread)
             pthread_join(fp->thread,NULL);
@@ -592,6 +595,9 @@ void folderview_destroy(void **spv)
         sfree((void**)&fp->base_path);
         sfree((void**)&fp->qcomplete_act);
         pthread_mutex_destroy(&fp->mutex);
+        safe_flag_destroy(&fp->update);
+        safe_flag_destroy(&fp->work);
+        safe_flag_destroy(&fp->stop);
         sfree((void**)&fh->data);
         sfree(spv);
     }
@@ -1037,19 +1043,20 @@ static void *folderview_collect_thread(void* vfi)
 {
     folderview_parent *fp = vfi;
 
-    fp->work=2; //set this to a non-1 value to allow the main thread to continue
+    safe_flag_set(fp->work,2); //set this to a non-1 value to allow the main thread to continue
 
-    if(fp->update&UPDATE_SYNC)
+    unsigned char update_flag=safe_flag_get(fp->update);
+    if(update_flag&UPDATE_SYNC)
     {
         pthread_mutex_lock(&fp->mutex);
-        fp->update&=~UPDATE_SYNC;
+        safe_flag_set(fp->update,update_flag&~UPDATE_SYNC);
         folderview_item_child_sync(fp,SYNC_CHILDREN|SYNC_ICONS|SYNC_RSYNC|SYNC_CLEAR);
         pthread_mutex_unlock(&fp->mutex);
     }
 
-    else if(fp->update&UPDATE_FILE_LIST)
+    else if(update_flag&UPDATE_FILE_LIST)
     {
-        fp->update&=~UPDATE_FILE_LIST;
+        safe_flag_set(fp->update,update_flag&~UPDATE_FILE_LIST);
         list_entry new_head= {0};
         list_entry_init(&new_head);
 
