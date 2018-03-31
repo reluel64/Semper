@@ -27,7 +27,7 @@ typedef struct
 #define EXTENSION_PATH_SURFACES   0x2
 #define EXTENSION_PATH_EXTENSIONS 0x3
 #define EXTENSION_PATH_SURFACE    0x4
-
+typedef int (*event_handler)(void*);
 
 
 void*         semper_safe_flag_init(void);

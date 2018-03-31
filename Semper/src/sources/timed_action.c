@@ -154,7 +154,7 @@ void timed_action_command(void *spv,unsigned char *command)
                 {
                     if(tl->action_index==comm_index)
                     {
-                        if(tl->running)
+                        if(safe_flag_get(tl->running))
                         {
                             break;
                         }

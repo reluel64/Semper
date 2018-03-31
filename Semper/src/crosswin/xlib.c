@@ -230,7 +230,7 @@ int xlib_message_dispatch(crosswin *c)
 {
 
   
-    do
+    while(XPending(c->display))
     {
 
         XEvent ev= {0};
@@ -248,12 +248,12 @@ int xlib_message_dispatch(crosswin *c)
         {
             /*This is pretty ugly as I did not want to call the utf8_to_ucs() but for the moment it does the job*/
             if(ev.xkey.keycode==105||ev.xkey.keycode==37)
-                w->md.ctrl=1;
+                c->md.ctrl=1;
             if(w->xInputContext)
             {
                 unsigned short symbol=0;
                 
-                if(w->md.ctrl&&ev.xkey.keycode==36)
+                if(c->md.ctrl&&ev.xkey.keycode==36)
                     symbol='\n';
                 else
                 {
@@ -279,44 +279,44 @@ int xlib_message_dispatch(crosswin *c)
         case KeyRelease:
         {
             if(ev.xkey.keycode==105||ev.xkey.keycode==37)
-                w->md.ctrl=0;
+                c->md.ctrl=0;
 
             break;
         }
 
         case MotionNotify:
         {
-            w->md.x=ev.xmotion.x;
-            w->md.y=ev.xmotion.y;
-            w->md.root_x=ev.xmotion.x_root;
-            w->md.root_y=ev.xmotion.y_root;
-            w->md.hover=mouse_hover;
+            c->md.x=ev.xmotion.x;
+            c->md.y=ev.xmotion.y;
+            c->md.root_x=ev.xmotion.x_root;
+            c->md.root_y=ev.xmotion.y_root;
+            c->md.hover=mouse_hover;
             w->c->handle_mouse(w);
             break;
         }
 
         case ButtonRelease:
-            w->md.x=ev.xbutton.x;
-            w->md.y=ev.xbutton.y;
-            w->md.state=mouse_button_state_unpressed;
+            c->md.x=ev.xbutton.x;
+            c->md.y=ev.xbutton.y;
+            c->md.state=mouse_button_state_unpressed;
             switch(ev.xbutton.button)
             {
             case Button1:
-                w->md.button=mouse_button_left;
+                c->md.button=mouse_button_left;
                 break;
             case Button2:
-                w->md.button=mouse_button_middle;
+                c->md.button=mouse_button_middle;
                 break;
             case Button3:
-                w->md.button=mouse_button_right;
+                c->md.button=mouse_button_right;
                 break;
             case Button4:
-                w->md.state=mouse_button_state_none;
-                w->md.scroll_dir=-1;
+                c->md.state=mouse_button_state_none;
+                c->md.scroll_dir=-1;
                 break;
             case Button5:
-                w->md.state=mouse_button_state_none;
-                w->md.scroll_dir=1;
+                c->md.state=mouse_button_state_none;
+                c->md.scroll_dir=1;
                 break;
             }
             w->c->handle_mouse(w);
@@ -324,27 +324,27 @@ int xlib_message_dispatch(crosswin *c)
         case ButtonPress:
       
             XSetInputFocus(w->c->display,w->window,RevertToParent,0);
-            w->md.x=ev.xbutton.x;
-            w->md.y=ev.xbutton.y;
-            w->md.state=mouse_button_state_pressed;
+            c->md.x=ev.xbutton.x;
+            c->md.y=ev.xbutton.y;
+            c->md.state=mouse_button_state_pressed;
             switch(ev.xbutton.button)
             {
             case Button1:
            
-                w->md.button=mouse_button_left;
+                c->md.button=mouse_button_left;
                 break;
             case Button2:
-                w->md.button=mouse_button_middle;
+                c->md.button=mouse_button_middle;
                 break;
             case Button3:
-                w->md.button=mouse_button_right;
+                c->md.button=mouse_button_right;
                 break;
             }
             w->c->handle_mouse(w);
             break;
         case LeaveNotify:
             XSetInputFocus(w->c->display,None,RevertToParent,0);
-            w->md.hover=mouse_unhover;
+            c->md.hover=mouse_unhover;
             w->c->handle_mouse(w);
             break;
 
@@ -359,7 +359,6 @@ int xlib_message_dispatch(crosswin *c)
         }
         
     }
-    while(XPending(c->display));
 
     return(0);
 }

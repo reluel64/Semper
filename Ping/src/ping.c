@@ -113,7 +113,7 @@ void destroy(void** spv)
     }
 
     pthread_mutex_destroy(&p->mutex); //destroying
-    semper_safe_flag_destroy(p->th_active);
+    semper_safe_flag_destroy(&p->th_active);
     free(p->exec);
     free(*spv);
     *spv = NULL;

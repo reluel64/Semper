@@ -7,6 +7,7 @@
     <Plugin Name="CppCheck"/>
   </Plugins>
   <VirtualDirectory Name="src">
+    <File Name="src/memf.c"/>
     <File Name="src/semper.c"/>
     <File Name="src/watcher.c"/>
     <VirtualDirectory Name="sources">
@@ -170,6 +171,7 @@
     <File Name="src/semper_api.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
+    <File Name="include/memf.h"/>
     <File Name="include/tooltip.h"/>
     <File Name="include/watcher.h"/>
     <VirtualDirectory Name="sources">

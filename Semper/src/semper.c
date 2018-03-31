@@ -17,7 +17,7 @@
 #include <fontconfig/fontconfig.h>
 #include <surface_builtin.h>
 #include <watcher.h>
-
+#include <memf.h>
 #ifdef __linux__
 #include <sys/inotify.h>
 #include <unistd.h>
@@ -40,7 +40,7 @@ extern void crosswin_update_z(crosswin *c);
 
 typedef struct
 {
-    FILE* nf;
+    void* nf;
     unsigned char* sn;
     unsigned char* kv;
     unsigned char* kn;
@@ -292,6 +292,7 @@ static int ini_handler(semper_write_key_handler)
     return (0);
 }
 
+
 int semper_write_key(unsigned char* file, unsigned char* sn, unsigned char* kn, unsigned char* kv)
 {
     if(!file || !sn || !kn || !kv)
@@ -358,6 +359,109 @@ int semper_write_key(unsigned char* file, unsigned char* sn, unsigned char* kn, 
 }
 
 
+static int ini_handler(semper_write_key_memory_handler)
+{
+    semper_write_key_data* swkd = pv;
+
+    /*Just treat the new line*/
+    if(!kn && !kv && !sn && !com)
+    {
+        size_t pos=mtell(swkd->nf);
+
+        if(pos>3)
+        {
+            swkd->new_lines++;
+            mprintf(swkd->nf, "\n");
+        }
+
+        return (0);
+
+    }
+
+    swkd->has_content=1;
+    /*The section is about to change so we get the ending offset*/
+
+    if(swkd->sect_off > swkd->sect_end_off && strcasecmp(sn, swkd->sn))
+    {
+        swkd->sect_end_off = mtell(swkd->nf) - swkd->new_lines;
+        mseek(swkd->nf, -(((long)swkd->new_lines) - 1), SEEK_CUR);
+        swkd->new_lines = 0;
+
+        if(swkd->key_found == 0)
+        {
+            mprintf(swkd->nf, "%s=%s\n", swkd->kn, (swkd->kv ? swkd->kv : (unsigned char*)""));
+        }
+    }
+
+    /*We have to process a section*/
+    if(sn && !kn)
+    {
+        mprintf(swkd->nf, *com ? "[%s]\t\t%s\n" : "[%s]\n", sn, *com ? com : (unsigned char*)""); /*Spit it out*/
+
+        /*this is the section - store the offset*/
+        if(!strcasecmp(sn, swkd->sn))
+        {
+            swkd->sect_off = mtell(swkd->nf); /*save the offset of the section start*/
+            swkd->key_found = 0;
+        }
+
+        return (0);
+    }
+
+    /*We found the key so we replace it with the new one*/
+    else if(sn && kn && !strcasecmp(sn, swkd->sn) && !strcasecmp(kn, swkd->kn)) /*we have the section and the key so let's print it out*/
+    {
+        mprintf(swkd->nf, (*com ? "%s=%s\t\t%s\n" : "%s=%s\n"), swkd->kn, (swkd->kv ? swkd->kv : (unsigned char*)""), (*com ? com : (unsigned char*)""));
+        swkd->key_found = 1;
+        return (0);
+    }
+    else
+    {
+        mprintf(swkd->nf, (*com ? "%s=%s\t\t%s\n" : "%s=%s\n"), kn, (kv ? kv : (unsigned char*)""), (*com ? com : (unsigned char*)""));
+        return (0);
+    }
+
+    /*Write multi-line value*/
+    if(!kn)
+    {
+        mprintf(swkd->nf, (*com ? "%s\t\t;%s\n" : "%s\n"), kv, (*com ? com : (unsigned char*)""));
+    }
+
+    return (0);
+}
+
+
+int semper_write_key_memory(memf *src,memf *dest, unsigned char* sn, unsigned char* kn, unsigned char* kv)
+{
+    if(!src || !dest || !sn || !kn || !kv)
+        return (-1);
+
+    semper_write_key_data swkd = {.nf = NULL, .sn = sn, .kv = kv, .kn = kn, .sect_found = 0, .key_found = 0 };
+    static size_t utf8_bom = 0xBFBBEF; /*such UTF-8 signature, much 3 bytes*/
+    swkd.nf = dest;
+
+    mwrite(&utf8_bom, 3, 1, swkd.nf);
+    ini_parser_parse_stream((ini_reader)mgets,src, semper_write_key_memory_handler, &swkd);
+
+    if(swkd.sect_off == 0) /*section was not found*/
+    {
+        if(swkd.has_content)
+        {
+            mprintf(swkd.nf, "\n[%s]\n%s=%s", sn, kn, kv);
+        }
+        else
+        {
+            mprintf(swkd.nf, "[%s]\n%s=%s", sn, kn, kv);
+        }
+    }
+    else if(swkd.key_found == 0 &&
+            swkd.sect_end_off < swkd.sect_off) /*this should happen if it is at the end of file*/
+    {
+        mprintf(swkd.nf, "%s=%s", kn, kv);
+    }
+    return (0);
+}
+
 /*Loads the configuration from Semper.ini*/
 static int semper_load_configuration(control_data* cd)
 {
@@ -377,7 +481,21 @@ static int semper_load_configuration(control_data* cd)
 int semper_save_configuration(control_data* cd)
 {
     section s = skeleton_first_section(&cd->shead);
+    void *buf=NULL;
+    size_t sz=0;
+    memf *src=NULL;
+    memf *dest=NULL;
+    FILE *cfg=NULL;
 
+    if(put_file_in_memory(cd->cf,&buf,&sz)<0)
+    {
+        return(-1);
+    }
+
+    src=mopen(sz);
+    mwrite(buf,sz,1,src);
+    mseek(src,0,SEEK_SET);
+    sfree((void**)&buf);
     do
     {
         unsigned char* sn = skeleton_get_section_name(s);
@@ -387,13 +505,43 @@ int semper_save_configuration(control_data* cd)
           preserves comments if user adds any*/
         do
         {
+            dest=mopen(0);
             unsigned char* kn = skeleton_key_name(k);
             unsigned char* kv = skeleton_key_value(k);
-            semper_write_key(cd->cf, sn, kn, kv);
+
+            semper_write_key_memory(src,dest, sn, kn, kv);
+            mseek(dest,0,SEEK_SET);
+            mclose(&src);
+            src=dest;
+            dest=NULL;
         }
         while((k = skeleton_next_key(k, s)));
     }
     while((s = skeleton_next_section(s, &cd->shead)));
+
+    /*write down the new configuration*/
+
+#ifdef WIN32
+    unsigned short *ucs=utf8_to_ucs(cd->cf);
+    cfg=_wfopen(ucs,L"wb");
+    sfree((void**)&ucs);
+#elif __linux__
+    cfg=fopen(cd->cf,"wb");
+#endif
+
+    mseek(src,0,SEEK_END);
+    sz=mtell(src);
+    mseek(src,0,SEEK_SET);
+    buf=zmalloc(sz);
+
+    mread(buf,sz,1,src);
+    mclose(&src);
+
+
+    fwrite(buf,sz,1,cfg);
+    sfree((void**)&buf);
+    fclose(cfg);
+
 
     return (1);
 }
@@ -483,12 +631,12 @@ static void semper_create_paths(control_data* cd)
     else
     {
         /*Is located in the user directory*/
-        #ifdef WIN32
+#ifdef WIN32
         cd->root_dir=expand_env_var("%userprofile%/Semper");
-        #elif __linux__
+#elif __linux__
 
-         cd->root_dir=expand_env_var("$HOME/Semper");
-         #endif
+        cd->root_dir=expand_env_var("$HOME/Semper");
+#endif
         cd->root_dir_length=string_length(cd->root_dir);
         rdl=cd->root_dir_length;
     }
@@ -965,7 +1113,6 @@ int semper_main(void)
     {
         event_add_wait(cd->eq,(event_wait_handler)semper_watcher_callback,cd,(void*)((size_t*)cd->watcher)[0],0x1);
     }
-
     semper_load_configuration(cd);
 
 #ifdef WIN32

@@ -147,18 +147,19 @@ void surface_reset(surface_data* sd)
 static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
 {
     surface_data* sd = crosswin_get_window_data(w);
-    crosswin_get_position(sd->sw, &sd->x, &sd->y);
+    crosswin_get_position(sd->sw, &sd->x, &sd->y,&sd->monitor);
 
     if(sd->draggable&&sd->snp)
     {
         long lx=0;
         long ly=0;
+        size_t mon=0;
 
+        lx  = parameter_long_long(sd, "X", 0, XPANDER_SURFACE_CONFIG);
+        ly  = parameter_long_long(sd, "Y", 0, XPANDER_SURFACE_CONFIG);
+        mon = parameter_size_t(sd, "Monitor", 0, XPANDER_SURFACE_CONFIG);
 
-        lx = parameter_long_long(sd, "X", 0, XPANDER_SURFACE_CONFIG);
-        ly = parameter_long_long(sd, "Y", 0, XPANDER_SURFACE_CONFIG);
-
-        if(sd->x!=lx||sd->y!=ly)
+        if(sd->x!=lx||sd->y!=ly||sd->monitor!=mon)
         {
             unsigned char buf[260] = { 0 };
             snprintf(buf, sizeof(buf), "%ld", sd->x);
@@ -166,9 +167,10 @@ static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
             memset(buf, 0, sizeof(buf));
             snprintf(buf, sizeof(buf), "%ld", sd->y);
             skeleton_add_key(sd->scd, "Y", buf);
-
+            snprintf(buf,sizeof(buf),"%llu",sd->monitor);
+            skeleton_add_key(sd->scd,"Monitor",buf);
             /*Defer the parameter update*/
-            event_push(sd->cd->eq,(event_handler)semper_save_configuration,(void*)sd->cd,500,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
+            event_push(sd->cd->eq,(event_handler)semper_save_configuration,(void*)sd->cd,100,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
         }
     }
 
