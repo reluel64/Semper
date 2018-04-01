@@ -183,20 +183,56 @@ int object_calculate_coordinates(object* o)
     return (1);
 }
 
-static void object_render_internal(object* o, cairo_t* cr)
+static void object_tweak_matrix(object *o,cairo_matrix_t *m)
 {
     long w = o->w < 0 ? o->auto_w : o->w;
     long h = o->h < 0 ? o->auto_h : o->h;
 
-    cairo_matrix_t m = { 0 };
-    cairo_matrix_init_translate(&m, o->x + o->op.left, o->y + o->op.top);
-
+    cairo_matrix_init_translate(m, o->x + o->op.left, o->y + o->op.top);
     if(o->angle != 0.0)
     {
-        cairo_matrix_translate(&m, w / 2, h / 2);
-        cairo_matrix_rotate(&m, DEG2RAD(o->angle));
-        cairo_matrix_translate(&m, -w / 2, -h / 2);
+        cairo_matrix_translate(m, w / 2, h / 2);
+        cairo_matrix_rotate(m, DEG2RAD(o->angle));
+        cairo_matrix_translate(m, -w / 2, -h / 2);
     }
+}
+
+
+static unsigned char object_may_hit(object *o,cairo_t *cr,double x,double y,cairo_surface_t *s,long stride)
+{
+
+    int ret=0;
+    long w = o->w < 0 ? o->auto_w : o->w;
+    long h = o->h < 0 ? o->auto_h : o->h;
+    cairo_matrix_t m= {0};
+    object_tweak_matrix(o,&m);
+    cairo_save(cr);
+
+    cairo_set_matrix(cr, &m);
+    cairo_new_path(cr);
+    cairo_rectangle(cr,0.0,0.0,(double)w,(double)h);
+    cairo_clip(cr);
+    cairo_set_color(cr,0xff000000);
+    cairo_paint(cr);
+    cairo_surface_flush(s);
+    unsigned char* imgb = cairo_image_surface_get_data(s);
+
+    size_t pos_in_buf = (size_t)x +(size_t)y*(size_t)stride;
+
+    if(imgb&&imgb[pos_in_buf])
+    {
+        ret=1;
+    }
+
+    cairo_restore(cr);
+    return(ret);
+}
+
+
+static void object_render_internal(object* o, cairo_t* cr)
+{
+    cairo_matrix_t m = { 0 };
+    object_tweak_matrix(o,&m);
 
     cairo_save(cr);
     cairo_new_path(cr);
@@ -272,7 +308,8 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
 
         list_enum_part_backward(o, &sd->objects, current)
         {
-            if(o->enabled == 0 || o->hidden)
+            cairo_set_operator(ctx,CAIRO_OPERATOR_SOURCE);
+            if(o->enabled == 0 || o->hidden||!object_may_hit(o,ctx,(double)ms->x,(double)ms->y,cs,stride))
             {
                 continue;
             }
