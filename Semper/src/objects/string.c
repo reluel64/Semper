@@ -26,8 +26,7 @@ void string_init(object* o)
     {
         o->pv = zmalloc(sizeof(string_object));
         string_object* so = o->pv;
-        so->font_map = pango_cairo_font_map_new_for_font_type(CAIRO_FONT_TYPE_FT);
-        so->context = pango_font_map_create_context(PANGO_FONT_MAP(so->font_map));
+        so->context = pango_context_new();
         so->layout = pango_layout_new(so->context);
         list_entry_init(&so->attr);
     }
@@ -44,6 +43,7 @@ void string_reset(object* o)
     {
         sfree((void**)&(so)->bind_string);
     }
+    pango_context_set_font_map(so->context,pango_cairo_font_map_get_default());
 
     so->bind_string=NULL;
     sfree((void**)&so->string);
@@ -84,17 +84,17 @@ void string_reset(object* o)
 
     switch(so->align)
     {
-        case 1:
-            pango_layout_set_alignment(so->layout, PANGO_ALIGN_RIGHT);
-            break;
+    case 1:
+        pango_layout_set_alignment(so->layout, PANGO_ALIGN_RIGHT);
+        break;
 
-        case 2:
-            pango_layout_set_alignment(so->layout, PANGO_ALIGN_CENTER);
-            break;
+    case 2:
+        pango_layout_set_alignment(so->layout, PANGO_ALIGN_CENTER);
+        break;
 
-        default:
-            pango_layout_set_alignment(so->layout, PANGO_ALIGN_LEFT);
-            break;
+    default:
+        pango_layout_set_alignment(so->layout, PANGO_ALIGN_LEFT);
+        break;
     }
 }
 
@@ -128,10 +128,9 @@ int string_update(object* o)
     sb.s_in = so->string;
     sb.scale = so->scale;
     sb.self_scaling = so->scaling;
-
+    pango_context_set_font_map(so->context,pango_cairo_font_map_get_default());
     /*Obtain the string*/
     so->bind_string_len=bind_update_string(o, &sb);
-
     if(sb.s_out == NULL)
     {
         return (-1);
@@ -222,7 +221,6 @@ void string_destroy(object* o)
         string_attr_destroy(so);
         g_object_unref(so->layout);
         g_object_unref(so->context);
-        g_object_unref(so->font_map);
         pango_font_description_free(so->font_desc);
 
         if(so->bind_string!=so->string)

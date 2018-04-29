@@ -205,7 +205,6 @@ event_queue* event_queue_init(void)
 #ifdef WIN32
     eq->loop_event = CreateEvent(NULL, 0, 1, NULL);
 #elif __linux__
-    eq->loop_wait=(void*)(size_t)epoll_create1(0);
     eq->loop_event=(void*)(size_t)eventfd(0x2712, EFD_NONBLOCK);
 #endif
     return (eq);
@@ -285,7 +284,7 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
     e->handler = handler;
     e->pv = pv;
 
-    if(flags & EVENT_PUSH_TIMER)
+    if((flags & EVENT_PUSH_TIMER) && !(flags & EVENT_PUSH_HIGH_PRIO))
     {
 
 #ifdef WIN32
@@ -313,14 +312,24 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
 #endif
     }
 
-    else if(!(flags&EVENT_NO_WAKE))
-    {
-        event_start_processing(eq);
-    }
+
 
     pthread_mutex_lock(&eq->mutex);
 
-    if(flags & EVENT_PUSH_TAIL)
+    if(flags & EVENT_PUSH_HIGH_PRIO)
+    {
+        if(eq->ce)
+        {
+
+            _linked_list_add(eq->ce->current.prev,&e->current,&eq->ce->current);
+        }
+        else
+        {
+            linked_list_add(&e->current, &eq->events);
+        }
+
+    }
+    else if(flags & EVENT_PUSH_TAIL)
     {
         linked_list_add_last(&e->current, &eq->events);
     }
@@ -328,8 +337,13 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
     {
         linked_list_add(&e->current, &eq->events);
     }
-
     pthread_mutex_unlock(&eq->mutex);
+    if(!(flags&EVENT_NO_WAKE)||(flags & EVENT_PUSH_HIGH_PRIO))
+    {
+        event_start_processing(eq);
+    }
+
+
 
     return (0);
 }

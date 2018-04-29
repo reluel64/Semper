@@ -179,10 +179,7 @@ void timed_action_command(void *spv,unsigned char *command)
                         }
                         else
                         {
-                            while(safe_flag_get(tl->running)==1)
-                            {
-                                sched_yield();
-                            }
+                            while(safe_flag_get(tl->running)==1);
                         }
                         break;
                     }

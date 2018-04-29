@@ -147,7 +147,7 @@ static void xlib_render(crosswin_window *w)
             w->offw = (size_t)w->w;
             w->offh = (size_t)w->h;
         }
-
+    
         cairo_t* cr= cairo_create(w->offscreen_buffer); // create a cairo context to gain access to surface rendering routine
 
         if(w->opacity!=255)

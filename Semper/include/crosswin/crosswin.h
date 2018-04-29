@@ -166,6 +166,7 @@ void crosswin_draggable(crosswin_window* w, unsigned char draggable);
 void crosswin_keep_on_screen(crosswin_window* w, unsigned char keep_on_screen);
 int crosswin_update(crosswin* c);
 void crosswin_monitor_resolution(crosswin* c, crosswin_window *cw, long* w, long* h);
+void crosswin_monitor_origin(crosswin *c,crosswin_window *cw,long *x,long *y);
 void crosswin_set_window_z_order(crosswin_window* w, unsigned char zorder);
 void crosswin_set_kbd_handler(crosswin_window *w,int(*kbd_handler)(unsigned  int key_code,void *p),void *kb_data);
 void crosswin_set_window_z_order(crosswin_window* w, unsigned char zorder);

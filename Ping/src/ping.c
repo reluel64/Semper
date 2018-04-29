@@ -82,8 +82,7 @@ double update(void* spv)
 
         if(!status)
         {
-            while(semper_safe_flag_get(p->th_active)==1)
-                sched_yield();
+            while(semper_safe_flag_get(p->th_active)==1);
         }
         else
         {

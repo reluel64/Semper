@@ -70,13 +70,15 @@ int surface_builtin_init(void *holder,surface_builtin_type tp)
         {
             long w = 0;
             long h = 0;
+            long x = 0;
+            long y = 0;
             size_t buf_sz=0;
             unsigned char *buf=surface_builtin_code(&buf_sz,tp);
             surface_data* sd =surface_load_memory(cd,buf,buf_sz,NULL);
             crosswin_set_monitor(sd->sw,0);
             crosswin_monitor_resolution(&cd->c,sd->sw, &w, &h);
-            crosswin_monitor *cm=crosswin_get_monitor(&sd->cd->c,0);
-            crosswin_set_position(sd->sw, (cm->x+w / 2) - sd->w / 2, (cm->y+h / 2) - sd->h / 2);
+            crosswin_monitor_origin(&cd->c,sd->sw,&x,&y);
+            crosswin_set_position(sd->sw, (x+w / 2) - sd->w / 2, (y+h / 2) - sd->h / 2);
             cd->srf_reg = sd;
             return(0);
         }

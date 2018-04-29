@@ -188,10 +188,7 @@ double webget_update(void *spv)
         }
         else
         {
-            while(safe_flag_get(w->work)==1)
-            {
-                sched_yield();
-            }
+            while(safe_flag_get(w->work)==1);
 
             if(w->c_rate)
                 w->c_rate--;

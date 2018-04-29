@@ -96,3 +96,37 @@
 "FontName=DejaVu Sans\n"
 "UpdateAction=Update(Background);ForceDraw()\n"
 #endif
+#if 0
+[Surface-Meta]
+Name=Relu's launcher
+Author=Margarit Alexandru-Daniel
+
+[Surface]
+UpdateFrequency=1000
+
+
+;----------------Sources---------------
+[Surface-Variables]
+;-------Right ttip------
+;P1X=20
+;P1Y=100
+;P2X=0
+;P2Y=110
+;P3X=20
+;P3Y=120
+;----------Bottom------
+P1X=100
+P1Y=20
+P2X=110
+P2Y=0
+P3X=120
+P3Y=20
+
+
+[Frame]
+Object=Vector
+Path=Rect(0,0,200,200);Stroke(0;255;0;255)
+Path1=PathSet($P1X$,$P1Y$,0,Arrow);Stroke(0;255;0;255)
+Arrow=LineTo($P2X$,$P2Y$);LineTo($P3X$,$P3Y$);
+Path2=Join(Path);Union(Path1);Fill(0;0;0;200)
+#endif

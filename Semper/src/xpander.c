@@ -490,7 +490,7 @@ static int xpander_src_token_filter(string_tokenizer_status *sts,void *pv)
 
 int xpander(xpander_request *xr)
 {
-    
+
     surface_data *sd=NULL;
     control_data *cd=NULL;
     section sect=NULL;
@@ -532,7 +532,7 @@ int xpander(xpander_request *xr)
     }
 
     cd=sd->cd;
-
+#warning "Monitor variables incomplete"
     xpander_table tbl[]=
     {
         { "^",                               sd->sp.data_dir,                    NULL },
@@ -756,7 +756,7 @@ int xpander(xpander_request *xr)
         while(has_var);
     }
 
-    
+
     if(escapments&&xr->es)
     {
         for(size_t i = 0; xr->es[i]; i++)
@@ -780,7 +780,7 @@ int xpander(xpander_request *xr)
             }
         }
     }
-    
+
    if(xr->es==NULL)
    {
        xr->es=expand_env_var(xr->os);
@@ -791,7 +791,7 @@ int xpander(xpander_request *xr)
     sfree((void**)&xr->es);
     xr->es=temp;
    }
-    
-    
+
+
     return(xr->es!=NULL);
 }

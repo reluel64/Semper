@@ -72,7 +72,10 @@ double update(void *spv)
         semper_safe_flag_set(ohm->work,1);
         if(pthread_create(&ohm->qth, NULL, ohm_query, ohm)==0)
         {
-            while(semper_safe_flag_get(ohm->work)==1);
+            while(semper_safe_flag_get(ohm->work)==1)
+            {
+                sched_yield();
+            }
         }
         else
         {
@@ -116,8 +119,14 @@ static void * ohm_query(void *pv)
     IEnumWbemClassObject *results  = NULL;
     IWbemServices        *services=NULL;
     IWbemLocator         *locator=NULL;
+    double value=0.0;
     semper_safe_flag_set(ohm->work,2);
 
+
+    pthread_mutex_lock(&ohm->mutex);
+    unsigned char *oname=strdup(ohm->name);
+    unsigned char *otype=strdup(ohm->type);
+    pthread_mutex_unlock(&ohm->mutex);
 
     CoInitializeEx(0, 0);
     CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
@@ -149,23 +158,17 @@ static void * ohm_query(void *pv)
                         char *s_name=ucs_to_utf8(name.bstrVal,NULL,0);
                         char *s_type=ucs_to_utf8(type.bstrVal,NULL,0);
 
-                        pthread_mutex_lock(&ohm->mutex);
-
-                        if(s_name&&s_type&&!strcasecmp(s_name,ohm->name)&&!strcasecmp(s_type,ohm->type))
+                        if(s_name&&s_type&&!strcasecmp(s_name,oname)&&!strcasecmp(s_type,otype))
                         {
-                            pthread_mutex_unlock(&ohm->mutex);
+
                             VARIANT val= {0};
                             hr = result->lpVtbl->Get(result, L"Value", 0, &val, 0, 0);
                             if(hr==S_OK)
                             {
-                                ohm->value=(double)val.fltVal;
+                                value=(double)val.fltVal;
                                 VariantClear(&val);
                                 found=1;
                             }
-                        }
-                        else
-                        {
-                            pthread_mutex_unlock(&ohm->mutex);
                         }
 
                         free(s_name);
@@ -179,17 +182,18 @@ static void * ohm_query(void *pv)
             }
             results->lpVtbl->Release(results);
 
-            if(found==0)
-            {
-                pthread_mutex_lock(&ohm->mutex);
-                ohm->value=0.0;
-                pthread_mutex_unlock(&ohm->mutex);
-            }
         }
         services->lpVtbl->Release(services);
     }
     locator->lpVtbl->Release(locator);
     CoUninitialize();
+
+    pthread_mutex_lock(&ohm->mutex);
+    ohm->value=value;
+    pthread_mutex_unlock(&ohm->mutex);
+
+    free(oname);
+    free(otype);
 
     semper_safe_flag_set(ohm->work,0);
 

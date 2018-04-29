@@ -585,7 +585,6 @@ int source_update(source* s)
 {
     surface_data* sd = s->sd;
     unsigned char svc = 0; // source value changed flag
-
     if(s->vol_var)
     {
         source_reset(s);

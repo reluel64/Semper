@@ -68,11 +68,23 @@ void crosswin_monitor_resolution(crosswin* c, crosswin_window *cw, long* w, long
 {
     crosswin_monitor *cm=crosswin_get_monitor(c,cw->mon);
 #ifdef WIN32
-    *w=cm->w+cm->x;
-    *h=cm->h+cm->y;
+    *w=cm->w-cm->x;
+    *h=cm->h-cm->y;
 #elif __linux__
     *w=cm->w;
     *h=cm->h;
+#endif
+}
+
+void crosswin_monitor_origin(crosswin *c,crosswin_window *cw,long *x,long *y)
+{
+     crosswin_monitor *cm=crosswin_get_monitor(c,cw->mon);
+#ifdef WIN32
+    *x=cm->x;
+    *y=cm->y;
+#elif __linux__
+    *x=cm->x;
+    *y=cm->y;
 #endif
 }
 void crosswin_message_dispatch(crosswin *c)

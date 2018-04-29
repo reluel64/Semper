@@ -18,6 +18,7 @@
 #include <surface_builtin.h>
 #include <watcher.h>
 #include <memf.h>
+#include <pango/pangocairo.h>
 #ifdef __linux__
 #include <sys/inotify.h>
 #include <unistd.h>
@@ -78,6 +79,15 @@ static size_t semper_timestamp_get(void)
     return(t.tv_sec*1000+t.tv_nsec/1000000);
 }
 #endif
+
+size_t tss()
+{
+    LARGE_INTEGER li;
+    QueryPerformanceCounter(&li);
+    return(li.QuadPart);
+}
+
+
 static int semper_skeleton_ini_handler(unsigned char* sn, unsigned char* kn, unsigned char* kv, unsigned char* comm, void* pv)
 {
     unused_parameter(comm);
@@ -772,7 +782,10 @@ static int semper_font_cache_fix(unsigned char *path)
 
 static void  semper_init_fonts(control_data *cd)
 {
-    FcFini();
+    FcInitReinitialize();
+    pango_cairo_font_map_set_default(NULL);
+    if(cd->fmap)
+    g_object_unref(cd->fmap);
     size_t fcroot_len=cd->root_dir_length+sizeof("/.fontcache");
     unsigned char *fcroot=zmalloc(fcroot_len);
     snprintf(fcroot,fcroot_len,"%s\\.fontcache",cd->root_dir);
@@ -810,11 +823,12 @@ static void  semper_init_fonts(control_data *cd)
         fclose(f);
     }
 
-    FcInit();
+    FcInitReinitialize();
     FcCacheCreateTagFile( FcConfigGetCurrent());
     semper_font_cache_fix(fcroot);
-    FcFini();
-    FcInit();
+    FcInitReinitialize();
+    cd->fmap=pango_cairo_font_map_new_for_font_type(CAIRO_FONT_TYPE_FT);
+    pango_cairo_font_map_set_default(cd->fmap);
     sfree((void**)&tmp);
     sfree((void**)&fcfg_file);
     sfree((void**)&win_fonts);
@@ -882,6 +896,9 @@ static int semper_watcher_callback(void *pv,void *wait)
 {
     surface_data* sd = NULL;
     control_data *cd=pv;
+
+    semper_init_fonts(cd);
+
     list_enum_part(sd, &cd->surfaces, current)
     {
         if(sd->rim && surface_modified(sd))
@@ -1077,24 +1094,22 @@ static void *semper_listener(void *p)
 }
 #endif
 
-
 int semper_main(void)
 {
-
     control_data* cd = zmalloc(sizeof(control_data));
     pthread_t th;
     surface_data *sd=NULL;
     surface_data *tsd=NULL;
 
     semper_create_paths(cd);
-#if 0
+
 #ifndef DEBUG
     if(semper_single_instance(cd)==0)
     {
         return(0);
     }
 #endif
-#endif
+
     if(pthread_create(&th,NULL,semper_listener,cd))
     {
         diag_error("Failed to create listener thread");
@@ -1123,7 +1138,6 @@ int semper_main(void)
 
 
 #endif
-
     if(semper_load_surfaces(cd)==0)
     {
         /*launch the catalog if no surface has been loaded due to various reasons*/
@@ -1153,10 +1167,12 @@ int semper_main(void)
     return (0);
 }
 
-
 #ifdef WIN32
 #ifdef DEBUG
 int main( int argc, wchar_t *argv[])
+
+
+
 #else
 int wmain( int argc, wchar_t *argv[])
 #endif
@@ -1167,7 +1183,6 @@ int main( int argc, char *argv[])
 
 #endif
 {
-
     if(argc<2)
         return(semper_main());
 

@@ -284,7 +284,7 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="Debug" CompilerType="gcc.exe (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 7.1.0" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-g3;-Wall;-fpermissive;-pipe" C_Options="-g3;-Wall;-Wno-pointer-sign;-pipe" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+      <Compiler Options="-g;-Wall;-fpermissive;-pipe" C_Options="-g;-Wall;-Wno-pointer-sign;-pipe" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <IncludePath Value="include"/>
         <IncludePath Value="$(CompilerInclude)/pango-1.0"/>
@@ -297,7 +297,7 @@
         <Preprocessor Value="DEBUG"/>
         <Preprocessor Value="_UNICODE"/>
       </Compiler>
-      <Linker Options="-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,-static;" Required="yes">
+      <Linker Options="-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,-static" Required="yes">
         <LibraryPath Value="$(CompilerLib)"/>
         <Library Value="Iphlpapi"/>
         <Library Value="curl"/>
@@ -552,7 +552,7 @@
         <SearchPaths/>
       </Completion>
     </Configuration>
-    <Configuration Name="Release" CompilerType="MinGW ( gcc.exe (Rev2, Built by MSYS2 project) 7.1.0 )" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+    <Configuration Name="Release" CompilerType="gcc.exe (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 7.1.0" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-O2;-Wall" C_Options="-O2;-Wall;-Wno-pointer-sign;-Wl,--exclude-all-symbols" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
         <IncludePath Value="include"/>
@@ -564,7 +564,7 @@
         <Preprocessor Value="__USE_MINGW_ANSI_STDIO=1"/>
         <Preprocessor Value="WIN32"/>
       </Compiler>
-      <Linker Options="-s;-mwindows;-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,-static;-municode " Required="yes">
+      <Linker Options="-s;-mwindows;-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,-static;-municode" Required="yes">
         <LibraryPath Value="$(CompilerLib)"/>
         <Library Value="Iphlpapi"/>
         <Library Value="curl"/>

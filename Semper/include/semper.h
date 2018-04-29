@@ -74,6 +74,7 @@ typedef struct
     event_queue* eq;                    //main event queue
     void *ich;                          //image cache holder
     unsigned char shutdown;
+    void *fmap;
     /*Surface Watcher*/
 
     void *watcher;
@@ -94,3 +95,4 @@ int diag_init(control_data *cd);
 int diag_log(unsigned char lvl,char *fmt, ...);
 int diag_print(void);
 /**************************************************************************/
+size_t tss();

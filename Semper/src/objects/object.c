@@ -276,6 +276,7 @@ object* object_by_name(surface_data* sd, unsigned char* on,size_t len)
     return (NULL);
 }
 
+int object_tooltip_best(object *o);
 
 int object_hit_testing(surface_data* sd, mouse_status* ms)
 {
@@ -384,11 +385,60 @@ void object_render(surface_data* sd, cairo_t* cr)
     }
 }
 
+int object_tooltip_best(object *o)
+{
+    surface_data *sd=o->sd;
+    control_data *cd=sd->cd;
+    long ow = o->w < 0 ? o->auto_w : o->w;
+    long oh = o->h < 0 ? o->auto_h : o->h;
+
+
+    long sx;
+    long sy;
+    long sw;
+    long sh;
+    char big_index = 2;
+    crosswin_monitor_origin(&cd->c,sd->sw,&sx,&sy);
+    crosswin_monitor_resolution(&cd->c,sd->sw,&sw,&sh);
+    long mx =  sx+sd->x+o->x+ow/2;
+    long my =  sy+sd->y+o->y+oh/2;
+    long poses[] =
+    {
+        sx + sd->x + o->x,  //left
+        sw - (sx+sd->x+o->x+ow), //right
+        sy + sd->y + o->y,    //top
+        sh - (sy+sd->y+o->y+oh) //bottom
+    };
+
+    for(char i=2; i<4; i++)
+    {
+        if(poses[i]>poses[big_index])
+            big_index=i;
+    }
+
+    switch(big_index)
+    {
+    case 0:
+        printf("Left\n");
+        break;
+    case 1:
+        printf("Right\n");
+        break;
+    case 2:
+        printf("Top\n");
+        break;
+    case 3:
+        printf("Bottom\n");
+        break;
+    }
+}
+
+
+
 int object_tooltip_update(object *o)
 {
     surface_data *tsd=o->ttip;
     surface_data *sd=o->sd;
-
     if(o->ot.title)
     {
         string_bind titsb= {0};
@@ -466,7 +516,7 @@ int object_tooltip_update(object *o)
      * Therefore, we need 3 fast update cycles to have everything nice
      * Cycles:
      * 1) Update the Title and the Text with the parameters set above
-     * 2) Update the backround size
+     * 2) Update the background size
      * 3) Update the reflect the new content*/
     for(char cycle=0; cycle<3; cycle++)
     {
@@ -479,7 +529,6 @@ int object_tooltip_update(object *o)
 
 int object_init(section s, surface_data* sd)
 {
-
     if(sd == NULL || s == NULL)
     {
         return (-1);
@@ -590,7 +639,7 @@ int object_update(object *o)
 
     if(o->enabled==0)
         return(0);
-
+  //  object_tooltip_best(o);
     if(o->object_update_rtn)
     {
         o->object_update_rtn(o);

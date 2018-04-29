@@ -6,7 +6,7 @@
 #define EVENT_REMOVE_BY_DATA_HANDLER (EVENT_REMOVE_BY_DATA|EVENT_REMOVE_BY_HANDLER)
 #define EVENT_PUSH_TIMER            1<<3
 #define EVENT_NO_WAKE               1<<4
-#define EVENT_PUSH_HIGH_PRIO        1<<5 /*Unimplemented*/
+#define EVENT_PUSH_HIGH_PRIO        1<<5
 
 
 typedef int (*event_handler)(void*);
@@ -24,7 +24,6 @@ typedef struct
 typedef struct _event_queue
 {
     void *loop_event;
-    void *loop_wait;
     pthread_mutex_t mutex;
     list_entry events;
     list_entry waiters;

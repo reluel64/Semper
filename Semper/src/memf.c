@@ -23,7 +23,6 @@ memf *mopen(size_t init)
 {
     memf *m=calloc(sizeof(memf),1);
 
-
     if(m)
     {
         if(init!=0)

@@ -265,16 +265,14 @@ void win32_draw(crosswin_window* w)
     static POINT pt = { 0, 0 };
     SIZE sz = { w->w, w->h };
 
-    if(w->offscreen_buffer == NULL)
+    if(w->offscreen_buffer == NULL || (w->offw != (size_t)w->w || w->offh != (size_t)w->h))
     {
+        if(w->offscreen_buffer)
+        {
+            cairo_surface_destroy(w->offscreen_buffer);
+            w->offscreen_buffer=NULL;
+        }
         w->offscreen_buffer = cairo_win32_surface_create_with_dib(CAIRO_FORMAT_ARGB32, w->w, w->h); // create a surface to render on
-        w->offw = (size_t)w->w;
-        w->offh = (size_t)w->h;
-    }
-    else if(w->offscreen_buffer && (w->offw != (size_t)w->w || w->offh != (size_t)w->h))
-    {
-        cairo_surface_destroy(w->offscreen_buffer);
-        w->offscreen_buffer = cairo_win32_surface_create_with_dib(CAIRO_FORMAT_ARGB32, w->w, w->h);
         w->offw = (size_t)w->w;
         w->offh = (size_t)w->h;
     }
