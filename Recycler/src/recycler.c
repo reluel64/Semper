@@ -288,9 +288,9 @@ void reset(void *spv, void *ip)
         r->me=CreateEvent(NULL,0,0,NULL);
         r->mon_mode=new_monitor;
         semper_safe_flag_set(r->tha,1);
-        if(pthread_create(&r->qth,NULL,recycler_query_thread,r)==0)
+        if(pthread_create(&r->qth,NULL,recycler_query_thread,r)!=0)
         {
-            while(semper_safe_flag_get(r->tha)==1);
+            semper_safe_flag_set(r->tha,0);
         }
     }
 }
@@ -314,9 +314,9 @@ double update(void *spv)
         {
             r->lc=r->cc;
             semper_safe_flag_set(r->tha,1);
-            if(pthread_create(&r->qth,NULL,recycler_query_thread,r)==0)
+            if(pthread_create(&r->qth,NULL,recycler_query_thread,r)!=0)
             {
-                while(semper_safe_flag_get(r->tha)==1);
+                semper_safe_flag_set(r->tha,0);
             }
         }
 

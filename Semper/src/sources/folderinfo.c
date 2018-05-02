@@ -256,12 +256,8 @@ double folderinfo_update(void* spv)
 
         if(status)
         {
-            fi->working=0;
+            safe_flag_set(fi->working,0);
             diag_crit("%s %d Failed to start folderinfo_collect_thread. Status %x",__FUNCTION__,__LINE__,status);
-        }
-        else
-        {
-            while(safe_flag_get(fi->working)==1);
         }
     }
 

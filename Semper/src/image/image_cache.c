@@ -763,7 +763,6 @@ int image_cache_query_image(void *ic,image_attributes *ia,unsigned char **px,lon
     }
     else
     {
-
         if(px)
         {
             *px=ie->image_px;

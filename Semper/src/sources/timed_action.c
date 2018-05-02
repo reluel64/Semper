@@ -177,10 +177,6 @@ void timed_action_command(void *spv,unsigned char *command)
                            safe_flag_set(tl->running,0);
                             diag_crit("%s %d Failed to start timed_action_exec. Status %x",__FUNCTION__,__LINE__,status);
                         }
-                        else
-                        {
-                            while(safe_flag_get(tl->running)==1);
-                        }
                         break;
                     }
                 }

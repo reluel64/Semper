@@ -98,7 +98,7 @@
 #endif
 #if 0
 [Surface-Meta]
-Name=Relu's launcher
+Name=Relu\'s launcher
 Author=Margarit Alexandru-Daniel
 
 [Surface]

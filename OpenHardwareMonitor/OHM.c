@@ -7,40 +7,65 @@
 #include <windows.h>
 #include <wbemidl.h>
 #include <pthread.h>
+#include <sys/time.h>
 typedef struct
 {
     unsigned char *name;
     unsigned char *type;
-    void *work;
+    double val;
+} ohm_data;
+typedef struct
+{
+    ohm_data *data;
+    size_t dlen;
+    void *kill;
     pthread_mutex_t mutex;
-    double value;
+    pthread_cond_t cond;
     pthread_t qth;
-
+    size_t inst_cnt;
 } open_hardware_monitor;
+
+typedef struct
+{
+    open_hardware_monitor *inst;
+    unsigned char *name;
+    unsigned char *type;
+} open_hardware_monitor_inst;
+
 
 static void * ohm_query(void *pv);
 static unsigned char *ucs_to_utf8(wchar_t *s_in, size_t *bn, unsigned char be);
 
 void init(void **spv,void *ip)
 {
-    open_hardware_monitor *ohm=malloc(sizeof(open_hardware_monitor));
-    memset(ohm,0,sizeof(open_hardware_monitor));
 
-    pthread_mutexattr_t mutex_attr;
-    pthread_mutexattr_init(&mutex_attr);
-    pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
-    pthread_mutex_init(&ohm->mutex,&mutex_attr);
-    pthread_mutexattr_destroy(&mutex_attr);
-    ohm->work=semper_safe_flag_init();
+    static open_hardware_monitor ohm_inst = {0};
+
+    if(ohm_inst.inst_cnt==0)
+    {
+        ohm_inst.kill=semper_safe_flag_init();
+        pthread_mutexattr_t mutex_attr;
+        pthread_mutexattr_init(&mutex_attr);
+        pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
+        pthread_mutex_init(&ohm_inst.mutex,&mutex_attr);
+        pthread_mutexattr_destroy(&mutex_attr);
+        pthread_cond_init(&ohm_inst.cond,NULL);
+        pthread_create(&ohm_inst.qth, NULL, ohm_query, &ohm_inst);
+    }
+
+    ohm_inst.inst_cnt++;
+    open_hardware_monitor_inst *ohm=malloc(sizeof(open_hardware_monitor));
+    memset(ohm,0,sizeof(open_hardware_monitor));
+    ohm->inst=&ohm_inst;
+
     *spv=ohm;
 }
 
 void reset(void *spv,void *ip)
 {
-    open_hardware_monitor *ohm=spv;
+    open_hardware_monitor_inst *ohm=spv;
     unsigned char *temp=NULL;
 
-    pthread_mutex_lock(&ohm->mutex);
     free(ohm->name);
     free(ohm->type);
     ohm->name=NULL;
@@ -55,44 +80,25 @@ void reset(void *spv,void *ip)
 
     if(temp)
         ohm->type=strdup(temp);
-
-    pthread_mutex_unlock(&ohm->mutex);
 }
 
 double update(void *spv)
 {
-    open_hardware_monitor *ohm=spv;
-    int status=0;
-    double v=0;
+    open_hardware_monitor_inst *ohm=spv;
+    double v=0.0;
     if(ohm->type==NULL||ohm->name==NULL)
         return(0.0);
 
-    if(ohm->qth==0)
+    pthread_mutex_lock(&ohm->inst->mutex);
+    for(size_t i=0; i<ohm->inst->dlen; i++)
     {
-        semper_safe_flag_set(ohm->work,1);
-        if(pthread_create(&ohm->qth, NULL, ohm_query, ohm)==0)
+        if(!strcasecmp(ohm->inst->data[i].name,ohm->name)&&!strcasecmp(ohm->inst->data[i].type,ohm->type))
         {
-            while(semper_safe_flag_get(ohm->work)==1)
-            {
-                sched_yield();
-            }
-        }
-        else
-        {
-            semper_safe_flag_set(ohm->work,0);
-            diag_error("Failed to start WMI query thread");
+            v=ohm->inst->data[i].val;
+            break;
         }
     }
-
-    if(semper_safe_flag_get(ohm->work)==0&&ohm->qth)
-    {
-        pthread_join(ohm->qth,NULL);
-        memset(&ohm->qth,0,sizeof(pthread_t));
-    }
-
-    pthread_mutex_lock(&ohm->mutex);
-    v=ohm->value;
-    pthread_mutex_unlock(&ohm->mutex);
+    pthread_mutex_unlock(&ohm->inst->mutex);
     return(v);
 }
 
@@ -100,11 +106,24 @@ double update(void *spv)
 
 void destroy(void **spv)
 {
-    open_hardware_monitor *ohm=*spv;
-    if(ohm->qth)
-        pthread_join(ohm->qth,NULL);
-    pthread_mutex_destroy(&ohm->mutex);
-    semper_safe_flag_destroy(&ohm->work);
+    open_hardware_monitor_inst *ohm=*spv;
+    open_hardware_monitor *ohm_inst=ohm->inst;
+
+    if(ohm_inst->inst_cnt>0)
+        ohm_inst->inst_cnt--;
+
+    if(ohm_inst->inst_cnt==0)
+    {
+        semper_safe_flag_set(ohm_inst->kill,1);
+        pthread_cond_signal(&ohm_inst->cond);
+
+        if(ohm_inst->qth)
+            pthread_join(ohm_inst->qth,NULL);
+        pthread_cond_destroy(&ohm_inst->cond);
+        semper_safe_flag_destroy(&ohm_inst->kill);
+        pthread_mutex_destroy(&ohm_inst->mutex);
+    }
+
     free(ohm->name);
     free(ohm->type);
     free(*spv);
@@ -113,89 +132,123 @@ void destroy(void **spv)
 }
 
 
+
+
+
+
+
+
+
 static void * ohm_query(void *pv)
 {
+    pthread_mutex_t mtx;
     open_hardware_monitor *ohm=pv;
     IEnumWbemClassObject *results  = NULL;
     IWbemServices        *services=NULL;
     IWbemLocator         *locator=NULL;
-    double value=0.0;
-    semper_safe_flag_set(ohm->work,2);
-
-
-    pthread_mutex_lock(&ohm->mutex);
-    unsigned char *oname=strdup(ohm->name);
-    unsigned char *otype=strdup(ohm->type);
-    pthread_mutex_unlock(&ohm->mutex);
-
     CoInitializeEx(0, 0);
     CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
     CoCreateInstance(&CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER, &IID_IWbemLocator, (LPVOID *) &locator);
-    HRESULT hr = locator->lpVtbl->ConnectServer(locator,  L"ROOT\\OpenHardwareMonitor", NULL, NULL, NULL, 0, NULL, NULL, &services);
-    if(hr==S_OK)
+
+    while(semper_safe_flag_get(ohm->kill)==0)
     {
-        hr = services->lpVtbl->ExecQuery(services, L"WQL", L"SELECT * FROM Sensor", WBEM_FLAG_BIDIRECTIONAL, NULL, &results);
+        struct timeval tv;
+        struct timespec ts;
+        int ret = 0;
+        size_t len = 0;
+        ohm_data *od=NULL;
+        double value=0.0;
 
-        if (results != NULL)
+        HRESULT hr = locator->lpVtbl->ConnectServer(locator,  L"ROOT\\OpenHardwareMonitor", NULL, NULL, NULL, 0, NULL, NULL, &services);
+        if(hr==S_OK)
         {
-            IWbemClassObject *result = NULL;
-            ULONG returnedCount = 0;
-            unsigned char found=0;
+            hr = services->lpVtbl->ExecQuery(services, L"WQL", L"SELECT * FROM Sensor", WBEM_FLAG_BIDIRECTIONAL, NULL, &results);
 
-            while(found==0&&(hr = results->lpVtbl->Next(results, WBEM_INFINITE, 1, &result, &returnedCount)) == S_OK)
+            if (results != NULL)
             {
-                VARIANT name= {0};
-                hr = result->lpVtbl->Get(result, L"Name", 0, &name, 0, 0);
+                IWbemClassObject *result = NULL;
+                ULONG returnedCount = 0;
 
-                if(hr==S_OK)
+
+                while((hr = results->lpVtbl->Next(results, WBEM_INFINITE, 1, &result, &returnedCount)) == S_OK)
                 {
-                    VARIANT type= {0};
-                    hr = result->lpVtbl->Get(result, L"SensorType", 0, &type, 0, 0);
+                    VARIANT name= {0};
+                    hr = result->lpVtbl->Get(result, L"Name", 0, &name, 0, 0);
 
                     if(hr==S_OK)
                     {
+                        VARIANT type= {0};
+                        hr = result->lpVtbl->Get(result, L"SensorType", 0, &type, 0, 0);
 
-                        char *s_name=ucs_to_utf8(name.bstrVal,NULL,0);
-                        char *s_type=ucs_to_utf8(type.bstrVal,NULL,0);
-
-                        if(s_name&&s_type&&!strcasecmp(s_name,oname)&&!strcasecmp(s_type,otype))
+                        if(hr==S_OK)
                         {
-
+                            ohm_data *tod=NULL;
+                            tod=realloc(od,sizeof(ohm_data)*(len+1));
                             VARIANT val= {0};
-                            hr = result->lpVtbl->Get(result, L"Value", 0, &val, 0, 0);
-                            if(hr==S_OK)
+                            if(tod!=NULL)
                             {
-                                value=(double)val.fltVal;
-                                VariantClear(&val);
-                                found=1;
+                                char *s_name=ucs_to_utf8(name.bstrVal,NULL,0);
+                                char *s_type=ucs_to_utf8(type.bstrVal,NULL,0);
+                                tod[len].name=s_name;
+                                tod[len].type=s_type;
+                                hr = result->lpVtbl->Get(result, L"Value", 0, &val, 0, 0);
+                                if(hr==S_OK)
+                                {
+                                    tod[len].val=(double)val.fltVal;
+                                    VariantClear(&val);
+                                }
+                                od=tod;
+                                len++;
                             }
                         }
-
-                        free(s_name);
-                        free(s_type);
                         VariantClear(&type);
                     }
                     VariantClear(&name);
+                    result->lpVtbl->Release(result);
                 }
 
-                result->lpVtbl->Release(result);
+
             }
             results->lpVtbl->Release(results);
-
         }
         services->lpVtbl->Release(services);
+
+        pthread_mutex_lock(&ohm->mutex);
+        if(ohm->data)
+        {
+            for(size_t i=0; i<ohm->dlen; i++)
+            {
+                free(ohm->data[i].name);
+                free(ohm->data[i].type);
+            }
+            free(ohm->data);
+            ohm->data=NULL;
+        }
+        ohm->data=od;
+        ohm->dlen=len;
+        pthread_mutex_unlock(&ohm->mutex);
+        gettimeofday(&tv, NULL);
+
+        pthread_mutex_init(&mtx,NULL);
+        ts.tv_sec = time(NULL) + 1000 / 1000;
+        ts.tv_nsec = tv.tv_usec * 1000 + 1000 * 1000 * (1000 % 1000);
+        ts.tv_sec += ts.tv_nsec / (1000 * 1000 * 1000);
+        ts.tv_nsec %= (1000 * 1000 * 1000);
+
+        pthread_mutex_lock(&mtx);
+        ret=pthread_cond_timedwait(&ohm->cond, &mtx, &ts);
+        pthread_mutex_unlock(&mtx);
+        pthread_mutex_destroy(&mtx);
     }
+
     locator->lpVtbl->Release(locator);
     CoUninitialize();
-
-    pthread_mutex_lock(&ohm->mutex);
-    ohm->value=value;
-    pthread_mutex_unlock(&ohm->mutex);
-
-    free(oname);
-    free(otype);
-
-    semper_safe_flag_set(ohm->work,0);
+    for(size_t i=0; i<ohm->dlen; i++)
+    {
+        free(ohm->data[i].name);
+        free(ohm->data[i].type);
+    }
+    free(ohm->data);
 
     return(NULL);
 }

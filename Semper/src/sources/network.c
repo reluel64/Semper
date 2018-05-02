@@ -134,8 +134,8 @@ void network_reset(void *spv,void *ip)
     n->qty=param_bool("Quantity",ip,0);
     p=param_string("Interface",EXTENSION_XPAND_ALL,ip,"0");
     n-> if_index=strtoul(p,&t,10);
-#ifdef WIN32
 
+#ifdef WIN32
     if(p==(unsigned char*)t)
     {
         n->best=!strcasecmp(p,"Best");
@@ -150,9 +150,7 @@ void network_reset(void *spv,void *ip)
         n->if_index++;
         n->best=0;
     }
-
 #endif
-
 }
 
 

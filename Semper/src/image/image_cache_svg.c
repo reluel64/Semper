@@ -2,6 +2,8 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Margarit
  * */
+#define NANOSVGRAST_IMPLEMENTATION
+#define NANOSVG_IMPLEMENTATION
 #include <stdio.h>
 #include <image/image_cache.h>
 #include <mem.h>
@@ -29,6 +31,7 @@ int image_cache_decode_svg(FILE *f,image_cache_decoded *icd)
 
     unsigned char *buf=zmalloc(buf_sz+1);
     fread(buf,buf_sz,1,f);
+
 
     NSVGimage *img=nsvgParse(buf,"px",0);
 

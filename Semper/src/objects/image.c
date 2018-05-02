@@ -76,6 +76,7 @@ int image_update(object* o)
     io->ia.path=sb.s_out;
     image_cache_query_image(sd->cd->ich, &io->ia, NULL, o->w, o->h);
 
+
     o->auto_w=io->ia.width;
     o->auto_h=io->ia.height;
     return (1);
@@ -86,7 +87,10 @@ int image_render(object* o, cairo_t* cr)
     unsigned char *px=NULL;
     surface_data *sd=o->sd;
     image_object* io = o->pv;
+
+
     image_cache_query_image(sd->cd->ich, &io->ia, &px, o->w, o->h);
+
 
     if(px==NULL)
     {

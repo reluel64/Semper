@@ -384,7 +384,7 @@ void object_render(surface_data* sd, cairo_t* cr)
         }
     }
 }
-
+#if 0
 int object_tooltip_best(object *o)
 {
     surface_data *sd=o->sd;
@@ -397,7 +397,7 @@ int object_tooltip_best(object *o)
     long sy;
     long sw;
     long sh;
-    char big_index = 2;
+    unsigned char big_index = 2;
     crosswin_monitor_origin(&cd->c,sd->sw,&sx,&sy);
     crosswin_monitor_resolution(&cd->c,sd->sw,&sw,&sh);
     long mx =  sx+sd->x+o->x+ow/2;
@@ -410,7 +410,7 @@ int object_tooltip_best(object *o)
         sh - (sy+sd->y+o->y+oh) //bottom
     };
 
-    for(char i=2; i<4; i++)
+    for(unsigned char i=2; i<4; i++)
     {
         if(poses[i]>poses[big_index])
             big_index=i;
@@ -433,7 +433,7 @@ int object_tooltip_best(object *o)
     }
 }
 
-
+#endif
 
 int object_tooltip_update(object *o)
 {
