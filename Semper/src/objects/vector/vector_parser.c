@@ -677,7 +677,7 @@ static int vector_parse_attributes(vector_parser_info *vpi)
 
         if((vpi->flags&VPI_COLOR_ATTR)&&(vpi->vpmt==vector_param_none))
         {
-            if(!strncasecmp(vpi->pm,"Stroke",6))
+            if(!strncasecmp(vpi->pm,"Stroke",6) && strncasecmp(vpi->pm,"StrokeWidth",11))
                 vpi->vpmt=vector_param_stroke;
 
             else if(!strncasecmp(vpi->pm,"Fill",4))

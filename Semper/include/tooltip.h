@@ -103,8 +103,8 @@ Author=Margarit Alexandru-Daniel
 
 [Surface]
 UpdateFrequency=1000
-
-
+SurfaceColor=0;0;0;0
+AutoSize=1
 ;----------------Sources---------------
 [Surface-Variables]
 ;-------Right ttip------
@@ -115,18 +115,55 @@ UpdateFrequency=1000
 ;P3X=20
 ;P3Y=120
 ;----------Bottom------
-P1X=100
-P1Y=20
-P2X=110
-P2Y=0
-P3X=120
-P3Y=20
 
+
+RX = 0
+RY = 8
+TX = 100
+TY = 0
+
+P1X = 0
+P1Y = 0
+P2X = 8.083
+P2Y = 8.083
+P3X = -8.083
+P3Y = 8.083
+Angle = 0
+
+[C]
+Source=Calculator
+Function=[C]+1
+Volatile=1
 
 [Frame]
+Volatile=1
 Object=Vector
-Path=Rect(0,0,200,200);Stroke(0;255;0;255)
-Path1=PathSet($P1X$,$P1Y$,0,Arrow);Stroke(0;255;0;255)
-Arrow=LineTo($P2X$,$P2Y$);LineTo($P3X$,$P3Y$);
-Path2=Join(Path);Union(Path1);Fill(0;0;0;200)
+Path=Rect($RX$,$RY$,200,100);Stroke(0;255;0;255);
+Path1=PathSet($P1X$,$P1Y$,1,Arrow);Rotate($Angle$);Offset([Frame:W]/2,$TY$);
+Arrow=LineTo($P2X$,$P2Y$);LineTo($P3X$,$P3Y$)
+Path2=Join(Path);Union(Path1);Fill(255;0;0;200);
+BackColor=0;255;0;0
+
+[Title]
+Object = String
+Text = Tooltip title
+X = $RX$ + 5
+Y = $RY$ + 5
+FontName = Segoe UI
+StringAlign = Center
+FontShadow = 1
+W=[Frame:W] - $RX$ - 8
+
+
+[Content]
+Object = String
+Source=C
+Text = This is just an example text to show how the content is displayed in the tooltip %0
+X = $RX$ + 5
+Y = 5R
+FontName = Segoe UI
+FontSize = 10
+FontShadow = 1
+W=[Frame:W] - $RX$ - 8
+
 #endif
