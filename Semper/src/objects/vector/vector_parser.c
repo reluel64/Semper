@@ -641,7 +641,10 @@ static int vector_parse_attributes(vector_parser_info *vpi)
     {
         memset(&vpi->params,0,sizeof(vpi->params));
 
-        if(vpi->flags&VPI_NORMAL_ATTR)
+        if(!strncasecmp(vpi->pm,"Attributes",10))
+            vpi->vpmt=vector_param_shared;
+
+        if(vpi->flags&VPI_REG_ATTR)
         {
             if(!strncasecmp(vpi->pm,"StrokeWidth",11))
                 vpi->vpmt=vector_param_stroke_width;
@@ -654,9 +657,6 @@ static int vector_parse_attributes(vector_parser_info *vpi)
 
             else if(!strncasecmp(vpi->pm,"Dashes",6))
                 vpi->vpmt=vector_param_dashes;
-
-            if(!strncasecmp(vpi->pm,"Attributes",10))
-                vpi->vpmt=vector_param_shared;
         }
 
         if((vpi->flags&VPI_MTX_ATTR) && (vpi->vpmt==vector_param_none))
@@ -797,7 +797,6 @@ static int vector_parse_attributes(vector_parser_info *vpi)
             else if(vpi->param>=3&&vpi->param<PARAMS_LENGTH-1)
             {
                 vpi->params[vpi->param-3]=compute_formula(lpm);
-                //printf("Param %d\n",vpi->param);
             }
         }
         else if(vpi->vpmt== vector_param_stroke_width)
@@ -840,7 +839,7 @@ static int vector_parse_attributes(vector_parser_info *vpi)
         {
             if(vpi->param>=2)
             {
-                cairo_matrix_t mtx= {0};
+                cairo_matrix_t mtx = {0};
 
                 if(vpi->param>=4)
                 {
@@ -1105,14 +1104,16 @@ int vector_parser_init(object *o)
     {
         vector_parse_paths,
         vector_parse_attributes,
+        vector_parse_attributes,
         vector_parse_attributes
     };
 
     static unsigned char vpi_flags[]=
     {
         0,
-        VPI_NORMAL_ATTR,
-        VPI_COLOR_ATTR|VPI_NORMAL_ATTR
+        VPI_MTX_ATTR,    // Parse matrix
+        VPI_REG_ATTR,   // parse regular
+        VPI_COLOR_ATTR  //parse color
     };
 
     /*Generate simple paths*/
@@ -1145,6 +1146,7 @@ int vector_parser_init(object *o)
             if(vpi.pv==NULL)
                 break;
         }
+
         /*Add the path to list*/
         if(vpi.pv)
         {
@@ -1180,7 +1182,7 @@ int vector_parser_init(object *o)
 
                 if(vpc_root==NULL)
                 {
-                    diag_error("%s %d Cannot join paths as the root path is missing\n",__FUNCTION__,__LINE__);
+                    diag_error("%s %d Cannot join paths as the root path is missing",__FUNCTION__,__LINE__);
                     continue;
                 }
                 /*We have a subject to clip*/

@@ -51,32 +51,32 @@ typedef enum
 typedef struct webget
 {
 
-    pthread_t worker;        	//worker thread
-    pthread_mutex_t mutex; 		//mutex to protect a resource to be accessed while it is modified
-    list_entry children;   		//head for the children list
-    list_entry current;    		//used if the entry is part of a list (is a child)
-    void *ip;              		//internal pointer (used for send_command())
-    unsigned char *address; 	//could be a url or a file
-    unsigned char *srf_dir;     //used when downloading a file in the surface's directory
-    unsigned char *err_str;     //error string returned if something fails
-    unsigned char *regexp; 		//regular expression
-    unsigned char *success_act;    //success action
-    unsigned char *parse_fail_act; //parse failure action
-    unsigned char *dwl_fail;       //download failure action
-    unsigned char *connect_fail;   //connecton failure action (timeout)
-    unsigned char *result;         //this is returned by webget_string()
-    unsigned char *temp;           //temporary holder which is used to update the children (basically it's contents depend on primary_index)
-    unsigned char dwl;             //should we download this?
-    unsigned char dwl_local;         //should we download this to a file? (it implies dwl)
-    void *update;           //valid only for children
-    void *stop;	   		//signal the worker to stop
-    void *work;    		//worker status
+    pthread_t worker;               //worker thread
+    pthread_mutex_t mutex;          //mutex to protect a resource to be accessed while it is modified
+    list_entry children;            //head for the children list
+    list_entry current;             //used if the entry is part of a list (is a child)
+    void *ip;                       //internal pointer (used for send_command())
+    unsigned char *address;         //could be a url or a file
+    unsigned char *srf_dir;         //used when downloading a file in the surface's directory
+    unsigned char *err_str;         //error string returned if something fails
+    unsigned char *regexp;          //regular expression
+    unsigned char *success_act;     //success action
+    unsigned char *parse_fail_act;  //parse failure action
+    unsigned char *dwl_fail;        //download failure action
+    unsigned char *connect_fail;    //connecton failure action (timeout)
+    unsigned char *result;          //this is returned by webget_string()
+    unsigned char *temp;            //temporary holder which is used to update the children (basically it's contents depend on primary_index)
+    unsigned char dwl;              //should we download this?
+    unsigned char dwl_local;        //should we download this to a file? (it implies dwl)
+    void *update;                   //valid only for children
+    void *stop;                     //signal the worker to stop
+    void *work;                     //worker status
     size_t pr_index;                //primary index  (extracted from the parent)
     size_t sec_index;               //secondary index (extracted after applying regexp on the primary index)
     size_t u_rate;                  //update rate
     size_t c_rate;                  //current rate
-    webget *parent;				   //used if the child has a parent
-    webget_worker *ww;			   //status for the worker
+    webget *parent;                 //used if the child has a parent
+    webget_worker *ww;              //status for the worker
 } webget;
 
 static int webget_post_worker_update(webget *w);

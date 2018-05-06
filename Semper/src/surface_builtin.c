@@ -155,7 +155,9 @@ int surface_registry_file_to_string(unsigned char* s, unsigned char* d)
         while(fread(&buf, 1, 1, sf))
         {
             if(buf == '\n')
+            {
                 fwrite(nl, 2, 1, df);
+            }
             else if(buf=='"')
             {
                 fputc('\\',df);

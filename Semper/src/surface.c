@@ -452,6 +452,8 @@ int surface_adjust_size(surface_data *sd)
 
     list_enum_part(o,&sd->objects,current)
     {
+        long ow = o->w < 0 ? o->auto_w : o->w;
+        long oh = o->h < 0 ? o->auto_h : o->h;
         if(o->die||o->enabled==0)
         {
             continue;
@@ -461,7 +463,7 @@ int surface_adjust_size(surface_data *sd)
 
         if(sd->lock_w==0)
         {
-            long w = (((o->w!=o->auto_w||o->w < 0)&&o->auto_w!=0) ? o->auto_w : o->w);
+            long w = ow;
 
             if(sd->w < w + o->x)
             {
@@ -471,7 +473,7 @@ int surface_adjust_size(surface_data *sd)
 
         if(sd->lock_h==0)
         {
-            long h = (((o->h!=o->auto_h||o->h < 0)&&o->auto_h!=0) ? o->auto_h : o->h);
+            long h = oh;
 
             if(sd->h < h + o->y)
             {

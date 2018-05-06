@@ -65,7 +65,7 @@ static int object_routines_table(object_routine_entry **ore,unsigned char *on)
             *ore=tbl+i;
             if(i==0)
             {
-                diag_error("%s %d Object Type: %s is not implemented yet",__FUNCTION__,__LINE__,tbl[i].obj_name);
+                diag_error("%s %d Object Type: %s is not implemented",__FUNCTION__,__LINE__,tbl[i].obj_name);
                 return(0);
             }
             return(i+1);
@@ -232,10 +232,15 @@ static unsigned char object_may_hit(object *o,cairo_t *cr,double x,double y,cair
 static void object_render_internal(object* o, cairo_t* cr)
 {
     cairo_matrix_t m = { 0 };
+    long ow = o->w < 0 ? o->auto_w : o->w;
+    long oh = o->h < 0 ? o->auto_h : o->h;
     object_tweak_matrix(o,&m);
 
     cairo_save(cr);
+
     cairo_new_path(cr);
+    cairo_rectangle(cr,(double)o->x,(double)o->y,(double)ow,(double)oh);
+    cairo_clip(cr);
     cairo_set_matrix(cr, &m);
 
     object_render_background(o, cr);
@@ -610,11 +615,6 @@ void object_reset(object* o)
     o->team = parameter_string(o, "Team", NULL, XPANDER_OBJECT);
     parameter_object_padding(o, "Padding", &o->op, XPANDER_OBJECT);
 
-    if(o->divider == 0)
-    {
-        o->divider = 1;
-    }
-
     o->ot.text = parameter_string(o, "TooltipText", NULL, XPANDER_OBJECT);
     o->ot.title = parameter_string(o, "TooltipTitle", NULL, XPANDER_OBJECT);
     o->ot.percentual = parameter_bool(o, "ToolTipPercentual", 0, XPANDER_OBJECT);
@@ -625,6 +625,10 @@ void object_reset(object* o)
     if(o->object_reset_rtn)
     {
         o->object_reset_rtn(o);
+    }
+    if(o->divider == 0)
+    {
+        o->divider = 1;
     }
 }
 
@@ -639,7 +643,7 @@ int object_update(object *o)
 
     if(o->enabled==0)
         return(0);
-  //  object_tooltip_best(o);
+    //  object_tooltip_best(o);
     if(o->object_update_rtn)
     {
         o->object_update_rtn(o);

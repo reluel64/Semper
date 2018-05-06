@@ -10,7 +10,6 @@ void vector_parser_destroy(object *o);
 
 #define VPI_MTX_ATTR (1<<0)
 #define VPI_REG_ATTR (1<<1)
-#define VPI_NORMAL_ATTR ((1<<1)|(1<<0))
 #define VPI_COLOR_ATTR (1<<2)
 
 typedef enum
