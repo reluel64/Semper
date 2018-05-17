@@ -16,39 +16,39 @@ typedef struct
     time_t _tm;
 } time_state;
 
-void time_init(void **spv,void *ip)
+void time_init(void **spv, void *ip)
 {
     unused_parameter(ip);
-    *spv=zmalloc(sizeof(time_state));
+    *spv = zmalloc(sizeof(time_state));
 }
 
-void time_reset(void *spv,void *ip)
+void time_reset(void *spv, void *ip)
 {
-    time_state *ts=spv;
+    time_state *ts = spv;
     sfree((void**)&ts->format);
-    ts->format=clone_string(param_string("Format",0x3,ip,NULL));
+    ts->format = clone_string(param_string("Format", 0x3, ip, NULL));
 }
 
 double time_update(void *spv)
 {
-    time_state *ts=spv;
-    ts->_tm=time(NULL);
+    time_state *ts = spv;
+    ts->_tm = time(NULL);
     return((double)ts->_tm);
 }
 
 
 unsigned char *time_string(void *spv)
 {
-    time_state *ts=spv;
-    struct tm res= {0};
-    struct tm *fmt_time=localtime_r(&ts->_tm,&res);
-    strftime(ts->buf,256,ts->format,fmt_time);
+    time_state *ts = spv;
+    struct tm res = {0};
+    struct tm *fmt_time = localtime_r(&ts->_tm, &res);
+    strftime(ts->buf, 256, ts->format, fmt_time);
     return(ts->buf);
 }
 
 void time_destroy(void **spv)
 {
-    time_state *ts=*spv;
+    time_state *ts = *spv;
     sfree((void**)&ts->format);
     sfree(spv);
 }

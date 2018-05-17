@@ -22,38 +22,42 @@ typedef struct Hints
 
 void xlib_init_display(crosswin *c)
 {
-    c->display=XOpenDisplay(NULL);
-    
+    c->display = XOpenDisplay(NULL);
+
     XMatchVisualInfo(c->display, DefaultScreen(c->display), 32, TrueColor, &c->vinfo);
-    c->disp_fd=(void*)(size_t)XConnectionNumber(c->display);
+    c->disp_fd = (void*)(size_t)XConnectionNumber(c->display);
 }
 
-int xlib_get_monitors(crosswin *c,crosswin_monitor **cm,size_t *cnt)
+int xlib_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *cnt)
 {
     if(cm == NULL || cnt == NULL || c == NULL || c->display == NULL)
     {
         return(-1);
     }
-    XineramaScreenInfo *sinfo=NULL;
-    
-   sinfo = XineramaQueryScreens(c->display,cnt);
-   
-   if(sinfo)
-   {
-       *cm=zmalloc(sizeof(crosswin_monitor)*(*cnt));
-       for(size_t i=0;i<*cnt;i++)
-       {
-           (*cm)[i].h=sinfo[i].height;
-           (*cm)[i].w=sinfo[i].width;
-           (*cm)[i].x=sinfo[i].x_org;
-           (*cm)[i].y=sinfo[i].y_org;
-            (*cm)[i].index=i;
-       }
-       XFree(sinfo);
-       return(0);
-   }
-   return(-1);
-    
+
+    XineramaScreenInfo *sinfo = NULL;
+
+    sinfo = XineramaQueryScreens(c->display, cnt);
+
+    if(sinfo)
+    {
+        *cm = zmalloc(sizeof(crosswin_monitor) * (*cnt));
+
+        for(size_t i = 0; i < *cnt; i++)
+        {
+            (*cm)[i].h = sinfo[i].height;
+            (*cm)[i].w = sinfo[i].width;
+            (*cm)[i].x = sinfo[i].x_org;
+            (*cm)[i].y = sinfo[i].y_org;
+            (*cm)[i].index = i;
+        }
+
+        XFree(sinfo);
+        return(0);
+    }
+
+    return(-1);
+
 }
 
 
@@ -61,25 +65,25 @@ void xlib_init_window(crosswin_window *w)
 {
     XSetWindowAttributes attr;
 
-    memset(&attr,0,sizeof(attr));
+    memset(&attr, 0, sizeof(attr));
     attr.colormap = XCreateColormap(w->c->display, DefaultRootWindow(w->c->display), w->c->vinfo.visual, AllocNone);
-    attr.background_pixel=0;
-    attr.border_pixel=0;
-    attr.override_redirect=0;
-    attr.event_mask=KeyPressMask 		    |
-                    KeymapStateMask         |
-                    StructureNotifyMask     |
-                    SubstructureNotifyMask  |
-                    SubstructureRedirectMask|
-                    ButtonReleaseMask 	    |
-                    KeyReleaseMask 		    |
-                    EnterWindowMask 	    |
-                    LeaveWindowMask 	    |
-                    PointerMotionMask 	    |
-                    ButtonMotionMask 	    |
-                    VisibilityChangeMask    |
-                    ExposureMask            |
-                    ButtonPressMask;
+    attr.background_pixel = 0;
+    attr.border_pixel = 0;
+    attr.override_redirect = 0;
+    attr.event_mask = KeyPressMask 		    |
+                      KeymapStateMask         |
+                      StructureNotifyMask     |
+                      SubstructureNotifyMask  |
+                      SubstructureRedirectMask |
+                      ButtonReleaseMask 	    |
+                      KeyReleaseMask 		    |
+                      EnterWindowMask 	    |
+                      LeaveWindowMask 	    |
+                      PointerMotionMask 	    |
+                      ButtonMotionMask 	    |
+                      VisibilityChangeMask    |
+                      ExposureMask            |
+                      ButtonPressMask;
 
     w->window = XCreateWindow(w->c->display						,
                               DefaultRootWindow(w->c->display)	,
@@ -101,17 +105,17 @@ void xlib_init_window(crosswin_window *w)
                              );
 
 
-    XSaveContext(w->c->display,(XID)w->window,CONTEXT_ID,(const char*)w);
-    Atom type = XInternAtom(w->c->display,"_NET_WM_WINDOW_TYPE", False);
-    Atom value = XInternAtom(w->c->display,"_NET_WM_WINDOW_TYPE_DOCK", False);
-    XChangeProperty(w->c->display, w->window, type, XA_ATOM, 32, PropModeReplace,(unsigned char*)&value, 1);
+    XSaveContext(w->c->display, (XID)w->window, CONTEXT_ID, (const char*)w);
+    Atom type = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE", False);
+    Atom value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_DOCK", False);
+    XChangeProperty(w->c->display, w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
 
     Hints hints;
     Atom property;
     hints.flags = 2;
     hints.decorations = 0;
     property = XInternAtom(w->c->display, "_MOTIF_WM_HINTS", 1);
-    XChangeProperty(w->c->display,w->window,property,property,32,PropModeReplace,(unsigned char *)&hints,5);
+    XChangeProperty(w->c->display, w->window, property, property, 32, PropModeReplace, (unsigned char *)&hints, 5);
 
     XMapWindow(w->c->display, w->window);
 
@@ -119,10 +123,10 @@ void xlib_init_window(crosswin_window *w)
 
 void xlib_set_dimmension(crosswin_window *w)
 {
-    XWindowChanges wc= {0};
-    wc.width=w->w;
-    wc.height=w->h;
-    XConfigureWindow(w->c->display,w->window,CWWidth|CWHeight,&wc);
+    XWindowChanges wc = {0};
+    wc.width = w->w;
+    wc.height = w->h;
+    XConfigureWindow(w->c->display, w->window, CWWidth | CWHeight, &wc);
 }
 
 
@@ -133,34 +137,34 @@ static void xlib_render(crosswin_window *w)
     {
         if(w->offscreen_buffer == NULL)
         {
-            w->offscreen_buffer=cairo_image_surface_create(CAIRO_FORMAT_ARGB32,w->w,w->h);
-            w->pixmap=XCreatePixmap(w->c->display,w->window,w->w,w->h,1);
+            w->offscreen_buffer = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w->w, w->h);
+            w->pixmap = XCreatePixmap(w->c->display, w->window, w->w, w->h, 1);
             w->offw = (size_t)w->w;
             w->offh = (size_t)w->h;
         }
         else if(w->offscreen_buffer && (w->offw != (size_t)w->w || w->offh != (size_t)w->h))
         {
             cairo_surface_destroy(w->offscreen_buffer);
-            XFreePixmap(w->c->display,w->pixmap);
-            w->pixmap=XCreatePixmap(w->c->display,w->window,w->w,w->h,1);
-            w->offscreen_buffer=cairo_image_surface_create(CAIRO_FORMAT_ARGB32,w->w,w->h);
+            XFreePixmap(w->c->display, w->pixmap);
+            w->pixmap = XCreatePixmap(w->c->display, w->window, w->w, w->h, 1);
+            w->offscreen_buffer = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w->w, w->h);
             w->offw = (size_t)w->w;
             w->offh = (size_t)w->h;
         }
-    
-        cairo_t* cr= cairo_create(w->offscreen_buffer); // create a cairo context to gain access to surface rendering routine
 
-        if(w->opacity!=255)
+        cairo_t* cr = cairo_create(w->offscreen_buffer); // create a cairo context to gain access to surface rendering routine
+
+        if(w->opacity != 255)
         {
-            cairo_set_operator(cr,CAIRO_OPERATOR_CLEAR);
+            cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
             cairo_paint(cr);
             cairo_push_group(cr); //push the first group (do the rendering here)
 
             w->render_func(w, cr);
             cairo_pop_group_to_source(cr); //pop the second group and set it as source
 
-            cairo_set_operator(cr,CAIRO_OPERATOR_SOURCE); //we want the source
-            cairo_paint_with_alpha(cr,(double)w->opacity/255.0); //render it with alpha
+            cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); //we want the source
+            cairo_paint_with_alpha(cr, (double)w->opacity / 255.0); //render it with alpha
 
         }
         else
@@ -170,10 +174,10 @@ static void xlib_render(crosswin_window *w)
 
         cairo_destroy(cr);
         /*Render everything to the window*/
-        cairo_surface_t *xs=cairo_xlib_surface_create(w->c->display,w->window,w->c->vinfo.visual,w->w,w->h);
-        cr=cairo_create(xs);
-        cairo_set_operator(cr,CAIRO_OPERATOR_SOURCE);
-        cairo_set_source_surface(cr,w->offscreen_buffer,0.0,0.0);
+        cairo_surface_t *xs = cairo_xlib_surface_create(w->c->display, w->window, w->c->vinfo.visual, w->w, w->h);
+        cr = cairo_create(xs);
+        cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+        cairo_set_source_surface(cr, w->offscreen_buffer, 0.0, 0.0);
         cairo_paint(cr); //render it to the window
 
         cairo_destroy(cr); //destroy the context
@@ -183,37 +187,37 @@ static void xlib_render(crosswin_window *w)
 
 void xlib_set_mask(crosswin_window *w)
 {
-    cairo_surface_t *xs=cairo_xlib_surface_create_for_bitmap (w->c->display,w->pixmap,DefaultScreenOfDisplay(w->c->display),w->w,w->h);
-    cairo_t *cr=cairo_create(xs);
+    cairo_surface_t *xs = cairo_xlib_surface_create_for_bitmap(w->c->display, w->pixmap, DefaultScreenOfDisplay(w->c->display), w->w, w->h);
+    cairo_t *cr = cairo_create(xs);
 
-    if(w->click_through==0&&w->offscreen_buffer)
+    if(w->click_through == 0 && w->offscreen_buffer)
     {
-        cairo_set_operator(cr,CAIRO_OPERATOR_SOURCE);
-        unsigned int *buf=(unsigned int*)cairo_image_surface_get_data(w->offscreen_buffer);
+        cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+        unsigned int *buf = (unsigned int*)cairo_image_surface_get_data(w->offscreen_buffer);
 
         if(buf)
         {
-            for(size_t i=0; i<(size_t)w->w*(size_t)w->h; i++)
+            for(size_t i = 0; i < (size_t)w->w * (size_t)w->h; i++)
             {
-                if(buf[i]&0xff000000)
+                if(buf[i] & 0xff000000)
                 {
-                    buf[i]|=0xff000000;
+                    buf[i] |= 0xff000000;
                 }
             }
 
             cairo_surface_mark_dirty(w->offscreen_buffer);
         }
 
-        cairo_set_source_surface(cr,w->offscreen_buffer,0.0,0.0);
+        cairo_set_source_surface(cr, w->offscreen_buffer, 0.0, 0.0);
         cairo_paint(cr); //render it to the window
     }
     else
     {
-        cairo_set_operator(cr,CAIRO_OPERATOR_CLEAR);
+        cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
         cairo_paint(cr);
     }
 
-    XShapeCombineMask(w->c->display,w->window,ShapeInput,0,0,w->pixmap,ShapeSet);
+    XShapeCombineMask(w->c->display, w->window, ShapeInput, 0, 0, w->pixmap, ShapeSet);
 
     cairo_destroy(cr);
     cairo_surface_destroy(xs);
@@ -223,141 +227,155 @@ void xlib_draw(crosswin_window* w)
 {
     xlib_render(w);
     xlib_set_mask(w);
-    XSync(w->c->display,1);
+    XSync(w->c->display, 1);
 }
 
 int xlib_message_dispatch(crosswin *c)
 {
 
-  
+
     while(XPending(c->display))
     {
 
-        XEvent ev= {0};
-        crosswin_window *w=NULL;
+        XEvent ev = {0};
+        crosswin_window *w = NULL;
 
-        XNextEvent(c->display,&ev);
-        
-        XFindContext(c->display,ev.xany.window,CONTEXT_ID,(char**)&w);
-    
-        if(c==NULL||w==NULL)
+        XNextEvent(c->display, &ev);
+
+        XFindContext(c->display, ev.xany.window, CONTEXT_ID, (char**)&w);
+
+        if(c == NULL || w == NULL)
             continue;
+
         switch(ev.xany.type)
         {
-        case KeyPress:
-        {
-            /*This is pretty ugly as I did not want to call the utf8_to_ucs() but for the moment it does the job*/
-            if(ev.xkey.keycode==105||ev.xkey.keycode==37)
-                c->md.ctrl=1;
-            if(w->xInputContext)
+            case KeyPress:
             {
-                unsigned short symbol=0;
-                
-                if(c->md.ctrl&&ev.xkey.keycode==36)
-                    symbol='\n';
-                else
+                /*This is pretty ugly as I did not want to call the utf8_to_ucs() but for the moment it does the job*/
+                if(ev.xkey.keycode == 105 || ev.xkey.keycode == 37)
+                    c->md.ctrl = 1;
+
+                if(w->xInputContext)
                 {
-                    unsigned char buf[9]= {0};
-                    unsigned short *temp=NULL;
+                    unsigned short symbol = 0;
 
-                    Status status = 0;
-                    Xutf8LookupString(w->xInputContext, &ev.xkey, (char*)&buf,8, NULL, &status);
+                    if(c->md.ctrl && ev.xkey.keycode == 36)
+                        symbol = '\n';
+                    else
+                    {
+                        unsigned char buf[9] = {0};
+                        unsigned short *temp = NULL;
 
-                    temp=utf8_to_ucs(buf);
-                    symbol=temp?temp[0]:0;
+                        Status status = 0;
+                        Xutf8LookupString(w->xInputContext, &ev.xkey, (char*)&buf, 8, NULL, &status);
 
-                    sfree((void**)&temp);
+                        temp = utf8_to_ucs(buf);
+                        symbol = temp ? temp[0] : 0;
+
+                        sfree((void**)&temp);
+                    }
+
+                    if(symbol && w->kbd_func)
+                        w->kbd_func(symbol, w->kb_data);
                 }
 
-                if(symbol&&w->kbd_func)
-                    w->kbd_func(symbol,w->kb_data);
+                break;
             }
 
-            break;
-        }
-
-        case KeyRelease:
-        {
-            if(ev.xkey.keycode==105||ev.xkey.keycode==37)
-                c->md.ctrl=0;
-
-            break;
-        }
-
-        case MotionNotify:
-        {
-            c->md.x=ev.xmotion.x;
-            c->md.y=ev.xmotion.y;
-            c->md.root_x=ev.xmotion.x_root;
-            c->md.root_y=ev.xmotion.y_root;
-            c->md.hover=mouse_hover;
-            w->c->handle_mouse(w);
-            break;
-        }
-
-        case ButtonRelease:
-            c->md.x=ev.xbutton.x;
-            c->md.y=ev.xbutton.y;
-            c->md.state=mouse_button_state_unpressed;
-            switch(ev.xbutton.button)
+            case KeyRelease:
             {
-            case Button1:
-                c->md.button=mouse_button_left;
-                break;
-            case Button2:
-                c->md.button=mouse_button_middle;
-                break;
-            case Button3:
-                c->md.button=mouse_button_right;
-                break;
-            case Button4:
-                c->md.state=mouse_button_state_none;
-                c->md.scroll_dir=-1;
-                break;
-            case Button5:
-                c->md.state=mouse_button_state_none;
-                c->md.scroll_dir=1;
+                if(ev.xkey.keycode == 105 || ev.xkey.keycode == 37)
+                    c->md.ctrl = 0;
+
                 break;
             }
-            w->c->handle_mouse(w);
-            break;
-        case ButtonPress:
-      
-            XSetInputFocus(w->c->display,w->window,RevertToParent,0);
-            c->md.x=ev.xbutton.x;
-            c->md.y=ev.xbutton.y;
-            c->md.state=mouse_button_state_pressed;
-            switch(ev.xbutton.button)
+
+            case MotionNotify:
             {
-            case Button1:
-           
-                c->md.button=mouse_button_left;
-                break;
-            case Button2:
-                c->md.button=mouse_button_middle;
-                break;
-            case Button3:
-                c->md.button=mouse_button_right;
+                c->md.x = ev.xmotion.x;
+                c->md.y = ev.xmotion.y;
+                c->md.root_x = ev.xmotion.x_root;
+                c->md.root_y = ev.xmotion.y_root;
+                c->md.hover = mouse_hover;
+                w->c->handle_mouse(w);
                 break;
             }
-            w->c->handle_mouse(w);
-            break;
-        case LeaveNotify:
-            XSetInputFocus(w->c->display,None,RevertToParent,0);
-            c->md.hover=mouse_unhover;
-            w->c->handle_mouse(w);
-            break;
 
-        case DestroyNotify:
-        {
-            surface_data *sd=w->user_data;
-            event_push(sd->cd->eq, (event_handler)surface_destroy, (void*)sd,0,EVENT_REMOVE_BY_DATA);
-            break;
+            case ButtonRelease:
+                c->md.x = ev.xbutton.x;
+                c->md.y = ev.xbutton.y;
+                c->md.state = mouse_button_state_unpressed;
+
+                switch(ev.xbutton.button)
+                {
+                    case Button1:
+                        c->md.button = mouse_button_left;
+                        break;
+
+                    case Button2:
+                        c->md.button = mouse_button_middle;
+                        break;
+
+                    case Button3:
+                        c->md.button = mouse_button_right;
+                        break;
+
+                    case Button4:
+                        c->md.state = mouse_button_state_none;
+                        c->md.scroll_dir = -1;
+                        break;
+
+                    case Button5:
+                        c->md.state = mouse_button_state_none;
+                        c->md.scroll_dir = 1;
+                        break;
+                }
+
+                w->c->handle_mouse(w);
+                break;
+
+            case ButtonPress:
+
+                XSetInputFocus(w->c->display, w->window, RevertToParent, 0);
+                c->md.x = ev.xbutton.x;
+                c->md.y = ev.xbutton.y;
+                c->md.state = mouse_button_state_pressed;
+
+                switch(ev.xbutton.button)
+                {
+                    case Button1:
+
+                        c->md.button = mouse_button_left;
+                        break;
+
+                    case Button2:
+                        c->md.button = mouse_button_middle;
+                        break;
+
+                    case Button3:
+                        c->md.button = mouse_button_right;
+                        break;
+                }
+
+                w->c->handle_mouse(w);
+                break;
+
+            case LeaveNotify:
+                XSetInputFocus(w->c->display, None, RevertToParent, 0);
+                c->md.hover = mouse_unhover;
+                w->c->handle_mouse(w);
+                break;
+
+            case DestroyNotify:
+            {
+                surface_data *sd = w->user_data;
+                event_push(sd->cd->eq, (event_handler)surface_destroy, (void*)sd, 0, EVENT_REMOVE_BY_DATA);
+                break;
+            }
+
+
         }
 
-
-        }
-        
     }
 
     return(0);
@@ -371,17 +389,17 @@ int xlib_set_opacity(crosswin_window *w)
 
 void  xlib_set_position(crosswin_window *w)
 {
-   XMoveWindow(w->c->display,w->window,w->x,w->y); /*Move the window*/
+    XMoveWindow(w->c->display, w->window, w->x, w->y); /*Move the window*/
 }
 
 void xlib_destroy_window(crosswin_window **w)
 {
     xlib_destroy_input_context(*w);
-    
-    XDeleteContext((*w)->c->display,(XID)(*w)->window,CONTEXT_ID);
-    XDestroyWindow((*w)->c->display,(*w)->window);
-   
-    XFreePixmap((*w)->c->display,(*w)->pixmap);
+
+    XDeleteContext((*w)->c->display, (XID)(*w)->window, CONTEXT_ID);
+    XDestroyWindow((*w)->c->display, (*w)->window);
+
+    XFreePixmap((*w)->c->display, (*w)->pixmap);
     cairo_surface_destroy((*w)->offscreen_buffer);
     free(*w);
 }
@@ -389,31 +407,32 @@ void xlib_destroy_window(crosswin_window **w)
 void xlib_set_zpos(crosswin_window *w)
 {
     return;
+
     switch(w->zorder)
     {
-    case crosswin_topmost:
-       // xlib_set_above(w,0);
-        break;
+        case crosswin_topmost:
+            // xlib_set_above(w,0);
+            break;
 
-    case crosswin_desktop:
-        //xlib_set_below(w,0);
-        break;
+        case crosswin_desktop:
+            //xlib_set_below(w,0);
+            break;
 
-    case crosswin_normal:
-       // xlib_set_normal(w);
-        break;
+        case crosswin_normal:
+            // xlib_set_normal(w);
+            break;
 
-    case crosswin_bottom:
-    case crosswin_top:
-        diag_error("%s crosswin_bottom and crosswin_top not implemented",__FILE__);
-        break;
+        case crosswin_bottom:
+        case crosswin_top:
+            diag_error("%s crosswin_bottom and crosswin_top not implemented", __FILE__);
+            break;
     }
 }
 
 
 int xlib_create_input_context(crosswin_window *w)
 {
-    if(w->xInputContext||w->xInputMethod)
+    if(w->xInputContext || w->xInputMethod)
         return(0);
 
     w->xInputMethod = XOpenIM(w->c->display, 0, 0, 0);
@@ -422,14 +441,14 @@ int xlib_create_input_context(crosswin_window *w)
     {
         XIMStyles* styles = 0;
 
-        if(XGetIMValues(w->xInputMethod, XNQueryInputStyle, &styles, NULL)==0)
+        if(XGetIMValues(w->xInputMethod, XNQueryInputStyle, &styles, NULL) == 0)
         {
             XIMStyle bestMatchStyle = 0;
 
-            for(int i=0; i<styles->count_styles; i++)
+            for(int i = 0; i < styles->count_styles; i++)
             {
 
-                if ( styles->supported_styles[i] == (XIMPreeditNothing | XIMStatusNothing))
+                if(styles->supported_styles[i] == (XIMPreeditNothing | XIMStatusNothing))
                 {
                     bestMatchStyle =  styles->supported_styles[i];
                     break;
@@ -441,10 +460,10 @@ int xlib_create_input_context(crosswin_window *w)
         }
     }
 
-    if(w->xInputContext==NULL&&w->xInputMethod)
+    if(w->xInputContext == NULL && w->xInputMethod)
     {
         XCloseIM(w->xInputMethod);
-        w->xInputMethod=NULL;
+        w->xInputMethod = NULL;
         return(-1);
     }
 
@@ -453,10 +472,10 @@ int xlib_create_input_context(crosswin_window *w)
 
 int xlib_destroy_input_context(crosswin_window *w)
 {
-    w->xInputContext?XDestroyIC(w->xInputContext):0;
-    w->xInputMethod?XCloseIM(w->xInputMethod):0;
-    w->xInputContext=NULL;
-    w->xInputMethod=NULL;
+    w->xInputContext ? XDestroyIC(w->xInputContext) : 0;
+    w->xInputMethod ? XCloseIM(w->xInputMethod) : 0;
+    w->xInputContext = NULL;
+    w->xInputMethod = NULL;
     return(0);
 }
 

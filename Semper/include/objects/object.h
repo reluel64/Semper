@@ -54,7 +54,7 @@ typedef struct _object
     unsigned char* sy;
     unsigned char* team;
     unsigned char* update_act; // update action
-    unsigned char update_act_lock:1;
+    unsigned char update_act_lock: 1;
     object_padding op;
     mouse_actions ma;
     /*****************************/
@@ -74,7 +74,7 @@ typedef struct _object
 } object;
 
 int object_update(object* o);
-object* object_by_name(surface_data* sd, unsigned char* on,size_t len);
+object* object_by_name(surface_data* sd, unsigned char* on, size_t len);
 void object_destroy(object** o);
 int object_init(section s, surface_data* sd);
 int object_hit_testing(surface_data* sd, mouse_status* ms);

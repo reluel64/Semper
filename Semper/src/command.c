@@ -62,31 +62,33 @@ static int command_defer_handler(command_defer_data* ec)
     {
         return (-1);
     }
-    surface_data *sd=NULL;
-    int command_exec=0;
-    list_enum_part(sd,&ec->cd->surfaces,current)
+
+    surface_data *sd = NULL;
+    int command_exec = 0;
+    list_enum_part(sd, &ec->cd->surfaces, current)
     {
-        if(ec->sd==sd)
+        if(ec->sd == sd)
         {
             command(ec->sd, &ec->comm);
-            command_exec=1;
+            command_exec = 1;
             break;
         }
     }
 
-    if(command_exec==0)
+    if(command_exec == 0)
     {
-        if(ec->cd->srf_reg==ec->sd)
+        if(ec->cd->srf_reg == ec->sd)
         {
             command(ec->sd, &ec->comm);
-            command_exec=1;
+            command_exec = 1;
         }
     }
 
-    if(command_exec==0)
+    if(command_exec == 0)
     {
-        diag_warn("%s %d Surface %p was not found",__FUNCTION__,__LINE__,ec->sd);
+        diag_warn("%s %d Surface %p was not found", __FUNCTION__, __LINE__, ec->sd);
     }
+
     sfree((void**)&ec->comm);
     sfree((void**)&ec);
 
@@ -138,7 +140,7 @@ COMMAND_HANDLER(handler_set_opacity)
         return (-1);
     }
 
-    sd->ro=atoi(cp->pms[0]);
+    sd->ro = atoi(cp->pms[0]);
     skeleton_add_key(sd->scd, "Opacity", cp->pms[0]);
     surface_fade(sd);
     return (0);
@@ -148,7 +150,7 @@ COMMAND_HANDLER(handler_load_registry)
 {
     unused_parameter(cp);
     control_data* cd = sd->cd;
-    return (surface_builtin_init(cd,catalog));
+    return (surface_builtin_init(cd, catalog));
 }
 
 COMMAND_HANDLER(handler_unload_registry)
@@ -311,9 +313,9 @@ COMMAND_HANDLER(handler_show_command)
 
     skeleton_add_key(sd->scd, "hidden", "0");
     sd->hidden = 0;
-    sd->co=sd->ro;
-    sd->visible=1;
-    crosswin_set_opacity(sd->sw,sd->co);
+    sd->co = sd->ro;
+    sd->visible = 1;
+    crosswin_set_opacity(sd->sw, sd->co);
     crosswin_show(sd->sw);
     return (0);
 }
@@ -332,9 +334,9 @@ COMMAND_HANDLER(handler_hide_command)
 
     skeleton_add_key(sd->scd, "Hidden", "1");
     sd->hidden = 1;
-    sd->co=0;
-    sd->visible=0;
-    crosswin_set_opacity(sd->sw,sd->co);
+    sd->co = 0;
+    sd->visible = 0;
+    crosswin_set_opacity(sd->sw, sd->co);
     crosswin_hide(sd->sw);
     return (0);
 }
@@ -353,7 +355,7 @@ COMMAND_HANDLER(handler_hide_fade_command)
 
     skeleton_add_key(sd->scd, "Hidden", "1");
     sd->hidden = 1;
-    sd->fade_direction=-1;
+    sd->fade_direction = -1;
 
     surface_fade(sd);
     return (0);
@@ -373,7 +375,7 @@ COMMAND_HANDLER(handler_show_fade_command)
 
     skeleton_add_key(sd->scd, "Hidden", "0");
     sd->hidden = 0;
-    sd->fade_direction=1;
+    sd->fade_direction = 1;
     surface_fade(sd);
     return (0);
 }
@@ -387,7 +389,7 @@ COMMAND_HANDLER(handler_update_surface)
 
     if(sd)
     {
-        event_push(sd->cd->eq, (event_handler)surface_update, (void*)sd, 0, EVENT_REMOVE_BY_DATA_HANDLER|EVENT_PUSH_TAIL);
+        event_push(sd->cd->eq, (event_handler)surface_update, (void*)sd, 0, EVENT_REMOVE_BY_DATA_HANDLER | EVENT_PUSH_TAIL);
     }
 
     return (0);
@@ -463,8 +465,8 @@ COMMAND_HANDLER(handler_change_param)
         return (-1);
     }
 
-    object* o = object_by_name(sd, in,-1);
-    source* s = source_by_name(sd, in,-1);
+    object* o = object_by_name(sd, in, -1);
+    source* s = source_by_name(sd, in, -1);
 
     if(o)
     {
@@ -508,17 +510,17 @@ COMMAND_HANDLER(handler_surface_pos)
         sd = surface_by_name(sd->cd, cp->pms[3]);
     }
 
-    if(sd == NULL||cp->plength<2)
+    if(sd == NULL || cp->plength < 2)
     {
         return (-1);
     }
 
-    double xd=0.0;
-    double yd=0.0;
+    double xd = 0.0;
+    double yd = 0.0;
 
-    if(!math_parser(x,&xd,NULL,NULL)&&!math_parser(y,&yd,NULL,NULL))
+    if(!math_parser(x, &xd, NULL, NULL) && !math_parser(y, &yd, NULL, NULL))
     {
-        crosswin_set_position(sd->sw,(long)xd,(long)yd);
+        crosswin_set_position(sd->sw, (long)xd, (long)yd);
     }
 
     return (1);
@@ -553,28 +555,28 @@ COMMAND_HANDLER(handler_change_variable)
         vv = cp->pms[1];
     }
 
-    if(cp->plength>2)
+    if(cp->plength > 2)
     {
-        sd=surface_by_name(sd->cd,cp->pms[2]);
+        sd = surface_by_name(sd->cd, cp->pms[2]);
     }
 
-    if(sd==NULL)
+    if(sd == NULL)
     {
         return(-1);
     }
 
-    double val=0.0;
-    int is_math=0;
+    double val = 0.0;
+    int is_math = 0;
 
-    if(vv!=NULL)
+    if(vv != NULL)
     {
-        is_math=math_parser(vv,&val,NULL,NULL)==0;
+        is_math = math_parser(vv, &val, NULL, NULL) == 0;
     }
 
     if(is_math)
     {
-        vv=zmalloc(64);
-        snprintf(vv,64,"%lf",val);
+        vv = zmalloc(64);
+        snprintf(vv, 64, "%lf", val);
         remove_trailing_zeros(vv);
     }
 
@@ -608,7 +610,7 @@ COMMAND_HANDLER(handler_switch_source)
 
     if(cp->plength >= 1)
     {
-        s = source_by_name(sd, cp->pms[0],-1);
+        s = source_by_name(sd, cp->pms[0], -1);
     }
 
     if(!s)
@@ -641,9 +643,9 @@ COMMAND_HANDLER(handler_source_command)
 
     if(lsd)
     {
-        source* s = source_by_name(lsd, cp->pms[0],-1);
+        source* s = source_by_name(lsd, cp->pms[0], -1);
 
-        if(s&&s->disabled == 0 && s && s->source_command_rtn)
+        if(s && s->disabled == 0 && s && s->source_command_rtn)
         {
             s->source_command_rtn(s->pv, cp->pms[1]);
         }
@@ -714,6 +716,7 @@ COMMAND_HANDLER(handler_load_surface)
     else
     {
         ld_srf = surface_by_name(sd->cd, cp->pms[0]);
+
         if(ld_srf)
         {
             surface_init_update(ld_srf);
@@ -740,14 +743,14 @@ COMMAND_HANDLER(handler_remove)
 
     if(cp->plength == 1)
     {
-        s = source_by_name(sd, cp->pms[0],-1);
-        o = object_by_name(sd, cp->pms[0],-1);
+        s = source_by_name(sd, cp->pms[0], -1);
+        o = object_by_name(sd, cp->pms[0], -1);
     }
     else if(cp->plength > 1)
     {
         sd = surface_by_name(sd->cd, cp->pms[1]);
-        s = source_by_name(sd, cp->pms[0],-1);
-        o = object_by_name(sd, cp->pms[0],-1);
+        s = source_by_name(sd, cp->pms[0], -1);
+        o = object_by_name(sd, cp->pms[0], -1);
     }
 
     if(sd && o)
@@ -873,24 +876,24 @@ COMMAND_HANDLER(handler_update)
         lsd = lsd ? lsd : sd;
     }
 
-    object* o = object_by_name(lsd, cp->pms[0],-1);
-    source* s = source_by_name(lsd, cp->pms[0],-1);
+    object* o = object_by_name(lsd, cp->pms[0], -1);
+    source* s = source_by_name(lsd, cp->pms[0], -1);
 
-    if(!strcasecmp(cp->pms[0],"S*"))
+    if(!strcasecmp(cp->pms[0], "S*"))
     {
-        list_enum_part(s,&lsd->sources,current)
+        list_enum_part(s, &lsd->sources, current)
         {
-            if(s->die==0)
+            if(s->die == 0)
             {
                 source_update(s);
             }
         }
     }
-    else if(!strcasecmp(cp->pms[0],"O*"))
+    else if(!strcasecmp(cp->pms[0], "O*"))
     {
-        list_enum_part(o,&lsd->objects,current)
+        list_enum_part(o, &lsd->objects, current)
         {
-            if(o->die==0)
+            if(o->die == 0)
             {
                 object_update(o);
             }
@@ -918,8 +921,8 @@ COMMAND_HANDLER(handler_reset)
         lsd = lsd ? lsd : sd;
     }
 
-    object* o = object_by_name(lsd, cp->pms[0],-1);
-    source* s = source_by_name(lsd, cp->pms[0],-1);
+    object* o = object_by_name(lsd, cp->pms[0], -1);
+    source* s = source_by_name(lsd, cp->pms[0], -1);
 
     if(o && o->die == 0)
     {
@@ -958,19 +961,20 @@ COMMAND_HANDLER(handler_defer)
         control_data* cd = sd->cd;
         command_defer_data* cdd = zmalloc(sizeof(command_defer_data));
         cdd->sd = sd;
-        cdd->cd=cd;
+        cdd->cd = cd;
         cdd->comm = clone_string(cp->rem_cmd);
         event_push(cd->eq, (event_handler)command_defer_handler, (void*)cdd, atoi(cp->pms[0]), EVENT_PUSH_TIMER);
         return(DEFER_COMMAND);
     }
+
     return(0);
 }
 
 COMMAND_HANDLER(handler_quit_app)
 {
     control_data* cd = sd->cd;
-    cd->c.quit=1;
-    event_push(cd->eq,NULL,NULL,0,0);
+    cd->c.quit = 1;
+    event_push(cd->eq, NULL, NULL, 0, 0);
     return(0);
 }
 
@@ -980,7 +984,7 @@ COMMAND_HANDLER(handler_quit_app)
 static int command_execute(command_handler_status* chs)
 {
     int ret = 0;
-    int found=0;
+    int found = 0;
 
     if(chs == NULL)
     {
@@ -1031,7 +1035,8 @@ static int command_execute(command_handler_status* chs)
 
             if(ci[i].handler && chs->comm_name && (strcasecmp(chs->comm_name, ci[i].act_name) == 0))
             {
-                found=1;
+                found = 1;
+
                 if((ci[i].min_parameters == 0) || (ci[i].min_parameters <= chs->cpm.plength))
                 {
                     ret = ci[i].handler(chs->sd, &chs->cpm);
@@ -1043,12 +1048,12 @@ static int command_execute(command_handler_status* chs)
     }
     else
     {
-        diag_warn("%s: NULL command",__FUNCTION__);
+        diag_warn("%s: NULL command", __FUNCTION__);
     }
 
-    if(found==0)
+    if(found == 0)
     {
-        diag_warn("%s: Command \"%s\" not found",__FUNCTION__,chs->comm_name);
+        diag_warn("%s: Command \"%s\" not found", __FUNCTION__, chs->comm_name);
     }
 
     return (ret);
@@ -1060,34 +1065,34 @@ static int command_parse_string_filter(string_tokenizer_status *pi, void* pv)
 
     if(pi->reset)
     {
-        memset(cts,0,sizeof(command_tokenizer_status));
+        memset(cts, 0, sizeof(command_tokenizer_status));
         return(0);
     }
 
-    if(cts->quote_type==0 && (pi->buf[pi->pos]=='"'||pi->buf[pi->pos]=='\''))
-        cts->quote_type=pi->buf[pi->pos];
+    if(cts->quote_type == 0 && (pi->buf[pi->pos] == '"' || pi->buf[pi->pos] == '\''))
+        cts->quote_type = pi->buf[pi->pos];
 
-    if(pi->buf[pi->pos]==cts->quote_type)
+    if(pi->buf[pi->pos] == cts->quote_type)
         cts->quotes++;
 
-    if(cts->quotes%2)
+    if(cts->quotes % 2)
         return(0);
     else
-        cts->quote_type=0;
+        cts->quote_type = 0;
 
 
     if(pi->buf[pi->pos] == '(')
-        if(++cts->op==1)
+        if(++cts->op == 1)
             return(1);
 
-    if(cts->op&&pi->buf[pi->pos] == ')')
-        if(--cts->op==0)
+    if(cts->op && pi->buf[pi->pos] == ')')
+        if(--cts->op == 0)
             return(0);
 
     if(pi->buf[pi->pos] == ';')
-        return (cts->op==0);
+        return (cts->op == 0);
 
-    if(cts->op%2&&pi->buf[pi->pos] == ',')
+    if(cts->op % 2 && pi->buf[pi->pos] == ',')
         return (1);
 
     return (0);
@@ -1096,19 +1101,19 @@ static int command_parse_string_filter(string_tokenizer_status *pi, void* pv)
 
 int command(surface_data* sd, unsigned char **pa)
 {
-    unsigned char push_params=0;
-    unsigned char execute=0;
-    unsigned char stack_pos=0;
+    unsigned char push_params = 0;
+    unsigned char execute = 0;
+    unsigned char stack_pos = 0;
 
-    if(pa == NULL ||*pa==NULL|| sd == NULL || sd->cd==NULL)
+    if(pa == NULL || *pa == NULL || sd == NULL || sd->cd == NULL)
     {
-        diag_warn("%s %d control_data %p surface_data %p action %p",__FUNCTION__,__LINE__,sd->cd,sd,pa);
+        diag_warn("%s %d control_data %p surface_data %p action %p", __FUNCTION__, __LINE__, sd->cd, sd, pa);
         return (-1);
     }
 
     command_tokenizer_status cts = { 0 };
-    command_handler_status   chs=  { 0 };
-    string_tokenizer_info    sti=
+    command_handler_status   chs =  { 0 };
+    string_tokenizer_info    sti =
     {
         .buffer                  = *pa, //store the string address here
         .filter_data             = &cts,
@@ -1117,92 +1122,92 @@ int command(surface_data* sd, unsigned char **pa)
         .oveclen                 = 0
     };
 
-    *pa=NULL;
+    *pa = NULL;
 
     string_tokenizer(&sti);
 
-    for(size_t i=0; i<sti.oveclen/2; i++)
+    for(size_t i = 0; i < sti.oveclen / 2; i++)
     {
-        size_t start = sti.ovecoff[2*i];
-        size_t end   = sti.ovecoff[2*i+1];
+        size_t start = sti.ovecoff[2 * i];
+        size_t end   = sti.ovecoff[2 * i + 1];
 
-        if(start==end)
+        if(start == end)
         {
             continue;
         }
 
         /*Clean spaces*/
-        if(string_strip_space_offsets(sti.buffer,&start,&end)==0)
+        if(string_strip_space_offsets(sti.buffer, &start, &end) == 0)
         {
 
-            if(sti.buffer[start]=='(')
+            if(sti.buffer[start] == '(')
             {
                 start++;
-                push_params=1;
+                push_params = 1;
             }
-            else if(sti.buffer[start]==',')
+            else if(sti.buffer[start] == ',')
             {
                 start++;
             }
-            else if(sti.buffer[start]==';')
+            else if(sti.buffer[start] == ';')
             {
-                push_params=0;
-                execute=0;
+                push_params = 0;
+                execute = 0;
                 start++;
             }
 
-            if(sti.buffer[end-1]==')')
+            if(sti.buffer[end - 1] == ')')
             {
                 end--;
-                execute=1;
+                execute = 1;
             }
         }
 
-        if(string_strip_space_offsets(sti.buffer,&start,&end)==0)
+        if(string_strip_space_offsets(sti.buffer, &start, &end) == 0)
         {
-            if(sti.buffer[start]=='"'||sti.buffer[start]=='\'')
+            if(sti.buffer[start] == '"' || sti.buffer[start] == '\'')
                 start++;
 
-            if(sti.buffer[end-1]=='"'||sti.buffer[end-1]=='\'')
+            if(sti.buffer[end - 1] == '"' || sti.buffer[end - 1] == '\'')
                 end--;
         }
 
-        if(push_params&&stack_pos<COMMAND_PARAMETER_STACK)
+        if(push_params && stack_pos < COMMAND_PARAMETER_STACK)
         {
-            if((execute&&end!=start)||execute==0)
+            if((execute && end != start) || execute == 0)
             {
-                chs.cpm.pms[stack_pos] = zmalloc((end-start)+1);
-                strncpy(chs.cpm.pms[stack_pos], sti.buffer+start, end-start);
+                chs.cpm.pms[stack_pos] = zmalloc((end - start) + 1);
+                strncpy(chs.cpm.pms[stack_pos], sti.buffer + start, end - start);
                 stack_pos++;
                 chs.cpm.plength++;
             }
         }
-        else if(chs.comm_name==NULL)
+        else if(chs.comm_name == NULL)
         {
-            chs.comm_name = zmalloc((end-start)+1);
-            strncpy(chs.comm_name, sti.buffer+start, end-start);
+            chs.comm_name = zmalloc((end - start) + 1);
+            strncpy(chs.comm_name, sti.buffer + start, end - start);
         }
 
         if(execute)
         {
-            int exec_ret=0;
-            chs.sd=sd;
-            chs.cpm.rem_cmd=sti.buffer+sti.ovecoff[2*i+1];
+            int exec_ret = 0;
+            chs.sd = sd;
+            chs.cpm.rem_cmd = sti.buffer + sti.ovecoff[2 * i + 1];
             exec_ret = command_execute(&chs);
-            execute=0;
+            execute = 0;
 
-            for(size_t i=0; i<chs.cpm.plength; i++)
+            for(size_t i = 0; i < chs.cpm.plength; i++)
             {
                 sfree((void**)&chs.cpm.pms[i]);
             }
 
-            stack_pos=0;
-            push_params=0;
-            chs.cpm.plength=0;
+            stack_pos = 0;
+            push_params = 0;
+            chs.cpm.plength = 0;
 
             sfree((void**)&chs.comm_name);
 
-            if(exec_ret==DEFER_COMMAND)
+            if(exec_ret == DEFER_COMMAND)
                 break;
         }
     }
@@ -1213,8 +1218,8 @@ int command(surface_data* sd, unsigned char **pa)
      * Otherwise we just  restore the value
      * In this way we do not have to allocate additional memory to store a copy of the string*/
 
-    if(*pa==NULL)
-        *pa=sti.buffer;
+    if(*pa == NULL)
+        *pa = sti.buffer;
     else
         sfree((void**)&sti.buffer);
 

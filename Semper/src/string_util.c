@@ -43,14 +43,14 @@ typedef struct
 
 char *strlwr(char *s)
 {
-    if(s==NULL)
+    if(s == NULL)
     {
         return(NULL);
     }
 
-    for(size_t i=0; s[i]; i++)
+    for(size_t i = 0; s[i]; i++)
     {
-        s[i]=lowercase((uint32_t)s[i]);
+        s[i] = lowercase((uint32_t)s[i]);
     }
 
     return(s);
@@ -58,14 +58,14 @@ char *strlwr(char *s)
 
 char *strupr(char *s)
 {
-    if(s==NULL)
+    if(s == NULL)
     {
         return(NULL);
     }
 
-    for(size_t i=0; s[i]; i++)
+    for(size_t i = 0; s[i]; i++)
     {
-        s[i]=uppercase((uint32_t)s[i]);
+        s[i] = uppercase((uint32_t)s[i]);
     }
 
     return(s);
@@ -111,7 +111,7 @@ size_t  remove_end_begin_quotes(unsigned char* s)
         }
     }
 
-    return (sz-1);
+    return (sz - 1);
 }
 
 int remove_character(unsigned char* str, unsigned char ch)
@@ -175,7 +175,7 @@ unsigned char* string_lower(unsigned char* s)
 {
     unsigned short* us = utf8_to_ucs(s);
     size_t slen = string_length(s);
-    size_t bn=0;
+    size_t bn = 0;
 
     for(size_t i = 0; us[i]; i++)
     {
@@ -186,7 +186,7 @@ unsigned char* string_lower(unsigned char* s)
 
     unsigned char* utf = ucs_to_utf8(us, &bn, 0);
 
-    strncpy(s, utf,min(slen,bn));
+    strncpy(s, utf, min(slen, bn));
     sfree((void**)&utf);
     sfree((void**)&us);
     return (s);
@@ -196,7 +196,7 @@ unsigned char* string_upper(unsigned char* s)
 {
     unsigned short* us = utf8_to_ucs(s);
     size_t slen = string_length(s);
-    size_t bn=0;
+    size_t bn = 0;
 
     for(size_t i = 0; us[i]; i++)
     {
@@ -207,7 +207,7 @@ unsigned char* string_upper(unsigned char* s)
 
     unsigned char* utf = ucs_to_utf8(us, &bn, 0);
 
-    strncpy(s, utf,min(slen,bn));
+    strncpy(s, utf, min(slen, bn));
     sfree((void**)&utf);
     sfree((void**)&us);
     return (s);
@@ -251,14 +251,14 @@ unsigned short* utf8_to_ucs(unsigned char* str)
     return (dest);
 }
 
-size_t utf8_len(unsigned char *str,size_t b_len)
+size_t utf8_len(unsigned char *str, size_t b_len)
 {
-    size_t ret=0;
+    size_t ret = 0;
 
-    if(str==NULL)
+    if(str == NULL)
         return(0);
 
-    if(b_len==0)
+    if(b_len == 0)
     {
         b_len = string_length(str);
     }
@@ -271,7 +271,7 @@ size_t utf8_len(unsigned char *str,size_t b_len)
         }
         else if(str[si] >= 0xE0 && str[si] <= 0xEF)
         {
-            si+=2;
+            si += 2;
             ret++;
         }
         else if(str[si] >= 0xc0 && str[si] <= 0xDF)
@@ -291,7 +291,7 @@ unsigned char* ucs_to_utf8(unsigned short* s_in, size_t* bn, unsigned char be)
     size_t di = 0;
     unsigned char* out = NULL;
 
-    if(s_in==NULL)
+    if(s_in == NULL)
     {
         return(NULL);
     }
@@ -389,7 +389,7 @@ unsigned char* ucs32_to_utf8(unsigned int* s_in, size_t* bn, unsigned char be)
     size_t di = 0;
     unsigned char* out = NULL;
 
-    if(s_in==NULL)
+    if(s_in == NULL)
     {
         return(NULL);
     }
@@ -481,21 +481,23 @@ unsigned char* ucs32_to_utf8(unsigned int* s_in, size_t* bn, unsigned char be)
 
 
 #ifdef __linux__
-static int variable_tokenizer(string_tokenizer_status *sti,int  *fl)
+static int variable_tokenizer(string_tokenizer_status *sti, int  *fl)
 {
     if(sti->reset)
     {
-        *fl=0;
+        *fl = 0;
         return(0);
     }
-    if(sti->buf[sti->pos]=='$')
+
+    if(sti->buf[sti->pos] == '$')
     {
-        *fl=1;
+        *fl = 1;
         return(1);
     }
-    if(sti->buf[sti->pos]=='/'&&*fl==1)
+
+    if(sti->buf[sti->pos] == '/' && *fl == 1)
     {
-        *fl=0;
+        *fl = 0;
         return(1);
     }
 
@@ -505,64 +507,66 @@ static int variable_tokenizer(string_tokenizer_status *sti,int  *fl)
 
 static char *string_util_xpand_linux_env(unsigned char *str)
 {
-    if(str==NULL)
+    if(str == NULL)
     {
         return(NULL);
     }
 
 
-    unsigned char *res=str;
-    size_t len=0;
+    unsigned char *res = str;
+    size_t len = 0;
 
-    for(unsigned char stage=0; stage<255; stage++)
+    for(unsigned char stage = 0; stage < 255; stage++)
     {
-        char more=0;
-        int p=0;
-        string_tokenizer_info sti= {0};
-        sti.buffer=res;
-        sti.string_tokenizer_filter=variable_tokenizer;
-        sti.filter_data=&p;
+        char more = 0;
+        int p = 0;
+        string_tokenizer_info sti = {0};
+        sti.buffer = res;
+        sti.string_tokenizer_filter = variable_tokenizer;
+        sti.filter_data = &p;
         string_tokenizer(&sti);
-        res=NULL;
-        for(size_t i=0; i<sti.oveclen/2; i++)
-        {
-            char bbb[256]= {0};
-            size_t start=sti.ovecoff[i*2];
-            size_t end=sti.ovecoff[i*2+1];
+        res = NULL;
 
-            if(end==start)
+        for(size_t i = 0; i < sti.oveclen / 2; i++)
+        {
+            char bbb[256] = {0};
+            size_t start = sti.ovecoff[i * 2];
+            size_t end = sti.ovecoff[i * 2 + 1];
+
+            if(end == start)
                 continue;
 
-            strncpy(bbb,sti.buffer+start,end-start);
+            strncpy(bbb, sti.buffer + start, end - start);
 
 
-            if(sti.buffer[start]=='$')
+            if(sti.buffer[start] == '$')
             {
-                unsigned char *vname=zmalloc((end-start)+1);
-                unsigned char *vval=NULL;
-                size_t vlen=end-start;
-                strncpy(vname,sti.buffer+start+1,end-(start+1));
-                vval=getenv(vname);
+                unsigned char *vname = zmalloc((end - start) + 1);
+                unsigned char *vval = NULL;
+                size_t vlen = end - start;
+                strncpy(vname, sti.buffer + start + 1, end - (start + 1));
+                vval = getenv(vname);
 
                 if(vval)
                 {
-                    vlen=string_length(vval);
-                    if(vval[0]=='$')
-                        more=1;
+                    vlen = string_length(vval);
+
+                    if(vval[0] == '$')
+                        more = 1;
                 }
                 else
                 {
-                    vval=sti.buffer+start;
+                    vval = sti.buffer + start;
                 }
 
-                unsigned char *tmp=realloc(res,vlen+len+1);
+                unsigned char *tmp = realloc(res, vlen + len + 1);
 
                 if(tmp)
                 {
-                    res=tmp;
-                    strncpy(res+len,vval,vlen);
-                    len+=vlen;
-                    res[len]=0;
+                    res = tmp;
+                    strncpy(res + len, vval, vlen);
+                    len += vlen;
+                    res[len] = 0;
                 }
 
 
@@ -571,28 +575,28 @@ static char *string_util_xpand_linux_env(unsigned char *str)
             }
             else
             {
-                size_t vlen=end-start;
-                unsigned char *tmp=realloc(res,vlen+len+1);
+                size_t vlen = end - start;
+                unsigned char *tmp = realloc(res, vlen + len + 1);
 
                 if(tmp)
                 {
-                    res=tmp;
-                    strncpy(res+len,sti.buffer+start,vlen);
-                    len+=vlen;
-                    res[len]=0;
+                    res = tmp;
+                    strncpy(res + len, sti.buffer + start, vlen);
+                    len += vlen;
+                    res[len] = 0;
                 }
             }
         }
 
 
-        if(sti.buffer!=str)
+        if(sti.buffer != str)
         {
             sfree((void**)&sti.buffer);
         }
 
         sfree((void**)&sti.ovecoff);
 
-        if(more==0)
+        if(more == 0)
             break;
 
 
@@ -636,7 +640,7 @@ unsigned char* clone_string(unsigned char* s)
 
     if(b)
     {
-        b[sl]=0;
+        b[sl] = 0;
         strcpy(b, s);
     }
 
@@ -679,7 +683,7 @@ double compute_formula(unsigned char* formula)
 
     double n = 0.0;
 
-    if(math_parser(formula,&n,NULL,NULL)==0)
+    if(math_parser(formula, &n, NULL, NULL) == 0)
         return(n);
     else
         return(0.0);
@@ -724,10 +728,10 @@ int string_to_padding(unsigned char* str, object_padding* op)
     sscanf(str, "%ld;%ld;%ld;%ld", &op->left, &op->top, &op->right, &op->bottom);
 
     /*Make sure that the padding is strictly positive*/
-    op->left   = op->left   > 0 ? op->left   :0;
-    op->right  = op->right  > 0 ? op->right  :0;
-    op->top    = op->top    > 0 ? op->top    :0;
-    op->bottom = op->bottom > 0 ? op->bottom :0;
+    op->left   = op->left   > 0 ? op->left   : 0;
+    op->right  = op->right  > 0 ? op->right  : 0;
+    op->top    = op->top    > 0 ? op->top    : 0;
+    op->bottom = op->bottom > 0 ? op->bottom : 0;
 
     return (0);
 }
@@ -756,17 +760,22 @@ int uniform_slashes(unsigned char *str)
     for(size_t i = 0; str[i]; i++)
     {
 #ifdef WIN32
+
         if(str[i] == '/')
         {
             str[i] = '\\';
         }
+
 #elif __linux__
+
         if(str[i] == '\\')
         {
             str[i] = '/';
         }
+
 #endif
-        if((str[i] == '/'||str[i] == '\\')&&(str[i+1]=='\\'||str[i+1]=='/'))
+
+        if((str[i] == '/' || str[i] == '\\') && (str[i + 1] == '\\' || str[i + 1] == '/'))
         {
             for(size_t cpos = i; str[cpos]; cpos++)
             {
@@ -789,18 +798,18 @@ int uniform_slashes(unsigned char *str)
 
 int string_tokenizer(string_tokenizer_info *sti)
 {
-    string_tokenizer_status sts=
+    string_tokenizer_status sts =
     {
-        .pos=0,
-        .buf=sti->buffer
+        .pos = 0,
+        .buf = sti->buffer
     };
 
-    if(sti->ovecoff==NULL)
+    if(sti->ovecoff == NULL)
     {
-        sti->oveclen=0;
+        sti->oveclen = 0;
     }
 
-    if(sti==NULL||sti->buffer==NULL||sti->oveclen%2)
+    if(sti == NULL || sti->buffer == NULL || sti->oveclen % 2)
     {
         return(-1);
     }
@@ -808,13 +817,13 @@ int string_tokenizer(string_tokenizer_info *sti)
     size_t buf_len = 0;
 
 
-        buf_len=string_length(sti->buffer);
+    buf_len = string_length(sti->buffer);
 
-    for(unsigned char step=sti->oveclen>0?1:0; step<2; step++)
+    for(unsigned char step = sti->oveclen > 0 ? 1 : 0; step < 2; step++)
     {
         size_t buf_pos = 0;
-        size_t offsets=0;
-        size_t lpos=0;
+        size_t offsets = 0;
+        size_t lpos = 0;
 
         while(buf_pos < buf_len)
         {
@@ -824,24 +833,24 @@ int string_tokenizer(string_tokenizer_info *sti)
                 buf_pos++;
             }
 
-            while(buf_pos<buf_len)
+            while(buf_pos < buf_len)
             {
-                sts.pos=buf_pos;
+                sts.pos = buf_pos;
 
-                if(sti->string_tokenizer_filter&&sti->string_tokenizer_filter(&sts,sti->filter_data))
+                if(sti->string_tokenizer_filter && sti->string_tokenizer_filter(&sts, sti->filter_data))
                 {
-                    if(step==0)
+                    if(step == 0)
                     {
-                        offsets+=2;
+                        offsets += 2;
                     }
-                    else if(sti->oveclen>=offsets+2)
+                    else if(sti->oveclen >= offsets + 2)
                     {
-                        sti->ovecoff[offsets++]=lpos;
-                        sti->ovecoff[offsets++]=buf_pos;
-                        sti->ovecoff[offsets]=buf_pos;
+                        sti->ovecoff[offsets++] = lpos;
+                        sti->ovecoff[offsets++] = buf_pos;
+                        sti->ovecoff[offsets] = buf_pos;
                     }
 
-                    lpos=buf_pos++;
+                    lpos = buf_pos++;
                     break;
                 }
 
@@ -849,61 +858,61 @@ int string_tokenizer(string_tokenizer_info *sti)
             }
         }
 
-        if(step==0)
+        if(step == 0)
         {
-            if(sti->ovecoff==NULL)
+            if(sti->ovecoff == NULL)
             {
-                offsets+=2;
-                sti->ovecoff=zmalloc(offsets*sizeof(size_t));
-                sti->oveclen=offsets;
-                sts.reset=1;
+                offsets += 2;
+                sti->ovecoff = zmalloc(offsets * sizeof(size_t));
+                sti->oveclen = offsets;
+                sts.reset = 1;
 
                 if(sti->string_tokenizer_filter)
                 {
-                    sti->string_tokenizer_filter(&sts,sti->filter_data);
+                    sti->string_tokenizer_filter(&sts, sti->filter_data);
                 }
 
-                sts.reset=0;
+                sts.reset = 0;
             }
         }
-        else if(sti->oveclen>=offsets+2)
+        else if(sti->oveclen >= offsets + 2)
         {
-            sti->ovecoff[offsets++]=lpos;
-            sti->ovecoff[offsets++]=buf_pos;
-            sti->oveclen=offsets;
+            sti->ovecoff[offsets++] = lpos;
+            sti->ovecoff[offsets++] = buf_pos;
+            sti->oveclen = offsets;
         }
     }
 
     return(0);
 }
 
-int string_strip_space_offsets(unsigned char *buf,size_t *start,size_t *end)
+int string_strip_space_offsets(unsigned char *buf, size_t *start, size_t *end)
 {
-    while((*start)<(*end))
+    while((*start) < (*end))
     {
-        unsigned char found=0;
+        unsigned char found = 0;
 
         if(isspace(buf[(*start)]))
         {
             (*start)++;
-            found=1;
+            found = 1;
         }
 
-        if(isspace(buf[(*end)-1]))
+        if(isspace(buf[(*end) - 1]))
         {
             (*end)--;
-            found=1;
+            found = 1;
         }
 
-        if(found==0)
+        if(found == 0)
         {
             break;
         }
     }
 
-    if((*start)>(*end))
+    if((*start) > (*end))
     {
-        *start=*end;
+        *start = *end;
         return(-1);
     }
 
@@ -953,19 +962,19 @@ static unsigned char* string_util_do_replacements_plain(replace_state* rs)
 {
     size_t nm = 0;
     size_t di = 0;
-    size_t rl_len=rs->rl_end-rs->rl_start;
-    size_t tbr_len=rs->tbr_end-rs->tbr_start;
+    size_t rl_len = rs->rl_end - rs->rl_start;
+    size_t tbr_len = rs->tbr_end - rs->tbr_start;
 
     unsigned char* ret = NULL;
 
-    if(tbr_len==0)
+    if(tbr_len == 0)
     {
         return(NULL);
     }
 
     for(size_t i = 0; rs->in[i]; i++)
     {
-        if(tbr_len && strncmp(rs->in + i, rs->ps+rs->tbr_start, tbr_len) == 0)
+        if(tbr_len && strncmp(rs->in + i, rs->ps + rs->tbr_start, tbr_len) == 0)
         {
             nm += rl_len;
             i += tbr_len - 1;
@@ -980,9 +989,9 @@ static unsigned char* string_util_do_replacements_plain(replace_state* rs)
 
     for(size_t i = 0; rs->in[i]; i++)
     {
-        if(tbr_len && strncmp(rs->in + i, rs->ps+rs->tbr_start, tbr_len) == 0)
+        if(tbr_len && strncmp(rs->in + i, rs->ps + rs->tbr_start, tbr_len) == 0)
         {
-            strncpy(ret + di, rs->ps+rs->rl_start,rl_len);
+            strncpy(ret + di, rs->ps + rs->rl_start, rl_len);
             di += rl_len;
             i += tbr_len - 1;
         }
@@ -998,7 +1007,7 @@ static unsigned char* string_util_do_replacements_plain(replace_state* rs)
 static unsigned char* string_util_do_replacements_pcre(replace_state* rs)
 {
 
-    if(!rs || !rs->in || (rs->tbr_end-rs->tbr_start)==0)
+    if(!rs || !rs->in || (rs->tbr_end - rs->tbr_start) == 0)
     {
         return (NULL);
     }
@@ -1006,7 +1015,7 @@ static unsigned char* string_util_do_replacements_pcre(replace_state* rs)
     size_t new_length = 0;          // total length of the new string
     size_t r_length = 0;            // replacement length
     size_t in_length = 0;           // length of the input string
-    size_t tbr_len=rs->tbr_end-rs->tbr_start;
+    size_t tbr_len = rs->tbr_end - rs->tbr_start;
     size_t ni = 0;                  // new index
     int err_off = 0;
     const char* err = NULL;
@@ -1015,8 +1024,8 @@ static unsigned char* string_util_do_replacements_pcre(replace_state* rs)
     int ovector[300] = { 0 };
 
     in_length = string_length(rs->in);
-    unsigned char *expression=zmalloc(tbr_len+1);
-    strncpy(expression,rs->ps+rs->tbr_start,tbr_len);
+    unsigned char *expression = zmalloc(tbr_len + 1);
+    strncpy(expression, rs->ps + rs->tbr_start, tbr_len);
 
     pcre* pc = pcre_compile((char*)expression, 0, &err, &err_off, NULL);
 
@@ -1051,7 +1060,7 @@ static unsigned char* string_util_do_replacements_pcre(replace_state* rs)
      * new_length=initial_length-length_matched_by_pattern
      */
 
-    for(size_t i = rs->rl_start; i<rs->rl_end; i++)
+    for(size_t i = rs->rl_start; i < rs->rl_end; i++)
     {
         int index = 0;
 
@@ -1090,7 +1099,7 @@ static unsigned char* string_util_do_replacements_pcre(replace_state* rs)
         strncpy(ns, rs->in, ovector[0]);
     }
 
-    for(size_t i = rs->rl_start; i<rs->rl_end; i++)
+    for(size_t i = rs->rl_start; i < rs->rl_end; i++)
     {
         int index = 0;
 
@@ -1129,36 +1138,36 @@ static int string_util_replace_tokenizer_filter(string_tokenizer_status *pi, voi
 {
     replacer_tokenizer_status* rts = pv;
 
-    if(rts->quote_type==0 && (pi->buf[pi->pos]=='"'||pi->buf[pi->pos]=='\''))
+    if(rts->quote_type == 0 && (pi->buf[pi->pos] == '"' || pi->buf[pi->pos] == '\''))
     {
-        rts->quote_type=pi->buf[pi->pos];
+        rts->quote_type = pi->buf[pi->pos];
     }
 
-    if(pi->buf[pi->pos]==rts->quote_type)
+    if(pi->buf[pi->pos] == rts->quote_type)
     {
         rts->quotes++;
     }
 
-    if(rts->quotes%2)
+    if(rts->quotes % 2)
     {
         return(0);
     }
     else
     {
-        rts->quote_type=0;
+        rts->quote_type = 0;
     }
 
     if(pi->buf[pi->pos] == '(')
     {
-        if(++rts->op==1)
+        if(++rts->op == 1)
         {
             return(1);
         }
     }
 
-    if(rts->op&&pi->buf[pi->pos] == ')')
+    if(rts->op && pi->buf[pi->pos] == ')')
     {
-        if(--rts->op==0)
+        if(--rts->op == 0)
         {
             return(0);
         }
@@ -1166,10 +1175,10 @@ static int string_util_replace_tokenizer_filter(string_tokenizer_status *pi, voi
 
     if(pi->buf[pi->pos] == ';')
     {
-        return (rts->op==0);
+        return (rts->op == 0);
     }
 
-    if(rts->op%2&&pi->buf[pi->pos] == ',')
+    if(rts->op % 2 && pi->buf[pi->pos] == ',')
     {
         return (1);
     }
@@ -1180,23 +1189,23 @@ static int string_util_replace_tokenizer_filter(string_tokenizer_status *pi, voi
 
 unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char regexp)
 {
-    unsigned char begin_pair=0;
-    unsigned char end_pair=0;
-    unsigned char step=0;
-    unsigned char *work=NULL;
-    size_t tvec[256]= {0};
-    replace_state rs=
+    unsigned char begin_pair = 0;
+    unsigned char end_pair = 0;
+    unsigned char step = 0;
+    unsigned char *work = NULL;
+    size_t tvec[256] = {0};
+    replace_state rs =
     {
-        .ps=rep_pair,
-        .in=in,
-        .tbr_start=0,
-        .tbr_end=0,
-        .rl_start=0,
-        .rl_end=0,
+        .ps = rep_pair,
+        .in = in,
+        .tbr_start = 0,
+        .tbr_end = 0,
+        .rl_start = 0,
+        .rl_end = 0,
     };
     replacer_tokenizer_status rts = { 0 };
     /*command_handler_status   chs=  { 0 };*/
-    string_tokenizer_info    sti=
+    string_tokenizer_info    sti =
     {
         .buffer                  = rep_pair,
         .filter_data             = &rts,
@@ -1212,84 +1221,84 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
 
     string_tokenizer(&sti);
 
-    memcpy(tvec,sti.ovecoff,sti.oveclen*sizeof(size_t));
+    memcpy(tvec, sti.ovecoff, sti.oveclen * sizeof(size_t));
 
-    for(size_t i=0; i<sti.oveclen/2; i++)
+    for(size_t i = 0; i < sti.oveclen / 2; i++)
     {
-        size_t start = sti.ovecoff[2*i];
-        size_t end   = sti.ovecoff[2*i+1];
+        size_t start = sti.ovecoff[2 * i];
+        size_t end   = sti.ovecoff[2 * i + 1];
 
-        if(start==end)
+        if(start == end)
         {
             continue;
         }
 
-        if(string_strip_space_offsets(rep_pair,&start,&end)==0)
+        if(string_strip_space_offsets(rep_pair, &start, &end) == 0)
         {
 
-            if(rep_pair[start]=='(')
+            if(rep_pair[start] == '(')
             {
                 start++;
-                begin_pair=1;
-                step=0;
+                begin_pair = 1;
+                step = 0;
             }
 
-            if(rep_pair[start]==',')
+            if(rep_pair[start] == ',')
             {
-                start++;
-            }
-
-            if(rep_pair[start]==';')
-            {
-                begin_pair=0;
-                end_pair=0;
                 start++;
             }
 
-            if(rep_pair[end-1]==')')
+            if(rep_pair[start] == ';')
+            {
+                begin_pair = 0;
+                end_pair = 0;
+                start++;
+            }
+
+            if(rep_pair[end - 1] == ')')
             {
                 end--;
-                end_pair=1;
+                end_pair = 1;
             }
         }
 
-        if(string_strip_space_offsets(rep_pair,&start,&end)==0)
+        if(string_strip_space_offsets(rep_pair, &start, &end) == 0)
         {
-            if(rep_pair[start]=='"'||rep_pair[start]=='\'')
+            if(rep_pair[start] == '"' || rep_pair[start] == '\'')
                 start++;
 
-            if(rep_pair[end-1]=='"'||rep_pair[end-1]=='\'')
+            if(rep_pair[end - 1] == '"' || rep_pair[end - 1] == '\'')
                 end--;
         }
 
-        if(step>=2) //safety measure
+        if(step >= 2) //safety measure
         {
             continue;
         }
 
-        if(begin_pair==1&&end_pair==0)
+        if(begin_pair == 1 && end_pair == 0)
         {
-            rs.tbr_start=start;
-            rs.tbr_end=end;
+            rs.tbr_start = start;
+            rs.tbr_end = end;
         }
-        else if(end_pair==1)
+        else if(end_pair == 1)
         {
-            rs.rl_start=start;
-            rs.rl_end=end;
+            rs.rl_start = start;
+            rs.rl_end = end;
 
-            if(!regexp||(work=string_util_do_replacements_pcre(&rs))==NULL)
+            if(!regexp || (work = string_util_do_replacements_pcre(&rs)) == NULL)
             {
-                work=string_util_do_replacements_plain(&rs);
+                work = string_util_do_replacements_plain(&rs);
             }
 
-            if(rs.in!=in)
+            if(rs.in != in)
             {
                 sfree((void**)&rs.in);
-                rs.in=work;
+                rs.in = work;
             }
             else
             {
-                rs.in=work;
+                rs.in = work;
             }
         }
 
@@ -1297,5 +1306,5 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
     }
 
     sfree((void**)&sti.ovecoff);
-    return (rs.in==in?NULL:rs.in);
+    return (rs.in == in ? NULL : rs.in);
 }

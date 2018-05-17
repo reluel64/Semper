@@ -8,4 +8,4 @@ typedef enum
 
 
 int surface_builtin_destroy(void **pv);
-int surface_builtin_init(void *holder,surface_builtin_type tp);
+int surface_builtin_init(void *holder, surface_builtin_type tp);

@@ -64,7 +64,7 @@ typedef struct _source
 
 
 int source_init(section cs, surface_data* sd);
-source* source_by_name(surface_data* sd, unsigned char* sn,size_t len);
+source* source_by_name(surface_data* sd, unsigned char* sn, size_t len);
 void source_destroy(source** s);
 int source_update(source* s);
 int update_sources(surface_data* sd);
@@ -73,4 +73,4 @@ unsigned char* source_variable(source* s, size_t* len, unsigned char flags);
 unsigned char* formula(void* sd, unsigned char* in);
 void source_reset(source* s);
 void source_average_destroy(source* s);
-unsigned char  *source_call_str_rtn(source *s,unsigned char *rtn,unsigned char **pms,size_t pm_len);
+unsigned char  *source_call_str_rtn(source *s, unsigned char *rtn, unsigned char **pms, size_t pm_len);

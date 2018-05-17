@@ -47,15 +47,15 @@ typedef struct _surface_data
     long w;
     unsigned int srf_col;      //main color of the surface - if not specified by the user, this will be 0
     unsigned int srf_col_2;    //second surface color - setting this will result in a gradient background
-    unsigned char hidden:1;
-    unsigned char draggable:1;
-    unsigned char wsz:2;        // volatile window size bit 0 - AutoSize; bit 1 - Need resize;
+    unsigned char hidden: 1;
+    unsigned char draggable: 1;
+    unsigned char wsz: 2;       // volatile window size bit 0 - AutoSize; bit 1 - Need resize;
     unsigned char ro;          // required opacity
     unsigned char co;          // current opacity
-    unsigned char clkt:1;        // click through
-    unsigned char snp:1;         // store new position
-    unsigned char rim:1;         // reload if modified
-    unsigned char keep_on_screen:1;
+    unsigned char clkt: 1;       // click through
+    unsigned char snp: 1;        // store new position
+    unsigned char rim: 1;        // reload if modified
+    unsigned char keep_on_screen: 1;
     unsigned char* team;
     unsigned char* focus_act;
     unsigned char* unfocus_act;
@@ -64,11 +64,11 @@ typedef struct _surface_data
     unsigned char* unload_act;
     mouse_hover_state mhs;
     mouse_hover_state omhs;
-    unsigned char update_act_lock:1;
-    unsigned char reload_act_lock:1;
-    unsigned char unload_act_lock:1;
+    unsigned char update_act_lock: 1;
+    unsigned char reload_act_lock: 1;
+    unsigned char unload_act_lock: 1;
     unsigned char zorder;
-    unsigned char visible:1;
+    unsigned char visible: 1;
     unsigned char lock_w;
     unsigned char lock_h;
     size_t monitor;
@@ -101,6 +101,6 @@ int surface_modified(surface_data *sd);
 size_t surface_file_variant(unsigned char* sd, unsigned char* file);
 int surface_change_variant(surface_data* sd, unsigned char* vf);
 void surface_fade(surface_data* sd);
-surface_data *surface_load_memory(control_data *cd,unsigned char *buf,size_t buf_sz,surface_data **sd);
+surface_data *surface_load_memory(control_data *cd, unsigned char *buf, size_t buf_sz, surface_data **sd);
 int surface_adjust_size(surface_data *sd);
 void surface_init_update(surface_data *sd);

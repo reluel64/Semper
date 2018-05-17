@@ -579,7 +579,8 @@
 #else				/* }{ */
 
 #error "Compiler does not support 'long long'. Use option '-DLUA_32BITS' \
-or '-DLUA_C89_NUMBERS' (see file 'luaconf.h' for details)"
+
+or '-DLUA_C89_NUMBERS'(see file 'luaconf.h' for details)"
 
 #endif				/* } */
 

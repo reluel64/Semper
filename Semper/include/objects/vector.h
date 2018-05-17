@@ -2,7 +2,7 @@
 #include <objects/object.h>
 void vector_init(object *o);
 void vector_reset(object *o);
-int vector_render(object *o,cairo_t *cr);
+int vector_render(object *o, cairo_t *cr);
 void vector_destroy(object *o);
 /*not API*/
 int vector_parser_init(object *o);
@@ -30,7 +30,7 @@ typedef enum
 
 typedef enum
 {
-    vector_param_none=vector_path_set_curve_to+1,
+    vector_param_none = vector_path_set_curve_to + 1,
     vector_param_done,
     vector_param_shared,
     vector_param_stroke_width,
@@ -72,7 +72,7 @@ typedef struct
 
 typedef enum
 {
-    vector_clip_intersect=1,
+    vector_clip_intersect = 1,
     vector_clip_union,
     vector_clip_diff,
     vector_clip_xor,

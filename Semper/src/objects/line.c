@@ -149,7 +149,7 @@ void line_reset(object* o)
 
         size_t index = 0;
 
-        sscanf(v+9, "%llu", &index);
+        sscanf(v + 9, "%llu", &index);
 
         line_data* ld = line_data_alloc(lo, index);
         ld->line_color = parameter_color(o, v, 0xff00ff00 + index, XPANDER_OBJECT);

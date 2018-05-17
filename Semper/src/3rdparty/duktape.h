@@ -216,20 +216,20 @@ typedef struct duk_number_list_entry duk_number_list_entry;
 typedef struct duk_time_components duk_time_components;
 
 typedef duk_ret_t (*duk_c_function)(duk_context *ctx);
-typedef void *(*duk_alloc_function) (void *udata, duk_size_t size);
-typedef void *(*duk_realloc_function) (void *udata, void *ptr, duk_size_t size);
-typedef void (*duk_free_function) (void *udata, void *ptr);
-typedef void (*duk_fatal_function) (void *udata, const char *msg);
-typedef void (*duk_decode_char_function) (void *udata, duk_codepoint_t codepoint);
-typedef duk_codepoint_t (*duk_map_char_function) (void *udata, duk_codepoint_t codepoint);
-typedef duk_ret_t (*duk_safe_call_function) (duk_context *ctx, void *udata);
-typedef duk_size_t (*duk_debug_read_function) (void *udata, char *buffer, duk_size_t length);
-typedef duk_size_t (*duk_debug_write_function) (void *udata, const char *buffer, duk_size_t length);
-typedef duk_size_t (*duk_debug_peek_function) (void *udata);
-typedef void (*duk_debug_read_flush_function) (void *udata);
-typedef void (*duk_debug_write_flush_function) (void *udata);
-typedef duk_idx_t (*duk_debug_request_function) (duk_context *ctx, void *udata, duk_idx_t nvalues);
-typedef void (*duk_debug_detached_function) (duk_context *ctx, void *udata);
+typedef void *(*duk_alloc_function)(void *udata, duk_size_t size);
+typedef void *(*duk_realloc_function)(void *udata, void *ptr, duk_size_t size);
+typedef void (*duk_free_function)(void *udata, void *ptr);
+typedef void (*duk_fatal_function)(void *udata, const char *msg);
+typedef void (*duk_decode_char_function)(void *udata, duk_codepoint_t codepoint);
+typedef duk_codepoint_t (*duk_map_char_function)(void *udata, duk_codepoint_t codepoint);
+typedef duk_ret_t (*duk_safe_call_function)(duk_context *ctx, void *udata);
+typedef duk_size_t (*duk_debug_read_function)(void *udata, char *buffer, duk_size_t length);
+typedef duk_size_t (*duk_debug_write_function)(void *udata, const char *buffer, duk_size_t length);
+typedef duk_size_t (*duk_debug_peek_function)(void *udata);
+typedef void (*duk_debug_read_flush_function)(void *udata);
+typedef void (*duk_debug_write_flush_function)(void *udata);
+typedef duk_idx_t (*duk_debug_request_function)(duk_context *ctx, void *udata, duk_idx_t nvalues);
+typedef void (*duk_debug_detached_function)(duk_context *ctx, void *udata);
 
 struct duk_thread_state
 {

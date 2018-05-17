@@ -23,7 +23,7 @@ This code takes care of both SourceActions and SourceConditions
 
 void action_init(source* s)
 {
-    if(s!=NULL && s->sa == NULL)
+    if(s != NULL && s->sa == NULL)
     {
         s->sa = zmalloc(sizeof(source_action));
     }
@@ -75,10 +75,10 @@ static action* action_alloc(list_entry* head, size_t index)
 
 static void action_remove(action** a)
 {
-    sfree((void**)&(*a)->actstr);
-    sfree((void**)&(*a)->cond_e);
-    sfree((void**)&(*a)->cond_f);
-    sfree((void**)&(*a)->cond_t);
+    sfree((void**) & (*a)->actstr);
+    sfree((void**) & (*a)->cond_e);
+    sfree((void**) & (*a)->cond_f);
+    sfree((void**) & (*a)->cond_t);
     linked_list_remove(&(*a)->current);
     sfree((void**)a);
 }
@@ -165,7 +165,8 @@ static int action_populate(source* s)
             unsigned char type = 0;
             unsigned char _bool = 0;
             unsigned char scond = 0;
-            action* a=NULL;
+            action* a = NULL;
+
             if(!strncasecmp(v + 6, "Condition", 9))
                 type = 1;
 
@@ -195,10 +196,10 @@ static int action_populate(source* s)
             }
 
             if(type)
-                scond?sscanf(v + 15 + (_bool ? 4 : 5), "%llu", &index):sscanf(v + 15, "%llu", &index);
+                scond ? sscanf(v + 15 + (_bool ? 4 : 5), "%llu", &index) : sscanf(v + 15, "%llu", &index);
 
             else
-                scond?sscanf(v + 11 + (_bool ? 4 : 5), "%llu", &index):sscanf(v + 11, "%llu", &index);
+                scond ? sscanf(v + 11 + (_bool ? 4 : 5), "%llu", &index) : sscanf(v + 11, "%llu", &index);
 
             a = action_alloc(type == 0 ? &sa->match : &sa->cond, index);
 
@@ -282,13 +283,13 @@ static int action_match(unsigned char* str, unsigned char* pattern)
     return (match_count > 0);
 }
 
-static int action_math_parser(unsigned char *vn,size_t len,double *v,void *pv)
+static int action_math_parser(unsigned char *vn, size_t len, double *v, void *pv)
 {
-    source *s=source_by_name(pv,vn,len);
+    source *s = source_by_name(pv, vn, len);
 
     if(s)
     {
-        *v=(double)s->d_info;
+        *v = (double)s->d_info;
         return(0);
     }
 
@@ -325,7 +326,7 @@ void action_execute(source* s)
 
             if(_bool && (a->done == 0 || s->always_do))
             {
-                a->actstr? command(s->sd, &a->actstr):0;
+                a->actstr ? command(s->sd, &a->actstr) : 0;
                 a->done = 1;
             }
             else if(!(_bool))
@@ -337,20 +338,20 @@ void action_execute(source* s)
 
     list_enum_part(a, &sa->cond, current)
     {
-        double v=0.0;
+        double v = 0.0;
 
-        if(math_parser(a->cond_e,&v,action_math_parser,s->sd)==0)
+        if(math_parser(a->cond_e, &v, action_math_parser, s->sd) == 0)
         {
-            unsigned char bool_true=v>0.0;
+            unsigned char bool_true = v > 0.0;
 
             if(bool_true && (a->done != 1 || s->always_do))
             {
-                a->cond_t?command(s->sd, &a->cond_t):0;
+                a->cond_t ? command(s->sd, &a->cond_t) : 0;
                 a->done = 1;
             }
             else if(!bool_true && (a->done != 2 || s->always_do))
             {
-                a->cond_f?command(s->sd, &a->cond_f):0;
+                a->cond_f ? command(s->sd, &a->cond_f) : 0;
                 a->done = 2;
             }
         }
@@ -358,16 +359,16 @@ void action_execute(source* s)
 
     list_enum_part(a, &sa->match, current)
     {
-        unsigned char bool_true = (unsigned char) ((s->s_info&&a->cond_e)?action_match(s->s_info, a->cond_e):0);
+        unsigned char bool_true = (unsigned char)((s->s_info && a->cond_e) ? action_match(s->s_info, a->cond_e) : 0);
 
         if(bool_true && (a->done != 1 || s->always_do))
         {
-            a->cond_t?command(s->sd, &a->cond_t):0;
+            a->cond_t ? command(s->sd, &a->cond_t) : 0;
             a->done = 1;
         }
         else if(!bool_true && (a->done != 2 || s->always_do))
         {
-            a->cond_f?command(s->sd, &a->cond_f):0;
+            a->cond_f ? command(s->sd, &a->cond_f) : 0;
             a->done = 2;
         }
     }

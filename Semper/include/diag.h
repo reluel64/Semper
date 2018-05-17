@@ -24,7 +24,7 @@ typedef struct
 
 } diag_status;
 
-int diag_log(unsigned char lvl,char *fmt, ...);
+int diag_log(unsigned char lvl, char *fmt, ...);
 
 
 #ifndef diag_info

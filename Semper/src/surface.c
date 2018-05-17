@@ -31,7 +31,7 @@
 
 #define SURFACE_INCLUDE_MAX_DEPTH 100
 /*Forward declarations */
-static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,unsigned char memory);
+static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd, unsigned char memory);
 static void surface_render(crosswin_window* w, void* cr);
 static int surface_create_paths(control_data* cd, surface_paths* sp, size_t variant, unsigned char* name);
 static void surface_destroy_structs(surface_data* sd, unsigned char destroy);
@@ -46,13 +46,13 @@ typedef struct
 
 int surface_modified(surface_data *sd)
 {
-    int res=-1;
-    semper_timestamp lst= {0};
+    int res = -1;
+    semper_timestamp lst = {0};
 
-    if(semper_get_file_timestamp(sd->sp.file_path,&lst)==0)
+    if(semper_get_file_timestamp(sd->sp.file_path, &lst) == 0)
     {
-        res=memcmp(&sd->st,&lst,sizeof(semper_timestamp))!=0;
-        memmove(&sd->st,&lst,sizeof(semper_timestamp));
+        res = memcmp(&sd->st, &lst, sizeof(semper_timestamp)) != 0;
+        memmove(&sd->st, &lst, sizeof(semper_timestamp));
     }
 
     return (res);
@@ -92,31 +92,31 @@ void surface_reset(surface_data* sd)
     sd->h = parameter_long_long(sd, "Height", 0, XPANDER_SURFACE);
     sd->w = parameter_long_long(sd, "Width", 0, XPANDER_SURFACE);
     sd->def_divider = parameter_size_t(sd, "DefaultDivider", 1, XPANDER_SURFACE);
-    sd->ia.path=parameter_string(sd,"Background",NULL,XPANDER_SURFACE);
-    image_cache_image_parameters(sd,&sd->ia,XPANDER_SURFACE,"Background");
+    sd->ia.path = parameter_string(sd, "Background", NULL, XPANDER_SURFACE);
+    image_cache_image_parameters(sd, &sd->ia, XPANDER_SURFACE, "Background");
 
-    if(image_cache_query_image(sd->cd->ich,&sd->ia,NULL,-1,-1)==0)
+    if(image_cache_query_image(sd->cd->ich, &sd->ia, NULL, -1, -1) == 0)
     {
-        if(sd->w<(long)sd->ia.width)
+        if(sd->w < (long)sd->ia.width)
         {
-            sd->w=(long)sd->ia.width;
+            sd->w = (long)sd->ia.width;
         }
 
-        if(sd->h<(long)sd->ia.height)
+        if(sd->h < (long)sd->ia.height)
         {
-            sd->h=(long)sd->ia.height;
+            sd->h = (long)sd->ia.height;
         }
     }
 
     //set the size locks
-    sd->lock_w=sd->w>0?1:0;
-    sd->lock_h=sd->h>0?1:0;
+    sd->lock_w = sd->w > 0 ? 1 : 0;
+    sd->lock_h = sd->h > 0 ? 1 : 0;
 
-    if(sd->w==0||sd->h==0)
+    if(sd->w == 0 || sd->h == 0)
         sd->wsz = parameter_bool(sd, "AutoSize", 0, XPANDER_SURFACE);
 
 
-    if(sd->w>0&&sd->h>0)
+    if(sd->w > 0 && sd->h > 0)
     {
         crosswin_set_dimension(sd->sw, sd->w,  sd->h);
     }
@@ -138,28 +138,28 @@ void surface_reset(surface_data* sd)
     sd->ro = parameter_byte(sd, "Opacity", 255, XPANDER_SURFACE_CONFIG);
     sd->order = (long)parameter_long_long(sd, "Order", 0, XPANDER_SURFACE_CONFIG);
     sd->zorder = parameter_byte(sd, "ZOrder", crosswin_normal, XPANDER_SURFACE_CONFIG);
-    sd->monitor=parameter_size_t(sd,"Monitor",0,XPANDER_SURFACE_CONFIG);
+    sd->monitor = parameter_size_t(sd, "Monitor", 0, XPANDER_SURFACE_CONFIG);
 
     sd->fade_direction = (sd->hidden ? -1 : 1);
-    sd->uf=sd->uf==0?1000:sd->uf;
+    sd->uf = sd->uf == 0 ? 1000 : sd->uf;
 }
 
 static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
 {
     surface_data* sd = crosswin_get_window_data(w);
-    crosswin_get_position(sd->sw, &sd->x, &sd->y,&sd->monitor);
+    crosswin_get_position(sd->sw, &sd->x, &sd->y, &sd->monitor);
 
-    if(sd->draggable&&sd->snp)
+    if(sd->draggable && sd->snp)
     {
-        long lx=0;
-        long ly=0;
-        size_t mon=0;
+        long lx = 0;
+        long ly = 0;
+        size_t mon = 0;
 
         lx  = parameter_long_long(sd, "X", 0, XPANDER_SURFACE_CONFIG);
         ly  = parameter_long_long(sd, "Y", 0, XPANDER_SURFACE_CONFIG);
         mon = parameter_size_t(sd, "Monitor", 0, XPANDER_SURFACE_CONFIG);
 
-        if(sd->x!=lx||sd->y!=ly||sd->monitor!=mon)
+        if(sd->x != lx || sd->y != ly || sd->monitor != mon)
         {
             unsigned char buf[260] = { 0 };
             snprintf(buf, sizeof(buf), "%ld", sd->x);
@@ -167,19 +167,19 @@ static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
             memset(buf, 0, sizeof(buf));
             snprintf(buf, sizeof(buf), "%ld", sd->y);
             skeleton_add_key(sd->scd, "Y", buf);
-            snprintf(buf,sizeof(buf),"%llu",sd->monitor);
-            skeleton_add_key(sd->scd,"Monitor",buf);
+            snprintf(buf, sizeof(buf), "%llu", sd->monitor);
+            skeleton_add_key(sd->scd, "Monitor", buf);
             /*Defer the parameter update*/
-            event_push(sd->cd->eq,(event_handler)semper_save_configuration,(void*)sd->cd,100,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
+            event_push(sd->cd->eq, (event_handler)semper_save_configuration, (void*)sd->cd, 100, EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA_HANDLER);
         }
     }
 
-    if(object_hit_testing(sd, ms)==0||ms->hover==mouse_unhover)
+    if(object_hit_testing(sd, ms) == 0 || ms->hover == mouse_unhover)
     {
         mouse_handle_button(sd, MOUSE_SURFACE, ms);
     }
 
-    sd->mhs=ms->hover; //this will be used by SurfaceOverAction
+    sd->mhs = ms->hover; //this will be used by SurfaceOverAction
 
     return (1);
 }
@@ -205,10 +205,10 @@ void surface_destroy_structs(surface_data* sd, unsigned char destroy)
         object* o = NULL;
         object* to = NULL;
         mouse_destroy_actions(&sd->ma);
-        sd->x=0;
-        sd->y=0;
-        sd->h=0;
-        sd->w=0;
+        sd->x = 0;
+        sd->y = 0;
+        sd->h = 0;
+        sd->w = 0;
 
         list_enum_part_safe(s, ts, &sd->sources, current)
         {
@@ -225,7 +225,7 @@ void surface_destroy_structs(surface_data* sd, unsigned char destroy)
 
     }
 
-    image_cache_unref_image(sd->cd->ich,&sd->ia,1);
+    image_cache_unref_image(sd->cd->ich, &sd->ia, 1);
     sfree((void**)&sd->ia.path);
     sfree((void**)&sd->team);
     sfree((void**)&sd->unfocus_act);
@@ -283,7 +283,7 @@ static unsigned char* surface_variant_file(unsigned char* sd, size_t variant)
 
 
     unsigned char* buf = zmalloc(sdl + 6 + 1);
-    snprintf(buf,sdl+6+1,"%s/*.ini",sd);
+    snprintf(buf, sdl + 6 + 1, "%s/*.ini", sd);
 
     WIN32_FIND_DATAW fd = { 0 };
     wchar_t* flt = utf8_to_ucs(buf);
@@ -304,7 +304,7 @@ static unsigned char* surface_variant_file(unsigned char* sd, size_t variant)
     }
     while(FindNextFileW(h, &fd));
 
-    if(h!=NULL&&h != INVALID_HANDLE_VALUE)
+    if(h != NULL && h != INVALID_HANDLE_VALUE)
     {
         FindClose(h);
     }
@@ -356,7 +356,7 @@ size_t surface_file_variant(unsigned char* sd, unsigned char* file)
         return (0);
     }
 
-    for(size_t i = 1; i < (size_t)-1; i++)
+    for(size_t i = 1; i < (size_t) - 1; i++)
     {
         unsigned char* res = surface_variant_file(sd, i);
 
@@ -383,14 +383,14 @@ size_t surface_file_variant(unsigned char* sd, unsigned char* file)
 static int surface_render_background(surface_data* sd, cairo_t* cr)
 {
     unsigned char* color = (unsigned char*)&sd->srf_col;
-    unsigned char *px=NULL;
-    image_cache_query_image(sd->cd->ich,&sd->ia,&px,-1,-1);
+    unsigned char *px = NULL;
+    image_cache_query_image(sd->cd->ich, &sd->ia, &px, -1, -1);
 
     if(px)
     {
-        int stride=cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,sd->ia.width);
-        cairo_surface_t *back=cairo_image_surface_create_for_data(px,CAIRO_FORMAT_ARGB32,sd->ia.width,sd->ia.height,stride);
-        cairo_set_source_surface(cr,back,0.0,0.0);
+        int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, sd->ia.width);
+        cairo_surface_t *back = cairo_image_surface_create_for_data(px, CAIRO_FORMAT_ARGB32, sd->ia.width, sd->ia.height, stride);
+        cairo_set_source_surface(cr, back, 0.0, 0.0);
         cairo_paint(cr);
         cairo_surface_destroy(back);
         return(0);
@@ -438,30 +438,31 @@ static int surface_render_background(surface_data* sd, cairo_t* cr)
 
 int surface_adjust_size(surface_data *sd)
 {
-    object *o=NULL;
+    object *o = NULL;
 
-    if(sd->lock_w==0)
+    if(sd->lock_w == 0)
     {
-        sd->w=0;
+        sd->w = 0;
     }
 
-    if(sd->lock_h==0)
+    if(sd->lock_h == 0)
     {
-        sd->h=0;
+        sd->h = 0;
     }
 
-    list_enum_part(o,&sd->objects,current)
+    list_enum_part(o, &sd->objects, current)
     {
         long ow = o->w < 0 ? o->auto_w : o->w;
         long oh = o->h < 0 ? o->auto_h : o->h;
-        if(o->die||o->enabled==0)
+
+        if(o->die || o->enabled == 0)
         {
             continue;
         }
 
         object_calculate_coordinates(o);
 
-        if(sd->lock_w==0)
+        if(sd->lock_w == 0)
         {
             long w = ow;
 
@@ -471,7 +472,7 @@ int surface_adjust_size(surface_data *sd)
             }
         }
 
-        if(sd->lock_h==0)
+        if(sd->lock_h == 0)
         {
             long h = oh;
 
@@ -599,24 +600,26 @@ void surface_reload(surface_data* sd)
         sd->fade_direction = -1;
         sd->ro = 0;
         surface_fade(sd);
-        event_push(sd->cd->eq, (event_handler)surface_reload, (void*)sd, ((sd->co * 2)), EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
+        event_push(sd->cd->eq, (event_handler)surface_reload, (void*)sd, ((sd->co * 2)), EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA_HANDLER);
     }
     else if(sd)
     {
         surface_destroy_structs(sd, 1);
-        surface_init(&sd->sp, sd->cd, &sd,0);
+        surface_init(&sd->sp, sd->cd, &sd, 0);
         surface_init_update(sd);
     }
 }
 
-surface_data *surface_load_memory(control_data *cd,unsigned char *buf,size_t buf_sz,surface_data **sd)
+surface_data *surface_load_memory(control_data *cd, unsigned char *buf, size_t buf_sz, surface_data **sd)
 {
-    surface_reader_stat srs= {.size = buf_sz, .buf = buf, .current = 0 };
-    surface_data *rsd=surface_init(&srs, cd, sd,1);
+    surface_reader_stat srs = {.size = buf_sz, .buf = buf, .current = 0 };
+    surface_data *rsd = surface_init(&srs, cd, sd, 1);
+
     if(rsd)
     {
         surface_init_update(rsd);
     }
+
     return(rsd);
 }
 
@@ -633,7 +636,7 @@ size_t surface_load(control_data* cd, unsigned char* name, size_t variant)
 
     surface_paths sp = { 0 };
     surface_create_paths(cd, &sp, variant, name);
-    sd = surface_init(&sp, cd, NULL,0);
+    sd = surface_init(&sp, cd, NULL, 0);
 
     if(sd)
     {
@@ -695,8 +698,8 @@ static char* surface_read_from_memory(char* str, size_t ccount, surface_reader_s
 static void surface_init_items(surface_data* sd)
 {
     section cs = skeleton_first_section(&sd->skhead);
-    object *o=NULL;
-    source *s=NULL;
+    object *o = NULL;
+    source *s = NULL;
 
     do
     {
@@ -756,10 +759,10 @@ static int ini_handler(surface_validate_handler)
 static int ini_handler(surface_create_skeleton_handler)
 {
     unused_parameter(com);
-    skeleton_handler_data* shd =pv;
+    skeleton_handler_data* shd = pv;
     surface_data* sd = shd->pv;
 
-    if(shd->depth>=SURFACE_INCLUDE_MAX_DEPTH)
+    if(shd->depth >= SURFACE_INCLUDE_MAX_DEPTH)
     {
         return(1);
     }
@@ -773,7 +776,7 @@ static int ini_handler(surface_create_skeleton_handler)
     {
         shd->ls = skeleton_add_section(&sd->skhead, sn);
 
-        if(strcasecmp(sn,"Surface-Variables")==0)
+        if(strcasecmp(sn, "Surface-Variables") == 0)
             sd->sv  = shd->ls;
     }
 
@@ -785,10 +788,10 @@ static int ini_handler(surface_create_skeleton_handler)
         if(kn && strcasecmp(kn, "$Include") == 0)
         {
             section ts = shd->ls; // save current section
-            xpander_request xr= {0};
-            xr.os=kv;
-            xr.requestor=shd->pv;
-            xr.req_type=XPANDER_SURFACE;
+            xpander_request xr = {0};
+            xr.os = kv;
+            xr.requestor = shd->pv;
+            xr.req_type = XPANDER_SURFACE;
             shd->depth++;
 
             if(xpander(&xr))
@@ -814,13 +817,13 @@ static int ini_handler(surface_create_skeleton_handler)
 
     if(!kn && kv && shd->ls)
     {
-        kn=skeleton_key_name(shd->lk);
+        kn = skeleton_key_name(shd->lk);
         size_t sl = string_length(shd->kv);
         size_t kvl = string_length(kv);
         unsigned char* tmp = zmalloc(sl + kvl + 1);
 
-        strncpy(tmp,shd->kv,sl);
-        strncpy(tmp+sl,kv,kvl);
+        strncpy(tmp, shd->kv, sl);
+        strncpy(tmp + sl, kv, kvl);
 
 
         sfree((void**)&shd->kv);
@@ -838,7 +841,7 @@ void surface_init_update(surface_data *sd)
     surface_window_init(sd);                                                   // initialize window
     surface_reset(sd); // set or reset the surface parameters
     surface_init_items(sd);                                                    // initialize sources and objects
-    crosswin_set_monitor(sd->sw,sd->monitor);
+    crosswin_set_monitor(sd->sw, sd->monitor);
     crosswin_click_through(sd->sw, sd->clkt);
     crosswin_set_position(sd->sw, sd->x, sd->y);
     crosswin_draggable(sd->sw, sd->draggable);
@@ -850,12 +853,12 @@ void surface_init_update(surface_data *sd)
     sd->cycle = 0;
     surface_update(sd);
     sd->cycle = temp_cycle;
-    event_push(sd->cd->eq, (event_handler)surface_fade, (void*)sd,0,0);
+    event_push(sd->cd->eq, (event_handler)surface_fade, (void*)sd, 0, 0);
 }
 
-static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,unsigned char memory)
+static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd, unsigned char memory)
 {
-    surface_paths *sp=pv;
+    surface_paths *sp = pv;
 
     surface_data* tsd = NULL;
     skeleton_handler_data shd = { 0 };
@@ -869,9 +872,9 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
 
     if(memory)
     {
-        sp=NULL;
+        sp = NULL;
     }
-    else if(pv==NULL)
+    else if(pv == NULL)
     {
         return(NULL);
     }
@@ -881,14 +884,14 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
      * */
     event_remove(cd->eq, NULL, tsd, EVENT_REMOVE_BY_DATA);
 
-    if(memory==0)
+    if(memory == 0)
     {
         ini_parser_parse_file(sp->file_path, surface_validate_handler, &valid); // call the validation handler
     }
     else
     {
-        ini_parser_parse_stream((ini_reader)surface_read_from_memory,pv,surface_validate_handler,&valid);
-        ((surface_reader_stat*)pv)->current=0;
+        ini_parser_parse_stream((ini_reader)surface_read_from_memory, pv, surface_validate_handler, &valid);
+        ((surface_reader_stat*)pv)->current = 0;
     }
 
     if(valid == 0)
@@ -931,13 +934,13 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
 
     shd.pv = tsd;
 
-    if(memory==0)
+    if(memory == 0)
     {
         ini_parser_parse_file(sp->file_path, surface_create_skeleton_handler, &shd); // we will create the skeleton
     }
     else
     {
-        ini_parser_parse_stream((ini_reader)surface_read_from_memory,pv,surface_create_skeleton_handler,&shd);
+        ini_parser_parse_stream((ini_reader)surface_read_from_memory, pv, surface_create_skeleton_handler, &shd);
     }
 
     sfree((void**)&shd.kv);                                                 // free a small yet important to free residue
@@ -955,12 +958,13 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
 
 void surface_fade(surface_data* sd)
 {
-    if((sd->hidden&&sd->co)||(sd->co!=sd->ro))
+    if((sd->hidden && sd->co) || (sd->co != sd->ro))
     {
-        sd->co=CLAMP((int)sd->co+(25*(int)sd->fade_direction),0,(int)sd->ro?sd->ro:255);
+        sd->co = CLAMP((int)sd->co + (25 * (int)sd->fade_direction), 0, (int)sd->ro ? sd->ro : 255);
         crosswin_set_opacity(sd->sw, sd->co);
-        if(sd->co!=sd->ro)
-            event_push(sd->cd->eq, (event_handler)surface_fade, (void*)sd, 33, EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
+
+        if(sd->co != sd->ro)
+            event_push(sd->cd->eq, (event_handler)surface_fade, (void*)sd, 33, EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA_HANDLER);
     }
 
     if(sd->hidden && sd->co == 0)
@@ -998,7 +1002,7 @@ int surface_update(surface_data* sd)
             continue;
         }
 
-        if((sd->cycle%s->divider||s->disabled)&&s->vol_var==0)
+        if((sd->cycle % s->divider || s->disabled) && s->vol_var == 0)
         {
             continue;
         }
@@ -1015,7 +1019,7 @@ int surface_update(surface_data* sd)
             continue;
         }
 
-        if((sd->cycle%o->divider||o->enabled==0)&&o->vol_var==0)
+        if((sd->cycle % o->divider || o->enabled == 0) && o->vol_var == 0)
         {
             continue;
         }
@@ -1023,34 +1027,36 @@ int surface_update(surface_data* sd)
         object_update(o);
     }
 
-    if(sd->wsz||sd->cycle==0)
+    if(sd->wsz || sd->cycle == 0)
     {
         surface_adjust_size(sd);
     }
 
     /*Draw*/
     sd->hidden ? 0 : crosswin_draw(sd->sw);
+
     /*Handle commands*/
     if(sd->update_act_lock == 0)
     {
         sd->update_act_lock = 1;
-        sd->update_act?command(sd, &sd->update_act):0;
+        sd->update_act ? command(sd, &sd->update_act) : 0;
         sd->update_act_lock = 0;
     }
 
-    if(sd->omhs != sd->mhs&&sd->mhs!=mouse_none)
+    if(sd->omhs != sd->mhs && sd->mhs != mouse_none)
     {
-        sd->mhs==mouse_hover ?(sd->focus_act ? command(sd, &sd->focus_act):0) :
-        (sd->focus_act ? command(sd, &sd->unfocus_act):0);
+        sd->mhs == mouse_hover ? (sd->focus_act ? command(sd, &sd->focus_act) : 0) :
+        (sd->focus_act ? command(sd, &sd->unfocus_act) : 0);
         sd->omhs = sd->mhs;
     }
 
     sd->cycle++; // increment the surface update cycle
 
-    if(sd->uf!=(size_t)-1)
+    if(sd->uf != (size_t) - 1)
     {
         // re-schedule the update by removing any potential duplicates and push a new timed event
-        event_push(sd->cd->eq, (event_handler)surface_update, (void*)sd, sd->uf, EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
+        event_push(sd->cd->eq, (event_handler)surface_update, (void*)sd, sd->uf, EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA_HANDLER);
     }
+
     return (1);
 }

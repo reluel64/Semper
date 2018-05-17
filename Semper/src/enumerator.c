@@ -51,7 +51,7 @@ unsigned char* enumerator_first_value(void* r, int rt, void** ed)
     }
 
     e->s = s;
-    e->anc=ancestor_build_queue(r,rt ? XPANDER_OBJECT : XPANDER_SOURCE);
+    e->anc = ancestor_build_queue(r, rt ? XPANDER_OBJECT : XPANDER_SOURCE);
 
     if(e->anc == NULL)
     {
@@ -65,9 +65,9 @@ unsigned char* enumerator_first_value(void* r, int rt, void** ed)
             return(NULL);
         }
 
-        ancestor_queue *aq=element_of(((list_entry*)e->anc)->prev,ancestor_queue,current);
+        ancestor_queue *aq = element_of(((list_entry*)e->anc)->prev, ancestor_queue, current);
         linked_list_remove(&aq->current);
-        e->as=aq->s;
+        e->as = aq->s;
         sfree((void**)&aq);
         e->k = skeleton_first_key(e->as);
         return (skeleton_key_name(e->k));
@@ -89,9 +89,9 @@ unsigned char* enumerator_next_value(void* ed)
 
             if(!(linked_list_empty((list_entry*)e->anc)))
             {
-                ancestor_queue *aq=element_of(((list_entry*)e->anc)->prev,ancestor_queue,current);
+                ancestor_queue *aq = element_of(((list_entry*)e->anc)->prev, ancestor_queue, current);
                 linked_list_remove(&aq->current);
-                e->as=aq->s;
+                e->as = aq->s;
                 sfree((void**)&aq);
                 e->k = skeleton_first_key(e->as);
                 return (skeleton_key_name(e->k));

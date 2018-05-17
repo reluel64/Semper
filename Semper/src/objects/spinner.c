@@ -19,9 +19,9 @@ void spinner_destroy(object* o)
 {
     if(o)
     {
-        surface_data *sd=o->sd;
+        surface_data *sd = o->sd;
         spinner_object* spo = o->pv;
-        image_cache_unref_image(sd->cd->ich, &spo->sia,1);
+        image_cache_unref_image(sd->cd->ich, &spo->sia, 1);
         sfree((void**)&spo->spinner_img_path);
         sfree((void**)&spo->sia.path);
         sfree((void**)&o->pv);
@@ -55,9 +55,9 @@ int spinner_update(object* o)
     bind_numeric bn = { 0 };
     surface_data* sd = o->sd;
     bind_update_numeric(o, &bn);
-    image_cache_unref_image(sd->cd->ich, &spo->sia,0);
+    image_cache_unref_image(sd->cd->ich, &spo->sia, 0);
 
-    if(spo->sia.path!=spo->spinner_img_path)
+    if(spo->sia.path != spo->spinner_img_path)
     {
         sfree((void**)&spo->sia.path);
     }
@@ -71,7 +71,7 @@ int spinner_update(object* o)
         return (-1);
     }
 
-    spo->sia.path=sb.s_out;
+    spo->sia.path = sb.s_out;
     image_cache_query_image(sd->cd->ich, &spo->sia, NULL, -1, -1);
 
     double percentage = bind_percentual_value(bn.val, bn.min, bn.max);
@@ -102,8 +102,8 @@ int spinner_update(object* o)
 int spinner_render(object* o, cairo_t* cr)
 {
     spinner_object* spo = o->pv;
-    surface_data *sd=o->sd;
-    unsigned char *pxx=NULL;
+    surface_data *sd = o->sd;
+    unsigned char *pxx = NULL;
     image_cache_query_image(sd->cd->ich, &spo->sia, &pxx, -1, -1);
     long w = o->w < 0 ? o->auto_w : o->w;
     long h = o->h < 0 ? o->auto_h : o->h;
@@ -121,6 +121,6 @@ int spinner_render(object* o, cairo_t* cr)
     cairo_set_source_surface(cr, image, 0, 0);
     cairo_paint(cr);
     cairo_surface_destroy(image);
-    image_cache_unref_image(sd->cd->ich, &spo->sia,0);
+    image_cache_unref_image(sd->cd->ich, &spo->sia, 0);
     return (0);
 }

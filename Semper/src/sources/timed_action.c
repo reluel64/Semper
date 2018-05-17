@@ -30,7 +30,7 @@
 
 typedef enum
 {
-    none=0,
+    none = 0,
     repeat,
     wait,
 } timed_type;
@@ -64,95 +64,95 @@ typedef struct
     unsigned char quote_type;
 } timed_action_tokenizer_status;
 
-static timed_list *timed_list_entry(list_entry *list,size_t index);
+static timed_list *timed_list_entry(list_entry *list, size_t index);
 static void timed_action_destroy_list(list_entry *head);
 static void *timed_action_exec(void *pv);
 static int timed_action_string_filter(string_tokenizer_status *pi, void* pv);
-size_t timed_action_fill_list(list_entry *head,string_tokenizer_info *sti,void *ip);
+size_t timed_action_fill_list(list_entry *head, string_tokenizer_info *sti, void *ip);
 
 
 /*Generic routines*/
 
 void timed_action_init(void **spv, void *ip)
 {
-    list_entry *ta=zmalloc(sizeof(list_entry));
+    list_entry *ta = zmalloc(sizeof(list_entry));
     list_entry_init(ta);
-    *spv=ta;
+    *spv = ta;
 }
 
-void timed_action_reset(void *spv,void *ip)
+void timed_action_reset(void *spv, void *ip)
 {
-    void *en=NULL;
-    list_entry *ta=spv;
-    unsigned char *kn=enumerator_first_value(ip,ENUMERATOR_SOURCE,&en);
-    source *s=ip;
+    void *en = NULL;
+    list_entry *ta = spv;
+    unsigned char *kn = enumerator_first_value(ip, ENUMERATOR_SOURCE, &en);
+    source *s = ip;
 
     do
     {
 
-        key k=NULL;
-        size_t act_index=0;
+        key k = NULL;
+        size_t act_index = 0;
 
-        if(kn==NULL)
+        if(kn == NULL)
         {
             break;
         }
 
-        if(strncasecmp("TimedList",kn,9))
+        if(strncasecmp("TimedList", kn, 9))
         {
             continue;
         }
 
-        k=skeleton_get_key(s->cs,kn);
+        k = skeleton_get_key(s->cs, kn);
 
-        if(k==NULL)
+        if(k == NULL)
         {
             continue;
         }
 
-        sscanf(kn,"TimedList%llu",&act_index);
+        sscanf(kn, "TimedList%llu", &act_index);
         timed_action_tokenizer_status tats = {0};
 
-        string_tokenizer_info sti=
+        string_tokenizer_info sti =
         {
-            .buffer= clone_string(param_string(kn,EXTENSION_XPAND_ALL,ip,NULL)),
-            .oveclen=0,
-            .ovecoff=NULL,
-            .filter_data=&tats,
-            .string_tokenizer_filter=timed_action_string_filter
+            .buffer = clone_string(param_string(kn, EXTENSION_XPAND_ALL, ip, NULL)),
+            .oveclen = 0,
+            .ovecoff = NULL,
+            .filter_data = &tats,
+            .string_tokenizer_filter = timed_action_string_filter
         };
 
         string_tokenizer(&sti);
 
-        timed_list *tl=timed_list_entry(ta,act_index);
-        tl->ip=ip;
-        timed_action_fill_list(&tl->act_chain,&sti,ip);
+        timed_list *tl = timed_list_entry(ta, act_index);
+        tl->ip = ip;
+        timed_action_fill_list(&tl->act_chain, &sti, ip);
         sfree((void**)&sti.ovecoff);
         sfree((void**)&sti.buffer);
     }
-    while((kn=enumerator_next_value(en))!=NULL);
+    while((kn = enumerator_next_value(en)) != NULL);
 
     enumerator_finish(&en);
 
 }
 
-void timed_action_command(void *spv,unsigned char *command)
+void timed_action_command(void *spv, unsigned char *command)
 {
-    list_entry *ta=spv;
+    list_entry *ta = spv;
 
     if(command)
     {
-        if(!strncasecmp("Start ",command,6))
+        if(!strncasecmp("Start ", command, 6))
         {
-            unsigned char *end=NULL;
-            size_t comm_index=strtoull((char*)command+6,(char**)&end,10);
+            unsigned char *end = NULL;
+            size_t comm_index = strtoull((char*)command + 6, (char**)&end, 10);
 
-            if(end!=command+6)
+            if(end != command + 6)
             {
-                timed_list *tl=NULL;
-                list_enum_part(tl,ta,current)
+                timed_list *tl = NULL;
+                list_enum_part(tl, ta, current)
                 {
-                    if(tl->action_index==comm_index)
+                    if(tl->action_index == comm_index)
                     {
                         if(safe_flag_get(tl->running))
                         {
@@ -161,46 +161,51 @@ void timed_action_command(void *spv,unsigned char *command)
                         else
                         {
                             pthread_t tth;
-                            memset(&tth,0,sizeof(pthread_t));
-                            if(memcmp(&tth,&tl->time_thread,sizeof(pthread_t))==0)
+                            memset(&tth, 0, sizeof(pthread_t));
+
+                            if(memcmp(&tth, &tl->time_thread, sizeof(pthread_t)) == 0)
                             {
-                                pthread_join(tl->time_thread,NULL);
-                                memset(&tl->time_thread,0,sizeof(pthread_t));
+                                pthread_join(tl->time_thread, NULL);
+                                memset(&tl->time_thread, 0, sizeof(pthread_t));
                             }
 
                         }
-                        int status=0;
-                        safe_flag_set(tl->running,1);
 
-                        if((status=pthread_create(&tl->time_thread,NULL,timed_action_exec,tl))!=0)
+                        int status = 0;
+                        safe_flag_set(tl->running, 1);
+
+                        if((status = pthread_create(&tl->time_thread, NULL, timed_action_exec, tl)) != 0)
                         {
-                           safe_flag_set(tl->running,0);
-                            diag_crit("%s %d Failed to start timed_action_exec. Status %x",__FUNCTION__,__LINE__,status);
+                            safe_flag_set(tl->running, 0);
+                            diag_crit("%s %d Failed to start timed_action_exec. Status %x", __FUNCTION__, __LINE__, status);
                         }
+
                         break;
                     }
                 }
             }
         }
 
-        if(!strncasecmp("Stop ",command,5))
+        if(!strncasecmp("Stop ", command, 5))
         {
-            unsigned char *end=NULL;
-            size_t comm_index=strtoull((char*)command+5,(char**)&end,10);
+            unsigned char *end = NULL;
+            size_t comm_index = strtoull((char*)command + 5, (char**)&end, 10);
 
-            if(end!=command+5)
+            if(end != command + 5)
             {
-                timed_list *tl=NULL;
-                list_enum_part(tl,ta,current)
+                timed_list *tl = NULL;
+                list_enum_part(tl, ta, current)
                 {
-                    if(tl->action_index==comm_index)
+                    if(tl->action_index == comm_index)
                     {
                         pthread_cond_signal(&tl->cond);
+
                         if(tl->time_thread)
                         {
-                            pthread_join(tl->time_thread,NULL);
-                            memset(&tl->time_thread,0,sizeof(pthread_t));
+                            pthread_join(tl->time_thread, NULL);
+                            memset(&tl->time_thread, 0, sizeof(pthread_t));
                         }
+
                         break;
                     }
                 }
@@ -211,68 +216,68 @@ void timed_action_command(void *spv,unsigned char *command)
 
 void timed_action_destroy(void **spv)
 {
-    list_entry *ta=*spv;
+    list_entry *ta = *spv;
     timed_action_destroy_list(ta);
     sfree(spv);
 }
 
 
-static timed_action_list *timed_action_list_entry(list_entry *act_head,size_t index)
+static timed_action_list *timed_action_list_entry(list_entry *act_head, size_t index)
 {
-    timed_action_list *tal=NULL;
-    timed_action_list *ltal=NULL;
-    list_enum_part(ltal,act_head,current)
+    timed_action_list *tal = NULL;
+    timed_action_list *ltal = NULL;
+    list_enum_part(ltal, act_head, current)
     {
-        if(index==ltal->index)
+        if(index == ltal->index)
         {
-            tal=ltal;
+            tal = ltal;
             break;
         }
     }
 
-    if(tal==NULL)
+    if(tal == NULL)
     {
-        tal=zmalloc(sizeof(timed_action_list));
+        tal = zmalloc(sizeof(timed_action_list));
         pthread_mutexattr_t mutex_attr;
         pthread_mutexattr_init(&mutex_attr);
-        pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
-        pthread_mutex_init(&tal->cmd_mtx,&mutex_attr);
+        pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
+        pthread_mutex_init(&tal->cmd_mtx, &mutex_attr);
         pthread_mutexattr_destroy(&mutex_attr);
         list_entry_init(&tal->current);
-        tal->index=index;
-        linked_list_add_last(&tal->current,act_head);
+        tal->index = index;
+        linked_list_add_last(&tal->current, act_head);
     }
 
     return(tal);
 }
 
-static timed_list *timed_list_entry(list_entry *list,size_t index)
+static timed_list *timed_list_entry(list_entry *list, size_t index)
 {
-    timed_list *ltl=NULL;
-    timed_list *tl=NULL;
-    list_enum_part(ltl,list,current)
+    timed_list *ltl = NULL;
+    timed_list *tl = NULL;
+    list_enum_part(ltl, list, current)
     {
-        if(ltl->action_index==index)
+        if(ltl->action_index == index)
         {
-            tl=ltl;
+            tl = ltl;
             break;
         }
     }
 
-    if(tl==NULL)
+    if(tl == NULL)
     {
-        tl=zmalloc(sizeof(timed_list));
-        pthread_cond_init(&tl->cond,NULL);
-        tl->running=safe_flag_init();
+        tl = zmalloc(sizeof(timed_list));
+        pthread_cond_init(&tl->cond, NULL);
+        tl->running = safe_flag_init();
         pthread_mutexattr_t mutex_attr;
         pthread_mutexattr_init(&mutex_attr);
-        pthread_mutexattr_settype(&mutex_attr,PTHREAD_MUTEX_RECURSIVE_NP);
-        pthread_mutex_init(&tl->mutex,&mutex_attr);
+        pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
+        pthread_mutex_init(&tl->mutex, &mutex_attr);
         pthread_mutexattr_destroy(&mutex_attr);
         list_entry_init(&tl->current);
         list_entry_init(&tl->act_chain);
-        tl->action_index=index;
-        linked_list_add_last(&tl->current,list);
+        tl->action_index = index;
+        linked_list_add_last(&tl->current, list);
     }
 
     return(tl);
@@ -282,27 +287,28 @@ static timed_list *timed_list_entry(list_entry *list,size_t index)
 
 static void timed_action_destroy_list(list_entry *head)
 {
-    timed_list *tl=NULL;
-    timed_list *ttl=NULL;
-    list_enum_part_safe(tl,ttl,head,current)
+    timed_list *tl = NULL;
+    timed_list *ttl = NULL;
+    list_enum_part_safe(tl, ttl, head, current)
     {
-        timed_action_list *tal=NULL;
-        timed_action_list *ttal=NULL;
+        timed_action_list *tal = NULL;
+        timed_action_list *ttal = NULL;
         pthread_mutex_lock(&tl->mutex);
         pthread_cond_signal(&tl->cond);                         /*signal the thread to end*/
 
         if(tl->time_thread)
         {
-            pthread_join(tl->time_thread,NULL);
-            memset(&tl->time_thread,0,sizeof(pthread_t));
+            pthread_join(tl->time_thread, NULL);
+            memset(&tl->time_thread, 0, sizeof(pthread_t));
         }
+
         linked_list_remove(&tl->current);                       /*remove the timed list from the chain*/
         pthread_cond_destroy(&tl->cond);                        /*destroy the condition variable*/
         pthread_mutex_unlock(&tl->mutex);
         pthread_mutex_destroy(&tl->mutex);
         safe_flag_destroy(&tl->running);
         /*destroy the action list for the timed action*/
-        list_enum_part_safe(tal,ttal,&tl->act_chain,current)
+        list_enum_part_safe(tal, ttal, &tl->act_chain, current)
         {
             linked_list_remove(&tal->current);                  /*remove the action*/
             pthread_mutex_lock(&tal->cmd_mtx);                      /*make sure we own the mutex*/
@@ -319,24 +325,24 @@ static void timed_action_destroy_list(list_entry *head)
 
 static void *timed_action_exec(void *pv)
 {
-    timed_list *tl=pv;
-    timed_action_list *tal=NULL;
-    safe_flag_set(tl->running,2);
-    int ret=-1;
+    timed_list *tl = pv;
+    timed_action_list *tal = NULL;
+    safe_flag_set(tl->running, 2);
+    int ret = -1;
 
-    list_enum_part(tal,&tl->act_chain,current)
+    list_enum_part(tal, &tl->act_chain, current)
     {
-        for(size_t i=0; i<=tal->repeat_count; i++)
+        for(size_t i = 0; i <= tal->repeat_count; i++)
         {
             struct timeval tv;
             struct timespec ts;
 
 
             pthread_mutex_t mtx;
-            pthread_mutex_init(&mtx,NULL);
+            pthread_mutex_init(&mtx, NULL);
 
             pthread_mutex_lock(&tal->cmd_mtx);
-            tal->act!=NULL?send_command(tl->ip,tal->act):0;
+            tal->act != NULL ? send_command(tl->ip, tal->act) : 0;
             pthread_mutex_unlock(&tal->cmd_mtx);
 
             gettimeofday(&tv, NULL);
@@ -346,18 +352,19 @@ static void *timed_action_exec(void *pv)
             ts.tv_nsec %= (1000 * 1000 * 1000);
 
             pthread_mutex_lock(&mtx);
-            ret=pthread_cond_timedwait(&tl->cond, &mtx, &ts);
+            ret = pthread_cond_timedwait(&tl->cond, &mtx, &ts);
             pthread_mutex_unlock(&mtx);
             pthread_mutex_destroy(&mtx);
 
-            if(ret==0)
+            if(ret == 0)
                 break;
         }
-        if(ret==0)
+
+        if(ret == 0)
             break;
     }
 
-    safe_flag_set(tl->running,0);
+    safe_flag_set(tl->running, 0);
     return(NULL);
 }
 
@@ -367,40 +374,40 @@ static int timed_action_string_filter(string_tokenizer_status *pi, void* pv)
 
     if(pi->reset)
     {
-        memset(tats,0,sizeof(timed_action_tokenizer_status));
+        memset(tats, 0, sizeof(timed_action_tokenizer_status));
         return(0);
     }
 
-    if(tats->quote_type==0 && (pi->buf[pi->pos]=='"'||pi->buf[pi->pos]=='\''))
+    if(tats->quote_type == 0 && (pi->buf[pi->pos] == '"' || pi->buf[pi->pos] == '\''))
     {
-        tats->quote_type=pi->buf[pi->pos];
+        tats->quote_type = pi->buf[pi->pos];
     }
 
-    if(pi->buf[pi->pos]==tats->quote_type)
+    if(pi->buf[pi->pos] == tats->quote_type)
     {
         tats->quotes++;
     }
 
-    if(tats->quotes%2)
+    if(tats->quotes % 2)
     {
         return(0);
     }
     else
     {
-        tats->quote_type=0;
+        tats->quote_type = 0;
     }
 
     if(pi->buf[pi->pos] == '(')
     {
-        if(++tats->op==1)
+        if(++tats->op == 1)
         {
             return(1);
         }
     }
 
-    if(tats->op&&pi->buf[pi->pos] == ')')
+    if(tats->op && pi->buf[pi->pos] == ')')
     {
-        if(--tats->op==0)
+        if(--tats->op == 0)
         {
             return(0);
         }
@@ -408,10 +415,10 @@ static int timed_action_string_filter(string_tokenizer_status *pi, void* pv)
 
     if(pi->buf[pi->pos] == ';')
     {
-        return (tats->op==0);
+        return (tats->op == 0);
     }
 
-    if(tats->op%2&&pi->buf[pi->pos] == ',')
+    if(tats->op % 2 && pi->buf[pi->pos] == ',')
     {
         return (1);
     }
@@ -420,112 +427,112 @@ static int timed_action_string_filter(string_tokenizer_status *pi, void* pv)
 }
 
 
-size_t timed_action_fill_list(list_entry *head,string_tokenizer_info *sti,void *ip)
+size_t timed_action_fill_list(list_entry *head, string_tokenizer_info *sti, void *ip)
 {
-    unsigned char push_params=0;
-    unsigned char finished=0;
-    unsigned char step=0;
-    size_t entries=0;
+    unsigned char push_params = 0;
+    unsigned char finished = 0;
+    unsigned char step = 0;
+    size_t entries = 0;
 
-    timed_type type=none;
-    timed_action_list *tal=NULL;
+    timed_type type = none;
+    timed_action_list *tal = NULL;
 
-    for(size_t i=0; i<sti->oveclen/2; i++)
+    for(size_t i = 0; i < sti->oveclen / 2; i++)
     {
-        size_t start = sti->ovecoff[2*i];
-        size_t end   = sti->ovecoff[2*i+1];
+        size_t start = sti->ovecoff[2 * i];
+        size_t end   = sti->ovecoff[2 * i + 1];
 
-        if(start==end)
+        if(start == end)
         {
             continue;
         }
 
         /*Clean spaces*/
-        if(string_strip_space_offsets(sti->buffer,&start,&end)==0)
+        if(string_strip_space_offsets(sti->buffer, &start, &end) == 0)
         {
-            if(sti->buffer[start]=='(')
+            if(sti->buffer[start] == '(')
             {
                 start++;
-                push_params=1;
+                push_params = 1;
             }
-            else if(sti->buffer[start]==',')
+            else if(sti->buffer[start] == ',')
             {
                 start++;
             }
-            else if(sti->buffer[start]==';')
+            else if(sti->buffer[start] == ';')
             {
-                push_params=0;
-                step=0;
-                finished=0;
+                push_params = 0;
+                step = 0;
+                finished = 0;
                 start++;
 
-                type=none;
+                type = none;
             }
 
-            if(sti->buffer[end-1]==')')
+            if(sti->buffer[end - 1] == ')')
             {
                 end--;
-                finished=1;
-                step=0;
+                finished = 1;
+                step = 0;
             }
         }
 
-        if(string_strip_space_offsets(sti->buffer,&start,&end)==0)
+        if(string_strip_space_offsets(sti->buffer, &start, &end) == 0)
         {
-            if(sti->buffer[start]=='"'||sti->buffer[start]=='\'')
+            if(sti->buffer[start] == '"' || sti->buffer[start] == '\'')
                 start++;
 
-            if(sti->buffer[end-1]=='"'||sti->buffer[end-1]=='\'')
+            if(sti->buffer[end - 1] == '"' || sti->buffer[end - 1] == '\'')
                 end--;
         }
 
         /********************************************************************/
-        if(push_params&&finished==0) //receiving parameters
+        if(push_params && finished == 0) //receiving parameters
         {
-            if(type==repeat)
+            if(type == repeat)
             {
-                if(step==0)
+                if(step == 0)
                 {
-                    unsigned char *kn=zmalloc((end-start)+1);
-                    strncpy(kn,sti->buffer+start,end-start);
-                    tal->act=clone_string(param_string(kn,EXTENSION_XPAND_ALL,ip,NULL));
+                    unsigned char *kn = zmalloc((end - start) + 1);
+                    strncpy(kn, sti->buffer + start, end - start);
+                    tal->act = clone_string(param_string(kn, EXTENSION_XPAND_ALL, ip, NULL));
                     sfree((void**)&kn);
                     step++;
                 }
-                else if(step==1)
+                else if(step == 1)
                 {
-                    tal->repeat_count=strtoull(sti->buffer+start,NULL,10)+1;
+                    tal->repeat_count = strtoull(sti->buffer + start, NULL, 10) + 1;
                     step++;
                 }
             }
         }
-        else if(push_params==0&&finished==0) //we've receiving the Wait/Repeat or just a simple action
+        else if(push_params == 0 && finished == 0) //we've receiving the Wait/Repeat or just a simple action
         {
-            tal=timed_action_list_entry(head,entries++);
+            tal = timed_action_list_entry(head, entries++);
             pthread_mutex_lock(&tal->cmd_mtx);
             sfree((void**)&tal->act);
-            tal->wait_timeout=0;
-            tal->repeat_count=1;
+            tal->wait_timeout = 0;
+            tal->repeat_count = 1;
 
-            if(strncasecmp("Repeat",sti->buffer+start,end-start)==0)
+            if(strncasecmp("Repeat", sti->buffer + start, end - start) == 0)
             {
-                type=repeat;
+                type = repeat;
             }
-            else if(strncasecmp("Wait",sti->buffer+start,end-start)==0)
+            else if(strncasecmp("Wait", sti->buffer + start, end - start) == 0)
             {
-                type=wait;
+                type = wait;
             }
             else
             {
-                unsigned char *kn=zmalloc((end-start)+1);
-                strncpy(kn,sti->buffer+start,end-start);
-                tal->act=clone_string(param_string(kn,EXTENSION_XPAND_ALL,ip,NULL));
+                unsigned char *kn = zmalloc((end - start) + 1);
+                strncpy(kn, sti->buffer + start, end - start);
+                tal->act = clone_string(param_string(kn, EXTENSION_XPAND_ALL, ip, NULL));
                 sfree((void**)&kn);
             }
         }
         else
         {
-            tal->wait_timeout=((type==repeat||type==wait)?strtoull(sti->buffer+start,NULL,10):0);
+            tal->wait_timeout = ((type == repeat || type == wait) ? strtoull(sti->buffer + start, NULL, 10) : 0);
             pthread_mutex_unlock(&tal->cmd_mtx);
         }
     }

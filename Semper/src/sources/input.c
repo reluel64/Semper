@@ -64,24 +64,24 @@ static int input_parse_string_filter(tokenize_string_status *pi, void* pv)
     input_tokenizer_status* its = pv;
 
     if(pi->reset)
-        memset(its,0,sizeof(input_tokenizer_status));
+        memset(its, 0, sizeof(input_tokenizer_status));
 
 
-    if(its->quote_type==0 && (pi->buf[pi->pos]=='"'||pi->buf[pi->pos]=='\''))
-        its->quote_type=pi->buf[pi->pos];
+    if(its->quote_type == 0 && (pi->buf[pi->pos] == '"' || pi->buf[pi->pos] == '\''))
+        its->quote_type = pi->buf[pi->pos];
 
-    if(pi->buf[pi->pos]==its->quote_type)
+    if(pi->buf[pi->pos] == its->quote_type)
         its->quotes++;
 
-    if(its->quotes%2)
+    if(its->quotes % 2)
         return(0);
     else
-        its->quote_type=0;
+        its->quote_type = 0;
 
     if(pi->buf[pi->pos] == ';')
-        return (its->quote_type==0);
+        return (its->quote_type == 0);
 
-    if(its->op%2&&pi->buf[pi->pos] == ',')
+    if(its->op % 2 && pi->buf[pi->pos] == ',')
         return (1);
 
     return (0);
@@ -92,51 +92,51 @@ static int input_parse_string_filter(tokenize_string_status *pi, void* pv)
  and execute the ones without it*/
 static int input_get_command(input_text *it)
 {
-    input_text_command *itc=NULL;
-    int found=0;
+    input_text_command *itc = NULL;
+    int found = 0;
 
 
     while(1)
     {
 
-        if(it->ovec_pos>=it->tsi.oveclen/2)
+        if(it->ovec_pos >= it->tsi.oveclen / 2)
         {
-            if(it->start_command<it->end_command)
+            if(it->start_command < it->end_command)
             {
-                it->wcommand= it->start_command++;
+                it->wcommand = it->start_command++;
             }
-            else if(it->start_command>it->end_command)
+            else if(it->start_command > it->end_command)
             {
-                it->wcommand= it->start_command--;
+                it->wcommand = it->start_command--;
             }
             else
             {
-                it->wcommand=it->start_command;
+                it->wcommand = it->start_command;
             }
         }
 
-        list_enum_part(itc,&it->commands,current)
+        list_enum_part(itc, &it->commands, current)
         {
-            if(it->ovec_pos>=it->tsi.oveclen/2)
+            if(it->ovec_pos >= it->tsi.oveclen / 2)
             {
                 tokenize_string_free(&it->tsi);
             }
 
-            if(itc->index== it->wcommand)
+            if(itc->index == it->wcommand)
             {
-                if(it->ovec_pos>=it->tsi.oveclen/2)
+                if(it->ovec_pos >= it->tsi.oveclen / 2)
                 {
-                    it->ovec_pos=0;
-                    it->current_command=itc->command;
+                    it->ovec_pos = 0;
+                    it->current_command = itc->command;
 
-                    input_tokenizer_status its= {0};
+                    input_tokenizer_status its = {0};
 
-                    it->tsi.tokenize_string_filter=input_parse_string_filter;
-                    it->tsi.filter_data=&its;
-                    it->tsi.buffer=itc->command;
+                    it->tsi.tokenize_string_filter = input_parse_string_filter;
+                    it->tsi.filter_data = &its;
+                    it->tsi.buffer = itc->command;
                     tokenize_string(&it->tsi);
-                    it->tsi.tokenize_string_filter=NULL;
-                    it->tsi.filter_data=NULL;
+                    it->tsi.tokenize_string_filter = NULL;
+                    it->tsi.filter_data = NULL;
 
                 }
                 else
@@ -144,16 +144,16 @@ static int input_get_command(input_text *it)
                     it->ovec_pos++;
                 }
 
-                for(; it->ovec_pos<it->tsi.oveclen/2; it->ovec_pos++)
+                for(; it->ovec_pos < it->tsi.oveclen / 2; it->ovec_pos++)
                 {
-                    for(size_t i=it->tsi.ovecoff[it->ovec_pos*2]; it->tsi.ovecoff[it->ovec_pos*2+1]-i>=11; i++)
+                    for(size_t i = it->tsi.ovecoff[it->ovec_pos * 2]; it->tsi.ovecoff[it->ovec_pos * 2 + 1] - i >= 11; i++)
                     {
-                        unsigned char *str=it->current_command+i;
+                        unsigned char *str = it->current_command + i;
 
-                        if(strncasecmp(str,"$TextInput$",11)==0)
+                        if(strncasecmp(str, "$TextInput$", 11) == 0)
                         {
                             /*Found a string that has $TextInput$*/
-                            found=1;
+                            found = 1;
                             break;
                         }
                     }
@@ -164,11 +164,11 @@ static int input_get_command(input_text *it)
                     }
                     else
                     {
-                        unsigned char *comm=it->current_command+it->tsi.ovecoff[it->ovec_pos*2];
-                        unsigned char temp=it->current_command[it->tsi.ovecoff[it->ovec_pos*2+1]];
-                        it->current_command[it->tsi.ovecoff[it->ovec_pos*2+1]]=0;
-                        send_command(it->ip,comm);
-                        it->current_command[it->tsi.ovecoff[it->ovec_pos*2+1]]=temp;
+                        unsigned char *comm = it->current_command + it->tsi.ovecoff[it->ovec_pos * 2];
+                        unsigned char temp = it->current_command[it->tsi.ovecoff[it->ovec_pos * 2 + 1]];
+                        it->current_command[it->tsi.ovecoff[it->ovec_pos * 2 + 1]] = 0;
+                        send_command(it->ip, comm);
+                        it->current_command[it->tsi.ovecoff[it->ovec_pos * 2 + 1]] = temp;
                     }
                 }
 
@@ -181,9 +181,9 @@ static int input_get_command(input_text *it)
         if(found)
             break;
 
-        if(it->start_command==it->end_command)
+        if(it->start_command == it->end_command)
         {
-            found=-1;
+            found = -1;
             break;
         }
     }
@@ -194,64 +194,64 @@ static int input_get_command(input_text *it)
 
 static void input_update_ret_buf(input_text *it)
 {
-    unsigned char *ret_tmp=NULL;
+    unsigned char *ret_tmp = NULL;
     sfree((void**)&it->ret_str);
-    it->ret_str_len=0;
-    ret_tmp=ucs32_to_utf8(it->buf,&it->ret_str_len,0);
-    it->ret_str=zmalloc(it->ret_str_len+3);
-    strncpy(it->ret_str,ret_tmp,it->ret_str_len);
+    it->ret_str_len = 0;
+    ret_tmp = ucs32_to_utf8(it->buf, &it->ret_str_len, 0);
+    it->ret_str = zmalloc(it->ret_str_len + 3);
+    strncpy(it->ret_str, ret_tmp, it->ret_str_len);
     sfree((void**)&ret_tmp);
 }
 
 static void input_exec_handler(input_text *it)
 {
-    unsigned char *user_inp=ucs32_to_utf8(it->buf,NULL,0);
-    memset(it->buf,0,it->buf_pos*sizeof(unsigned int));
+    unsigned char *user_inp = ucs32_to_utf8(it->buf, NULL, 0);
+    memset(it->buf, 0, it->buf_pos * sizeof(unsigned int));
 
-    it->buf_pos=0;
+    it->buf_pos = 0;
     input_update_ret_buf(it);
 
-    if(it->ovec_pos<it->tsi.oveclen/2&&user_inp)
+    if(it->ovec_pos < it->tsi.oveclen / 2 && user_inp)
     {
-        size_t start=it->tsi.ovecoff[it->ovec_pos*2];
-        size_t end=it->tsi.ovecoff[it->ovec_pos*2+1];
+        size_t start = it->tsi.ovecoff[it->ovec_pos * 2];
+        size_t end = it->tsi.ovecoff[it->ovec_pos * 2 + 1];
 
-        if(it->current_command[start]==';')
+        if(it->current_command[start] == ';')
             start++;
 
-        size_t len=end-start;
-        unsigned char *temp=zmalloc(len+1);
-        strncpy(temp,it->current_command+start,len);
-        size_t flen=16+string_length(user_inp);
-        unsigned char *pair=zmalloc(flen+1);
-        snprintf(pair,flen,"($TextInput$,%s)",user_inp);
+        size_t len = end - start;
+        unsigned char *temp = zmalloc(len + 1);
+        strncpy(temp, it->current_command + start, len);
+        size_t flen = 16 + string_length(user_inp);
+        unsigned char *pair = zmalloc(flen + 1);
+        snprintf(pair, flen, "($TextInput$,%s)", user_inp);
 
-        unsigned char *final_command=replace(temp,pair,0);
+        unsigned char *final_command = replace(temp, pair, 0);
         sfree((void**)&temp);
         sfree((void**)&pair);
 
-        send_command(it->ip,final_command);
+        send_command(it->ip, final_command);
         sfree((void**)&final_command);
     }
 
     sfree((void**)&user_inp);
 
-    if(input_get_command(it)<0)
+    if(input_get_command(it) < 0)
     {
-        it->ovec_pos=0;
-        it->active=0;
-        it->tsi.oveclen=0;
-        it->ret_str[it->ret_str_len]=0;
+        it->ovec_pos = 0;
+        it->active = 0;
+        it->tsi.oveclen = 0;
+        it->ret_str[it->ret_str_len] = 0;
         tokenize_string_free(&it->tsi);
-        crosswin_set_kbd_handler(it->w,NULL,NULL);
+        crosswin_set_kbd_handler(it->w, NULL, NULL);
     }
 }
 
 static void input_destroy_list(input_text *it)
 {
-    input_text_command *itc=NULL;
-    input_text_command *titc=NULL;
-    list_enum_part_safe(itc,titc,&it->commands,current)
+    input_text_command *itc = NULL;
+    input_text_command *titc = NULL;
+    list_enum_part_safe(itc, titc, &it->commands, current)
     {
         sfree((void**)&itc->command);
         sfree((void**)&itc);
@@ -268,129 +268,129 @@ static void input_populate_list(input_text *it)
 
     do
     {
-        if(ev==NULL)
+        if(ev == NULL)
             break;
 
-        if(strncasecmp("Command",ev,7))
+        if(strncasecmp("Command", ev, 7))
             continue;
 
-        input_text_command *itc=zmalloc(sizeof(input_text_command));
-        itc->command=clone_string(param_string(ev,EXTENSION_XPAND_ALL,it->ip,NULL));
+        input_text_command *itc = zmalloc(sizeof(input_text_command));
+        itc->command = clone_string(param_string(ev, EXTENSION_XPAND_ALL, it->ip, NULL));
         //printf("%s\n",itc->command);
-        sscanf(ev,"Command%llu",&itc->index);
+        sscanf(ev, "Command%llu", &itc->index);
         list_entry_init(&itc->current);
-        linked_list_add_last(&itc->current,&it->commands);
+        linked_list_add_last(&itc->current, &it->commands);
     }
-    while((ev=enumerator_next_value(es))!=NULL);
+    while((ev = enumerator_next_value(es)) != NULL);
 
     enumerator_finish(&es);
 }
 
-static int input_kbd_handler(unsigned int key_code,void *pv)
+static int input_kbd_handler(unsigned int key_code, void *pv)
 {
-    input_text *it=pv;
+    input_text *it = pv;
 #ifdef DEBUG
-    printf("KeyCode %d\n",key_code);
+    printf("KeyCode %d\n", key_code);
 #endif
 
-    if(key_code=='\r')
+    if(key_code == '\r')
     {
         input_exec_handler(it);
     }
     else
     {
-        if(key_code==(unsigned int)'\b')
+        if(key_code == (unsigned int)'\b')
         {
             if(it->buf_pos)
                 it->buf_pos--;
 
-            if(it->number_only&&it->buf[it->buf_pos]=='.')
-                it->dot_set=0;
+            if(it->number_only && it->buf[it->buf_pos] == '.')
+                it->dot_set = 0;
 
-            it->buf[it->buf_pos]=0;
+            it->buf[it->buf_pos] = 0;
             input_update_ret_buf(it);
-            send_command(it->ip,"UpdateSurface()");
+            send_command(it->ip, "UpdateSurface()");
             return(0);
         }
 
         if(it->number_only)
         {
-            if(((it->buf_pos==0&&key_code=='.')||
-                    (it->dot_set&&key_code=='.'))||
-                    (it->buf_pos&&key_code=='-') ||
-                    (!isdigit(key_code)&&key_code!='-'&&key_code!='.'))
+            if(((it->buf_pos == 0 && key_code == '.') ||
+                    (it->dot_set && key_code == '.')) ||
+                    (it->buf_pos && key_code == '-') ||
+                    (!isdigit(key_code) && key_code != '-' && key_code != '.'))
                 return(-1);
-            else if(it->buf_pos!=0&&key_code=='.'&&it->dot_set==0)
-                it->dot_set=1;
+            else if(it->buf_pos != 0 && key_code == '.' && it->dot_set == 0)
+                it->dot_set = 1;
 
         }
 
-        if(it->buf_lim==0||it->buf_pos<it->buf_lim)
+        if(it->buf_lim == 0 || it->buf_pos < it->buf_lim)
         {
             /*Make the buffer comfy for the new character*/
 
-            if(it->buf_lim==0&&it->buf_sz<=it->buf_pos+1)
+            if(it->buf_lim == 0 && it->buf_sz <= it->buf_pos + 1)
             {
-                unsigned int *temp=zmalloc(sizeof(unsigned int)*(it->buf_sz+2+8192));
-                memcpy(temp,it->buf,sizeof(unsigned int)*it->buf_sz);
+                unsigned int *temp = zmalloc(sizeof(unsigned int) * (it->buf_sz + 2 + 8192));
+                memcpy(temp, it->buf, sizeof(unsigned int)*it->buf_sz);
                 sfree((void**)&it->buf);
-                it->buf=temp;
-                it->buf_sz+=8192;
+                it->buf = temp;
+                it->buf_sz += 8192;
             }
 
-            it->buf[it->buf_pos++]=key_code;
+            it->buf[it->buf_pos++] = key_code;
             input_update_ret_buf(it);
 
         }
     }
 
-    send_command(it->ip,"UpdateSurface()");
+    send_command(it->ip, "UpdateSurface()");
     return(0);
 }
 
-void input_init(void **spv,void *ip)
+void input_init(void **spv, void *ip)
 {
-    input_text *it=zmalloc(sizeof(input_text));
-    it->ip=ip;
+    input_text *it = zmalloc(sizeof(input_text));
+    it->ip = ip;
     list_entry_init(&it->commands);
-    it->w=((surface_data*)((source*)ip)->sd)->sw;
-    *spv=it;
+    it->w = ((surface_data*)((source*)ip)->sd)->sw;
+    *spv = it;
 }
 
-void input_reset(void *spv,void *ip)
+void input_reset(void *spv, void *ip)
 {
-    input_text *it=spv;
+    input_text *it = spv;
     sfree((void**)&it->buf);
-    it->buf_lim=param_size_t("MaxTextSize",ip,0);
-    it->number_only=param_bool("NumberOnly",ip,0);
-    it->ret_str=zmalloc(2);
-    it->current_command=NULL;
+    it->buf_lim = param_size_t("MaxTextSize", ip, 0);
+    it->number_only = param_bool("NumberOnly", ip, 0);
+    it->ret_str = zmalloc(2);
+    it->current_command = NULL;
     input_populate_list(it);
 
     tokenize_string_free(&it->tsi);
-    it->ovec_pos=0;
+    it->ovec_pos = 0;
 
     if(it->buf_lim)
     {
-        it->buf=zmalloc((it->buf_lim+1)*sizeof(unsigned int));
+        it->buf = zmalloc((it->buf_lim + 1) * sizeof(unsigned int));
     }
     else
     {
-        it->buf=zmalloc(sizeof(unsigned int)*3);
-        it->buf_sz=2;
+        it->buf = zmalloc(sizeof(unsigned int) * 3);
+        it->buf_sz = 2;
     }
 }
 
 double input_update(void *spv)
 {
-    input_text *it=spv;
+    input_text *it = spv;
 
     if(it->active)
     {
-        if(it->w->kb_data!=it)
-            it->ret_str[it->ret_str_len]=0;
+        if(it->w->kb_data != it)
+            it->ret_str[it->ret_str_len] = 0;
         else
-            it->ret_str[it->ret_str_len]= (it->ret_str[it->ret_str_len]=='|'?0:'|');
+            it->ret_str[it->ret_str_len] = (it->ret_str[it->ret_str_len] == '|' ? 0 : '|');
     }
 
     return(-1.0);
@@ -398,61 +398,61 @@ double input_update(void *spv)
 
 unsigned char *input_string(void *spv)
 {
-    input_text *it=spv;
+    input_text *it = spv;
 
-    return(it->ret_str?it->ret_str:(unsigned char*)"");
+    return(it->ret_str ? it->ret_str : (unsigned char*)"");
 }
 
-void input_command(void *spv,unsigned char *comm)
+void input_command(void *spv, unsigned char *comm)
 {
-    input_text *it=spv;
+    input_text *it = spv;
 
     if(comm)
     {
-        if(strncasecmp(comm,"Read",4)==0)
+        if(strncasecmp(comm, "Read", 4) == 0)
         {
-            if(it->active==0)
+            if(it->active == 0)
             {
-                it->active=1;
-                it->start_command=0;
-                sscanf(comm,"Read %llu-%llu",&it->start_command,&it->end_command);
+                it->active = 1;
+                it->start_command = 0;
+                sscanf(comm, "Read %llu-%llu", &it->start_command, &it->end_command);
 
-                if(strchr(comm,'-')==NULL)
+                if(strchr(comm, '-') == NULL)
                 {
-                    it->end_command=it->start_command+1;
+                    it->end_command = it->start_command + 1;
                 }
 
-                if(input_get_command(it)>0)
-                    crosswin_set_kbd_handler(it->w,input_kbd_handler,spv);
+                if(input_get_command(it) > 0)
+                    crosswin_set_kbd_handler(it->w, input_kbd_handler, spv);
             }
             else if(it->active)
             {
-                crosswin_set_kbd_handler(it->w,input_kbd_handler,spv);
+                crosswin_set_kbd_handler(it->w, input_kbd_handler, spv);
             }
         }
-        else if(it->active==1&&!strcasecmp(comm,"StopRead") && it->w->kb_data==it)
+        else if(it->active == 1 && !strcasecmp(comm, "StopRead") && it->w->kb_data == it)
         {
-            it->active=0;
+            it->active = 0;
             tokenize_string_free(&it->tsi);
-            it->ovec_pos=0;
-            it->tsi.oveclen=0;
-            crosswin_set_kbd_handler(it->w,NULL,NULL);
-            it->ret_str[it->ret_str_len]=0;
+            it->ovec_pos = 0;
+            it->tsi.oveclen = 0;
+            crosswin_set_kbd_handler(it->w, NULL, NULL);
+            it->ret_str[it->ret_str_len] = 0;
         }
     }
 }
 
 void input_destroy(void **spv)
 {
-    input_text *it=*spv;
+    input_text *it = *spv;
     sfree((void**)&it->ret_str);
     sfree((void**)&it->buf);
     tokenize_string_free(&it->tsi);
     input_destroy_list(it);
 
-    if(it->w->kb_data==it)
+    if(it->w->kb_data == it)
     {
-        crosswin_set_kbd_handler(it->w,NULL,NULL);
+        crosswin_set_kbd_handler(it->w, NULL, NULL);
     }
 
     sfree(spv);

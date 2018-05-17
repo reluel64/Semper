@@ -123,12 +123,12 @@ static void bind_populate(object* o)
         size_t index = 0;
         source* s = NULL;
 
-        sscanf(ev+6, "%llu", &index);
+        sscanf(ev + 6, "%llu", &index);
         unsigned char* sn = parameter_string(o, ev, NULL, XPANDER_OBJECT);
-        s = source_by_name(o->sd, sn,-1);
+        s = source_by_name(o->sd, sn, -1);
         sfree((void**)&sn);
 
-        if(s&&s->die==0)
+        if(s && s->die == 0)
         {
             binding* bs = bind_alloc(o, s);
             bind_alloc_index(bs, index);
@@ -139,15 +139,15 @@ static void bind_populate(object* o)
     enumerator_finish(&es);
 }
 
-unsigned char *bind_source_name(object *o,size_t index)
+unsigned char *bind_source_name(object *o, size_t index)
 {
-    binding *b=NULL;
-    list_enum_part(b,&o->bindings,current)
+    binding *b = NULL;
+    list_enum_part(b, &o->bindings, current)
     {
-        bind_index*bi=NULL;
-        list_enum_part(bi,&b->index,current)
+        bind_index*bi = NULL;
+        list_enum_part(bi, &b->index, current)
         {
-            if(index==bi->index)
+            if(index == bi->index)
             {
                 if(b->s)
                 {
@@ -241,7 +241,7 @@ void bind_unbind(surface_data* sd, source *s)
         binding* b = NULL;
         list_enum_part(b, &o->bindings, current)
         {
-            if(b->s==s)
+            if(b->s == s)
             {
                 bind_dealloc(&b);
                 break;
@@ -283,7 +283,7 @@ static void bind_create_strings(object* o, string_bind* sb)
     binding* b = NULL;
     list_enum_part(b, &o->bindings, current)
     {
-        if(!b->s || b->s->die||b->s->s_info)
+        if(!b->s || b->s->die || b->s->s_info)
         {
             continue;
         }
@@ -307,21 +307,25 @@ static void bind_create_strings(object* o, string_bind* sb)
         {
             switch(sb->self_scaling)
             {
-            case 1:
-                for(formula = s->d_info; formula > 1024.0; formula /= 1024.0, ++mul);
-                break;
+                case 1:
+                    for(formula = s->d_info; formula > 1024.0; formula /= 1024.0, ++mul);
 
-            case 2:
-                for(formula = s->d_info; formula > 1000.0; formula /= 1000.0, ++mul);
-                break;
+                    break;
 
-            case 3:
-                for(formula = s->d_info; formula > 1024.0 * 1024; formula /= (1024.0 * 1024), ++mul);
-                break;
+                case 2:
+                    for(formula = s->d_info; formula > 1000.0; formula /= 1000.0, ++mul);
 
-            case 4:
-                for(formula = s->d_info; formula > 1000.0 * 1000; formula /= (1000.0 * 1000), ++mul);
-                break;
+                    break;
+
+                case 3:
+                    for(formula = s->d_info; formula > 1024.0 * 1024; formula /= (1024.0 * 1024), ++mul);
+
+                    break;
+
+                case 4:
+                    for(formula = s->d_info; formula > 1000.0 * 1000; formula /= (1000.0 * 1000), ++mul);
+
+                    break;
             }
         }
 
@@ -382,9 +386,9 @@ static inline size_t bind_string_sz(object* o, size_t index)
         bind_index* bi = NULL;
         list_enum_part(bi, &b->index, current)
         {
-            if(bi->index==index)
+            if(bi->index == index)
             {
-                if(b->s&&b->s->s_info&&b->s->die==0)
+                if(b->s && b->s->s_info && b->s->die == 0)
                 {
                     return(b->s->s_info_len);
                 }
@@ -411,9 +415,9 @@ static inline unsigned char* bind_string(object* o, size_t index, size_t* sz)
         {
             if(bi->index == index)
             {
-                if(b->s&&b->s->s_info&&b->s->die==0)
+                if(b->s && b->s->s_info && b->s->die == 0)
                 {
-                    *sz=b->s->s_info_len;
+                    *sz = b->s->s_info_len;
                     return(b->s->s_info);
                 }
                 else

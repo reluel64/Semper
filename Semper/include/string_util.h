@@ -27,7 +27,7 @@ typedef struct
 
 
 void remove_be_space(unsigned char* s);
-int string_strip_space_offsets(unsigned char *buf,size_t *start,size_t *end);
+int string_strip_space_offsets(unsigned char *buf, size_t *start, size_t *end);
 double compute_formula(unsigned char* formula);
 size_t remove_end_begin_quotes(unsigned char* s);
 int remove_character(unsigned char* str, unsigned char ch);
@@ -50,7 +50,7 @@ unsigned char* string_lower(unsigned char* s);
 unsigned char is_file_type(unsigned char* file, unsigned char* ext);
 unsigned char* replace(unsigned char* in, unsigned char* rep_pair, unsigned char regexp);
 unsigned short* utf8_to_ucs(unsigned char* str);
-size_t utf8_len(unsigned char *str,size_t b_len);
+size_t utf8_len(unsigned char *str, size_t b_len);
 #ifndef WIN32
 char *strlwr(char *s);
 char *strupr(char *s);

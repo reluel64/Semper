@@ -32,7 +32,7 @@ typedef struct
     control_data* cd;
     unsigned char* comm;
 } extension_command;
-extern int diag_log(unsigned char lvl,char *fmt, ...);
+extern int diag_log(unsigned char lvl, char *fmt, ...);
 
 SEMPER_API double param_double(unsigned char* pn, void* ip, double def)
 {
@@ -111,13 +111,13 @@ SEMPER_API unsigned char* param_string(unsigned char* pn, unsigned char flags, v
 SEMPER_API void* get_surface(void* ip)
 {
     source* s = ip;
-    return(s?s->sd:NULL);
+    return(s ? s->sd : NULL);
 }
 
 SEMPER_API unsigned char* get_extension_name(void* ip)
 {
     source* s = ip;
-    return(s?skeleton_get_section_name(s->cs):NULL);
+    return(s ? skeleton_get_section_name(s->cs) : NULL);
 }
 
 SEMPER_API void* get_extension_by_name(unsigned char* name, void* ip)
@@ -126,7 +126,7 @@ SEMPER_API void* get_extension_by_name(unsigned char* name, void* ip)
 
     if(s && s->sd)
     {
-        return (source_by_name(s->sd, name,-1));
+        return (source_by_name(s->sd, name, -1));
     }
 
     return (NULL);
@@ -134,7 +134,7 @@ SEMPER_API void* get_extension_by_name(unsigned char* name, void* ip)
 
 SEMPER_API void* get_private_data(void* ip)
 {
-    return(ip?(((source*)ip)->pv):NULL);
+    return(ip ? (((source*)ip)->pv) : NULL);
 }
 
 SEMPER_API int is_parent_candidate(void* pc, void* ip)
@@ -144,13 +144,13 @@ SEMPER_API int is_parent_candidate(void* pc, void* ip)
 
     if(sp && s)
     {
-        if(s->type==sp->type)
+        if(s->type == sp->type)
         {
-            if(sp->type==1&&s->extension && sp->extension && !strcasecmp(s->extension, sp->extension))
+            if(sp->type == 1 && s->extension && sp->extension && !strcasecmp(s->extension, sp->extension))
             {
                 return(1);
             }
-            else if(sp->type==1)
+            else if(sp->type == 1)
             {
                 return(0);
             }
@@ -168,48 +168,51 @@ static int extension_command_handler(extension_command* ec)
     {
         return (-1);
     }
-    surface_data *sd=NULL;
-    int command_exec=0;
-    list_enum_part(sd,&ec->cd->surfaces,current)
+
+    surface_data *sd = NULL;
+    int command_exec = 0;
+    list_enum_part(sd, &ec->cd->surfaces, current)
     {
-        if(ec->sd==sd)
+        if(ec->sd == sd)
         {
             command(ec->sd, &ec->comm);
-            command_exec=1;
+            command_exec = 1;
             break;
         }
     }
 
-    if(command_exec==0)
+    if(command_exec == 0)
     {
-        if(ec->cd->srf_reg==ec->sd)
+        if(ec->cd->srf_reg == ec->sd)
         {
             command(ec->sd, &ec->comm);
-            command_exec=1;
+            command_exec = 1;
         }
     }
-    if(command_exec==0)
+
+    if(command_exec == 0)
     {
-        diag_warn("%s %d Surface %p was not found",__FUNCTION__,__LINE__,ec->sd);
+        diag_warn("%s %d Surface %p was not found", __FUNCTION__, __LINE__, ec->sd);
     }
+
     sfree((void**)&ec->comm);
     sfree((void**)&ec);
 
     return (0);
 }
 
-SEMPER_API void send_command_ex(void* ir, unsigned char* cmd,size_t timeout,char unique)
+SEMPER_API void send_command_ex(void* ir, unsigned char* cmd, size_t timeout, char unique)
 {
     if(ir && cmd)
     {
-        unsigned char flags=unique?EVENT_REMOVE_BY_DATA_HANDLER:0;
-        flags|=timeout>0?EVENT_PUSH_TIMER:0;
+        unsigned char flags = unique ? EVENT_REMOVE_BY_DATA_HANDLER : 0;
+        flags |= timeout > 0 ? EVENT_PUSH_TIMER : 0;
         source* s = ir;
         surface_data* sd = s->sd;
         control_data* cd = sd->cd;
         extension_command* ec = zmalloc(sizeof(extension_command));
         ec->sd = sd;
-        ec->cd=cd;
+        ec->cd = cd;
         ec->comm = clone_string(cmd);
         event_push(cd->eq, (event_handler)extension_command_handler, (void*)ec, timeout, flags); //we will queue this event to be processed later
     }
@@ -217,7 +220,7 @@ SEMPER_API void send_command_ex(void* ir, unsigned char* cmd,size_t timeout,char
 
 SEMPER_API void send_command(void* ir, unsigned char* cmd)
 {
-    send_command_ex(ir,cmd,0,0);
+    send_command_ex(ir, cmd, 0, 0);
 }
 
 
@@ -246,7 +249,7 @@ SEMPER_API void* get_parent(unsigned char* str, void* ip)
     if(str[0] == '[' && str[strl - 1] == ']')
     {
         source* s = ip;
-        source* p = source_by_name(s->sd, str + 1,strl-2);
+        source* p = source_by_name(s->sd, str + 1, strl - 2);
 
         if(is_parent_candidate(p, s))
         {
@@ -273,82 +276,82 @@ SEMPER_API void tokenize_string_free(tokenize_string_info *tsi)
     sfree((void**)&tsi->ovecoff);
 }
 
-SEMPER_API unsigned char *get_path(void *ip,unsigned char pth)
+SEMPER_API unsigned char *get_path(void *ip, unsigned char pth)
 {
-    if(ip==NULL)
+    if(ip == NULL)
     {
         return(NULL);
     }
 
-    source *s=ip;
-    surface_data *sd=s->sd;
-    control_data *cd=sd->cd;
+    source *s = ip;
+    surface_data *sd = s->sd;
+    control_data *cd = sd->cd;
 
     switch(pth)
     {
-    default:
-        return(NULL);
+        default:
+            return(NULL);
 
-    case EXTENSION_PATH_SEMPER:
-        return(cd->root_dir);
+        case EXTENSION_PATH_SEMPER:
+            return(cd->root_dir);
 
-    case EXTENSION_PATH_EXTENSIONS:
-        return(cd->ext_dir);
+        case EXTENSION_PATH_EXTENSIONS:
+            return(cd->ext_dir);
 
-    case EXTENSION_PATH_SURFACE:
-        return(sd->sp.surface_dir);
+        case EXTENSION_PATH_SURFACE:
+            return(sd->sp.surface_dir);
 
-    case EXTENSION_PATH_SURFACES:
-        return(cd->surface_dir);
+        case EXTENSION_PATH_SURFACES:
+            return(cd->surface_dir);
     }
 }
 
 
-SEMPER_API unsigned char *absolute_path(void *ip,unsigned char *rp,unsigned char pth)
+SEMPER_API unsigned char *absolute_path(void *ip, unsigned char *rp, unsigned char pth)
 {
-    if(ip==NULL||rp==NULL)
+    if(ip == NULL || rp == NULL)
     {
         return(NULL);
     }
 
-    source *s=ip;
-    surface_data *sd=s->sd;
-    control_data *cd=sd->cd;
-    unsigned char *root=NULL;
-    size_t rootl=0;
+    source *s = ip;
+    surface_data *sd = s->sd;
+    control_data *cd = sd->cd;
+    unsigned char *root = NULL;
+    size_t rootl = 0;
 
     switch(pth)
     {
-    default:
-        return(NULL);
+        default:
+            return(NULL);
 
-    case EXTENSION_PATH_SEMPER:
-        root=cd->root_dir;
-        rootl=cd->root_dir_length;
-        break;
+        case EXTENSION_PATH_SEMPER:
+            root = cd->root_dir;
+            rootl = cd->root_dir_length;
+            break;
 
-    case EXTENSION_PATH_EXTENSIONS:
-        root=cd->ext_dir;
-        rootl=cd->ext_dir_length;
-        break;
+        case EXTENSION_PATH_EXTENSIONS:
+            root = cd->ext_dir;
+            rootl = cd->ext_dir_length;
+            break;
 
-    case EXTENSION_PATH_SURFACE:
-        root=sd->sp.surface_dir;
-        rootl=string_length(sd->sp.surface_dir);
-        break;
+        case EXTENSION_PATH_SURFACE:
+            root = sd->sp.surface_dir;
+            rootl = string_length(sd->sp.surface_dir);
+            break;
 
-    case EXTENSION_PATH_SURFACES:
-        root=cd->surface_dir;
-        rootl=cd->surface_dir_length;
-        break;
+        case EXTENSION_PATH_SURFACES:
+            root = cd->surface_dir;
+            rootl = cd->surface_dir_length;
+            break;
     }
 
     if(root)
     {
-        size_t rpl=string_length(rp);
+        size_t rpl = string_length(rp);
         sfree((void**)&s->ext_str);
-        s->ext_str=zmalloc(rootl+rpl+2); //null + /
-        snprintf(s->ext_str,rootl+rpl+2,"%s/%s",root,rp);
+        s->ext_str = zmalloc(rootl + rpl + 2); //null + /
+        snprintf(s->ext_str, rootl + rpl + 2, "%s/%s", root, rp);
         uniform_slashes(s->ext_str);
         return(s->ext_str);
     }
@@ -356,37 +359,41 @@ SEMPER_API unsigned char *absolute_path(void *ip,unsigned char *rp,unsigned char
     return(NULL);
 }
 
-SEMPER_API int semper_event_remove(void *ip,event_handler eh, void* pv, unsigned char flags)
+SEMPER_API int semper_event_remove(void *ip, event_handler eh, void* pv, unsigned char flags)
 {
-    source *s=ip;
-    control_data *cd=NULL;
-    if(s&&s->sd)
+    source *s = ip;
+    control_data *cd = NULL;
+
+    if(s && s->sd)
     {
-        cd=((surface_data*)s->sd)->cd;
+        cd = ((surface_data*)s->sd)->cd;
     }
-    if(cd==NULL)
+
+    if(cd == NULL)
     {
         return(-1);
     }
 
-    event_remove(cd->eq,eh,pv,flags);
+    event_remove(cd->eq, eh, pv, flags);
     return(0);
 }
 
-SEMPER_API int semper_event_push(void *ip,event_handler handler, void* pv, size_t timeout, unsigned char flags)
+SEMPER_API int semper_event_push(void *ip, event_handler handler, void* pv, size_t timeout, unsigned char flags)
 {
-    source *s=ip;
-    control_data *cd=NULL;
-    if(s&&s->sd)
+    source *s = ip;
+    control_data *cd = NULL;
+
+    if(s && s->sd)
     {
-        cd=((surface_data*)s->sd)->cd;
+        cd = ((surface_data*)s->sd)->cd;
     }
-    if(cd==NULL)
+
+    if(cd == NULL)
     {
         return(-1);
     }
 
-    return(event_push(cd->eq,handler,pv,timeout,flags));
+    return(event_push(cd->eq, handler, pv, timeout, flags));
 }
 
 SEMPER_API void semper_safe_flag_destroy(void **psf)
@@ -397,9 +404,9 @@ SEMPER_API size_t semper_safe_flag_get(void *sf)
 {
     return(safe_flag_get(sf));
 }
-SEMPER_API void semper_safe_flag_set(void *sf,size_t flag)
+SEMPER_API void semper_safe_flag_set(void *sf, size_t flag)
 {
-    safe_flag_set(sf,flag);
+    safe_flag_set(sf, flag);
 }
 
 SEMPER_API void *semper_safe_flag_init(void)

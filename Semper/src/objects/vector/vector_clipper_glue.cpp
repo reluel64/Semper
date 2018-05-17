@@ -12,7 +12,7 @@ extern "C"   Clipper *vector_init_clipper(void)
     {
         return(new Clipper);
     }
-    catch (...)
+    catch(...)
     {
         return(NULL);
     }
@@ -32,28 +32,28 @@ extern "C"    Paths *vector_init_paths(void)
 
 extern "C"    void vector_destroy_paths(Paths **p)
 {
-    if(p&&*p)
+    if(p && *p)
     {
         delete *p;
-        *p=NULL;
+        *p = NULL;
     }
 }
 extern "C"    void vector_destroy_clipper(Clipper **c)
 {
-    if(c&&*c)
+    if(c && *c)
     {
         delete *c;
-        *c=NULL;
+        *c = NULL;
     }
 }
 
-extern "C"  void vector_add_paths(Clipper *c,Paths *p,PolyType t,int closed)
+extern "C"  void vector_add_paths(Clipper *c, Paths *p, PolyType t, int closed)
 {
-    if(c&&p)
+    if(c && p)
     {
         try
         {
-            c->AddPaths(*p,t,closed?true:false);
+            c->AddPaths(*p, t, closed ? true : false);
         }
         catch(...)
         {
@@ -62,11 +62,11 @@ extern "C"  void vector_add_paths(Clipper *c,Paths *p,PolyType t,int closed)
     }
 }
 
-extern "C"  void  vector_clip_paths(Clipper *c,Paths *p,ClipType t)
+extern "C"  void  vector_clip_paths(Clipper *c, Paths *p, ClipType t)
 {
     try
     {
-        c->Execute(t,*p,pftNonZero,pftNonZero);
+        c->Execute(t, *p, pftNonZero, pftNonZero);
     }
     catch(...)
     {
@@ -74,11 +74,11 @@ extern "C"  void  vector_clip_paths(Clipper *c,Paths *p,ClipType t)
     }
 }
 
-extern "C"    void vector_cairo_to_clip(cairo_t *cr,Paths *p)
+extern "C"    void vector_cairo_to_clip(cairo_t *cr, Paths *p)
 {
     try
     {
-        cairo::cairo_to_clipper(cr,*p,5.0);
+        cairo::cairo_to_clipper(cr, *p, 5.0);
     }
     catch(...)
     {
@@ -86,11 +86,11 @@ extern "C"    void vector_cairo_to_clip(cairo_t *cr,Paths *p)
     }
 }
 
-extern "C"   void vector_clip_to_cairo(cairo_t *cr,Paths *p)
+extern "C"   void vector_clip_to_cairo(cairo_t *cr, Paths *p)
 {
     try
     {
-        cairo::clipper_to_cairo(*p,cr,5.0);
+        cairo::clipper_to_cairo(*p, cr, 5.0);
     }
     catch(...)
     {

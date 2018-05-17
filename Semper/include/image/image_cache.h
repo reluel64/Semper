@@ -83,5 +83,5 @@ int image_cache_init(control_data *cd);
 int image_cache_cleanup(void* ic);
 void image_cache_destroy(void** ic);
 void image_cache_image_parameters(void* r, image_attributes* ia, unsigned char flags, char* pre);
-int image_cache_query_image(void *ic,image_attributes *ia,unsigned char **px,long width,long height);
-void image_cache_unref_image(void *ic,image_attributes *ia,unsigned char riz);
+int image_cache_query_image(void *ic, image_attributes *ia, unsigned char **px, long width, long height);
+void image_cache_unref_image(void *ic, image_attributes *ia, unsigned char riz);

@@ -53,7 +53,7 @@ int arc_render(object* o, cairo_t* cr)
 {
     arc_object* ao = o->pv;
     cairo_set_line_cap(cr, ao->rounded ? CAIRO_LINE_CAP_ROUND : CAIRO_LINE_CAP_SQUARE);
-    cairo_set_color(cr,ao->color);
+    cairo_set_color(cr, ao->color);
     cairo_set_line_width(cr, ao->width);
 
     if(ao->fill)
@@ -61,7 +61,7 @@ int arc_render(object* o, cairo_t* cr)
         cairo_move_to(cr, o->w / 2, o->h / 2);
     }
 
-    cairo_arc(cr, o->w / 2, o->h / 2, ao->radius, ao->start_angle,  DEG2RAD(ao->percents*360.0));
+    cairo_arc(cr, o->w / 2, o->h / 2, ao->radius, ao->start_angle,  DEG2RAD(ao->percents * 360.0));
 
     if(ao->fill)
     {

@@ -36,9 +36,18 @@ typedef struct
 
 } object_routine_entry;
 
-static int object_routines_table(object_routine_entry **ore,unsigned char *on)
+typedef enum
 {
-    static object_routine_entry tbl[]=
+    tooltip_none,
+    tooltip_top,
+    tooltip_bottom,
+    tooltip_left,
+    tooltip_right
+} tooltip_position;
+
+static int object_routines_table(object_routine_entry **ore, unsigned char *on)
+{
+    static object_routine_entry tbl[] =
     {
         /*Object name   Init routine    Reset routine       Update routine      Render routine             Destroy routine*/
         {"Custom",      NULL,           NULL,               NULL,               NULL,                                NULL},
@@ -53,26 +62,28 @@ static int object_routines_table(object_routine_entry **ore,unsigned char *on)
         {"Vector",      vector_init,    vector_reset,       NULL,               vector_render,             vector_destroy},
     };
 
-    if(on==NULL||ore==NULL)
+    if(on == NULL || ore == NULL)
     {
-        return(0);
+        return (0);
     }
 
-    for(size_t i=0; i<sizeof(tbl)/sizeof(object_routine_entry); i++)
+    for(size_t i = 0; i < sizeof(tbl) / sizeof(object_routine_entry); i++)
     {
-        if(!strcasecmp(tbl[i].obj_name,on))
+        if(!strcasecmp(tbl[i].obj_name, on))
         {
-            *ore=tbl+i;
-            if(i==0)
+            *ore = tbl + i;
+
+            if(i == 0)
             {
-                diag_error("%s %d Object Type: %s is not implemented",__FUNCTION__,__LINE__,tbl[i].obj_name);
-                return(0);
+                diag_error("%s %d Object Type: %s is not implemented", __FUNCTION__, __LINE__, tbl[i].obj_name);
+                return (0);
             }
-            return(i+1);
+
+            return (i + 1);
         }
     }
 
-    return(0);
+    return (0);
 }
 
 static void object_render_background(object* o, cairo_t* cr)
@@ -84,24 +95,24 @@ static void object_render_background(object* o, cairo_t* cr)
     double green = 0.0;
     double blue = 0.0;
     double alpha = 0.0;
-
-    color = (unsigned char*)&o->back_color;
-    red = (double)color[2] / 255.0;
-    green = (double)color[1] / 255.0;
-    blue = (double)color[0] / 255.0;
-    alpha = (double)color[3] / 255.0;
-    cairo_pattern_t* background = cairo_pattern_create_linear(w / 2, 0.0, w / 2, h);
+    cairo_pattern_t* background = NULL;
+    color = (unsigned char*) &o->back_color;
+    red = (double) color[2] / 255.0;
+    green = (double) color[1] / 255.0;
+    blue = (double) color[0] / 255.0;
+    alpha = (double) color[3] / 255.0;
+    background = cairo_pattern_create_linear(w / 2, 0.0, w / 2, h);
     cairo_pattern_add_color_stop_rgba(background, 0, red, green, blue, alpha);
 
     if(o->back_color_2)
     {
-        color = (unsigned char*)&o->back_color_2;
-        red = (double)color[2] / 255.0;
-        green = (double)color[1] / 255.0;
-        blue = (double)color[0] / 255.0;
-        alpha = (double)color[3] / 255.0;
-        cairo_pattern_add_color_stop_rgba(background, 1, red, green, blue, alpha);
         cairo_matrix_t m = { 0 };
+        color = (unsigned char*) &o->back_color_2;
+        red = (double) color[2] / 255.0;
+        green = (double) color[1] / 255.0;
+        blue = (double) color[0] / 255.0;
+        alpha = (double) color[3] / 255.0;
+        cairo_pattern_add_color_stop_rgba(background, 1, red, green, blue, alpha);
         cairo_matrix_init_translate(&m, w / 2, h / 2);
         cairo_matrix_rotate(&m, DEG2RAD(o->back_color_angle));
         cairo_matrix_translate(&m, -w / 2, -h / 2);
@@ -144,7 +155,7 @@ int object_calculate_coordinates(object* o)
         }
         else
         {
-            po=NULL;
+            po = NULL;
             break;
         }
     }
@@ -157,38 +168,39 @@ int object_calculate_coordinates(object* o)
         poy = po->y;
     }
 
-    long nx=o->x;
-    long ny=o->y;
+    long nx = o->x;
+    long ny = o->y;
     unsigned char reps[260] = { 0 };
     unsigned char* out = NULL;
 
     snprintf(reps, sizeof(reps), "(r,+%ld);(R,+%ld)", pox, pow + pox);
     out = replace(o->sx, reps, 0);
-    nx = (long)compute_formula(out);
-    sfree((void**)&out);
+    nx = (long) compute_formula(out);
+    sfree((void**) &out);
 
     memset(reps, 0, sizeof(reps));
 
     snprintf(reps, sizeof(reps), "(r,+%ld);(R,+%ld)", poy, poh + poy);
     out = replace(o->sy, reps, 0);
-    ny = (long)compute_formula(out);
-    sfree((void**)&out);
+    ny = (long) compute_formula(out);
+    sfree((void**) &out);
 
-    if(nx!=o->x||ny!=o->y)
+    if(nx != o->x || ny != o->y)
     {
-        o->x=nx;
-        o->y=ny;
+        o->x = nx;
+        o->y = ny;
     }
 
     return (1);
 }
 
-static void object_tweak_matrix(object *o,cairo_matrix_t *m)
+static void object_tweak_matrix(object *o, cairo_matrix_t *m)
 {
     long w = o->w < 0 ? o->auto_w : o->w;
     long h = o->h < 0 ? o->auto_h : o->h;
 
     cairo_matrix_init_translate(m, o->x + o->op.left, o->y + o->op.top);
+
     if(o->angle != 0.0)
     {
         cairo_matrix_translate(m, w / 2, h / 2);
@@ -198,34 +210,34 @@ static void object_tweak_matrix(object *o,cairo_matrix_t *m)
 }
 
 
-static unsigned char object_may_hit(object *o,cairo_t *cr,double x,double y,cairo_surface_t *s,long stride)
+static unsigned char object_may_hit(object *o, cairo_t *cr, double x, double y, cairo_surface_t *s, long stride)
 {
 
-    int ret=0;
+    int ret = 0;
     long w = o->w < 0 ? o->auto_w : o->w;
     long h = o->h < 0 ? o->auto_h : o->h;
-    cairo_matrix_t m= {0};
-    object_tweak_matrix(o,&m);
+    cairo_matrix_t m = {0};
+    object_tweak_matrix(o, &m);
     cairo_save(cr);
 
     cairo_set_matrix(cr, &m);
     cairo_new_path(cr);
-    cairo_rectangle(cr,0.0,0.0,(double)w,(double)h);
+    cairo_rectangle(cr, 0.0, 0.0, (double) w, (double) h);
     cairo_clip(cr);
-    cairo_set_color(cr,0xff000000);
+    cairo_set_color(cr, 0xff000000);
     cairo_paint(cr);
     cairo_surface_flush(s);
     unsigned char* imgb = cairo_image_surface_get_data(s);
 
-    size_t pos_in_buf = (size_t)x +(size_t)y*(size_t)stride;
+    size_t pos_in_buf = (size_t) x + (size_t) y * (size_t) stride;
 
-    if(imgb&&imgb[pos_in_buf])
+    if(imgb && imgb[pos_in_buf])
     {
-        ret=1;
+        ret = 1;
     }
 
     cairo_restore(cr);
-    return(ret);
+    return (ret);
 }
 
 
@@ -234,12 +246,12 @@ static void object_render_internal(object* o, cairo_t* cr)
     cairo_matrix_t m = { 0 };
     long ow = o->w < 0 ? o->auto_w : o->w;
     long oh = o->h < 0 ? o->auto_h : o->h;
-    object_tweak_matrix(o,&m);
+    object_tweak_matrix(o, &m);
 
     cairo_save(cr);
 
     cairo_new_path(cr);
-    cairo_rectangle(cr,(double)o->x,(double)o->y,(double)ow,(double)oh);
+    cairo_rectangle(cr, (double) o->x, (double) o->y, (double) ow, (double) oh);
     cairo_clip(cr);
     cairo_set_matrix(cr, &m);
 
@@ -253,7 +265,7 @@ static void object_render_internal(object* o, cairo_t* cr)
     cairo_restore(cr);
 }
 
-object* object_by_name(surface_data* sd, unsigned char* on,size_t len)
+object* object_by_name(surface_data* sd, unsigned char* on, size_t len)
 {
     object* o = NULL;
 
@@ -266,7 +278,7 @@ object* object_by_name(surface_data* sd, unsigned char* on,size_t len)
     {
         unsigned char* con = skeleton_get_section_name(o->os);
 
-        if(con && (len==(size_t)-1?!strcasecmp(con,on):!strncasecmp(con, on,len)))
+        if(con && (len == (size_t) - 1 ? !strcasecmp(con, on) : !strncasecmp(con, on, len)))
         {
             if(o->die == 0)
             {
@@ -281,20 +293,20 @@ object* object_by_name(surface_data* sd, unsigned char* on,size_t len)
     return (NULL);
 }
 
-int object_tooltip_best(object *o);
+tooltip_position object_tooltip_best(object *o, long *x, long *y);
 
 int object_hit_testing(surface_data* sd, mouse_status* ms)
 {
     object* o = NULL;
-    object *lo=NULL;
+    object *lo = NULL;
 
     unsigned char found = 0;
-    unsigned char mouse_ret=0;
+    unsigned char mouse_ret = 0;
 
     if(ms->x >= 0 && ms->y >= 0 && ms->x < sd->w && ms->y < sd->h)
     {
 
-        long stride=cairo_format_stride_for_width (CAIRO_FORMAT_A8,sd->w);
+        long stride = cairo_format_stride_for_width(CAIRO_FORMAT_A8, sd->w);
         cairo_surface_t* cs = cairo_image_surface_create(CAIRO_FORMAT_A8, sd->w, sd->h);
 
         if(cairo_surface_status(cs))
@@ -314,8 +326,9 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
 
         list_enum_part_backward(o, &sd->objects, current)
         {
-            cairo_set_operator(ctx,CAIRO_OPERATOR_SOURCE);
-            if(o->enabled == 0 || o->hidden||!object_may_hit(o,ctx,(double)ms->x,(double)ms->y,cs,stride))
+            cairo_set_operator(ctx, CAIRO_OPERATOR_SOURCE);
+
+            if(o->enabled == 0 || o->hidden || !object_may_hit(o, ctx, (double) ms->x, (double) ms->y, cs, stride))
             {
                 continue;
             }
@@ -325,24 +338,24 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
 
             unsigned char* imgb = cairo_image_surface_get_data(cs);
 
-            size_t pos_in_buf = (size_t)ms->x +(size_t)ms->y*(size_t)stride;
+            size_t pos_in_buf = (size_t) ms->x + (size_t) ms->y * (size_t) stride;
 
-            if(imgb&&imgb[pos_in_buf])
+            if(imgb && imgb[pos_in_buf])
             {
-                if(o->object_type==9) //Button
+                if(o->object_type == 9)    //Button
                 {
-                    button_mouse(o,ms);
+                    button_mouse(o, ms);
                 }
 
-                mouse_ret=mouse_handle_button(o, MOUSE_OBJECT, ms);
-                found=1;
+                mouse_ret = mouse_handle_button(o, MOUSE_OBJECT, ms);
+                found = 1;
                 break;
             }
         }
 
-        if(found==0)
+        if(found == 0)
         {
-            o=NULL;
+            o = NULL;
         }
 
         cairo_destroy(ctx);
@@ -353,22 +366,22 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
 
     list_enum_part(lo, &sd->objects, current)
     {
-        if(lo!=o)
+        if(lo != o)
         {
             mouse_status dms = { 0 }; // dummy mouse status to signal that other objects are not important so they should trigger  MouseLeaveAction
             dms.state = mouse_button_state_none;
             dms.hover = mouse_unhover;
 
-            if(lo->object_type==9) //Button
+            if(lo->object_type == 9)    //Button
             {
-                button_mouse(lo,&dms);
+                button_mouse(lo, &dms);
             }
 
             mouse_handle_button(lo, MOUSE_OBJECT, &dms);
         }
     }
 
-    return (found&&mouse_ret);
+    return (found && mouse_ret);
 }
 
 void object_render(surface_data* sd, cairo_t* cr)
@@ -383,153 +396,157 @@ void object_render(surface_data* sd, cairo_t* cr)
 
         object_calculate_coordinates(o);
 
-        if(o->enabled && o->hidden == 0 )
+        if(o->enabled && o->hidden == 0)
         {
             object_render_internal(o, cr);
         }
     }
 }
-#if 0
-int object_tooltip_best(object *o)
+#if 1
+tooltip_position object_tooltip_best(object *o, long *x, long *y)
 {
-    surface_data *sd=o->sd;
-    control_data *cd=sd->cd;
+    surface_data *sd = o->sd;
+    control_data *cd = sd->cd;
+    tooltip_position tp = tooltip_none;
+    long mx = 0;
+    long my = 0;
+    long mw = 0;
+    long mh = 0;
+    int pos = 0; /* 0 - up/down | 1 left/right  */
+
     long ow = o->w < 0 ? o->auto_w : o->w;
     long oh = o->h < 0 ? o->auto_h : o->h;
 
+    pos = (ow >= oh) ? 0 : 1;   /*set the direction*/
 
-    long sx;
-    long sy;
-    long sw;
-    long sh;
-    unsigned char big_index = 2;
-    crosswin_monitor_origin(&cd->c,sd->sw,&sx,&sy);
-    crosswin_monitor_resolution(&cd->c,sd->sw,&sw,&sh);
-    long mx =  sx+sd->x+o->x+ow/2;
-    long my =  sy+sd->y+o->y+oh/2;
-    long poses[] =
-    {
-        sx + sd->x + o->x,  //left
-        sw - (sx+sd->x+o->x+ow), //right
-        sy + sd->y + o->y,    //top
-        sh - (sy+sd->y+o->y+oh) //bottom
-    };
+    crosswin_monitor_origin(&cd->c, sd->sw, &mx, &my);
+    crosswin_monitor_resolution(&cd->c, sd->sw, &mw, &mh);
 
-    for(unsigned char i=2; i<4; i++)
+    if(pos)
     {
-        if(poses[i]>poses[big_index])
-            big_index=i;
+        *x = sd->x + o->x + ow;
+        *y = sd->y + o->y + oh / 2;
+        tp = tooltip_right;
+
+        if(sd->x + o->x > mw - (sd->w + o->x + ow))
+        {
+            (*x) -= ow;
+            tp = tooltip_left;
+        }
     }
-
-    switch(big_index)
+    else
     {
-    case 0:
-        printf("Left\n");
-        break;
-    case 1:
-        printf("Right\n");
-        break;
-    case 2:
-        printf("Top\n");
-        break;
-    case 3:
-        printf("Bottom\n");
-        break;
+
+        *x = sd->x + o->x + ow / 2;
+        *y = sd->y + o->y + oh;
+        tp = tooltip_bottom;
+
+        if(sd->y + o->y > mh - (sd->y + o->y + oh))
+        {
+            tp = tooltip_top;
+            (*y) -= oh;
+        }
     }
+    return(tp);
 }
 
 #endif
 
 int object_tooltip_update(object *o)
 {
-    surface_data *tsd=o->ttip;
-    surface_data *sd=o->sd;
+#if 0
+    surface_data *tsd = o->ttip;
+    surface_data *sd = o->sd;
+
     if(o->ot.title)
     {
-        string_bind titsb= {0};
-        titsb.s_in=o->ot.title;
-        titsb.percentual=o->ot.percentual;
-        titsb.scale=o->ot.scale;
-        titsb.self_scaling=o->ot.scaling;
-        titsb.decimals=o->ot.decimals;
-        bind_update_string(o,&titsb);
+        string_bind titsb = {0};
+        titsb.s_in = o->ot.title;
+        titsb.percentual = o->ot.percentual;
+        titsb.scale = o->ot.scale;
+        titsb.self_scaling = o->ot.scaling;
+        titsb.decimals = o->ot.decimals;
+        bind_update_string(o, &titsb);
 
         if(titsb.s_out)
         {
-            unsigned char titfmt[]= {"Variable(Title,\"%s\")"};
-            size_t fbuf=sizeof(titfmt)+string_length(titsb.s_out);
-            unsigned char *buf=zmalloc(fbuf+1);
+            unsigned char titfmt[] = {"Variable(Title,\"%s\")"};
+            size_t fbuf = sizeof(titfmt) + string_length(titsb.s_out);
+            unsigned char *buf = zmalloc(fbuf + 1);
 
-            if(titsb.s_out[0]!=' ')
+            if(titsb.s_out[0] != ' ')
             {
-                snprintf(buf,fbuf,titfmt,titsb.s_out);
-                command(o->ttip,&buf);
+                snprintf(buf, fbuf, titfmt, titsb.s_out);
+                command(o->ttip, &buf);
             }
 
-            sfree((void**)&buf);
+            sfree((void**) &buf);
         }
     }
     else
     {
-        static unsigned char *empty_title="Parameter(Title,Disabled,1); \
+        static unsigned char *empty_title = "Parameter(Title,Disabled,1); \
                                      Parameter(Title,W,0);\
                                      Parameter(Title,H,0);\
                                      Parameter(Title,X,0);\
                                      Parameter(Title,Y,0);\
                                      Parameter(Text,Y,5r);";
-        command(o->ttip,&empty_title);
+        command(o->ttip, &empty_title);
     }
 
     if(o->ot.text)
     {
-        string_bind txtsb= {0};
-        txtsb.s_in=o->ot.text;
-        txtsb.percentual=o->ot.percentual;
-        txtsb.scale=o->ot.scale;
-        txtsb.self_scaling=o->ot.scaling;
-        txtsb.decimals=o->ot.decimals;
-        bind_update_string(o,&txtsb);
+        string_bind txtsb = {0};
+        txtsb.s_in = o->ot.text;
+        txtsb.percentual = o->ot.percentual;
+        txtsb.scale = o->ot.scale;
+        txtsb.self_scaling = o->ot.scaling;
+        txtsb.decimals = o->ot.decimals;
+        bind_update_string(o, &txtsb);
 
         if(txtsb.s_out)
         {
-            unsigned char txtfmt[]= {"Variable(Text,\"%s\")"};
-            size_t fbuf=sizeof(txtfmt)+string_length(txtsb.s_out);
-            unsigned char *buf=zmalloc(fbuf+1);
+            unsigned char txtfmt[] = {"Variable(Text,\"%s\")"};
+            size_t fbuf = sizeof(txtfmt) + string_length(txtsb.s_out);
+            unsigned char *buf = zmalloc(fbuf + 1);
 
-            if(txtsb.s_out[0]!=' ')
+            if(txtsb.s_out[0] != ' ')
             {
-                snprintf(buf,fbuf,txtfmt,txtsb.s_out);
-                command(o->ttip,&buf);
+                snprintf(buf, fbuf, txtfmt, txtsb.s_out);
+                command(o->ttip, &buf);
             }
 
-            sfree((void**)&buf);
+            sfree((void**) &buf);
         }
     }
     else
     {
 
-        static  unsigned char *empty_txt="Parameter(Text,Disabled,1);\
+        static  unsigned char *empty_txt = "Parameter(Text,Disabled,1);\
                                   Parameter(Text,W,0);\
                                   Parameter(Text,H,0);\
                                   Parameter(Text,X,0);\
                                   Parameter(Text,Y,0);";
-        command(o->ttip,&empty_txt);
+        command(o->ttip, &empty_txt);
     }
 
-    unsigned char *show_fade="ShowFade()";
+    unsigned char *show_fade = "ShowFade()";
+
     /*The tooltip relies on the parent object to update its contents.
      * Therefore, we need 3 fast update cycles to have everything nice
      * Cycles:
      * 1) Update the Title and the Text with the parameters set above
      * 2) Update the background size
      * 3) Update the reflect the new content*/
-    for(char cycle=0; cycle<3; cycle++)
+    for(char cycle = 0; cycle < 3; cycle++)
     {
         surface_update(o->ttip);
     }
-    crosswin_set_position(tsd->sw, (o->x+o->w/2+sd->x)-tsd->w/2,  o->y+o->h+sd->y);
-    command(o->ttip,&show_fade);
-    return(0);
+
+    crosswin_set_position(tsd->sw, (o->x + o->w / 2 + sd->x) - tsd->w / 2,  o->y + o->h + sd->y);
+    command(o->ttip, &show_fade);
+#endif
+    return (0);
 }
 
 int object_init(section s, surface_data* sd)
@@ -542,8 +559,8 @@ int object_init(section s, surface_data* sd)
     key k = skeleton_get_key(s, "Object");
     object* o = NULL;
     unsigned char* type = skeleton_key_value(k);
-    object_routine_entry *ore=NULL;
-    unsigned char obj_type=object_routines_table(&ore,type);
+    object_routine_entry *ore = NULL;
+    unsigned char obj_type = object_routines_table(&ore, type);
 
     if(!obj_type)
     {
@@ -564,11 +581,11 @@ int object_init(section s, surface_data* sd)
     o->sd = sd;
 
     /*For the moment we will initialize the function pointers here but this may change in the future*/
-    o->object_init_rtn=ore->object_init_rtn;
-    o->object_reset_rtn=ore->object_reset_rtn;
-    o->object_update_rtn=ore->object_update_rtn;
-    o->object_render_rtn=ore->object_render_rtn;
-    o->object_destroy_rtn=ore->object_destroy_rtn;
+    o->object_init_rtn = ore->object_init_rtn;
+    o->object_reset_rtn = ore->object_reset_rtn;
+    o->object_update_rtn = ore->object_update_rtn;
+    o->object_render_rtn = ore->object_render_rtn;
+    o->object_destroy_rtn = ore->object_destroy_rtn;
 
     list_entry_init(&o->current);
     list_entry_init(&o->bindings);
@@ -586,15 +603,15 @@ int object_init(section s, surface_data* sd)
 void object_reset(object* o)
 {
     surface_data* sd = o->sd;
-    bind_reset(o); /*Handle any change that may occur with the binded sources*/
+    bind_reset(o);    /*Handle any change that may occur with the binded sources*/
     mouse_set_actions(o, MOUSE_OBJECT);
-    sfree((void**)&o->update_act);
-    sfree((void**)&o->team);
-    sfree((void**)&o->sx);
-    sfree((void**)&o->sy);
+    sfree((void**) &o->update_act);
+    sfree((void**) &o->team);
+    sfree((void**) &o->sx);
+    sfree((void**) &o->sy);
 
-    sfree((void**)&o->ot.title);
-    sfree((void**)&o->ot.text);
+    sfree((void**) &o->ot.title);
+    sfree((void**) &o->ot.text);
 
 
     o->sx = parameter_string(o, "X", NULL, XPANDER_OBJECT);
@@ -608,7 +625,7 @@ void object_reset(object* o)
     o->back_color = parameter_color(o, "BackColor", 0, XPANDER_OBJECT);
     o->back_color_2 = parameter_color(o, "BackColor2", 0, XPANDER_OBJECT);
     o->enabled = !parameter_bool(o, "Disabled", 0, XPANDER_OBJECT);
-    o->divider = parameter_size_t(o, "Divider", sd->def_divider, XPANDER_OBJECT);
+    o->divider = parameter_size_t (o, "Divider", sd->def_divider, XPANDER_OBJECT);
     o->angle = parameter_double(o, "Angle", 0.0, XPANDER_OBJECT);
     o->back_color_angle = parameter_double(o, "BackColorAngle", 0.0, XPANDER_OBJECT);
     o->update_act = parameter_string(o, "UpdateAction", NULL, XPANDER_OBJECT);
@@ -621,11 +638,13 @@ void object_reset(object* o)
     o->ot.scale = parameter_double(o, "ToolTipScale", 0, XPANDER_OBJECT);
     o->ot.scaling = parameter_self_scaling(o, "ToolTipSelfScaling", 0, XPANDER_OBJECT);
     o->ot.decimals = parameter_byte(o, "ToolTipDecimals", 0, XPANDER_OBJECT);
+
     /*Do the private reset of the object */
     if(o->object_reset_rtn)
     {
         o->object_reset_rtn(o);
     }
+
     if(o->divider == 0)
     {
         o->divider = 1;
@@ -641,14 +660,19 @@ int object_update(object *o)
         object_reset(o);
     }
 
-    if(o->enabled==0)
-        return(0);
-    //  object_tooltip_best(o);
+    if(o->enabled == 0)
+        return (0);
+
+    long x = 0;
+    long y = 0;
+    tooltip_position tp = tooltip_none;
+    object_tooltip_best(o, &x, &y);
+
     if(o->object_update_rtn)
     {
         o->object_update_rtn(o);
 
-        if(o->ttip&&(o->ot.text||o->ot.title))
+        if(o->ttip && (o->ot.text || o->ot.title))
         {
             object_tooltip_update(o);
         }
@@ -656,7 +680,7 @@ int object_update(object *o)
         if(o->update_act_lock == 0)
         {
             o->update_act_lock = 1;
-            o->update_act?command(sd, &o->update_act):0;
+            o->update_act ? command(sd, &o->update_act) : 0;
             o->update_act_lock = 0;
         }
     }
@@ -670,15 +694,16 @@ void object_destroy(object** o)
     if(o && *o)
     {
         object* to = *o;
-        sfree((void**)&to->update_act);
-        sfree((void**)&to->team);
-        sfree((void**)&to->sx);
-        sfree((void**)&to->sy);
+        sfree((void**) &to->update_act);
+        sfree((void**) &to->team);
+        sfree((void**) &to->sx);
+        sfree((void**) &to->sy);
 
-        sfree((void**)&to->ot.title);
-        sfree((void**)&to->ot.text);
+        sfree((void**) &to->ot.title);
+        sfree((void**) &to->ot.text);
 
         surface_builtin_destroy(&to->ttip);
+
         if(to->object_destroy_rtn)
         {
             to->object_destroy_rtn(to);
@@ -689,6 +714,6 @@ void object_destroy(object** o)
         mouse_destroy_actions(&to->ma);
         skeleton_remove_section(&to->os);
         linked_list_remove(&to->current);
-        sfree((void**)o);
+        sfree((void**) o);
     }
 }

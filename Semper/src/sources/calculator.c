@@ -85,6 +85,7 @@ static inline unsigned short calculator_random(calculator* c)
             {
                 c->rnum = c->vec[--c->la];
             }
+
             return (c->rnum);
         }
         else
@@ -111,28 +112,28 @@ static inline unsigned short calculator_random(calculator* c)
     return (c->rnum);
 }
 
-static int calculator_math_parser(unsigned char *vn,size_t len,double *v,void *pv)
+static int calculator_math_parser(unsigned char *vn, size_t len, double *v, void *pv)
 {
-    calculator *c=pv;
+    calculator *c = pv;
 
-    if(strncasecmp("Random",vn,len)==0)
+    if(strncasecmp("Random", vn, len) == 0)
     {
 
-        *v=(double)calculator_random(c);
+        *v = (double)calculator_random(c);
         return(0);
     }
-    else if(strncasecmp("SurfaceCycle",vn,len)==0)
+    else if(strncasecmp("SurfaceCycle", vn, len) == 0)
     {
-        *v=(double)((surface_data*)c->sd)->cycle;
+        *v = (double)((surface_data*)c->sd)->cycle;
         return(0);
     }
     else
     {
-        source *s=source_by_name(c->sd,vn,len);
+        source *s = source_by_name(c->sd, vn, len);
 
         if(s)
         {
-            *v=(double)s->d_info;
+            *v = (double)s->d_info;
             return(0);
         }
     }
@@ -181,9 +182,9 @@ void calculator_reset(void* spv, void* ip)
 double calculator_update(void* spv)
 {
     calculator* c = spv;
-    double v=0.0;
+    double v = 0.0;
 
-    if(math_parser(c->frm,&v,calculator_math_parser,c))
+    if(math_parser(c->frm, &v, calculator_math_parser, c))
         return(0.0);
 
     return (v);

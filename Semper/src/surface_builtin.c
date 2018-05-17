@@ -14,13 +14,13 @@
 #include <surface_builtin.h>
 #include <event.h>
 
-static inline unsigned char* surface_builtin_code(size_t* size,surface_builtin_type tp)
+static inline unsigned char* surface_builtin_code(size_t* size, surface_builtin_type tp)
 {
     static char catalog_code[] =
     {
 #include <registry.h>
     };
-    static char tooltip_code[]=
+    static char tooltip_code[] =
     {
 #include <tooltip.h>
     };
@@ -29,22 +29,22 @@ static inline unsigned char* surface_builtin_code(size_t* size,surface_builtin_t
     {
         switch(tp)
         {
-        default:
-        {
-            return(NULL);
-        }
+            default:
+            {
+                return(NULL);
+            }
 
-        case catalog:
-        {
-            *size=sizeof(catalog_code);
-            return(catalog_code);
-        }
+            case catalog:
+            {
+                *size = sizeof(catalog_code);
+                return(catalog_code);
+            }
 
-        case tooltip:
-        {
-            *size=sizeof(tooltip_code);
-            return(tooltip_code);
-        }
+            case tooltip:
+            {
+                *size = sizeof(tooltip_code);
+                return(tooltip_code);
+            }
         }
     }
 
@@ -52,67 +52,67 @@ static inline unsigned char* surface_builtin_code(size_t* size,surface_builtin_t
 }
 
 
-int surface_builtin_init(void *holder,surface_builtin_type tp)
+int surface_builtin_init(void *holder, surface_builtin_type tp)
 {
 
-    if(holder==NULL)
+    if(holder == NULL)
     {
         return(-1);
     }
 
     switch(tp)
     {
-    case catalog:
-    {
-        control_data *cd=holder;
-
-        if(cd->srf_reg == NULL)
+        case catalog:
         {
-            long w = 0;
-            long h = 0;
-            long x = 0;
-            long y = 0;
-            size_t buf_sz=0;
-            unsigned char *buf=surface_builtin_code(&buf_sz,tp);
-            surface_data* sd =surface_load_memory(cd,buf,buf_sz,NULL);
-            crosswin_set_monitor(sd->sw,0);
-            crosswin_monitor_resolution(&cd->c,sd->sw, &w, &h);
-            crosswin_monitor_origin(&cd->c,sd->sw,&x,&y);
-            crosswin_set_position(sd->sw, (x+w / 2) - sd->w / 2, (y+h / 2) - sd->h / 2);
-            cd->srf_reg = sd;
-            return(0);
+            control_data *cd = holder;
+
+            if(cd->srf_reg == NULL)
+            {
+                long w = 0;
+                long h = 0;
+                long x = 0;
+                long y = 0;
+                size_t buf_sz = 0;
+                unsigned char *buf = surface_builtin_code(&buf_sz, tp);
+                surface_data* sd = surface_load_memory(cd, buf, buf_sz, NULL);
+                crosswin_set_monitor(sd->sw, 0);
+                crosswin_monitor_resolution(&cd->c, sd->sw, &w, &h);
+                crosswin_monitor_origin(&cd->c, sd->sw, &x, &y);
+                crosswin_set_position(sd->sw, (x + w / 2) - sd->w / 2, (y + h / 2) - sd->h / 2);
+                cd->srf_reg = sd;
+                return(0);
+            }
+
+            break;
+
         }
 
-        break;
-
-    }
-
-    case tooltip:
-    {
-        object *o=holder;
-        surface_data *osd=o->sd;
-        control_data *cd=osd->cd;
-
-        if(o->ttip == NULL&&(o->ot.text||o->ot.title))
+        case tooltip:
         {
-            size_t buf_sz=0;
-            unsigned char *buf=surface_builtin_code(&buf_sz,tp);
-            surface_data* sd =surface_load_memory(cd,buf,buf_sz,NULL);
-            sd->hidden=1;
-            crosswin_set_position(sd->sw, (o->x+osd->x),  o->y+o->h+osd->y);
+            object *o = holder;
+            surface_data *osd = o->sd;
+            control_data *cd = osd->cd;
 
-            crosswin_click_through(sd->sw,1);
+            if(o->ttip == NULL && (o->ot.text || o->ot.title))
+            {
+                size_t buf_sz = 0;
+                unsigned char *buf = surface_builtin_code(&buf_sz, tp);
+                surface_data* sd = surface_load_memory(cd, buf, buf_sz, NULL);
+                sd->hidden = 1;
+                crosswin_set_position(sd->sw, (o->x + osd->x),  o->y + o->h + osd->y);
 
-            crosswin_set_window_z_order(sd->sw,crosswin_topmost);
-            o->ttip=sd;
-            crosswin_hide(sd->sw);
-            object_tooltip_update(o);
+                crosswin_click_through(sd->sw, 1);
 
-            return(0);
+                crosswin_set_window_z_order(sd->sw, crosswin_topmost);
+                o->ttip = sd;
+                crosswin_hide(sd->sw);
+                object_tooltip_update(o);
+
+                return(0);
+            }
+
+            break;
         }
-
-        break;
-    }
     }
 
     return (-1);
@@ -121,7 +121,7 @@ int surface_builtin_init(void *holder,surface_builtin_type tp)
 int surface_builtin_destroy(void **pv)
 {
     surface_destroy(*pv);
-    *pv=NULL; /*set this to null as the surface will die on it's own*/
+    *pv = NULL; /*set this to null as the surface will die on it's own*/
     return (0);
 }
 
@@ -132,7 +132,7 @@ void surface_registry_dump(void)
     if(f)
     {
         size_t buf_sz = 0;
-        unsigned char* buf = surface_builtin_code(&buf_sz,catalog);
+        unsigned char* buf = surface_builtin_code(&buf_sz, catalog);
         fwrite(buf, 1, buf_sz, f);
         fclose(f);
     }
@@ -158,10 +158,10 @@ int surface_registry_file_to_string(unsigned char* s, unsigned char* d)
             {
                 fwrite(nl, 2, 1, df);
             }
-            else if(buf=='"')
+            else if(buf == '"')
             {
-                fputc('\\',df);
-                fputc('"',df);
+                fputc('\\', df);
+                fputc('"', df);
             }
             else
             {

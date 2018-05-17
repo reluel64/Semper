@@ -26,7 +26,7 @@ void string_source_reset(void* pv, void* ip)
     if(str)
     {
         ssi->str = clone_string(str);
-        ssi->len = utf8_len(str,0);
+        ssi->len = utf8_len(str, 0);
     }
 
     str = param_string("Mode", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "String");
@@ -37,13 +37,13 @@ void string_source_reset(void* pv, void* ip)
         {
             ssi->option = 0;
         }
-        else if(strcasecmp("Number",str)==0)
+        else if(strcasecmp("Number", str) == 0)
         {
-            ssi->option=1;
+            ssi->option = 1;
         }
-        else if(strcasecmp("String",str)==0)
+        else if(strcasecmp("String", str) == 0)
         {
-            ssi->option=3;
+            ssi->option = 3;
         }
     }
 }
@@ -54,14 +54,14 @@ double string_source_update(void* pv)
 
     switch(ssi->option)
     {
-    case 0:
-        return ((double)ssi->len);
+        case 0:
+            return ((double)ssi->len);
 
-    case 1:
-        return(strtod(ssi->str,NULL));
+        case 1:
+            return(strtod(ssi->str, NULL));
 
-    default:
-        return(-1.0);
+        default:
+            return(-1.0);
     }
 }
 

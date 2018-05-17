@@ -17,32 +17,32 @@
  *to be the most responsive object when it comes to transitions
  */
 
-int button_mouse(object *o,mouse_status *ms)
+int button_mouse(object *o, mouse_status *ms)
 {
-    surface_data *sd=o->sd;
-    button_object *bto=o->pv;
+    surface_data *sd = o->sd;
+    button_object *bto = o->pv;
 
 
-    if(bto->im_index&&ms->state==mouse_button_state_none&&ms->hover==mouse_hover)
+    if(bto->im_index && ms->state == mouse_button_state_none && ms->hover == mouse_hover)
     {
         return(0);
     }
 
-    if(ms->hover==mouse_hover&&ms->state==mouse_button_state_pressed)
+    if(ms->hover == mouse_hover && ms->state == mouse_button_state_pressed)
     {
-        bto->im_index=2;
+        bto->im_index = 2;
     }
-    else if(ms->hover==mouse_hover)
+    else if(ms->hover == mouse_hover)
     {
-        bto->im_index=1;
+        bto->im_index = 1;
     }
-    else if(ms->hover==mouse_unhover)
+    else if(ms->hover == mouse_unhover)
     {
-        bto->im_index=0;
+        bto->im_index = 0;
     }
 
     surface_adjust_size(sd);
-    event_push(sd->cd->eq,(event_handler)crosswin_draw,sd->sw,0,0);
+    event_push(sd->cd->eq, (event_handler)crosswin_draw, sd->sw, 0, 0);
 
     return(0);
 }
@@ -51,28 +51,28 @@ void button_init(object *o)
 {
     if(o)
     {
-        o->pv=zmalloc(sizeof(button_object));
+        o->pv = zmalloc(sizeof(button_object));
     }
 }
 
 void button_reset(object *o)
 {
-    button_object *bto=o->pv;
+    button_object *bto = o->pv;
     sfree((void**)&bto->image_path);
-    bto->image_path=parameter_string(o,"ButtonImage","%0",XPANDER_OBJECT);
-    image_cache_image_parameters(o,&bto->ia,XPANDER_OBJECT,"Button");
-    bto->ia.keep_ratio=1;
+    bto->image_path = parameter_string(o, "ButtonImage", "%0", XPANDER_OBJECT);
+    image_cache_image_parameters(o, &bto->ia, XPANDER_OBJECT, "Button");
+    bto->ia.keep_ratio = 1;
 }
 
 int button_update(object *o)
 {
     surface_data* sd = o->sd;
-    button_object *bto=o->pv;
+    button_object *bto = o->pv;
     string_bind sb = { 0 };
 
-    image_cache_unref_image(sd->cd->ich, &bto->ia,0);
+    image_cache_unref_image(sd->cd->ich, &bto->ia, 0);
 
-    if(bto->ia.path!=bto->image_path)
+    if(bto->ia.path != bto->image_path)
     {
         sfree((void**)&bto->ia.path);
     }
@@ -85,64 +85,65 @@ int button_update(object *o)
     {
         return (-1);
     }
-    bto->ia.path=sb.s_out;
-    image_cache_query_image(sd->cd->ich, &bto->ia, NULL, o->w*3, o->h*3);
+
+    bto->ia.path = sb.s_out;
+    image_cache_query_image(sd->cd->ich, &bto->ia, NULL, o->w * 3, o->h * 3);
 
 
-    if(bto->ia.width>bto->ia.height)
+    if(bto->ia.width > bto->ia.height)
     {
-        o->auto_w = bto->ia.width/3;
+        o->auto_w = bto->ia.width / 3;
         o->auto_h = bto->ia.height;
     }
     else
     {
-        o->auto_h = bto->ia.height/3;
+        o->auto_h = bto->ia.height / 3;
         o->auto_w = bto->ia.width;
     }
 
     return (1);
 }
 
-int button_render(object *o,cairo_t *cr)
+int button_render(object *o, cairo_t *cr)
 {
     button_object* bto = o->pv;
-    surface_data *sd=o->sd;
-    unsigned char *px=NULL;
+    surface_data *sd = o->sd;
+    unsigned char *px = NULL;
     long w = bto->ia.width;
     long h = bto->ia.height;
-    image_cache_query_image(sd->cd->ich, &bto->ia, &px, o->w*3, o->h*3);
+    image_cache_query_image(sd->cd->ich, &bto->ia, &px, o->w * 3, o->h * 3);
 
     int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, bto->ia.width);
 
     cairo_surface_t* image = cairo_image_surface_create_for_data(px, CAIRO_FORMAT_ARGB32, bto->ia.width, bto->ia.height, stride);
 
-    if(bto->ia.width>bto->ia.height)
+    if(bto->ia.width > bto->ia.height)
     {
-        cairo_rectangle(cr,0,0,w/3.0,h);
+        cairo_rectangle(cr, 0, 0, w / 3.0, h);
         cairo_clip(cr);
-        cairo_translate(cr,(double)(bto->im_index*(-w/3)),0);
+        cairo_translate(cr, (double)(bto->im_index * (-w / 3)), 0);
     }
     else
     {
-        cairo_rectangle(cr,0,0,w,h/3.0);
+        cairo_rectangle(cr, 0, 0, w, h / 3.0);
         cairo_clip(cr);
-        cairo_translate(cr,0.0,(double)(bto->im_index*(h/3)));
+        cairo_translate(cr, 0.0, (double)(bto->im_index * (h / 3)));
     }
 
     cairo_set_source_surface(cr, image, 0, 0);
 
-    if(bto->ia.width>bto->ia.height)
+    if(bto->ia.width > bto->ia.height)
     {
-        cairo_translate(cr,(double)(bto->im_index*(w/3)),0.0);
+        cairo_translate(cr, (double)(bto->im_index * (w / 3)), 0.0);
     }
     else
     {
-        cairo_translate(cr,0.0,(double)(bto->im_index*(-h/3)));
+        cairo_translate(cr, 0.0, (double)(bto->im_index * (-h / 3)));
     }
 
     cairo_paint(cr);
     cairo_surface_destroy(image);
-    image_cache_unref_image(sd->cd->ich, &bto->ia,0);
+    image_cache_unref_image(sd->cd->ich, &bto->ia, 0);
     return (0);
 }
 
@@ -151,11 +152,13 @@ void button_destroy(object *o)
 {
     if(o)
     {
-        button_object *bto=o->pv;
-        if(bto->ia.path!=bto->image_path)
+        button_object *bto = o->pv;
+
+        if(bto->ia.path != bto->image_path)
         {
             sfree((void**)&bto->ia.path);
         }
+
         sfree((void**)&bto->image_path);
         sfree((void**)&o->pv);
     }

@@ -42,7 +42,7 @@ Written by Alexandru-Daniel Mărgărit
 #ifdef WIN32
 #include <windows.h>
 #endif
-typedef unsigned char *(*src_str_rtn)(void *ip,unsigned char **pms,size_t pms_len);
+typedef unsigned char *(*src_str_rtn)(void *ip, unsigned char **pms, size_t pms_len);
 typedef struct
 {
     unsigned char *source_name;
@@ -69,9 +69,9 @@ typedef struct _average
 } source_average;
 
 
-static size_t source_routines_table(unsigned char* s,source_table **st)
+static size_t source_routines_table(unsigned char* s, source_table **st)
 {
-    static source_table table[]=
+    static source_table table[] =
     {
         // Source name          Init routine                Destroy routine             Update routine              Reset routine               String routine                          Command routine
         { "Extension",          NULL,                       NULL,                       NULL,                       NULL,                       NULL,                                             NULL },
@@ -99,15 +99,15 @@ static size_t source_routines_table(unsigned char* s,source_table **st)
 
     };
 
-    if(s==NULL||st==NULL)
+    if(s == NULL || st == NULL)
         return(0);
 
-    for(size_t i=0; i<sizeof(table)/sizeof(source_table); i++)
+    for(size_t i = 0; i < sizeof(table) / sizeof(source_table); i++)
     {
-        if(!strcasecmp(s,table[i].source_name))
+        if(!strcasecmp(s, table[i].source_name))
         {
-            *st=&table[i];
-            return(i+1);
+            *st = &table[i];
+            return(i + 1);
         }
     }
 
@@ -137,12 +137,14 @@ static double source_average_update(source *s, double value)
     source_average* sa = s->avg_pv;
     source_average_val* sav = NULL;
     source_average_val* tsav = NULL;
+
     if(s->avg_count < 2)
     {
         if(s->avg_pv)
         {
             source_average_destroy(s);
         }
+
         return (value);
     }
     else if(s->avg_pv == NULL)
@@ -166,21 +168,21 @@ static double source_average_update(source *s, double value)
     }
 
 
-    if(sa->count<s->avg_count)
+    if(sa->count < s->avg_count)
     {
         sav = zmalloc(sizeof(source_average_val));
         list_entry_init(&sav->current);
-        sav->value=value;
+        sav->value = value;
         sa->count++;
     }
     else
     {
         tsav = element_of(sa->values.prev, source_average_val, current);
         linked_list_remove(&tsav->current);
-        sa->total-=tsav->value;
+        sa->total -= tsav->value;
         list_entry_init(&tsav->current);
-        tsav->value=value;
-        sav=tsav;
+        tsav->value = value;
+        sav = tsav;
     }
 
     sa->total += sav->value;
@@ -191,10 +193,11 @@ static double source_average_update(source *s, double value)
 
 unsigned char* source_variable(source* s, size_t* len, unsigned char flags)
 {
-    if(s == NULL|| len ==NULL||s->die)
+    if(s == NULL || len == NULL || s->die)
     {
         if(len)
-            *len=0;
+            *len = 0;
+
         return(NULL);
     }
 
@@ -248,16 +251,16 @@ static void* source_load_lib(unsigned char* path)
     lib = LoadLibraryW(wp);
     sfree((void**)&wp);
 #elif __linux__
-    unsigned char *temp_path=path;
+    unsigned char *temp_path = path;
 
-    if(is_file_type(path,"so")==0)
+    if(is_file_type(path, "so") == 0)
     {
-        size_t len=string_length(path);
-        temp_path=zmalloc(len+5);
+        size_t len = string_length(path);
+        temp_path = zmalloc(len + 5);
 
         if(temp_path)
         {
-            snprintf(temp_path,len+4,"%s.so",path);
+            snprintf(temp_path, len + 4, "%s.so", path);
         }
     }
 
@@ -266,7 +269,7 @@ static void* source_load_lib(unsigned char* path)
         lib = dlopen(temp_path, RTLD_LAZY);
     }
 
-    if(temp_path!=path)
+    if(temp_path != path)
     {
         sfree((void**)&temp_path);
     }
@@ -295,10 +298,10 @@ static void source_unload_lib(void* lib)
 #endif
 }
 
-unsigned char  *source_call_str_rtn(source *s,unsigned char *rtn,unsigned char **pms,size_t pm_len)
+unsigned char  *source_call_str_rtn(source *s, unsigned char *rtn, unsigned char **pms, size_t pm_len)
 {
-    unsigned char *str=NULL;
-    static char *rsr_rtn[6]=
+    unsigned char *str = NULL;
+    static char *rsr_rtn[6] =
     {
         "init",
         "update",
@@ -310,22 +313,25 @@ unsigned char  *source_call_str_rtn(source *s,unsigned char *rtn,unsigned char *
 
     if(s->library)
     {
-        char go=1;
-        for(unsigned char i=0; i<sizeof(rsr_rtn)/sizeof(unsigned char*); i++)
+        char go = 1;
+
+        for(unsigned char i = 0; i < sizeof(rsr_rtn) / sizeof(unsigned char*); i++)
         {
-            if(rtn&&!strcasecmp(rtn,rsr_rtn[i]))
-                go=0;
+            if(rtn && !strcasecmp(rtn, rsr_rtn[i]))
+                go = 0;
         }
+
         if(go)
         {
-            src_str_rtn src_rtn=source_get_proc(s->library,rtn);
+            src_str_rtn src_rtn = source_get_proc(s->library, rtn);
 
             if(src_rtn)
             {
-                str=src_rtn(s->pv,pms,pm_len);
+                str = src_rtn(s->pv, pms, pm_len);
             }
         }
     }
+
     return(str);
 }
 
@@ -343,20 +349,20 @@ static int source_load_extension(source* s)
 
     unsigned char* modp = zmalloc(pln);
 
-    snprintf(modp,pln,"%s/%s",sd->cd->ext_dir,s->extension);
+    snprintf(modp, pln, "%s/%s", sd->cd->ext_dir, s->extension);
     s->library = source_load_lib(modp);
     sfree((void**)&modp);
 
 
     if(s->library == NULL)
     {
-        pln=sd->cd->ext_app_dir_len + srcnl + 2;
-        modp= zmalloc(pln);
-        snprintf(modp,pln,"%s/%s",sd->cd->ext_app_dir,s->extension);
+        pln = sd->cd->ext_app_dir_len + srcnl + 2;
+        modp = zmalloc(pln);
+        snprintf(modp, pln, "%s/%s", sd->cd->ext_app_dir, s->extension);
         s->library = source_load_lib(modp);
         sfree((void**)&modp);
 
-        if(s->library==NULL)
+        if(s->library == NULL)
             return (-1);
     }
 
@@ -383,14 +389,14 @@ static void source_destroy_routines(source* s)
     s->source_reset_rtn = NULL;
 }
 
-static int source_set_routines(source* s,source_table *st)
+static int source_set_routines(source* s, source_table *st)
 {
-    int ret=-1;
+    int ret = -1;
 
-    if(s==NULL||st==NULL)
+    if(s == NULL || st == NULL)
         return(-1);
 
-    if(s->type==1&&source_load_extension(s) == 0)
+    if(s->type == 1 && source_load_extension(s) == 0)
     {
 
         s->source_init_rtn = source_get_proc(s->library, "init");
@@ -412,7 +418,7 @@ static int source_set_routines(source* s,source_table *st)
         ret = 0;
     }
 
-    if(ret==0&&s->source_init_rtn)
+    if(ret == 0 && s->source_init_rtn)
     {
         s->source_init_rtn(&s->pv, s);
     }
@@ -430,7 +436,7 @@ int source_init(section s, surface_data* sd)
     source* ss = zmalloc(sizeof(source));
     ss->sd = sd;
     ss->cs = s;
-    ss->divider=1;
+    ss->divider = 1;
     ss->vol_var = 1; // mark as volatile so the source_reset() will be called on the first update cycle
     action_init(ss);
     list_entry_init(&ss->current);
@@ -438,7 +444,7 @@ int source_init(section s, surface_data* sd)
     return (0);
 }
 
-source* source_by_name(surface_data* sd, unsigned char* sn,size_t len)
+source* source_by_name(surface_data* sd, unsigned char* sn, size_t len)
 {
     source* s = NULL;
 
@@ -451,7 +457,7 @@ source* source_by_name(surface_data* sd, unsigned char* sn,size_t len)
     {
         unsigned char* sname = skeleton_get_section_name(s->cs);
 
-        if(sname && (len==(size_t)-1?!strcasecmp(sname,sn):!strncasecmp(sname, sn,len)))
+        if(sname && (len == (size_t) - 1 ? !strcasecmp(sname, sn) : !strncasecmp(sname, sn, len)))
         {
             if(s->die)
             {
@@ -492,7 +498,7 @@ void source_destroy(source** s)
 void source_reset(source* s)
 {
     surface_data* sd = s->sd;
-    source_table *st=NULL;
+    source_table *st = NULL;
     double mval = 0; // for MaxValue
 
     sfree((void**)&s->replacements);
@@ -515,7 +521,7 @@ void source_reset(source* s)
     s->regexp = parameter_bool(s, "ReplaceRegExp", 0, XPANDER_SOURCE);
     s->team = parameter_string(s, "Team", NULL, XPANDER_SOURCE);
     unsigned char* ts = parameter_string(s, "Source", NULL, XPANDER_SOURCE);
-    unsigned char type = source_routines_table(ts,&st);
+    unsigned char type = source_routines_table(ts, &st);
     sfree((void**)&ts);
 
     if(s->divider == 0)
@@ -535,7 +541,7 @@ void source_reset(source* s)
 
         if(type != 1)
         {
-            source_set_routines(s,st); // do not call if the type is "Extension" as this is handled below
+            source_set_routines(s, st); // do not call if the type is "Extension" as this is handled below
         }
     }
 
@@ -548,7 +554,7 @@ void source_reset(source* s)
             sfree((void**)&s->extension);
             source_destroy_routines(s);
             s->extension = ext_name;
-            source_set_routines(s,st);
+            source_set_routines(s, st);
         }
         else
         {
@@ -568,7 +574,7 @@ void source_reset(source* s)
             s->max_val = mval;
         }
     }
-    else if(mval == 0.0&&s->max_val == 0.0)
+    else if(mval == 0.0 && s->max_val == 0.0)
     {
         s->max_val = 1.0;
     }
@@ -585,6 +591,7 @@ int source_update(source* s)
 {
     surface_data* sd = s->sd;
     unsigned char svc = 0; // source value changed flag
+
     if(s->vol_var)
     {
         source_reset(s);
@@ -621,9 +628,9 @@ int source_update(source* s)
         /*Calculate the new result*/
         cv = (s->inverted ? s->max_val - cv + s->min_val : cv);
 
-        if(s->avg_pv||s->avg_count>1)
+        if(s->avg_pv || s->avg_count > 1)
         {
-            cv=source_average_update(s, cv);
+            cv = source_average_update(s, cv);
         }
 
         svc = (cv != s->d_info);
@@ -634,14 +641,15 @@ int source_update(source* s)
     {
         unsigned char* str = s->source_string_rtn(s->pv);
 
-        if(str==NULL||s->s_info==NULL || strcmp(s->s_info, str))
+        if(str == NULL || s->s_info == NULL || strcmp(s->s_info, str))
         {
             sfree((void**)&s->s_info);
-            s->s_info_len=0;
+            s->s_info_len = 0;
+
             if(str)
             {
-                s->s_info=(str[0]!=0?clone_string(str):zmalloc(1));
-                s->s_info_len =(str[0]!=0?string_length(s->s_info):0);
+                s->s_info = (str[0] != 0 ? clone_string(str) : zmalloc(1));
+                s->s_info_len = (str[0] != 0 ? string_length(s->s_info) : 0);
             }
 
             svc = 1;
@@ -651,10 +659,10 @@ int source_update(source* s)
      * make sure that if the source was changed and does
      * not have a string function we do clear the string information
      * */
-    else if(s->s_info||s->s_info_len)
+    else if(s->s_info || s->s_info_len)
     {
         sfree((void**)&s->s_info);
-        s->s_info_len=0;
+        s->s_info_len = 0;
     }
 
     /*Create a string to help out xpander.c*/
@@ -674,14 +682,14 @@ int source_update(source* s)
     if(s->update_act_lock == 0)
     {
         s->update_act_lock = 1;
-        s->update_act!=NULL?command(sd, &s->update_act):0;
+        s->update_act != NULL ? command(sd, &s->update_act) : 0;
         s->update_act_lock = 0;
     }
 
-    if(svc&&s->change_act_lock == 0)
+    if(svc && s->change_act_lock == 0)
     {
         s->change_act_lock = 1;
-        s->change_act?command(sd, &s->change_act):0;
+        s->change_act ? command(sd, &s->change_act) : 0;
         s->change_act_lock = 0;
     }
 

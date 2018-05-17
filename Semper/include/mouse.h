@@ -37,6 +37,6 @@ typedef struct _mouse_actions
     unsigned char* nha;
 } mouse_actions;
 
-int mouse_set_actions(void *pv,unsigned char tgt);
-void mouse_destroy_actions( mouse_actions* ma);
+int mouse_set_actions(void *pv, unsigned char tgt);
+void mouse_destroy_actions(mouse_actions* ma);
 int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms);

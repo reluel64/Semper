@@ -14,5 +14,5 @@ void button_reset(object *o);
 void button_destroy(object *o);
 void button_init(object *o);
 int  button_update(object *o);
-int  button_render(object *o,cairo_t *cr);
-int  button_mouse(object *o,mouse_status *ms); //the special function
+int  button_render(object *o, cairo_t *cr);
+int  button_mouse(object *o, mouse_status *ms); //the special function

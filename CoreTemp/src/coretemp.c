@@ -84,11 +84,11 @@ static coretemp_inf_t coretemp_dispatch_opt(unsigned char *opt)
         "TDP", "Power"
     };
 
-    for(char i=0; i<sizeof(opts)/sizeof(unsigned char*); i++)
+    for(char i = 0; i < sizeof(opts) / sizeof(unsigned char*); i++)
     {
-        if(strcasecmp(opt,opts[i])==0)
+        if(strcasecmp(opt, opts[i]) == 0)
         {
-            return((coretemp_inf_t)(i+1));
+            return((coretemp_inf_t)(i + 1));
         }
     }
 
@@ -98,10 +98,10 @@ static coretemp_inf_t coretemp_dispatch_opt(unsigned char *opt)
 void reset(void* spv, void* ip)
 {
     coretemp_data* crd = spv;
-    unsigned char* str_opt=NULL;
+    unsigned char* str_opt = NULL;
     crd->core_index = 0;
     str_opt = param_string("CoreTempInfo", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "Temperature");
-    crd->cti=coretemp_dispatch_opt(str_opt);
+    crd->cti = coretemp_dispatch_opt(str_opt);
     crd->core_index = param_size_t("CoreTempIndex", ip, 0);
     crd->core_index = (crd->core_index > 127 ? 127 : crd->core_index);
 }
@@ -123,36 +123,50 @@ double update(void* spv)
     {
         case coretemp_load:
             return (data.uiLoad[crd->core_index]); // core load
+
         case coretemp_tjmax:
             return (data.uiTjMax[crd->core_index]); // core tjmax
+
         case coretemp_core_count:
             return (data.uiCoreCnt); // CPU core count
+
         case coretemp_cpu_count:
             return (data.uiCPUCnt); // cpu count
+
         case coretemp_temp:
-            return (data.ucDeltaToTjMax?
-                    (float)data.uiTjMax[crd->core_index]-data.fTemp[crd->core_index]:
+            return (data.ucDeltaToTjMax ?
+                    (float)data.uiTjMax[crd->core_index] - data.fTemp[crd->core_index] :
                     data.fTemp[crd->core_index]); // core temperature
+
         case coretemp_cpu_spd:
             return (data.fCPUSpeed); // global cpu speed
+
         case coretemp_fsb_speed:
             return (data.fFSBSpeed); // bus speed
+
         case coretemp_vcore:
             return (data.fVID); // voltage requested by cpu
+
         case coretemp_mul:
             return ((double)data.fMultipliers[crd->core_index]); // per core multiplier
+
         case coretemp_name:
             return (0.0);
+
         case coretemp_max_temp:
             return (coretemp_calc_max_temp(&data)); // highest temperature
+
         case coretemp_core_speed:
             return ((double)data.fMultipliers[crd->core_index] * (double)data.fFSBSpeed); // per core frequency
+
         case coretemp_tdp:
-            return (data.ucTdpSupported?(double)data.uiTdp[crd->core_index]:0.0); // TDP
+            return (data.ucTdpSupported ? (double)data.uiTdp[crd->core_index] : 0.0); // TDP
+
         case coretemp_pwr:
-            return (data.ucPowerSupported?(double)data.fPower[crd->core_index]:0.0); // Power (Wattage)
+            return (data.ucPowerSupported ? (double)data.fPower[crd->core_index] : 0.0); // Power (Wattage)
+
         default:
-            diag_error("%s %d CoreTemp unknown option 0x%x",__FUNCTION__,__LINE__,crd->cti);
+            diag_error("%s %d CoreTemp unknown option 0x%x", __FUNCTION__, __LINE__, crd->cti);
             break;
     }
 
@@ -163,8 +177,8 @@ unsigned char* string(void* spv)
 {
     coretemp_data* crd = spv;
 
-    if(crd->cti==coretemp_name)
-        return (crd->cpu_name?crd->cpu_name:(unsigned char*)"");
+    if(crd->cti == coretemp_name)
+        return (crd->cpu_name ? crd->cpu_name : (unsigned char*)"");
 
     return(NULL);
 }
@@ -178,7 +192,7 @@ void destroy(void** spv)
 static inline int coretemp_gather_data(CoreTempSharedDataEx* data)
 {
     void* fm = OpenFileMappingA(FILE_MAP_READ, 0, "Local\\CoreTempMappingObjectEx");
-    int ret=-1;
+    int ret = -1;
 
     if(fm)
     {
@@ -188,19 +202,21 @@ static inline int coretemp_gather_data(CoreTempSharedDataEx* data)
         {
             memcpy(data, shd, sizeof(CoreTempSharedDataEx));
             UnmapViewOfFile(shd);
-            ret=0;
+            ret = 0;
         }
 
         else
         {
-            diag_error("%s %d Failed to read CoreTemp data",__FUNCTION__,__LINE__);
+            diag_error("%s %d Failed to read CoreTemp data", __FUNCTION__, __LINE__);
         }
+
         CloseHandle(fm);
     }
     else
     {
-        diag_error("%s %d Failed to access CoreTemp data",__FUNCTION__,__LINE__);
+        diag_error("%s %d Failed to access CoreTemp data", __FUNCTION__, __LINE__);
     }
+
     return (ret);
 }
 
@@ -213,6 +229,7 @@ static double coretemp_calc_max_temp(CoreTempSharedDataEx* data)
         if(max_temp < data->fTemp[i])
             max_temp = data->fTemp[i];
     }
+
     return (max_temp);
 }
 #endif

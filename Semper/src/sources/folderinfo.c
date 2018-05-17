@@ -48,10 +48,10 @@ void folderinfo_init(void** spv, void* ip)
 
     fi = zmalloc(sizeof(folderinfo));
 
-    fi->working=safe_flag_init();
-    fi->stop=safe_flag_init();
+    fi->working = safe_flag_init();
+    fi->stop = safe_flag_init();
     unused_parameter(ip);
-    *spv=fi;
+    *spv = fi;
 }
 
 void folderinfo_reset(void* spv, void* ip)
@@ -62,9 +62,9 @@ void folderinfo_reset(void* spv, void* ip)
 
     if(fi->th)
     {
-        safe_flag_set(fi->stop,1);
-        pthread_join(fi->th,NULL);
-        safe_flag_set(fi->stop,0);
+        safe_flag_set(fi->stop, 1);
+        pthread_join(fi->th, NULL);
+        safe_flag_set(fi->stop, 0);
         fi->th = 0;
     }
 
@@ -101,32 +101,32 @@ void folderinfo_reset(void* spv, void* ip)
 #ifdef WIN32
 static int folderinfo_collect(unsigned char* root, folderinfo* fi)
 {
-    unsigned char *file=root;
-    list_entry qbase= {0};
+    unsigned char *file = root;
+    list_entry qbase = {0};
     list_entry_init(&qbase);
 
     while(file)
     {
-        size_t fpsz =0;
+        size_t fpsz = 0;
         WIN32_FIND_DATAW wfd = { 0 };
-        void* fh =NULL;
+        void* fh = NULL;
 
-        if(safe_flag_get(fi->stop)==0)
+        if(safe_flag_get(fi->stop) == 0)
         {
-            fpsz= string_length(file);
+            fpsz = string_length(file);
             unsigned char* filtered = zmalloc(fpsz + 6);
-            snprintf(filtered,fpsz+6,"%s/*.*",file);
+            snprintf(filtered, fpsz + 6, "%s/*.*", file);
 
             unsigned short* filtered_uni = utf8_to_ucs(filtered);
             sfree((void**)&filtered);
 
-            fh= FindFirstFileExW(filtered_uni,FindExInfoBasic, &wfd,FindExSearchNameMatch,NULL,2);
+            fh = FindFirstFileExW(filtered_uni, FindExInfoBasic, &wfd, FindExSearchNameMatch, NULL, 2);
             sfree((void**)&filtered_uni);
         }
 
         do
         {
-            if(safe_flag_get(fi->stop)||fh==INVALID_HANDLE_VALUE)
+            if(safe_flag_get(fi->stop) || fh == INVALID_HANDLE_VALUE)
             {
                 break;
             }
@@ -175,11 +175,11 @@ static int folderinfo_collect(unsigned char* root, folderinfo* fi)
                 {
                     size_t res_sz = string_length(res);
                     unsigned char* ndir = zmalloc(res_sz + fpsz + 2);
-                    snprintf(ndir,res_sz+fpsz+2,"%s/%s",file,res);
-                    folderinfo_dir_list *fdl=zmalloc(sizeof(folderinfo_dir_list));
+                    snprintf(ndir, res_sz + fpsz + 2, "%s/%s", file, res);
+                    folderinfo_dir_list *fdl = zmalloc(sizeof(folderinfo_dir_list));
                     list_entry_init(&fdl->current);
-                    linked_list_add(&fdl->current,&qbase);
-                    fdl->dir=ndir;
+                    linked_list_add(&fdl->current, &qbase);
+                    fdl->dir = ndir;
                     uniform_slashes(ndir);
                 }
             }
@@ -194,29 +194,29 @@ static int folderinfo_collect(unsigned char* root, folderinfo* fi)
             sfree((void**)&res);
 
         }
-        while(safe_flag_get(fi->stop)==0&&FindNextFileW(fh, &wfd));
+        while(safe_flag_get(fi->stop) == 0 && FindNextFileW(fh, &wfd));
 
-        if(fh!=NULL&&fh!=INVALID_HANDLE_VALUE)
+        if(fh != NULL && fh != INVALID_HANDLE_VALUE)
         {
             FindClose(fh);
-            fh=NULL;
+            fh = NULL;
         }
 
-        if(root!=file)
+        if(root != file)
         {
             sfree((void**)&file);
         }
 
-        if(linked_list_empty(&qbase)==0)
+        if(linked_list_empty(&qbase) == 0)
         {
-            folderinfo_dir_list *fdl=element_of(qbase.prev,folderinfo_dir_list,current);
-            file=fdl->dir;
+            folderinfo_dir_list *fdl = element_of(qbase.prev, folderinfo_dir_list, current);
+            file = fdl->dir;
             linked_list_remove(&fdl->current);
             sfree((void**)&fdl);
         }
         else
         {
-            file=NULL;
+            file = NULL;
             break;
         }
     }
@@ -246,22 +246,22 @@ double folderinfo_update(void* spv)
 
     folderinfo* fi = spv;
 
-    if(safe_flag_get(fi->working)==0&&fi->parent == NULL && fi->th == 0)
+    if(safe_flag_get(fi->working) == 0 && fi->parent == NULL && fi->th == 0)
     {
-        int status=0;
-        safe_flag_set(fi->working,1);
+        int status = 0;
+        safe_flag_set(fi->working, 1);
 #ifdef WIN32
-        status=pthread_create(&fi->th, NULL, folderinfo_collect_thread, fi);
+        status = pthread_create(&fi->th, NULL, folderinfo_collect_thread, fi);
 #endif
 
         if(status)
         {
-            safe_flag_set(fi->working,0);
-            diag_crit("%s %d Failed to start folderinfo_collect_thread. Status %x",__FUNCTION__,__LINE__,status);
+            safe_flag_set(fi->working, 0);
+            diag_crit("%s %d Failed to start folderinfo_collect_thread. Status %x", __FUNCTION__, __LINE__, status);
         }
     }
 
-    if(safe_flag_get(fi->working) == 0&&fi->th)
+    if(safe_flag_get(fi->working) == 0 && fi->th)
     {
         pthread_join(fi->th, NULL);
         fi->th = 0;
@@ -276,14 +276,14 @@ double folderinfo_update(void* spv)
 
     switch(fi->type)
     {
-    case 0:
-        return ((double)fi->ofile_count);
+        case 0:
+            return ((double)fi->ofile_count);
 
-    case 1:
-        return ((double)fi->ofolder_count);
+        case 1:
+            return ((double)fi->ofolder_count);
 
-    case 2:
-        return ((double)fi->osize);
+        case 2:
+            return ((double)fi->osize);
     }
 
     return (0.0);
@@ -292,13 +292,14 @@ double folderinfo_update(void* spv)
 void folderinfo_destroy(void** spv)
 {
     folderinfo* fi = *spv;
-    safe_flag_set(fi->stop,1);
+    safe_flag_set(fi->stop, 1);
 
 
-    if(fi->th!=0)
+    if(fi->th != 0)
     {
-        pthread_join(fi->th,NULL);
+        pthread_join(fi->th, NULL);
     }
+
     safe_flag_destroy(&fi->stop);
     safe_flag_destroy(&fi->working);
     sfree((void**)&fi->path);

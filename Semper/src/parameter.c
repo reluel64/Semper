@@ -22,20 +22,20 @@ static inline section parameter_dispatch_section(void* r, unsigned char flag)
 
     switch(flag & 0x1C)
     {
-    case XPANDER_REQUESTOR_OBJECT:
-        return (((object*)r)->os);
+        case XPANDER_REQUESTOR_OBJECT:
+            return (((object*)r)->os);
 
-    case XPANDER_REQUESTOR_SOURCE:
-        return (((source*)r)->cs);
+        case XPANDER_REQUESTOR_SOURCE:
+            return (((source*)r)->cs);
 
-    case XPANDER_REQUESTOR_SURFACE:
-        if(flag & XPANDER_CONFIG)
-            return (((surface_data*)r)->scd);
-        else
-            return (((surface_data*)r)->spm);
+        case XPANDER_REQUESTOR_SURFACE:
+            if(flag & XPANDER_CONFIG)
+                return (((surface_data*)r)->scd);
+            else
+                return (((surface_data*)r)->spm);
 
-    default:
-        return (NULL);
+        default:
+            return (NULL);
     }
 }
 
@@ -108,7 +108,7 @@ size_t parameter_size_t(void* req, unsigned char* npm, size_t def, unsigned char
     }
     else if(xr.os)
     {
-        ret =(size_t) compute_formula(xr.os);
+        ret = (size_t) compute_formula(xr.os);
     }
 
     xr.os = NULL;
@@ -128,7 +128,7 @@ unsigned char parameter_byte(void* req, unsigned char* npm, unsigned char def, u
 
 unsigned char parameter_bool(void* req, unsigned char* npm, unsigned char def, unsigned char xpander_flags)
 {
-    return (parameter_size_t(req, npm, (size_t)def, xpander_flags)!=0);
+    return (parameter_size_t(req, npm, (size_t)def, xpander_flags) != 0);
 }
 
 unsigned char* parameter_string(void* req, unsigned char* npm, unsigned char* def, unsigned char xpander_flags)

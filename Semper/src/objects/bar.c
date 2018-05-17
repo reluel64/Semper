@@ -28,13 +28,13 @@ void bar_init(object* o)
 void bar_destroy(object* o)
 {
     bar_object* bo = o->pv;
-    surface_data *sd=o->sd;
+    surface_data *sd = o->sd;
 
     if(bo)
     {
-        image_cache_unref_image(sd->cd->ich, &bo->b1ia,1);
-        image_cache_unref_image(sd->cd->ich, &bo->b2ia,1);
-        image_cache_unref_image(sd->cd->ich, &bo->bcia,1);
+        image_cache_unref_image(sd->cd->ich, &bo->b1ia, 1);
+        image_cache_unref_image(sd->cd->ich, &bo->b2ia, 1);
+        image_cache_unref_image(sd->cd->ich, &bo->bcia, 1);
         sfree((void**)&bo->b1ia.path);
         sfree((void**)&bo->b2ia.path);
         sfree((void**)&bo->bcia.path);
@@ -45,10 +45,10 @@ void bar_destroy(object* o)
 void bar_reset(object* o)
 {
     bar_object* bo = o->pv;
-    surface_data *sd=o->sd;
-    image_cache_unref_image(sd->cd->ich, &bo->b1ia,0);
-    image_cache_unref_image(sd->cd->ich, &bo->b2ia,0);
-    image_cache_unref_image(sd->cd->ich, &bo->bcia,0);
+    surface_data *sd = o->sd;
+    image_cache_unref_image(sd->cd->ich, &bo->b1ia, 0);
+    image_cache_unref_image(sd->cd->ich, &bo->b2ia, 0);
+    image_cache_unref_image(sd->cd->ich, &bo->bcia, 0);
     sfree((void**)&bo->b1ia.path);
     sfree((void**)&bo->b2ia.path);
     sfree((void**)&bo->bcia.path);
@@ -81,8 +81,8 @@ void bar_reset(object* o)
 
 int bar_update(object* o)
 {
-    o->auto_w=o->w;
-    o->auto_h=o->h;
+    o->auto_w = o->w;
+    o->auto_h = o->h;
     ///  surface_data* sd = o->sd;
     bar_object* bo = o->pv;
     bind_numeric bn = { 0 };
@@ -114,8 +114,8 @@ int bar_render(object* o, cairo_t* cr)
 {
     bar_object* bo = o->pv;
     cairo_surface_t* image_surface = NULL;
-    surface_data *sd=o->sd;
-    unsigned char *px=NULL;
+    surface_data *sd = o->sd;
+    unsigned char *px = NULL;
     // long iw=0;
     // long ih=0;
     long cx = 0;
@@ -123,11 +123,11 @@ int bar_render(object* o, cairo_t* cr)
     long cw = 0;
     long ch = 0;
 
-    image_cache_query_image(sd->cd->ich,&bo->bcia,&px,o->w,o->h);
+    image_cache_query_image(sd->cd->ich, &bo->bcia, &px, o->w, o->h);
 
     if(px == NULL)
     {
-        cairo_set_color(cr,bo->b_over_col);
+        cairo_set_color(cr, bo->b_over_col);
     }
     else
     {
@@ -180,7 +180,7 @@ int bar_render(object* o, cairo_t* cr)
         percentage = (b == 0 ? bo->percents : bo->percents_2);
 
 
-        image_cache_query_image(sd->cd->ich,(b?&bo->b1ia:&bo->b2ia),&px,o->w,o->h);
+        image_cache_query_image(sd->cd->ich, (b ? &bo->b1ia : &bo->b2ia), &px, o->w, o->h);
 
         if(bo->vertical && !bo->flip)
         {
@@ -215,12 +215,12 @@ int bar_render(object* o, cairo_t* cr)
 
         if(px)
         {
-            cairo_set_color(cr,b == 0 ? bo->bar_color : bo->bar_color_2);
+            cairo_set_color(cr, b == 0 ? bo->bar_color : bo->bar_color_2);
         }
         else
         {
             int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, o->auto_w);
-            image_surface = cairo_image_surface_create_for_data(  px, CAIRO_FORMAT_ARGB32, o->w,o->h, stride);
+            image_surface = cairo_image_surface_create_for_data(px, CAIRO_FORMAT_ARGB32, o->w, o->h, stride);
             cairo_set_source_surface(cr, image_surface, 0.0, 0.0);
         }
 
@@ -234,8 +234,8 @@ int bar_render(object* o, cairo_t* cr)
         }
     }
 
-    image_cache_unref_image(sd->cd->ich, &bo->b1ia,0);
-    image_cache_unref_image(sd->cd->ich, &bo->b2ia,0);
-    image_cache_unref_image(sd->cd->ich, &bo->bcia,0);
+    image_cache_unref_image(sd->cd->ich, &bo->b1ia, 0);
+    image_cache_unref_image(sd->cd->ich, &bo->b2ia, 0);
+    image_cache_unref_image(sd->cd->ich, &bo->bcia, 0);
     return (0);
 }

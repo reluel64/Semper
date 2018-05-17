@@ -46,12 +46,12 @@ typedef struct _surface_lister
 
 static int surface_lister_collect(surface_lister* sl)
 {
-    sl->start=NULL;
-    sl->items=0;
-    sl->current_item=0;
-    surface_lister_file_list *slfl=NULL;
-    surface_lister_file_list *tslfl=NULL;
-    list_enum_part_safe(slfl,tslfl,&sl->file_list,current)
+    sl->start = NULL;
+    sl->items = 0;
+    sl->current_item = 0;
+    surface_lister_file_list *slfl = NULL;
+    surface_lister_file_list *tslfl = NULL;
+    list_enum_part_safe(slfl, tslfl, &sl->file_list, current)
     {
         linked_list_remove(&slfl->current);
         sfree((void**)&slfl->display_name);
@@ -76,16 +76,16 @@ static int surface_lister_collect(surface_lister* sl)
 
 #elif __linux__
 
-    DIR *dh=opendir(sl->path);
+    DIR *dh = opendir(sl->path);
 
-    if(dh==NULL)
+    if(dh == NULL)
     {
         return(-1);
     }
 
-    struct dirent *dat=readdir(dh);
+    struct dirent *dat = readdir(dh);
 
-    if(dat==NULL)
+    if(dat == NULL)
     {
         closedir(dh);
         return(-1);
@@ -96,16 +96,16 @@ static int surface_lister_collect(surface_lister* sl)
     do
     {
 
-        unsigned char* temp=NULL;
+        unsigned char* temp = NULL;
 
 #ifdef WIN32
-        temp= ucs_to_utf8(wfd.cFileName, NULL, 0);
+        temp = ucs_to_utf8(wfd.cFileName, NULL, 0);
 #elif __linux__
 
-        temp=clone_string(dat->d_name);
+        temp = clone_string(dat->d_name);
 #endif
 
-        if(temp==NULL)
+        if(temp == NULL)
             break;
 
 
@@ -116,20 +116,20 @@ static int surface_lister_collect(surface_lister* sl)
         }
 
         sl->items++;
-        surface_lister_file_list *slfl=zmalloc(sizeof(surface_lister_file_list));
+        surface_lister_file_list *slfl = zmalloc(sizeof(surface_lister_file_list));
 
-        if(sl->start==NULL)
+        if(sl->start == NULL)
         {
-            sl->start=slfl;
+            sl->start = slfl;
         }
 
         list_entry_init(&slfl->current);
-        linked_list_add(&slfl->current,&sl->file_list);
-        slfl->display_name=temp;
+        linked_list_add(&slfl->current, &sl->file_list);
+        slfl->display_name = temp;
 #ifdef WIN32
-        slfl->dir=(wfd.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)!=0;
+        slfl->dir = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 #elif __linux__
-        slfl->dir=(dat->d_type == DT_DIR);
+        slfl->dir = (dat->d_type == DT_DIR);
 #endif
 
     }
@@ -140,7 +140,7 @@ static int surface_lister_collect(surface_lister* sl)
 
 #elif __linux__
 
-    while((dat=readdir(dh))!=NULL);
+    while((dat = readdir(dh)) != NULL);
 
 #endif
 
@@ -174,51 +174,52 @@ void surface_lister_reset(void* spv, void* ip)
 
     if(parent)
     {
-        sl->index=param_size_t("ChildIndex",ip,0);
-        sl->parent=get_private_data(parent);
+        sl->index = param_size_t("ChildIndex", ip, 0);
+        sl->parent = get_private_data(parent);
     }
     else
     {
-        sl->child_count=param_size_t("ChildCount",ip,0);
-        sl->base_path=cd->surface_dir;
-        sl->path=sl->base_path;
-        sl->base_len=cd->surface_dir_length;
-        sl->update=1;
+        sl->child_count = param_size_t("ChildCount", ip, 0);
+        sl->base_path = cd->surface_dir;
+        sl->path = sl->base_path;
+        sl->base_len = cd->surface_dir_length;
+        sl->update = 1;
     }
 }
 
 double surface_lister_update(void* spv)
 {
-    surface_lister *sl=spv;
+    surface_lister *sl = spv;
 
-    if(sl->parent&&sl->parent->start&&sl->index<sl->parent->child_count)
+    if(sl->parent && sl->parent->start && sl->index < sl->parent->child_count)
     {
-        surface_lister_file_list *slfl=sl->parent->start;
-        size_t i=sl->index;
+        surface_lister_file_list *slfl = sl->parent->start;
+        size_t i = sl->index;
 
         for(; i; i--)
         {
-            if(slfl->current.prev==&sl->parent->file_list)
+            if(slfl->current.prev == &sl->parent->file_list)
             {
                 return(0.0);
             }
 
-            slfl=element_of(slfl->current.prev,surface_lister_file_list,current);
+            slfl = element_of(slfl->current.prev, surface_lister_file_list, current);
         }
 
-        if(i==0)
+        if(i == 0)
         {
             return(1.0);
         }
     }
+
 #if 0
-    else if(sl->parent==NULL&&sl->update)
+    else if(sl->parent == NULL && sl->update)
 #else
-    else if(sl->parent==NULL)
+    else if(sl->parent == NULL)
 #endif
     {
         surface_lister_collect(spv);
-        sl->update=0;
+        sl->update = 0;
     }
 
     return(0.0);
@@ -226,24 +227,24 @@ double surface_lister_update(void* spv)
 
 unsigned char *surface_lister_string(void* spv)
 {
-    surface_lister *sl=spv;
+    surface_lister *sl = spv;
 
-    if(sl->parent&&sl->parent->start&&sl->index<sl->parent->child_count)
+    if(sl->parent && sl->parent->start && sl->index < sl->parent->child_count)
     {
-        surface_lister_file_list *slfl=sl->parent->start;
-        size_t i=sl->index;
+        surface_lister_file_list *slfl = sl->parent->start;
+        size_t i = sl->index;
 
         for(; i; i--)
         {
-            if(slfl->current.prev==&sl->parent->file_list)
+            if(slfl->current.prev == &sl->parent->file_list)
             {
                 return(NULL);
             }
 
-            slfl=element_of(slfl->current.prev,surface_lister_file_list,current);
+            slfl = element_of(slfl->current.prev, surface_lister_file_list, current);
         }
 
-        if(i==0)
+        if(i == 0)
         {
             return(slfl->display_name);
         }
@@ -255,103 +256,103 @@ unsigned char *surface_lister_string(void* spv)
 void surface_lister_command(void* spv, unsigned char* command)
 {
 
-    surface_lister *sl=spv;
+    surface_lister *sl = spv;
 
-    if(sl->parent&&sl->parent->start&&command&&sl->index<sl->parent->child_count)
+    if(sl->parent && sl->parent->start && command && sl->index < sl->parent->child_count)
     {
-        surface_lister_file_list *slfl=sl->parent->start;
-        surface_lister *parent=sl->parent;
-        size_t i=sl->index;
+        surface_lister_file_list *slfl = sl->parent->start;
+        surface_lister *parent = sl->parent;
+        size_t i = sl->index;
 
         for(; i; i--)
         {
-            if(slfl->current.prev==&sl->parent->file_list)
+            if(slfl->current.prev == &sl->parent->file_list)
             {
                 break;
             }
 
-            slfl=element_of(slfl->current.prev,surface_lister_file_list,current);
+            slfl = element_of(slfl->current.prev, surface_lister_file_list, current);
         }
 
-        if(i==0)
+        if(i == 0)
         {
-            if(strcasecmp("Open",command)==0)
+            if(strcasecmp("Open", command) == 0)
             {
                 if(slfl->dir)
                 {
-                    size_t path_len=string_length(parent->path);
-                    size_t dir_len=string_length(slfl->display_name);
-                    unsigned char *temp=zmalloc(path_len+dir_len+2); //space for null and for slash
+                    size_t path_len = string_length(parent->path);
+                    size_t dir_len = string_length(slfl->display_name);
+                    unsigned char *temp = zmalloc(path_len + dir_len + 2); //space for null and for slash
 
-                    snprintf(temp,path_len+dir_len+2,"%s/%s",parent->path,slfl->display_name);
+                    snprintf(temp, path_len + dir_len + 2, "%s/%s", parent->path, slfl->display_name);
 
-                    if(parent->path!=parent->base_path)
+                    if(parent->path != parent->base_path)
                     {
                         sfree((void**)&parent->path);
                     }
 
-                    parent->path=temp;
-                    parent->update=1;
+                    parent->path = temp;
+                    parent->update = 1;
                 }
                 else
                 {
-                    size_t path_len=string_length(parent->path+parent->base_len+1);
-                    size_t dir_len=string_length(slfl->display_name);
-                    unsigned char *temp=zmalloc(15+dir_len+path_len); //space for null and for slash
-                    snprintf(temp,15+dir_len+path_len,"LoadSurface(%s,%s)",parent->path+parent->base_len+1,slfl->display_name);
-                    send_command(parent->ip,temp);
+                    size_t path_len = string_length(parent->path + parent->base_len + 1);
+                    size_t dir_len = string_length(slfl->display_name);
+                    unsigned char *temp = zmalloc(15 + dir_len + path_len); //space for null and for slash
+                    snprintf(temp, 15 + dir_len + path_len, "LoadSurface(%s,%s)", parent->path + parent->base_len + 1, slfl->display_name);
+                    send_command(parent->ip, temp);
                     sfree((void**)&temp);
                 }
             }
 
-            else if(strcasecmp("Unload",command)==0)
+            else if(strcasecmp("Unload", command) == 0)
             {
-                size_t path_len=string_length(parent->path+parent->base_len+1);
+                size_t path_len = string_length(parent->path + parent->base_len + 1);
 
-                unsigned char *temp=zmalloc(18+path_len); //space for null and for slash
-                snprintf(temp,18+path_len,"unLoadSurface(%s)",parent->path+parent->base_len+1);
-                send_command(parent->ip,temp);
+                unsigned char *temp = zmalloc(18 + path_len); //space for null and for slash
+                snprintf(temp, 18 + path_len, "unLoadSurface(%s)", parent->path + parent->base_len + 1);
+                send_command(parent->ip, temp);
                 sfree((void**)&temp);
             }
         }
     }
-    else if(sl->parent==NULL&&command)
+    else if(sl->parent == NULL && command)
     {
-        if(strcasecmp("Back",command)==0&&strcasecmp(sl->path,sl->base_path))
+        if(strcasecmp("Back", command) == 0 && strcasecmp(sl->path, sl->base_path))
         {
-            unsigned char *lo=strrchr(sl->path,'/');
+            unsigned char *lo = strrchr(sl->path, '/');
 
-            if(sl->path!=sl->base_path&&strncasecmp(sl->path,sl->base_path,lo-sl->path))
+            if(sl->path != sl->base_path && strncasecmp(sl->path, sl->base_path, lo - sl->path))
             {
 
                 sfree((void**)&sl->path);
-                sl->path=sl->base_path;
+                sl->path = sl->base_path;
             }
             else
             {
-                lo[0]=0;
+                lo[0] = 0;
             }
 
-            sl->update=1;
+            sl->update = 1;
         }
         else if(sl->start)
         {
-            if(strcasecmp("Up",command)==0)
+            if(strcasecmp("Up", command) == 0)
             {
-                if(sl->start->current.next!=&sl->file_list)
+                if(sl->start->current.next != &sl->file_list)
                 {
                     if(sl->current_item)
                         sl->current_item--;
 
-                    sl->start= element_of(sl->start->current.next,surface_lister_file_list,current);
+                    sl->start = element_of(sl->start->current.next, surface_lister_file_list, current);
                 }
             }
-            else if(strcasecmp("Down",command)==0&&sl->items-sl->current_item>sl->child_count)
+            else if(strcasecmp("Down", command) == 0 && sl->items - sl->current_item > sl->child_count)
             {
-                if(sl->start->current.prev!=&sl->file_list)
+                if(sl->start->current.prev != &sl->file_list)
                 {
                     sl->current_item++;
-                    sl->start= element_of(sl->start->current.prev,surface_lister_file_list,current);
+                    sl->start = element_of(sl->start->current.prev, surface_lister_file_list, current);
                 }
             }
         }
@@ -359,20 +360,20 @@ void surface_lister_command(void* spv, unsigned char* command)
 }
 void surface_lister_destroy(void** spv)
 {
-    surface_lister *sl=*spv;
+    surface_lister *sl = *spv;
 
-    if(sl->parent==NULL)
+    if(sl->parent == NULL)
     {
-        surface_lister_file_list *slfl=NULL;
-        surface_lister_file_list *tslfl=NULL;
-        list_enum_part_safe(slfl,tslfl,&sl->file_list,current)
+        surface_lister_file_list *slfl = NULL;
+        surface_lister_file_list *tslfl = NULL;
+        list_enum_part_safe(slfl, tslfl, &sl->file_list, current)
         {
             linked_list_remove(&slfl->current);
             sfree((void**)&slfl->display_name);
             sfree((void**)&slfl);
         }
 
-        if(sl->base_path!=sl->path)
+        if(sl->base_path != sl->path)
         {
             sfree((void**)&sl->path);
         }

@@ -33,7 +33,7 @@ void surfaces_collector_init(void** spv, void* ip)
     source* s = ip;
     surface_data* sd = s->sd;
     scd->cd = sd->cd;
-    scd->ip=ip;
+    scd->ip = ip;
     *spv = scd;
 }
 
@@ -119,9 +119,9 @@ void surfaces_collector_command(void* spv, unsigned char* command)
         else if(!strcasecmp("IndexDown", command) && scd->base > 0)
             scd->base--;
     }
-    else if(command&&scd->parent)
+    else if(command && scd->parent)
     {
-        if(strcasecmp("Unload",command)==0)
+        if(strcasecmp("Unload", command) == 0)
         {
             control_data* cd = scd->cd;
             size_t i = scd->parent->base + scd->index;
@@ -136,11 +136,11 @@ void surfaces_collector_command(void* spv, unsigned char* command)
 
             if(sd && i == 0)
             {
-                size_t path_len=string_length(sd->sp.surface_rel_dir+1);
+                size_t path_len = string_length(sd->sp.surface_rel_dir + 1);
 
-                unsigned char *temp=zmalloc(18+path_len); //space for null and for slash
-                snprintf(temp,18+path_len,"unLoadSurface(%s)",sd->sp.surface_rel_dir);
-                send_command(scd->ip,temp);
+                unsigned char *temp = zmalloc(18 + path_len); //space for null and for slash
+                snprintf(temp, 18 + path_len, "unLoadSurface(%s)", sd->sp.surface_rel_dir);
+                send_command(scd->ip, temp);
                 sfree((void**)&temp);
             }
         }

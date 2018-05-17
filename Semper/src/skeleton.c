@@ -97,7 +97,7 @@ section skeleton_first_section(section shead)
 {
     list_entry* lh = shead;
 
-    if(lh==NULL)
+    if(lh == NULL)
     {
         return(NULL);
     }
@@ -161,7 +161,7 @@ key skeleton_get_key(section s, unsigned char* kn)
     return (NULL);
 }
 
-key skeleton_get_key_n(section s, unsigned char* kn,size_t n)
+key skeleton_get_key_n(section s, unsigned char* kn, size_t n)
 {
     if(s == NULL || kn == NULL)
     {
@@ -173,7 +173,7 @@ key skeleton_get_key_n(section s, unsigned char* kn,size_t n)
 
     list_enum_part(ik, &is->keys, current)
     {
-        if(ik->kn && kn && !strncasecmp(kn, ik->kn,n))
+        if(ik->kn && kn && !strncasecmp(kn, ik->kn, n))
         {
             return (ik);
         }
@@ -244,7 +244,7 @@ unsigned char* skeleton_key_name(key k)
 
 void skeleton_key_remove(key* k)
 {
-    if(k&&*k)
+    if(k && *k)
     {
         internal_key* ik = *k;
         linked_list_remove(&ik->current);
@@ -256,7 +256,7 @@ void skeleton_key_remove(key* k)
 
 void skeleton_remove_section(section* s)
 {
-    if(s&&*s)
+    if(s && *s)
     {
         internal_section* is = *s;
         sfree((void**)&is->sn);
@@ -276,7 +276,7 @@ void skeleton_remove_section(section* s)
 
 int skeleton_destroy(section shead)
 {
-    if(shead==NULL)
+    if(shead == NULL)
     {
         return(-1);
     }

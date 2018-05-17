@@ -90,9 +90,9 @@ typedef struct
 } semper_timestamp;
 
 int semper_save_configuration(control_data* cd);
-int semper_get_file_timestamp(unsigned char *file,semper_timestamp *st);
+int semper_get_file_timestamp(unsigned char *file, semper_timestamp *st);
 int diag_init(control_data *cd);
-int diag_log(unsigned char lvl,char *fmt, ...);
+int diag_log(unsigned char lvl, char *fmt, ...);
 int diag_print(void);
 /**************************************************************************/
 size_t tss();

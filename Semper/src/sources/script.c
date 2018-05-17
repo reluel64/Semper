@@ -20,20 +20,20 @@
 #include <math_parser.h>
 
 /*lua prototypes*/
-extern void *lua_engine_init(unsigned char *buf,void *ip);
+extern void *lua_engine_init(unsigned char *buf, void *ip);
 extern void lua_engine_call_reset(void *ctx);
 extern double lua_engine_call_update(void *ctx);
 extern unsigned char *lua_engine_call_string(void *ctx);
 extern void lua_engine_cleanup(void **ctx);
-extern void lua_engine_call_command(void *ctx,unsigned char *comm);
+extern void lua_engine_call_command(void *ctx, unsigned char *comm);
 
 /*JavaScript prototypes*/
-extern void *js_engine_init(void *buf,void *pv);
+extern void *js_engine_init(void *buf, void *pv);
 extern void js_engine_call_reset(void  *ctx);
 extern double js_engine_call_update(void *ctx);
 extern unsigned char *js_engine_call_string(void *ctx);
 extern void js_engine_cleanup(void **ctx);
-extern void js_engine_call_command(void *ctx,unsigned char *comm);
+extern void js_engine_call_command(void *ctx, unsigned char *comm);
 
 typedef enum
 {
@@ -58,66 +58,66 @@ typedef struct
 
 } script_data;
 
-void script_init(void **spv,void *ip)
+void script_init(void **spv, void *ip)
 {
-    script_data *sc=zmalloc(sizeof(script_data));
-    sc->s=ip;
-    sc->sd=sc->s->sd;
-    sc->cd=sc->sd->cd;
-    *spv=sc;
+    script_data *sc = zmalloc(sizeof(script_data));
+    sc->s = ip;
+    sc->sd = sc->s->sd;
+    sc->cd = sc->sd->cd;
+    *spv = sc;
 }
 
-void script_reset(void *spv,void *ip)
+void script_reset(void *spv, void *ip)
 {
-    script_data *sc=spv;
+    script_data *sc = spv;
 
-    unsigned char * s=param_string("ScriptPath",0x3,ip,NULL);
-    unsigned char script_changed=1;
+    unsigned char * s = param_string("ScriptPath", 0x3, ip, NULL);
+    unsigned char script_changed = 1;
 
     if(s) //if the scripts differs you know what that means (bye bye old script)
     {
-        size_t mem=0;
-        unsigned char *tbuf=NULL;
+        size_t mem = 0;
+        unsigned char *tbuf = NULL;
 
-        if(put_file_in_memory(s,(void**)&tbuf,&mem)==0)
+        if(put_file_in_memory(s, (void**)&tbuf, &mem) == 0)
         {
 
-            unsigned char *ref=NULL;
+            unsigned char *ref = NULL;
 
-            if(tbuf[0]==0xff&&tbuf[1]==0xfe) //unicode? no problem
+            if(tbuf[0] == 0xff && tbuf[1] == 0xfe) //unicode? no problem
             {
-                unsigned char *ttbuf=zmalloc(mem+2); //we have to ensure that the string is null terminated
-                memcpy(ttbuf,tbuf,mem);
+                unsigned char *ttbuf = zmalloc(mem + 2); //we have to ensure that the string is null terminated
+                memcpy(ttbuf, tbuf, mem);
                 sfree((void**)&tbuf);
-                ref=ucs_to_utf8((unsigned short*)(ttbuf+4),&mem,0);
+                ref = ucs_to_utf8((unsigned short*)(ttbuf + 4), &mem, 0);
                 sfree((void**)&ttbuf);
             }
             else
             {
-                unsigned char *ttbuf=zmalloc(mem+1); //we have to ensure that the string is null terminated
-                memcpy(ttbuf,tbuf,mem);
+                unsigned char *ttbuf = zmalloc(mem + 1); //we have to ensure that the string is null terminated
+                memcpy(ttbuf, tbuf, mem);
                 sfree((void**)&tbuf);
-                ref=ttbuf;
+                ref = ttbuf;
             }
 
-            if(ref&&sc->scode&&strcasecmp(ref,sc->scode)==0)
+            if(ref && sc->scode && strcasecmp(ref, sc->scode) == 0)
             {
                 sfree((void**)&ref);
-                script_changed=0;
+                script_changed = 0;
             }
             else
             {
                 sfree((void**)&sc->scode);
-                sc->scode=ref;
+                sc->scode = ref;
             }
         }
 
         sfree((void**)&sc->script_name);
-        sc->script_name=clone_string(s);
+        sc->script_name = clone_string(s);
     }
 
     /*Destroy the old engine context*/
-    if(sc->ctx&&script_changed)
+    if(sc->ctx && script_changed)
     {
         switch(sc->eng)
         {
@@ -134,7 +134,7 @@ void script_reset(void *spv,void *ip)
                 break;
         }
 
-        sc->ctx=NULL;
+        sc->ctx = NULL;
     }
 
 
@@ -142,19 +142,19 @@ void script_reset(void *spv,void *ip)
     /*The detection is pretty straight forward:
      * Try to create a context until there's one successful. If it is, then that is our engine. If it's not..well...bad luck
      */
-    if(sc->ctx==NULL)
+    if(sc->ctx == NULL)
     {
-        if((sc->ctx=lua_engine_init(sc->scode,sc))!=NULL)
+        if((sc->ctx = lua_engine_init(sc->scode, sc)) != NULL)
         {
-            sc->eng=lua;
+            sc->eng = lua;
         }
-        else if((sc->ctx=js_engine_init(sc->scode,sc))!=NULL)
+        else if((sc->ctx = js_engine_init(sc->scode, sc)) != NULL)
         {
-            sc->eng=javascript;
+            sc->eng = javascript;
         }
         else
         {
-            sc->eng=unknown;
+            sc->eng = unknown;
         }
     }
 
@@ -178,7 +178,7 @@ void script_reset(void *spv,void *ip)
 
 double script_update(void *spv)
 {
-    script_data *sc=spv;
+    script_data *sc = spv;
 
     switch(sc->eng)
     {
@@ -198,17 +198,17 @@ double script_update(void *spv)
 
 unsigned char *script_string(void *spv)
 {
-    script_data *sc=spv;
+    script_data *sc = spv;
     sfree((void**)&sc->sval);
 
     switch(sc->eng)
     {
         case lua:
-            sc->sval=lua_engine_call_string(sc->ctx);
+            sc->sval = lua_engine_call_string(sc->ctx);
             break;
 
         case javascript:
-            sc->sval=js_engine_call_string(sc->ctx);
+            sc->sval = js_engine_call_string(sc->ctx);
             break;
 
         case python:
@@ -222,7 +222,7 @@ unsigned char *script_string(void *spv)
 
 void script_destroy(void **spv)
 {
-    script_data *sc=*spv;
+    script_data *sc = *spv;
 
     sfree((void**)&sc->scode);
     sfree((void**)&sc->ret_val);
@@ -250,21 +250,21 @@ void script_destroy(void **spv)
     sfree(spv);
 }
 
-void script_command(void *spv,unsigned char *comm)
+void script_command(void *spv, unsigned char *comm)
 {
-    script_data *sc=spv;
+    script_data *sc = spv;
 
     switch(sc->eng)
     {
         case lua:
             if(sc->ctx)
-                lua_engine_call_command(sc->ctx,comm);
+                lua_engine_call_command(sc->ctx, comm);
 
             break;
 
         case javascript:
             if(sc->ctx)
-                js_engine_call_command(sc->ctx,comm);
+                js_engine_call_command(sc->ctx, comm);
 
             break;
 
@@ -280,78 +280,78 @@ void script_command(void *spv,unsigned char *comm)
  ******************************
  */
 
-unsigned char *script_param_retrieve(script_item_data *sid,unsigned char *res,unsigned char *def,unsigned char xflags)
+unsigned char *script_param_retrieve(script_item_data *sid, unsigned char *res, unsigned char *def, unsigned char xflags)
 {
-    object *o=NULL;
-    source *s=NULL;
-    script_data *sc=sid->pv;
+    object *o = NULL;
+    source *s = NULL;
+    script_data *sc = sid->pv;
 
     switch(sid->type)
     {
         case 1:
-            o=object_by_name(sc->sd,sid->name,-1);
+            o = object_by_name(sc->sd, sid->name, -1);
             break;
 
         case 2:
-            s=source_by_name(sc->sd,sid->name,-1);
+            s = source_by_name(sc->sd, sid->name, -1);
             break;
 
         default:
             return(NULL);
     }
 
-    if(o==NULL&&s==NULL&&sid->name[0])
+    if(o == NULL && s == NULL && sid->name[0])
     {
         return(NULL);
     }
 
     sfree((void**)&sc->ret_val);
 
-    if(!strcasecmp(res,"Name"))
+    if(!strcasecmp(res, "Name"))
     {
         if(sid->name[0])
         {
-            sc->ret_val=clone_string(skeleton_get_section_name((o==NULL?s->cs:o->os)));
+            sc->ret_val = clone_string(skeleton_get_section_name((o == NULL ? s->cs : o->os)));
         }
         else
         {
-            sc->ret_val=clone_string(skeleton_get_section_name(sc->s->cs));
+            sc->ret_val = clone_string(skeleton_get_section_name(sc->s->cs));
         }
     }
     else
     {
         if(sid->name[0])
         {
-            sc->ret_val=parameter_string(((void*)o==NULL?(void*)s:(void*)o),res,def,xflags);
+            sc->ret_val = parameter_string(((void*)o == NULL ? (void*)s : (void*)o), res, def, xflags);
         }
         else
         {
-            sc->ret_val=parameter_string(sc->s,res,def,XPANDER_REQUESTOR_SOURCE);
+            sc->ret_val = parameter_string(sc->s, res, def, XPANDER_REQUESTOR_SOURCE);
         }
     }
 
     return(sc->ret_val);
 }
 
-void script_set_param(script_item_data *sid,unsigned char *p,unsigned char *v)
+void script_set_param(script_item_data *sid, unsigned char *p, unsigned char *v)
 {
-    static unsigned char fmt[]="Parameter(%s,%s,%s)";
-    size_t nm=string_length(v)+string_length(p)+sizeof(fmt)+string_length(sid->name);
-    unsigned char *buf=zmalloc(nm);
+    static unsigned char fmt[] = "Parameter(%s,%s,%s)";
+    size_t nm = string_length(v) + string_length(p) + sizeof(fmt) + string_length(sid->name);
+    unsigned char *buf = zmalloc(nm);
 
 
-    script_data *sc=sid->pv;
-    snprintf(buf,nm,fmt,sid->name,p,v);
-    command(sc->sd,&buf);
+    script_data *sc = sid->pv;
+    snprintf(buf, nm, fmt, sid->name, p, v);
+    command(sc->sd, &buf);
     sfree((void**)&buf);
 }
 
-double script_object_param(script_item_data *sid,unsigned char id) /*this should get the real parameters*/
+double script_object_param(script_item_data *sid, unsigned char id) /*this should get the real parameters*/
 {
-    script_data *sc=sid->pv;
-    object *o=object_by_name(sc->sd,sid->name,-1);
+    script_data *sc = sid->pv;
+    object *o = object_by_name(sc->sd, sid->name, -1);
 
-    if(o==NULL)
+    if(o == NULL)
         return(-1.0);
 
     switch(id)
@@ -386,17 +386,17 @@ static inline double script_source_relative_value(double val, double min, double
 }
 
 
-void *script_source_param(script_item_data *sid,unsigned char id) /*this should get the real parameters*/
+void *script_source_param(script_item_data *sid, unsigned char id) /*this should get the real parameters*/
 {
-    script_data *sc=sid->pv;
-    source *s=source_by_name(sc->sd,sid->name,-1);
+    script_data *sc = sid->pv;
+    source *s = source_by_name(sc->sd, sid->name, -1);
 
-    if(s==NULL)
+    if(s == NULL)
     {
         return(NULL);
     }
 
-    static double res=0;
+    static double res = 0;
 
     switch(id)
     {
@@ -413,11 +413,11 @@ void *script_source_param(script_item_data *sid,unsigned char id) /*this should 
             return(&s->min_val);
 
         case 5:
-            res=s->max_val-s->min_val;
+            res = s->max_val - s->min_val;
             return(&res);
 
         case 6:
-            res=(script_source_relative_value(s->d_info,s->min_val,s->max_val));
+            res = (script_source_relative_value(s->d_info, s->min_val, s->max_val));
             return(&res);
     }
 
@@ -426,9 +426,9 @@ void *script_source_param(script_item_data *sid,unsigned char id) /*this should 
 
 double script_math(unsigned char *frml)
 {
-    double r=0.0;
+    double r = 0.0;
 
-    if(frml&&math_parser(frml,&r,NULL,NULL)==0)
+    if(frml && math_parser(frml, &r, NULL, NULL) == 0)
     {
         return(r);
     }
@@ -436,46 +436,46 @@ double script_math(unsigned char *frml)
     return(0.0);
 }
 
-void script_send_command(void *pv,unsigned char *cmd) /*this allows the script to send commands to the core*/
+void script_send_command(void *pv, unsigned char *cmd) /*this allows the script to send commands to the core*/
 {
-    script_data *sc=pv;
-    command(sc->sd,&cmd);
+    script_data *sc = pv;
+    command(sc->sd, &cmd);
 }
 
-unsigned char *script_xpand(void *pv,unsigned char *s)
+unsigned char *script_xpand(void *pv, unsigned char *s)
 {
-    script_data *sc=pv;
-    xpander_request xr=
+    script_data *sc = pv;
+    xpander_request xr =
     {
-        .requestor=sc->sd,
-        .os=s,
-        .req_type=XPANDER_SURFACE,
-        .es=NULL
+        .requestor = sc->sd,
+        .os = s,
+        .req_type = XPANDER_SURFACE,
+        .es = NULL
     };
 
     if(xpander(&xr))
     {
         sfree((void **)&sc->ret_val);
-        sc->ret_val=xr.es;
+        sc->ret_val = xr.es;
     }
     else
     {
-        sc->ret_val=clone_string(xr.os);
+        sc->ret_val = clone_string(xr.os);
     }
 
     return(sc->ret_val);
 }
 
-unsigned char *script_variable(void *pv,unsigned char *s)
+unsigned char *script_variable(void *pv, unsigned char *s)
 {
-    script_data *sc=pv;
-    size_t len=string_length(s)+3;
-    unsigned char *ts=zmalloc(len);
+    script_data *sc = pv;
+    size_t len = string_length(s) + 3;
+    unsigned char *ts = zmalloc(len);
 
-    snprintf(ts,len,"$%s$",s);
-    script_xpand(pv,ts);
+    snprintf(ts, len, "$%s$", s);
+    script_xpand(pv, ts);
 
-    if(ts&&sc->ret_val&&!strcasecmp(ts,sc->ret_val))
+    if(ts && sc->ret_val && !strcasecmp(ts, sc->ret_val))
     {
         sfree((void**)&sc->ret_val);
     }

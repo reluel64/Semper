@@ -28,51 +28,51 @@ static int team_filter(string_tokenizer_status *sts, void* pv)
     return (0);
 }
 
-unsigned char team_member(unsigned char *members,unsigned char *rmember)
+unsigned char team_member(unsigned char *members, unsigned char *rmember)
 {
-    int found=0;
-    size_t quotes=0;
-    string_tokenizer_info sti=
+    int found = 0;
+    size_t quotes = 0;
+    string_tokenizer_info sti =
     {
-        .buffer=members,
-        .oveclen=0,
-        .ovecoff=NULL,
-        .string_tokenizer_filter=team_filter,
-        .filter_data=&quotes
+        .buffer = members,
+        .oveclen = 0,
+        .ovecoff = NULL,
+        .string_tokenizer_filter = team_filter,
+        .filter_data = &quotes
     };
 
-    if(members==NULL||rmember==NULL)
+    if(members == NULL || rmember == NULL)
     {
         return(0);
     }
 
     string_tokenizer(&sti);
 
-    for(size_t i=0; i<sti.oveclen/2; i++)
+    for(size_t i = 0; i < sti.oveclen / 2; i++)
     {
-        size_t start = sti.ovecoff[2*i];
-        size_t end   = sti.ovecoff[2*i+1];
+        size_t start = sti.ovecoff[2 * i];
+        size_t end   = sti.ovecoff[2 * i + 1];
 
-        if(string_strip_space_offsets(members,&start,&end)==0)
+        if(string_strip_space_offsets(members, &start, &end) == 0)
         {
-            if(members[start]==';')
+            if(members[start] == ';')
             {
                 start++;
             }
         }
 
-        if(string_strip_space_offsets(members,&start,&end)==0)
+        if(string_strip_space_offsets(members, &start, &end) == 0)
         {
-            if(members[start]=='"'||members[start]=='\'')
+            if(members[start] == '"' || members[start] == '\'')
                 start++;
 
-            if(members[end-1]=='"'||members[end-1]=='\'')
+            if(members[end - 1] == '"' || members[end - 1] == '\'')
                 end--;
         }
 
-        if(!strncasecmp(members+start,rmember,end-start))
+        if(!strncasecmp(members + start, rmember, end - start))
         {
-            found=1;
+            found = 1;
             break;
         }
     }

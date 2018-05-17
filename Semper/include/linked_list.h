@@ -42,16 +42,16 @@ static inline int linked_list_empty(list_entry* head)
     return (head->next == head);
 }
 
-static inline void linked_list_replace(list_entry *cr,list_entry *nw)
+static inline void linked_list_replace(list_entry *cr, list_entry *nw)
 {
-    nw->next=cr->next;
-    nw->prev=cr->prev;
-    nw->next->prev=nw;
-    nw->prev->next=nw;
+    nw->next = cr->next;
+    nw->prev = cr->prev;
+    nw->next->prev = nw;
+    nw->prev->next = nw;
 }
 static inline int linked_list_single(list_entry *head)
 {
-    return(head->next->next==head);
+    return(head->next->next == head);
 }
 
 #define list_enum(pos, head) for(pos = (head->next); pos != (head); pos = pos->next)

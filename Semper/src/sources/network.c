@@ -32,14 +32,14 @@ typedef struct _MIB_IF_ROW2
     NET_IF_DIRECTION_TYPE      DirectionType;
     struct
     {
-        BOOLEAN HardwareInterface  :1;
-        BOOLEAN FilterInterface  :1;
-        BOOLEAN ConnectorPresent   :1;
-        BOOLEAN NotAuthenticated  :1;
-        BOOLEAN NotMediaConnected  :1;
-        BOOLEAN Paused  :1;
-        BOOLEAN LowPower  :1;
-        BOOLEAN EndPointInterface  :1;
+        BOOLEAN HardwareInterface  : 1;
+        BOOLEAN FilterInterface  : 1;
+        BOOLEAN ConnectorPresent   : 1;
+        BOOLEAN NotAuthenticated  : 1;
+        BOOLEAN NotMediaConnected  : 1;
+        BOOLEAN Paused  : 1;
+        BOOLEAN LowPower  : 1;
+        BOOLEAN EndPointInterface  : 1;
     } InterfaceAndOperStatusFlags;
     IF_OPER_STATUS             OperStatus;
     NET_IF_ADMIN_STATUS        AdminStatus;
@@ -75,7 +75,7 @@ typedef struct _MIB_IF_TABLE2
     MIB_IF_ROW2 Table[ANY_SIZE];
 } MIB_IF_TABLE2, *PMIB_IF_TABLE2;
 
-DWORD WINAPI GetIfTable2( _Out_ PMIB_IF_TABLE2 *Table);
+DWORD WINAPI GetIfTable2(_Out_ PMIB_IF_TABLE2 *Table);
 VOID WINAPI FreeMibTable(_In_ PVOID Memory);
 
 #elif __linux__
@@ -87,7 +87,7 @@ typedef enum
     total,
     download,
     upload,
-    unknown=255
+    unknown = 255
 } network_info;
 
 typedef struct
@@ -105,51 +105,53 @@ typedef struct
 static size_t network_interface_index(unsigned char *iname);
 static size_t network_get_bytes(network *n);
 
-void network_init(void**spv,void *ip)
+void network_init(void**spv, void *ip)
 {
     unused_parameter(ip);
-    network *n=zmalloc(sizeof(network));
-    *spv=n;
+    network *n = zmalloc(sizeof(network));
+    *spv = n;
 }
 
-void network_reset(void *spv,void *ip)
+void network_reset(void *spv, void *ip)
 {
 
-    network *n=spv;
-    char *t=NULL;
-    unsigned char *p=param_string("Type",EXTENSION_XPAND_ALL,ip,"Total");
+    network *n = spv;
+    char *t = NULL;
+    unsigned char *p = param_string("Type", EXTENSION_XPAND_ALL, ip, "Total");
 
     if(p)
     {
-        if(!strcasecmp(p,"Total"))
-            n->inf=total;
-        else if(!strcasecmp(p,"Download"))
-            n->inf=download;
-        else if(!strcasecmp(p,"Upload"))
-            n->inf=upload;
+        if(!strcasecmp(p, "Total"))
+            n->inf = total;
+        else if(!strcasecmp(p, "Download"))
+            n->inf = download;
+        else if(!strcasecmp(p, "Upload"))
+            n->inf = upload;
         else
-            n->inf=unknown;
+            n->inf = unknown;
     }
 
-    n->qty=param_bool("Quantity",ip,0);
-    p=param_string("Interface",EXTENSION_XPAND_ALL,ip,"0");
-    n-> if_index=strtoul(p,&t,10);
+    n->qty = param_bool("Quantity", ip, 0);
+    p = param_string("Interface", EXTENSION_XPAND_ALL, ip, "0");
+    n-> if_index = strtoul(p, &t, 10);
 
 #ifdef WIN32
-    if(p==(unsigned char*)t)
+
+    if(p == (unsigned char*)t)
     {
-        n->best=!strcasecmp(p,"Best");
+        n->best = !strcasecmp(p, "Best");
 
         if(n->best)
         {
-            n->if_index=network_interface_index(p);
+            n->if_index = network_interface_index(p);
         }
     }
     else
     {
         n->if_index++;
-        n->best=0;
+        n->best = 0;
     }
+
 #endif
 }
 
@@ -158,35 +160,35 @@ void network_reset(void *spv,void *ip)
 double network_update(void *spv)
 {
 
-    network *n=spv;
-    time_t ct=time(NULL);
+    network *n = spv;
+    time_t ct = time(NULL);
 
-    size_t new_value=0;
+    size_t new_value = 0;
 
-    if(ct-n->t<1)
+    if(ct - n->t < 1)
     {
         return(n->v); //we'll not update the speed if the interval is less than a second
     }
 
-    new_value=network_get_bytes(n);
+    new_value = network_get_bytes(n);
 
-    if(new_value>=n->old_bytes&&n->old_bytes)
+    if(new_value >= n->old_bytes && n->old_bytes)
     {
-        n->v=(double)(new_value-n->old_bytes);
-        n->qty_bytes+=(new_value-n->old_bytes);
-        n->old_bytes=new_value;
+        n->v = (double)(new_value - n->old_bytes);
+        n->qty_bytes += (new_value - n->old_bytes);
+        n->old_bytes = new_value;
 
         if(n->qty)
         {
-            n->v=(double)n->qty_bytes;
+            n->v = (double)n->qty_bytes;
         }
     }
     else
     {
-        n->old_bytes=new_value;
+        n->old_bytes = new_value;
     }
 
-    n->t=ct; //set the new time
+    n->t = ct; //set the new time
 
     return(n->v);
 }
@@ -200,87 +202,87 @@ void network_destroy(void **spv)
 
 static size_t network_get_bytes(network *n)
 {
-    size_t c_bytes=0;
+    size_t c_bytes = 0;
 #ifdef WIN32
-    MIB_IF_TABLE2 *tbl=NULL;
+    MIB_IF_TABLE2 *tbl = NULL;
 
 
-    if(GetIfTable2(&tbl)!=NO_ERROR)
+    if(GetIfTable2(&tbl) != NO_ERROR)
     {
         return(0);
     }
 
     if(n->best)
     {
-        if(GetBestInterface(INADDR_ANY,(DWORD*)&n->if_index)!=NO_ERROR)
+        if(GetBestInterface(INADDR_ANY, (DWORD*)&n->if_index) != NO_ERROR)
         {
-            n->if_index=0; //get the data from all the interfaces (until next call)
-            n->best|=0x2; //indicate an error
+            n->if_index = 0; //get the data from all the interfaces (until next call)
+            n->best |= 0x2; //indicate an error
         }
         else
         {
-            for(size_t i=0; i<tbl->NumEntries; i++)
+            for(size_t i = 0; i < tbl->NumEntries; i++)
             {
-                if(tbl->Table[i].InterfaceIndex==(NET_IFINDEX)n->if_index)
+                if(tbl->Table[i].InterfaceIndex == (NET_IFINDEX)n->if_index)
                 {
-                    n->if_index=i+1;
+                    n->if_index = i + 1;
                     break;
                 }
             }
 
-            n->best=1; //all clear
+            n->best = 1; //all clear
         }
     }
 
-    if(n->if_index-1&&n->if_index-1<=tbl->NumEntries)
+    if(n->if_index - 1 && n->if_index - 1 <= tbl->NumEntries)
     {
 
         switch(n->inf)
         {
             case total:
-                c_bytes+=tbl->Table[n->if_index-1].InOctets;
-                c_bytes+=tbl->Table[n->if_index-1].OutOctets;
+                c_bytes += tbl->Table[n->if_index - 1].InOctets;
+                c_bytes += tbl->Table[n->if_index - 1].OutOctets;
                 break;
 
             case download:
-                c_bytes+=tbl->Table[n->if_index-1].InOctets;
+                c_bytes += tbl->Table[n->if_index - 1].InOctets;
                 break;
 
             case upload:
-                c_bytes+=tbl->Table[n->if_index-1].OutOctets;
+                c_bytes += tbl->Table[n->if_index - 1].OutOctets;
                 break;
 
             case unknown:
-                c_bytes=0;
+                c_bytes = 0;
                 break;
         }
     }
 
     else
     {
-        for(size_t i=0; i<tbl->NumEntries; i++)
+        for(size_t i = 0; i < tbl->NumEntries; i++)
         {
-            if (tbl->Table[i].Type == IF_TYPE_SOFTWARE_LOOPBACK ||
+            if(tbl->Table[i].Type == IF_TYPE_SOFTWARE_LOOPBACK ||
                     tbl->Table[i].InterfaceAndOperStatusFlags.FilterInterface == 1)
                 continue;
 
             switch(n->inf)
             {
                 case total:
-                    c_bytes+=tbl->Table[i].InOctets;
-                    c_bytes+=tbl->Table[i].OutOctets;
+                    c_bytes += tbl->Table[i].InOctets;
+                    c_bytes += tbl->Table[i].OutOctets;
                     break;
 
                 case download:
-                    c_bytes+=tbl->Table[i].InOctets;
+                    c_bytes += tbl->Table[i].InOctets;
                     break;
 
                 case upload:
-                    c_bytes+=tbl->Table[i].OutOctets;
+                    c_bytes += tbl->Table[i].OutOctets;
                     break;
 
                 case unknown:
-                    c_bytes=0;
+                    c_bytes = 0;
                     break;
             }
         }
@@ -288,58 +290,58 @@ static size_t network_get_bytes(network *n)
 
     FreeMibTable(tbl);
 #elif __linux
-    DIR *dh=opendir("/sys/class/net");
-    struct dirent *dir=NULL;
-    unsigned char buf[512]= {0};
-    size_t rx=0;
-    size_t tx=0;
+    DIR *dh = opendir("/sys/class/net");
+    struct dirent *dir = NULL;
+    unsigned char buf[512] = {0};
+    size_t rx = 0;
+    size_t tx = 0;
 
-    if(dh==NULL)
+    if(dh == NULL)
         return(0);
 
-    while((dir=readdir(dh))!=NULL)
+    while((dir = readdir(dh)) != NULL)
     {
-        size_t lifindex=network_interface_index(dir->d_name);
+        size_t lifindex = network_interface_index(dir->d_name);
 
-        if(n->if_index==0||lifindex==n->if_index-1)
+        if(n->if_index == 0 || lifindex == n->if_index - 1)
         {
-            size_t lrx=0;
-            size_t ltx=0;
+            size_t lrx = 0;
+            size_t ltx = 0;
 
-            snprintf(buf,512,"/sys/class/net/%s/statistics/rx_bytes",dir->d_name);
-            FILE *f=fopen(buf,"r");
-
-            if(f)
-            {
-                fscanf(f,"%lu",&lrx);
-                fclose(f);
-            }
-
-            snprintf(buf,512,"/sys/class/net/%s/statistics/tx_bytes",dir->d_name);
-            f=fopen(buf,"r");
+            snprintf(buf, 512, "/sys/class/net/%s/statistics/rx_bytes", dir->d_name);
+            FILE *f = fopen(buf, "r");
 
             if(f)
             {
-                fscanf(f,"%lu",&ltx);
+                fscanf(f, "%lu", &lrx);
                 fclose(f);
             }
 
-            rx+=lrx;
-            tx+=ltx;
+            snprintf(buf, 512, "/sys/class/net/%s/statistics/tx_bytes", dir->d_name);
+            f = fopen(buf, "r");
 
-            if(lifindex==n->if_index-1)
+            if(f)
+            {
+                fscanf(f, "%lu", &ltx);
+                fclose(f);
+            }
+
+            rx += lrx;
+            tx += ltx;
+
+            if(lifindex == n->if_index - 1)
                 break;
         }
     }
 
     closedir(dh);
 
-    if(n->inf==total)
-        c_bytes=rx+tx;
-    else if(n->inf==download)
-        c_bytes=rx;
-    else if(n->inf==upload)
-        c_bytes=tx;
+    if(n->inf == total)
+        c_bytes = rx + tx;
+    else if(n->inf == download)
+        c_bytes = rx;
+    else if(n->inf == upload)
+        c_bytes = tx;
 
 #endif
     return(c_bytes);
@@ -349,28 +351,28 @@ static size_t network_get_bytes(network *n)
 static size_t network_interface_index(unsigned char *iname)
 {
 
-    size_t if_index=0;
+    size_t if_index = 0;
 
-    if(iname==NULL)
+    if(iname == NULL)
     {
         return(0);
     }
 
 #ifdef WIN32
-    MIB_IF_TABLE2 *tbl=NULL;
-    unsigned short *uc=utf8_to_ucs(iname);
+    MIB_IF_TABLE2 *tbl = NULL;
+    unsigned short *uc = utf8_to_ucs(iname);
 
-    if(GetIfTable2(&tbl)!=NO_ERROR)
+    if(GetIfTable2(&tbl) != NO_ERROR)
     {
         sfree((void**)&uc);
         return(0);
     }
 
-    for(size_t i=0; i<tbl->NumEntries; i++)
+    for(size_t i = 0; i < tbl->NumEntries; i++)
     {
-        if(!wcsicmp(uc,tbl->Table[i].Description))
+        if(!wcsicmp(uc, tbl->Table[i].Description))
         {
-            if_index=tbl->Table[i].InterfaceIndex+1;
+            if_index = tbl->Table[i].InterfaceIndex + 1;
             break;
         }
     }
@@ -378,17 +380,17 @@ static size_t network_interface_index(unsigned char *iname)
     FreeMibTable(tbl);
     sfree((void**)&uc);
 #elif __linux__
-    unsigned char buf[256]= {0};
-    snprintf(buf,256,"/sys/class/net/%s/ifindex",iname);
-    FILE *f=fopen(buf,"r");
+    unsigned char buf[256] = {0};
+    snprintf(buf, 256, "/sys/class/net/%s/ifindex", iname);
+    FILE *f = fopen(buf, "r");
 
-    if(f==NULL)
+    if(f == NULL)
     {
         return(0);
     }
     else
     {
-        fscanf(f,"%lu",&if_index);
+        fscanf(f, "%lu", &if_index);
         fclose(f);
     }
 

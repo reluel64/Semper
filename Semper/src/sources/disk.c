@@ -28,20 +28,20 @@ typedef struct _disk
 #ifdef __linux__
 static unsigned char disk_check_removable(unsigned char *p)
 {
-    unsigned char removable=0;
-    unsigned char path[256]= {0};
-    unsigned char base[32]= {0};
-    sscanf(p,"/dev/%[A-z]31s",base);
-    snprintf(path,256,"/sys/block/%s/removable",base);
-    FILE *f=fopen(path,"r");
+    unsigned char removable = 0;
+    unsigned char path[256] = {0};
+    unsigned char base[32] = {0};
+    sscanf(p, "/dev/%[A-z]31s", base);
+    snprintf(path, 256, "/sys/block/%s/removable", base);
+    FILE *f = fopen(path, "r");
 
     if(f)
     {
-        removable=fgetc(f)!='0';
+        removable = fgetc(f) != '0';
         fclose(f);
     }
     else
-        removable=2;
+        removable = 2;
 
     return(removable);
 }
@@ -81,21 +81,21 @@ void disk_reset(void* spv, void* ip)
     sfree((void**)&buf);
     source_set_max((double)((ULARGE_INTEGER*)d->total_bytes)->QuadPart, ip, 1, 0);
 #elif __linux__
-    struct statfs s= {0};
+    struct statfs s = {0};
 
-    if(d->total_bytes==NULL)
+    if(d->total_bytes == NULL)
     {
-        d->total_bytes=zmalloc(sizeof(size_t));
+        d->total_bytes = zmalloc(sizeof(size_t));
     }
 
-    if(d->free_bytes==NULL)
+    if(d->free_bytes == NULL)
     {
-        d->free_bytes=zmalloc(sizeof(size_t));
+        d->free_bytes = zmalloc(sizeof(size_t));
     }
 
-    if(statfs(d->name,&s)==0)
+    if(statfs(d->name, &s) == 0)
     {
-        ((size_t*)d->total_bytes)[0]=s.f_blocks*s.f_bsize;
+        ((size_t*)d->total_bytes)[0] = s.f_blocks * s.f_bsize;
     }
 
 #endif
@@ -138,19 +138,19 @@ double disk_update(void* spv)
 
 #elif __linux__
 
-    if(d->type==0)
+    if(d->type == 0)
     {
-        struct statfs s= {0};
+        struct statfs s = {0};
 
-        if(statfs(d->name,&s)==0)
+        if(statfs(d->name, &s) == 0)
         {
-            ((size_t*)d->total_bytes)[0]=s.f_blocks*s.f_bsize;
-            ((size_t*)d->free_bytes)[0]=s.f_bfree*s.f_bsize;
+            ((size_t*)d->total_bytes)[0] = s.f_blocks * s.f_bsize;
+            ((size_t*)d->free_bytes)[0] = s.f_bfree * s.f_bsize;
         }
         else
         {
-            ((size_t*)d->total_bytes)[0]=0;
-            ((size_t*)d->free_bytes)[0]=0;
+            ((size_t*)d->total_bytes)[0] = 0;
+            ((size_t*)d->free_bytes)[0] = 0;
         }
 
         if(d->total)
@@ -190,7 +190,7 @@ unsigned char* disk_string(void* spv)
 #ifdef WIN32
         return (types[GetDriveType(d->name)]);
 #elif __linux__
-        unsigned char removable=disk_check_removable(d->name);
+        unsigned char removable = disk_check_removable(d->name);
         // (removable==0)?return(types[3]):0;
         //  (removable==1)?return(types[2]):0;
         // (removable==2)?return(types[1]):0;

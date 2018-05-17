@@ -96,7 +96,7 @@ void histogram_reset(object* o)
 void histogram_destroy(object* o)
 {
     histogram_object* ho = o->pv;
-    surface_data *sd=o->sd;
+    surface_data *sd = o->sd;
 
     if(ho)
     {
@@ -115,9 +115,9 @@ void histogram_destroy(object* o)
             sfree((void**)&hv);
         }
 
-        image_cache_unref_image(sd->cd->ich, &ho->h1ia,1);
-        image_cache_unref_image(sd->cd->ich, &ho->h2ia,1);
-        image_cache_unref_image(sd->cd->ich, &ho->hcia,1);
+        image_cache_unref_image(sd->cd->ich, &ho->h1ia, 1);
+        image_cache_unref_image(sd->cd->ich, &ho->h2ia, 1);
+        image_cache_unref_image(sd->cd->ich, &ho->hcia, 1);
 
         sfree((void**)&ho->h1ia.path);
         sfree((void**)&ho->h2ia.path);
@@ -211,13 +211,13 @@ int histogram_update(object* o)
         linked_list_add(&hv2->current, &ho->val_2);
     }
 
-    image_cache_unref_image(sd->cd->ich, &ho->h1ia,0);
-    image_cache_unref_image(sd->cd->ich, &ho->h2ia,0);
-    image_cache_unref_image(sd->cd->ich, &ho->hcia,0);
+    image_cache_unref_image(sd->cd->ich, &ho->h1ia, 0);
+    image_cache_unref_image(sd->cd->ich, &ho->h2ia, 0);
+    image_cache_unref_image(sd->cd->ich, &ho->hcia, 0);
 
-    image_cache_query_image(sd->cd->ich, &ho->h1ia,NULL, o->w, o->h);
-    image_cache_query_image(sd->cd->ich, &ho->h2ia,NULL, o->w, o->h);
-    image_cache_query_image(sd->cd->ich, &ho->hcia,NULL, o->w, o->h);
+    image_cache_query_image(sd->cd->ich, &ho->h1ia, NULL, o->w, o->h);
+    image_cache_query_image(sd->cd->ich, &ho->h2ia, NULL, o->w, o->h);
+    image_cache_query_image(sd->cd->ich, &ho->hcia, NULL, o->w, o->h);
 
     return (1);
 }
@@ -236,10 +236,10 @@ int histogram_render(object* o, cairo_t* cr)
 
     cairo_surface_t* image_surface = NULL;
     histogram_object* ho = o->pv;
-    surface_data *sd=o->sd;
-    unsigned char *px=NULL;
-    unsigned char *px1=NULL;
-    unsigned char *px2=NULL;
+    surface_data *sd = o->sd;
+    unsigned char *px = NULL;
+    unsigned char *px1 = NULL;
+    unsigned char *px2 = NULL;
 
 
     if(ho->straight)
@@ -249,9 +249,9 @@ int histogram_render(object* o, cairo_t* cr)
 
     cairo_set_line_width(cr, 1.0);
 
-    image_cache_query_image(sd->cd->ich, &ho->hcia,&px,  o->w, o->h);
-    image_cache_query_image(sd->cd->ich, &ho->h1ia,&px1, o->w, o->h);
-    image_cache_query_image(sd->cd->ich, &ho->h2ia,&px2, o->w, o->h);
+    image_cache_query_image(sd->cd->ich, &ho->hcia, &px,  o->w, o->h);
+    image_cache_query_image(sd->cd->ich, &ho->h1ia, &px1, o->w, o->h);
+    image_cache_query_image(sd->cd->ich, &ho->h2ia, &px2, o->w, o->h);
 
     if(px == NULL)
     {
@@ -385,12 +385,12 @@ int histogram_render(object* o, cairo_t* cr)
 
         if((h == 0 ? px1 : px2) == NULL)
         {
-            cairo_set_color(cr, (h==1?ho->hist_2_color: ho->hist_color));
+            cairo_set_color(cr, (h == 1 ? ho->hist_2_color : ho->hist_color));
         }
         else
         {
             int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, o->auto_w);
-            image_surface = cairo_image_surface_create_for_data((h == 0 ? px1 : px2), CAIRO_FORMAT_ARGB32,o->w,o->h,stride);
+            image_surface = cairo_image_surface_create_for_data((h == 0 ? px1 : px2), CAIRO_FORMAT_ARGB32, o->w, o->h, stride);
             cairo_set_source_surface(cr, image_surface, 0.0, 0.0);
         }
 
@@ -403,8 +403,8 @@ int histogram_render(object* o, cairo_t* cr)
         }
     }
 
-    image_cache_unref_image(sd->cd->ich, &ho->h1ia,0);
-    image_cache_unref_image(sd->cd->ich, &ho->h2ia,0);
-    image_cache_unref_image(sd->cd->ich, &ho->hcia,0);
+    image_cache_unref_image(sd->cd->ich, &ho->h1ia, 0);
+    image_cache_unref_image(sd->cd->ich, &ho->h2ia, 0);
+    image_cache_unref_image(sd->cd->ich, &ho->hcia, 0);
     return (0);
 }
