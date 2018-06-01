@@ -1,1 +1,1 @@
-/media/alex/Data/Semper_Workspace/build/DiskSpeed/disk_speed.c.o
+D:/Semper_Workspace/build/DiskSpeed/disk_speed.c.o   

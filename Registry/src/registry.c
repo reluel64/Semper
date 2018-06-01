@@ -8,6 +8,8 @@
 #include <Windows.h>
 #include <SDK/semper_api.h>
 
+#define string_length(s) (((s) == NULL ? 0 : strlen((s))))
+
 typedef struct
 {
     HKEY rh;
@@ -23,7 +25,7 @@ typedef struct
     void *evt; /*we'll use an event because why not*/
 } registry;
 
-#define string_length(s) (((s) == NULL ? 0 : strlen((s))))
+
 
 static void* zmalloc(size_t bytes)
 {

@@ -156,7 +156,7 @@ void reset(void *spv, void *ip)
         else if(!strcasecmp("ReadTotal", s))
             ds->dst = read_total;
 
-        else if(!strcasecmp("Readspeed", s))
+        else if(!strcasecmp("ReadSpeed", s))
             ds->dst = read_speed;
 
         else if(!strcasecmp("WriteTotal", s))

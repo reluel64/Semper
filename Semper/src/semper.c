@@ -82,9 +82,13 @@ static size_t semper_timestamp_get(void)
 
 size_t tss()
 {
+    #ifdef WIN32
     LARGE_INTEGER li;
     QueryPerformanceCounter(&li);
     return(li.QuadPart);
+    #elif __linux__
+    return(0);
+    #endif
 }
 
 
@@ -918,9 +922,9 @@ static int semper_watcher_callback(void *pv, void *wait)
 {
     surface_data* sd = NULL;
     control_data *cd = pv;
-
+#ifdef WIN32
     semper_init_fonts(cd);
-
+#endif
     list_enum_part(sd, &cd->surfaces, current)
     {
         if(sd->rim && surface_modified(sd))

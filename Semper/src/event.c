@@ -121,7 +121,10 @@ unsigned char event_wait(event_queue* eq)
 
     list_enum_part(ew, &eq->waiters, current)
     {
-        UnregisterWaitEx(ew->mon_th, INVALID_HANDLE_VALUE);
+        if(ew->mon_th != NULL || ew->mon_th != INVALID_HANDLE_VALUE)
+        {
+            UnregisterWaitEx(ew->mon_th, INVALID_HANDLE_VALUE);
+        }
         ew->mon_th = NULL;
 
         if(ew->wait == NULL || WaitForSingleObject(ew->wait, 0) == 0)
@@ -327,7 +330,6 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
     {
         if(eq->ce)
         {
-
             _linked_list_add(eq->ce->current.prev, &e->current, &eq->ce->current);
         }
         else

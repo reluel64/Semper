@@ -131,14 +131,6 @@ void destroy(void **spv)
 
 }
 
-
-
-
-
-
-
-
-
 static void * ohm_query(void *pv)
 {
     pthread_mutex_t mtx;
@@ -206,8 +198,6 @@ static void * ohm_query(void *pv)
                     VariantClear(&name);
                     result->lpVtbl->Release(result);
                 }
-
-
             }
             results->lpVtbl->Release(results);
         }
