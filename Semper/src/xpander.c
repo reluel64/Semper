@@ -495,6 +495,68 @@ static int xpander_src_token_filter(string_tokenizer_status *sts, void *pv)
     return(0);
 }
 
+
+static size_t xpander_index_variable(unsigned char *in, size_t in_len, unsigned char **out, void *pv)
+{
+    size_t vindex = 0;
+    size_t out_len = -1;
+    crosswin_monitor *cm = NULL;
+    surface_data *sd = pv;
+    control_data *cd = sd->cd;
+
+    if(!strncasecmp("Screen", in, min(in_len, 6)))
+    {
+        if(toupper(in[6]) == 'W' || toupper(in[6]) == 'H' || toupper(in[6]) == 'X' || toupper(in[6]) == 'Y')
+        {
+            char val = toupper(in[6]);
+
+            if(in_len > 7)
+            {
+                if(in[7] == '#')
+                {
+                    vindex = strtoull(in + 8, NULL, 10);
+                }
+                else if(toupper(in[7]) =='P')
+                {
+                    vindex = 0;
+                }
+            }
+            else
+            {
+                vindex = sd->monitor;
+            }
+
+            cm = crosswin_get_monitor(&cd->c, vindex);
+
+            if(cm && cd->c.mon_cnt >= vindex)
+            {
+                *out = zmalloc(64);
+
+                switch(val)
+                {
+                    case 'X':
+                        out_len = snprintf(*out, 64, "%ld", cm->x);
+                        break;
+
+                    case 'Y':
+                        out_len = snprintf(*out, 64, "%ld", cm->y);
+                        break;
+
+                    case 'W':
+                        out_len = snprintf(*out, 64, "%ld", cm->w);
+                        break;
+
+                    case 'H':
+                        out_len = snprintf(*out, 64, "%ld", cm->h);
+                        break;
+                }
+            }
+        }
+    }
+
+    return(out_len);
+}
+
 int xpander(xpander_request *xr)
 {
 
@@ -542,20 +604,18 @@ int xpander(xpander_request *xr)
 #warning "Monitor variables incomplete"
     xpander_table tbl[] =
     {
-        { "^",                               sd->sp.data_dir,                    NULL },
-        { "NL",                                         "\n",                    NULL },
-        { "Surfaces",                        cd->surface_dir,                    NULL },
-        { "Extensions",                          cd->ext_dir,                    NULL },
-        { "Semper",                             cd->root_dir,                    NULL },
-        { "ThisSection",     skeleton_get_section_name(sect),                    NULL },
-        { "ScreenW",                               &cd->c.sw,    xpander_convert_long },
-        { "ScreenH",                               &cd->c.sh,    xpander_convert_long },
-        { "SurfaceX",                                 &sd->x,    xpander_convert_long },
-        { "SurfaceY",                                 &sd->y,    xpander_convert_long },
-        { "SurfaceW",                                 &sd->w,    xpander_convert_long },
-        { "SurfaceH",                                 &sd->h,    xpander_convert_long },
+        { "^",                               sd->sp.data_dir,                     NULL },
+        { "NL",                                         "\n",                     NULL },
+        { "Surfaces",                        cd->surface_dir,                     NULL },
+        { "Extensions",                          cd->ext_dir,                     NULL },
+        { "Semper",                             cd->root_dir,                     NULL },
+        { "ThisSection",     skeleton_get_section_name(sect),                     NULL },
+        { "SurfaceX",                                 &sd->x,     xpander_convert_long },
+        { "SurfaceY",                                 &sd->y,     xpander_convert_long },
+        { "SurfaceW",                                 &sd->w,     xpander_convert_long },
+        { "SurfaceH",                                 &sd->h,     xpander_convert_long },
 #ifdef WIN32
-        { "OS",                               "Windows",                         NULL }
+        { "OS",                               "Windows",                          NULL }
 #elif __linux__
         { "OS",                               "Linux",                            NULL }
 #endif
@@ -654,15 +714,28 @@ int xpander(xpander_request *xr)
                     //try to match a surface variable
                     if(found == 0)
                     {
-                        key k = skeleton_get_key_n(sd->sv, wbuf + start, end - start);
 
-                        if(k)
+                        size_t len = xpander_index_variable(wbuf + start, end - start, &buf_start, sd);
+
+                        if(len == (size_t) - 1)
                         {
-                            has_var = 1;
-                            buf_start = skeleton_key_value(k);
+                            key k = skeleton_get_key_n(sd->sv, wbuf + start, end - start);
+
+                            if(k)
+                            {
+                                has_var = 1;
+                                buf_start = skeleton_key_value(k);
+                                start = 0;
+                                found = 1;
+                                end = string_length(buf_start);
+                            }
+                        }
+                        else
+                        {
                             start = 0;
+                            alloc = 1;
                             found = 1;
-                            end = string_length(buf_start);
+                            end = len;
                         }
                     }
 
