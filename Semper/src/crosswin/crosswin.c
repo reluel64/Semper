@@ -115,7 +115,7 @@ void* crosswin_get_window_data(crosswin_window* w)
     return (w ? w->user_data : NULL);
 }
 
-void crosswin_click_through(crosswin_window* w, unsigned char state)
+void crosswin_set_click_through(crosswin_window* w, unsigned char state)
 {
     if(w)
     {
@@ -126,6 +126,15 @@ void crosswin_click_through(crosswin_window* w, unsigned char state)
 #endif
     }
 }
+
+void crosswin_get_click_through(crosswin_window* w, unsigned char *state)
+{
+    if(w && state)
+    {
+        *state = w->click_through;
+    }
+}
+
 void crosswin_draw(crosswin_window* w)
 {
     if(w)
@@ -158,7 +167,7 @@ crosswin_monitor *crosswin_get_monitor(crosswin *c, size_t index)
 void crosswin_set_position(crosswin_window* w, long x, long y)
 {
 
-    if(w && ((w->x!=x)||(w->y != y)))
+    if(w && ((w->x != x) || (w->y != y)))
     {
         crosswin* c = w->c;
         crosswin_monitor *cm = crosswin_get_monitor(c, w->mon);
@@ -232,7 +241,7 @@ void crosswin_get_dimmension(crosswin_window* cw, long* w, long* h)
 
 void crosswin_set_opacity(crosswin_window* w, unsigned char opacity)
 {
-    if(w && w->opacity!=opacity)
+    if(w && w->opacity != opacity)
     {
         w->opacity = opacity;
 #ifdef WIN32
@@ -244,16 +253,24 @@ void crosswin_set_opacity(crosswin_window* w, unsigned char opacity)
     }
 }
 
+void crosswin_get_opacity(crosswin_window* w, unsigned char *opacity)
+{
+    if(w && opacity)
+    {
+        *opacity = w->opacity;
+    }
+}
+
 void crosswin_set_dimension(crosswin_window* w, long width, long height)
 {
-    if(w && (w->w!=width ||w->h != height))
+    if(w && (w->w != width || w->h != height))
     {
         w->w = labs(width);
         w->h = labs(height);
 
 
 #ifdef __linux__
-    xlib_set_dimmension(w);
+        xlib_set_dimmension(w);
 #endif
     }
 }
@@ -314,18 +331,32 @@ void crosswin_destroy(crosswin_window** w)
     }
 }
 
-void crosswin_draggable(crosswin_window* w, unsigned char draggable)
+void crosswin_set_draggable(crosswin_window* w, unsigned char draggable)
 {
     if(w)
         w->draggable = draggable;
 }
 
-void crosswin_keep_on_screen(crosswin_window* w, unsigned char keep_on_screen)
+void crosswin_get_draggable(crosswin_window* w, unsigned char *draggable)
+{
+    if(w&&draggable)
+        *draggable = w->draggable;
+}
+
+void crosswin_set_keep_on_screen(crosswin_window* w, unsigned char keep_on_screen)
 {
     if(w)
     {
         w->keep_on_screen = keep_on_screen;
         crosswin_set_position(w, w->x, w->y);
+    }
+}
+
+void crosswin_get_keep_on_screen(crosswin_window* w, unsigned char *keep_on_screen)
+{
+    if(w && keep_on_screen)
+    {
+        keep_on_screen  = w->keep_on_screen;
     }
 }
 

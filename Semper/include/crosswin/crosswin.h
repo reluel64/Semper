@@ -132,11 +132,11 @@ typedef struct _crosswin_window
     int (*mouse_func)(crosswin_window* w, mouse_status* ms);
     int (*kbd_func)(unsigned  int key_code, void* ms);
     unsigned char draggable;
-
+    unsigned char click_through;
 #ifdef WIN32
     HWND window;
 #elif __linux__
-    unsigned char click_through;
+
     unsigned char ctrl_down;
     Window window;
     Pixmap pixmap;
@@ -149,11 +149,13 @@ void crosswin_init(crosswin* c);
 void crosswin_message_dispatch(crosswin *c);
 void crosswin_set_window_data(crosswin_window* w, void* pv);
 void* crosswin_get_window_data(crosswin_window* w);
-void crosswin_click_through(crosswin_window* w, unsigned char state);
+void crosswin_set_click_through(crosswin_window* w, unsigned char state);
+void crosswin_get_click_through(crosswin_window* w, unsigned char *state);
 void crosswin_draw(crosswin_window* w);
 void crosswin_set_render(crosswin_window* w, void (*render)(crosswin_window* w, void* cr));
 void crosswin_set_position(crosswin_window* w, long x, long y);
 void crosswin_set_opacity(crosswin_window* w, unsigned char opacity);
+void crosswin_get_opacity(crosswin_window* w, unsigned char *opacity);
 crosswin_window* crosswin_init_window(crosswin* c);
 void crosswin_set_dimension(crosswin_window* w, long width, long height);
 void crosswin_set_mouse_handler(crosswin_window* w, int (*mouse_handler)(crosswin_window* w, mouse_status* ms));
@@ -162,8 +164,10 @@ void crosswin_hide(crosswin_window* w);
 void crosswin_destroy(crosswin_window** w);
 void crosswin_get_position(crosswin_window* w, long* x, long* y, size_t *monitor);
 void crosswin_get_dimmension(crosswin_window* cw, long* w, long* h);
-void crosswin_draggable(crosswin_window* w, unsigned char draggable);
-void crosswin_keep_on_screen(crosswin_window* w, unsigned char keep_on_screen);
+void crosswin_get_draggable(crosswin_window* w, unsigned char *draggable);
+void crosswin_set_draggable(crosswin_window* w, unsigned char draggable);
+void crosswin_set_keep_on_screen(crosswin_window* w, unsigned char keep_on_screen);
+void crosswin_get_keep_on_screen(crosswin_window* w, unsigned char *keep_on_screen);
 int crosswin_update(crosswin* c);
 void crosswin_monitor_resolution(crosswin* c, crosswin_window *cw, long* w, long* h);
 void crosswin_monitor_origin(crosswin *c, crosswin_window *cw, long *x, long *y);

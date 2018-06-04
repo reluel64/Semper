@@ -99,6 +99,8 @@ static int command_defer_handler(command_defer_data* ec)
 
 COMMAND_HANDLER(handler_draggable_command)
 {
+    unsigned char draggable = 0;
+
     if(cp->plength > 1)
     {
         sd = surface_by_name(sd->cd, cp->pms[1]);
@@ -109,22 +111,24 @@ COMMAND_HANDLER(handler_draggable_command)
         return (-1);
     }
 
+    crosswin_get_draggable(sd->sw, &draggable);
+
     if(!strcasecmp("-1", cp->pms[0]))
     {
-        if(sd->draggable)
+        if(draggable)
             skeleton_add_key(sd->scd, "Draggable", "0");
         else
             skeleton_add_key(sd->scd, "Draggable", "1");
 
-        sd->draggable = !sd->draggable;
+        draggable = !draggable;
     }
     else
     {
         skeleton_add_key(sd->scd, "Draggable", cp->pms[0]);
-        sd->draggable = atoi(cp->pms[0]);
+        draggable = atoi(cp->pms[0]);
     }
 
-    crosswin_draggable(sd->sw, sd->draggable);
+    crosswin_set_draggable(sd->sw, draggable);
     return (0);
 }
 
@@ -230,6 +234,8 @@ COMMAND_HANDLER(handler_reload_if_modified)
 
 COMMAND_HANDLER(handler_keep_on_screen)
 {
+    unsigned char keep_on_screen = 0;
+
     if(cp->plength > 1)
     {
         sd = surface_by_name(sd->cd, cp->pms[1]);
@@ -240,9 +246,11 @@ COMMAND_HANDLER(handler_keep_on_screen)
         return (-1);
     }
 
+    crosswin_get_keep_on_screen(sd->sw, &keep_on_screen);
+
     if(!strcasecmp("-1", cp->pms[0]))
     {
-        if(sd->keep_on_screen)
+        if(keep_on_screen)
         {
             skeleton_add_key(sd->scd, "KeepOnScreen", "0");
         }
@@ -251,20 +259,22 @@ COMMAND_HANDLER(handler_keep_on_screen)
             skeleton_add_key(sd->scd, "KeepOnScreen", "1");
         }
 
-        sd->keep_on_screen = !sd->keep_on_screen;
+        keep_on_screen = !keep_on_screen;
     }
     else
     {
         skeleton_add_key(sd->scd, "KeepOnScreen", cp->pms[0]);
-        sd->keep_on_screen = atoi(cp->pms[0]);
+        keep_on_screen = atoi(cp->pms[0]);
     }
 
-    crosswin_keep_on_screen(sd->sw, sd->keep_on_screen);
+    crosswin_set_keep_on_screen(sd->sw, keep_on_screen);
     return (0);
 }
 
 COMMAND_HANDLER(handler_click_through)
 {
+    unsigned char click_through = 0;
+
     if(cp->plength > 1)
     {
         sd = surface_by_name(sd->cd, cp->pms[1]);
@@ -275,9 +285,11 @@ COMMAND_HANDLER(handler_click_through)
         return (-1);
     }
 
+    crosswin_get_click_through(sd->sw, &click_through);
+
     if(!strcasecmp("-1", cp->pms[0]))
     {
-        if(sd->clkt)
+        if(click_through)
         {
             skeleton_add_key(sd->scd, "Clickthrough", "0");
         }
@@ -286,16 +298,16 @@ COMMAND_HANDLER(handler_click_through)
             skeleton_add_key(sd->scd, "Clickthrough", "1");
         }
 
-        sd->clkt = !sd->clkt;
+        click_through = !click_through;
 
     }
     else
     {
         skeleton_add_key(sd->scd, "Clickthrough", cp->pms[0]);
-        sd->clkt = atoi(cp->pms[0]);
+        click_through = atoi(cp->pms[0]);
     }
 
-    crosswin_click_through(sd->sw, sd->clkt);
+    crosswin_set_click_through(sd->sw, click_through);
     return (0);
 }
 
@@ -313,9 +325,8 @@ COMMAND_HANDLER(handler_show_command)
 
     skeleton_add_key(sd->scd, "hidden", "0");
     sd->hidden = 0;
-    sd->co = sd->ro;
     sd->visible = 1;
-    crosswin_set_opacity(sd->sw, sd->co);
+    crosswin_set_opacity(sd->sw, sd->ro);
     crosswin_show(sd->sw);
     return (0);
 }
@@ -334,9 +345,8 @@ COMMAND_HANDLER(handler_hide_command)
 
     skeleton_add_key(sd->scd, "Hidden", "1");
     sd->hidden = 1;
-    sd->co = 0;
     sd->visible = 0;
-    crosswin_set_opacity(sd->sw, sd->co);
+    crosswin_set_opacity(sd->sw, 0);
     crosswin_hide(sd->sw);
     return (0);
 }

@@ -107,7 +107,7 @@ int surface_builtin_init(void *holder, surface_builtin_type tp)
                 crosswin_get_position(osd->sw,&sx,&sy,NULL);
                 crosswin_set_position(sd->sw, (o->x + sx),  o->y + o->h + sy);
 
-                crosswin_click_through(sd->sw, 1);
+                crosswin_set_click_through(sd->sw, 1);
 
                 crosswin_set_window_z_order(sd->sw, crosswin_topmost);
                 o->ttip = sd;

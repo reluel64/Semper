@@ -69,11 +69,17 @@ double surface_info_update(void* spv)
 
     if(si->data == 1)
     {
-        flags |= ((size_t)sd->keep_on_screen)                          << 0;
-        flags |= ((size_t)sd->draggable)                               << 1;
-        flags |= ((size_t)sd->snp)                                     << 2;
-        flags |= ((size_t)sd->rim)                                     << 3;
-        flags |= ((size_t)sd->clkt)                                    << 4;
+        unsigned char keep_on_screen = 0;
+        unsigned char draggable = 0;
+        unsigned char click_through = 0 ;
+        crosswin_get_keep_on_screen(sd->sw,&keep_on_screen);
+        crosswin_get_click_through(sd->sw,&click_through);
+        crosswin_get_draggable(sd->sw,&draggable);
+        flags |= ((size_t)keep_on_screen)                                 << 0;
+        flags |= ((size_t)draggable)                                      << 1;
+        flags |= ((size_t)sd->snp)                                        << 2;
+        flags |= ((size_t)sd->rim)                                        << 3;
+        flags |= ((size_t)click_through)                                  << 4;
         flags |= ((size_t)(surface_info_meta(sd, "Name") != NULL))        << 5;
         flags |= ((size_t)(surface_info_meta(sd, "Author") != NULL))      << 6;
         flags |= ((size_t)(surface_info_meta(sd, "Version") != NULL))     << 7;
