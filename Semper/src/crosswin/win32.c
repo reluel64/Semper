@@ -174,11 +174,13 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
             event_push(sd->cd->eq, (event_handler)surface_destroy, (void*)sd, 0, EVENT_REMOVE_BY_DATA);
             return(0);
         }
+
         case WM_DISPLAYCHANGE:
         {
-           crosswin_update(c);
+            c->update = 1;
             break;
         }
+
         case WM_QUIT:
         {
             c->quit = 1;
@@ -245,8 +247,8 @@ static int win32_get_monitors_callback(HMONITOR mon, HDC dcmon, LPRECT prect, LP
 
         tcm[*cnt].x = prect->left;
         tcm[*cnt].y = prect->top;
-        tcm[*cnt].h = prect->bottom-prect->top;
-        tcm[*cnt].w = prect->right-prect->left;
+        tcm[*cnt].h = prect->bottom - prect->top;
+        tcm[*cnt].w = prect->right - prect->left;
         tcm[*cnt].index = (*cnt);
         (*cnt)++;
     }

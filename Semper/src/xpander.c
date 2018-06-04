@@ -527,7 +527,7 @@ static size_t xpander_index_variable(unsigned char *in, size_t in_len, unsigned 
             }
 
             cm = crosswin_get_monitor(&cd->c, vindex);
-
+           
             if(cm && cd->c.mon_cnt >= vindex)
             {
                 *out = zmalloc(64);

@@ -139,7 +139,6 @@ void surface_reset(surface_data* sd)
     sd->order = (long)parameter_long_long(sd, "Order", 0, XPANDER_SURFACE_CONFIG);
     sd->zorder = parameter_byte(sd, "ZOrder", crosswin_normal, XPANDER_SURFACE_CONFIG);
     sd->monitor = parameter_size_t(sd, "Monitor", 0, XPANDER_SURFACE_CONFIG);
-
     sd->fade_direction = (sd->hidden ? -1 : 1);
     sd->uf = sd->uf == 0 ? 1000 : sd->uf;
 }
@@ -148,7 +147,6 @@ static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
 {
     surface_data* sd = crosswin_get_window_data(w);
     crosswin_get_position(sd->sw, &sd->x, &sd->y, &sd->monitor);
-
     if(sd->draggable && sd->snp)
     {
         long lx = 0;
@@ -464,21 +462,17 @@ int surface_adjust_size(surface_data *sd)
 
         if(sd->lock_w == 0)
         {
-            long w = ow;
-
-            if(sd->w < w + o->x)
+            if(sd->w < ow + o->x)
             {
-                sd->w = (w + o->x);
+                sd->w = (ow + o->x);
             }
         }
 
         if(sd->lock_h == 0)
         {
-            long h = oh;
-
-            if(sd->h < h + o->y)
+            if(sd->h < oh + o->y)
             {
-                sd->h = h + o->y;
+                sd->h = oh + o->y;
             }
         }
     }

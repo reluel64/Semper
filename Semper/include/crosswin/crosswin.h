@@ -93,9 +93,8 @@ typedef struct
 typedef struct
 {
     crosswin_monitor *pm;            //parent monitor (used for keep on screen)
+    unsigned char update;
     size_t mon_cnt;
-    long sw; // screen width
-    long sh; // screen height
     unsigned char update_z;
     unsigned char quit;
     void *disp_fd;

@@ -163,7 +163,7 @@ void timed_action_command(void *spv, unsigned char *command)
                             pthread_t tth;
                             memset(&tth, 0, sizeof(pthread_t));
 
-                            if(memcmp(&tth, &tl->time_thread, sizeof(pthread_t)) == 0)
+                            if(memcmp(&tth, &tl->time_thread, sizeof(pthread_t)))
                             {
                                 pthread_join(tl->time_thread, NULL);
                                 memset(&tl->time_thread, 0, sizeof(pthread_t));

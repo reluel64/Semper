@@ -372,6 +372,9 @@ int xlib_message_dispatch(crosswin *c)
                 event_push(sd->cd->eq, (event_handler)surface_destroy, (void*)sd, 0, EVENT_REMOVE_BY_DATA);
                 break;
             }
+            case Expose:
+            c->update = 1;
+            break;
 
 
         }

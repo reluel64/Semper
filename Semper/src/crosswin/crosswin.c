@@ -27,39 +27,30 @@ void crosswin_init(crosswin* c)
 {
     list_entry_init(&c->windows);
     c->handle_mouse = crosswin_mouse_handle;
+    
 #ifdef WIN32
     win32_init_class();
-    c->sh = GetSystemMetrics(SM_CYSCREEN);
-    c->sw = GetSystemMetrics(SM_CXSCREEN);
-
 #elif __linux__
     xlib_init_display(c);
 #endif
+
+    c->update = 1;
     crosswin_update(c);
 }
 
 int crosswin_update(crosswin* c)
 {
-    long oh = c->sh;
-    long ow = c->sw;
-    sfree((void**)&c->pm);
-    c->mon_cnt = 0;
-    crosswin_get_monitors(c, &c->pm, &c->mon_cnt);
-#ifdef WIN32
-    c->sh = GetSystemMetrics(SM_CYSCREEN);
-    c->sw = GetSystemMetrics(SM_CXSCREEN);
+    unsigned char up_status = c->update;
 
-#elif __linux__
-    Screen *s = DefaultScreenOfDisplay(c->display);
-
-    if(s)
+    if(up_status)
     {
-        c->sw = s->width;
-        c->sh = s->height;
+        c->update = 0;
+        c->mon_cnt = 0;
+        sfree((void**)&c->pm);
+        crosswin_get_monitors(c, &c->pm, &c->mon_cnt);
     }
 
-#endif
-    return(oh != c->sh || ow != c->sw);
+    return(up_status);
 }
 
 void crosswin_monitor_resolution(crosswin* c, crosswin_window *cw, long* w, long* h)
@@ -167,14 +158,12 @@ crosswin_monitor *crosswin_get_monitor(crosswin *c, size_t index)
 void crosswin_set_position(crosswin_window* w, long x, long y)
 {
 
-    if(w)
+    if(w && (w->x!=x)||(w->y != y)) 
     {
         crosswin* c = w->c;
         crosswin_monitor *cm = crosswin_get_monitor(c, w->mon);
         w->x = x;
         w->y = y;
-
-
 
         if(w->keep_on_screen == 1)
         {
@@ -189,22 +178,19 @@ void crosswin_set_position(crosswin_window* w, long x, long y)
 
             else if(w->y + w->h > cm->h + cm->y)
                 w->y = (cm->h + cm->y) - w->h;
-
         }
         else
         {
 
-            for(size_t i = 0; i < w->c->mon_cnt; i++)
+            for(size_t i = 0; i < c->mon_cnt; i++)
             {
                 cm = crosswin_get_monitor(w->c, i);
 
-                if(w->x >= cm->x && w->x <= (cm->x + cm->w) && w->y >= cm->y && w->y <= cm->y + cm->h)
+                if(w->x >= cm->x && w->x <= (cm->w + cm->x) && w->y >= cm->y && w->y <= cm->h + cm->y)
                 {
                     w->mon = i;
                     break;
                 }
-
-
             }
         }
 
@@ -234,7 +220,7 @@ void crosswin_get_position(crosswin_window* w, long* x, long* y, size_t *monitor
 
 void crosswin_set_opacity(crosswin_window* w, unsigned char opacity)
 {
-    if(w)
+    if(w && w->opacity!=opacity)
     {
         w->opacity = opacity;
 #ifdef WIN32
@@ -248,17 +234,17 @@ void crosswin_set_opacity(crosswin_window* w, unsigned char opacity)
 
 void crosswin_set_dimension(crosswin_window* w, long width, long height)
 {
-    if(w)
+    if(w && (w->w!=width ||w->h != height))
     {
         w->w = labs(width);
         w->h = labs(height);
-    }
+    
 
 #ifdef __linux__
     xlib_set_dimmension(w);
 #endif
+    }
 }
-
 
 void crosswin_set_monitor(crosswin_window *w, size_t mon)
 {
