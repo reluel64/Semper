@@ -523,11 +523,11 @@ static size_t xpander_index_variable(unsigned char *in, size_t in_len, unsigned 
             }
             else
             {
-                vindex = sd->monitor;
+                crosswin_get_position(sd->sw,NULL,NULL,&vindex);
             }
 
             cm = crosswin_get_monitor(&cd->c, vindex);
-           
+
             if(cm && cd->c.mon_cnt >= vindex)
             {
                 *out = zmalloc(64);
@@ -563,6 +563,10 @@ int xpander(xpander_request *xr)
     surface_data *sd = NULL;
     control_data *cd = NULL;
     section sect = NULL;
+    long sx = 0;
+    long sy = 0;
+    long sw = 0;
+    long sh = 0;
     unsigned char escapments = 0;
     unsigned char *wbuf = xr->os;
     unsigned char has_var = 0;
@@ -601,6 +605,8 @@ int xpander(xpander_request *xr)
     }
 
     cd = sd->cd;
+    crosswin_get_position(sd->sw,&sx,&sy,NULL);
+    crosswin_get_dimmension(sd->sw,&sw,&sh);
 #warning "Monitor variables incomplete"
     xpander_table tbl[] =
     {
@@ -610,10 +616,10 @@ int xpander(xpander_request *xr)
         { "Extensions",                          cd->ext_dir,                     NULL },
         { "Semper",                             cd->root_dir,                     NULL },
         { "ThisSection",     skeleton_get_section_name(sect),                     NULL },
-        { "SurfaceX",                                 &sd->x,     xpander_convert_long },
-        { "SurfaceY",                                 &sd->y,     xpander_convert_long },
-        { "SurfaceW",                                 &sd->w,     xpander_convert_long },
-        { "SurfaceH",                                 &sd->h,     xpander_convert_long },
+        { "SurfaceX",                                 &sx,     xpander_convert_long },
+        { "SurfaceY",                                 &sy,     xpander_convert_long },
+        { "SurfaceW",                                 &sw,     xpander_convert_long },
+        { "SurfaceH",                                 &sh,     xpander_convert_long },
 #ifdef WIN32
         { "OS",                               "Windows",                          NULL }
 #elif __linux__

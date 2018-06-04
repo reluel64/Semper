@@ -79,6 +79,9 @@ surface_data* surface_by_name(control_data* cd, unsigned char* sn)
 
 void surface_reset(surface_data* sd)
 {
+    long sw = 0;
+    long sh = 0;
+    size_t monitor = 0;
     surface_destroy_structs(sd, 0); //clean the mess just to make things messy again
     sd->srf_col = parameter_color(sd, "SurfaceColor", 0, XPANDER_SURFACE);
     sd->srf_col_2 = parameter_color(sd, "SurfaceColor2", 0, XPANDER_SURFACE);
@@ -89,44 +92,47 @@ void surface_reset(surface_data* sd)
     sd->update_act =  parameter_string(sd, "SurfaceUpdateAction", NULL, XPANDER_SURFACE);
     sd->reload_act =  parameter_string(sd, "SurfaceReloadAction", NULL, XPANDER_SURFACE);
     sd->unload_act =  parameter_string(sd, "SurfaceUnloadAction", NULL, XPANDER_SURFACE);
-    sd->h = parameter_long_long(sd, "Height", 0, XPANDER_SURFACE);
-    sd->w = parameter_long_long(sd, "Width", 0, XPANDER_SURFACE);
+    sh = parameter_long_long(sd, "Height", 0, XPANDER_SURFACE);
+    sw = parameter_long_long(sd, "Width", 0, XPANDER_SURFACE);
     sd->def_divider = parameter_size_t(sd, "DefaultDivider", 1, XPANDER_SURFACE);
     sd->ia.path = parameter_string(sd, "Background", NULL, XPANDER_SURFACE);
     image_cache_image_parameters(sd, &sd->ia, XPANDER_SURFACE, "Background");
 
     if(image_cache_query_image(sd->cd->ich, &sd->ia, NULL, -1, -1) == 0)
     {
-        if(sd->w < (long)sd->ia.width)
+        if(sw < (long)sd->ia.width)
         {
-            sd->w = (long)sd->ia.width;
+            sw = (long)sd->ia.width;
         }
 
-        if(sd->h < (long)sd->ia.height)
+        if(sh < (long)sd->ia.height)
         {
-            sd->h = (long)sd->ia.height;
+            sh = (long)sd->ia.height;
         }
     }
 
     //set the size locks
-    sd->lock_w = sd->w > 0 ? 1 : 0;
-    sd->lock_h = sd->h > 0 ? 1 : 0;
+    sd->lock_w = sw > 0 ? 1 : 0;
+    sd->lock_h = sh > 0 ? 1 : 0;
 
-    if(sd->w == 0 || sd->h == 0)
+    if(sw == 0 || sh == 0)
         sd->wsz = parameter_bool(sd, "AutoSize", 0, XPANDER_SURFACE);
 
 
-    if(sd->w > 0 && sd->h > 0)
+    if(sw > 0 && sh > 0)
     {
-        crosswin_set_dimension(sd->sw, sd->w,  sd->h);
+        crosswin_set_dimension(sd->sw, sw,  sh);
     }
 
 
     /*Let's read the configuration from the Semper.ini*/
     if(sd->snp)
     {
-        sd->x = parameter_long_long(sd, "X", 0, XPANDER_SURFACE_CONFIG);
-        sd->y = parameter_long_long(sd, "Y", 0, XPANDER_SURFACE_CONFIG);
+        long x = 0;
+        long y = 0;
+        x = parameter_long_long(sd, "X", 0, XPANDER_SURFACE_CONFIG);
+        y = parameter_long_long(sd, "Y", 0, XPANDER_SURFACE_CONFIG);
+        crosswin_set_position(sd->sw, x, y);
     }
 
     sd->keep_on_screen = parameter_bool(sd, "KeepOnScreen", 0, XPANDER_SURFACE_CONFIG);
@@ -138,15 +144,20 @@ void surface_reset(surface_data* sd)
     sd->ro = parameter_byte(sd, "Opacity", 255, XPANDER_SURFACE_CONFIG);
     sd->order = (long)parameter_long_long(sd, "Order", 0, XPANDER_SURFACE_CONFIG);
     sd->zorder = parameter_byte(sd, "ZOrder", crosswin_normal, XPANDER_SURFACE_CONFIG);
-    sd->monitor = parameter_size_t(sd, "Monitor", 0, XPANDER_SURFACE_CONFIG);
+    monitor = parameter_size_t(sd, "Monitor", 0, XPANDER_SURFACE_CONFIG);
     sd->fade_direction = (sd->hidden ? -1 : 1);
     sd->uf = sd->uf == 0 ? 1000 : sd->uf;
+    crosswin_set_monitor(sd->sw,monitor);
 }
 
 static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
 {
     surface_data* sd = crosswin_get_window_data(w);
-    crosswin_get_position(sd->sw, &sd->x, &sd->y, &sd->monitor);
+    long x = 0;
+    long y = 0;
+    size_t  monitor = 0;
+    crosswin_get_position(sd->sw, &x, &y, &monitor);
+
     if(sd->draggable && sd->snp)
     {
         long lx = 0;
@@ -157,15 +168,15 @@ static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
         ly  = parameter_long_long(sd, "Y", 0, XPANDER_SURFACE_CONFIG);
         mon = parameter_size_t(sd, "Monitor", 0, XPANDER_SURFACE_CONFIG);
 
-        if(sd->x != lx || sd->y != ly || sd->monitor != mon)
+        if(x != lx || y != ly || monitor != mon)
         {
             unsigned char buf[260] = { 0 };
-            snprintf(buf, sizeof(buf), "%ld", sd->x);
+            snprintf(buf, sizeof(buf), "%ld", x);
             skeleton_add_key(sd->scd, "X", buf);
             memset(buf, 0, sizeof(buf));
-            snprintf(buf, sizeof(buf), "%ld", sd->y);
+            snprintf(buf, sizeof(buf), "%ld", y);
             skeleton_add_key(sd->scd, "Y", buf);
-            snprintf(buf, sizeof(buf), "%llu", sd->monitor);
+            snprintf(buf, sizeof(buf), "%llu", monitor);
             skeleton_add_key(sd->scd, "Monitor", buf);
             /*Defer the parameter update*/
             event_push(sd->cd->eq, (event_handler)semper_save_configuration, (void*)sd->cd, 100, EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA_HANDLER);
@@ -203,10 +214,8 @@ void surface_destroy_structs(surface_data* sd, unsigned char destroy)
         object* o = NULL;
         object* to = NULL;
         mouse_destroy_actions(&sd->ma);
-        sd->x = 0;
-        sd->y = 0;
-        sd->h = 0;
-        sd->w = 0;
+        crosswin_set_position(sd->sw, 0, 0);
+        crosswin_set_dimension(sd->sw, 0, 0);
 
         list_enum_part_safe(s, ts, &sd->sources, current)
         {
@@ -382,6 +391,9 @@ static int surface_render_background(surface_data* sd, cairo_t* cr)
 {
     unsigned char* color = (unsigned char*)&sd->srf_col;
     unsigned char *px = NULL;
+    long sw = 0;
+    long sh = 0;
+    crosswin_get_dimmension(sd->sw, &sw, &sh);
     image_cache_query_image(sd->cd->ich, &sd->ia, &px, -1, -1);
 
     if(px)
@@ -399,7 +411,7 @@ static int surface_render_background(surface_data* sd, cairo_t* cr)
         return (-1);
     }
 
-    cairo_pattern_t* pat1 = cairo_pattern_create_linear((double)sd->w / 2.0, 0.0, (double)sd->w / 2.0, (double)sd->h);
+    cairo_pattern_t* pat1 = cairo_pattern_create_linear((double)sw / 2.0, 0.0, (double)sw / 2.0, (double)sh);
 
     double red = 0.0;
     double green = 0.0;
@@ -426,7 +438,7 @@ static int surface_render_background(surface_data* sd, cairo_t* cr)
         cairo_pattern_add_color_stop_rgba(pat1, 1, red, green, blue, alpha);
     }
 
-    cairo_rectangle(cr, 0, 0, sd->w, sd->h);
+    cairo_rectangle(cr, 0, 0, sw, sh);
     cairo_set_source(cr, pat1);
     cairo_fill(cr);
     cairo_pattern_destroy(pat1);
@@ -437,15 +449,17 @@ static int surface_render_background(surface_data* sd, cairo_t* cr)
 int surface_adjust_size(surface_data *sd)
 {
     object *o = NULL;
-
+    long sw = 0;
+    long sh = 0;
+    crosswin_get_dimmension(sd->sw,&sw,&sh);
     if(sd->lock_w == 0)
     {
-        sd->w = 0;
+        sw = 0;
     }
 
     if(sd->lock_h == 0)
     {
-        sd->h = 0;
+        sh = 0;
     }
 
     list_enum_part(o, &sd->objects, current)
@@ -462,24 +476,24 @@ int surface_adjust_size(surface_data *sd)
 
         if(sd->lock_w == 0)
         {
-            if(sd->w < ow + o->x)
+            if(sw < ow + o->x)
             {
-                sd->w = (ow + o->x);
+                sw = (ow + o->x);
             }
         }
 
         if(sd->lock_h == 0)
         {
-            if(sd->h < oh + o->y)
+            if(sh < oh + o->y)
             {
-                sd->h = oh + o->y;
+                sh = oh + o->y;
             }
         }
     }
 
-    sd->w = labs(sd->w);
-    sd->h = labs(sd->h);
-    crosswin_set_dimension(sd->sw, sd->w ? sd->w : 1, sd->h ? sd->h : 1);
+    sw = labs(sw);
+    sh = labs(sh);
+    crosswin_set_dimension(sd->sw, sw ? sw : 1, sh ? sh : 1);
     return(0);
 }
 
@@ -835,9 +849,8 @@ void surface_init_update(surface_data *sd)
     surface_window_init(sd);                                                   // initialize window
     surface_reset(sd); // set or reset the surface parameters
     surface_init_items(sd);                                                    // initialize sources and objects
-    crosswin_set_monitor(sd->sw, sd->monitor);
     crosswin_click_through(sd->sw, sd->clkt);
-    crosswin_set_position(sd->sw, sd->x, sd->y);
+    // crosswin_set_position(sd->sw, sd->x, sd->y);
     crosswin_draggable(sd->sw, sd->draggable);
     crosswin_keep_on_screen(sd->sw, sd->keep_on_screen);
     crosswin_set_window_z_order(sd->sw, sd->zorder);

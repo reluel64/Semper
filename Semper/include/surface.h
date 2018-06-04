@@ -41,10 +41,6 @@ typedef struct _surface_data
 
     //Surface Parameters
     long order;
-    long x;
-    long y;
-    long h;
-    long w;
     unsigned int srf_col;      //main color of the surface - if not specified by the user, this will be 0
     unsigned int srf_col_2;    //second surface color - setting this will result in a gradient background
     unsigned char hidden: 1;
@@ -71,7 +67,6 @@ typedef struct _surface_data
     unsigned char visible: 1;
     unsigned char lock_w;
     unsigned char lock_h;
-    size_t monitor;
     //*************************************************
     size_t cycle;             // update cycle counter (it is used for dividers)
     section spm;              //[surface]

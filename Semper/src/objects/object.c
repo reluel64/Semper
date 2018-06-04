@@ -302,12 +302,15 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
 
     unsigned char found = 0;
     unsigned char mouse_ret = 0;
+    long sw = 0;
+    long sh = 0;
+    crosswin_get_dimmension(sd->sw,&sw,&sh);
 
-    if(ms->x >= 0 && ms->y >= 0 && ms->x < sd->w && ms->y < sd->h)
+    if(ms->x >= 0 && ms->y >= 0 && ms->x < sw && ms->y < sh)
     {
 
-        long stride = cairo_format_stride_for_width(CAIRO_FORMAT_A8, sd->w);
-        cairo_surface_t* cs = cairo_image_surface_create(CAIRO_FORMAT_A8, sd->w, sd->h);
+        long stride = cairo_format_stride_for_width(CAIRO_FORMAT_A8, sw);
+        cairo_surface_t* cs = cairo_image_surface_create(CAIRO_FORMAT_A8, sw, sh);
 
         if(cairo_surface_status(cs))
         {
@@ -408,6 +411,10 @@ tooltip_position object_tooltip_best(object *o, long *x, long *y)
     surface_data *sd = o->sd;
     control_data *cd = sd->cd;
     tooltip_position tp = tooltip_none;
+    long sx = 0;
+    long sy = 0;
+    long sw = 0;
+    long sh = 0;
     long mx = 0;
     long my = 0;
     long mw = 0;
@@ -421,14 +428,16 @@ tooltip_position object_tooltip_best(object *o, long *x, long *y)
 
     crosswin_monitor_origin(&cd->c, sd->sw, &mx, &my);
     crosswin_monitor_resolution(&cd->c, sd->sw, &mw, &mh);
+    crosswin_get_position(sd->sw, &sx, &sy, NULL);
+    crosswin_get_dimmension(sd->sw, &sw, &sh);
 
     if(pos)
     {
-        *x = sd->x + o->x + ow;
-        *y = sd->y + o->y + oh / 2;
+        *x = sx + o->x + ow;
+        *y = sy + o->y + oh / 2;
         tp = tooltip_right;
 
-        if(sd->x + o->x > mw - (sd->w + o->x + ow))
+        if(sx + o->x > mw - (sw + o->x + ow))
         {
             (*x) -= ow;
             tp = tooltip_left;
@@ -437,16 +446,17 @@ tooltip_position object_tooltip_best(object *o, long *x, long *y)
     else
     {
 
-        *x = sd->x + o->x + ow / 2;
-        *y = sd->y + o->y + oh;
+        *x = sx + o->x + ow / 2;
+        *y = sy + o->y + oh;
         tp = tooltip_bottom;
 
-        if(sd->y + o->y > mh - (sd->y + o->y + oh))
+        if(sy + o->y > mh - (sy + o->y + oh))
         {
             tp = tooltip_top;
             (*y) -= oh;
         }
     }
+
     return(tp);
 }
 
@@ -457,7 +467,9 @@ int object_tooltip_update(object *o)
 #if 0
     surface_data *tsd = o->ttip;
     surface_data *sd = o->sd;
-
+    long sx =0;
+    long sy =0;
+    long sw = 0;
     if(o->ot.title)
     {
         string_bind titsb = {0};
@@ -542,8 +554,9 @@ int object_tooltip_update(object *o)
     {
         surface_update(o->ttip);
     }
-
-    crosswin_set_position(tsd->sw, (o->x + o->w / 2 + sd->x) - tsd->w / 2,  o->y + o->h + sd->y);
+    crosswin_get_position(sd->sw,&sx,&sy,NULL);
+    crosswin_get_dimmension(tsd->sw,&sw,NULL);
+    crosswin_set_position(tsd->sw, (o->x + o->w / 2 + sx) - sw / 2,  o->y + o->h + sy);
     command(o->ttip, &show_fade);
 #endif
     return (0);

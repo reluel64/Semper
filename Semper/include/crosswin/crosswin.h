@@ -161,6 +161,7 @@ void crosswin_show(crosswin_window* w);
 void crosswin_hide(crosswin_window* w);
 void crosswin_destroy(crosswin_window** w);
 void crosswin_get_position(crosswin_window* w, long* x, long* y, size_t *monitor);
+void crosswin_get_dimmension(crosswin_window* cw, long* w, long* h);
 void crosswin_draggable(crosswin_window* w, unsigned char draggable);
 void crosswin_keep_on_screen(crosswin_window* w, unsigned char keep_on_screen);
 int crosswin_update(crosswin* c);

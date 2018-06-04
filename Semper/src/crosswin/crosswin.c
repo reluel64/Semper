@@ -27,7 +27,7 @@ void crosswin_init(crosswin* c)
 {
     list_entry_init(&c->windows);
     c->handle_mouse = crosswin_mouse_handle;
-    
+
 #ifdef WIN32
     win32_init_class();
 #elif __linux__
@@ -158,7 +158,7 @@ crosswin_monitor *crosswin_get_monitor(crosswin *c, size_t index)
 void crosswin_set_position(crosswin_window* w, long x, long y)
 {
 
-    if(w && (w->x!=x)||(w->y != y)) 
+    if(w && ((w->x!=x)||(w->y != y)))
     {
         crosswin* c = w->c;
         crosswin_monitor *cm = crosswin_get_monitor(c, w->mon);
@@ -218,6 +218,18 @@ void crosswin_get_position(crosswin_window* w, long* x, long* y, size_t *monitor
     }
 }
 
+void crosswin_get_dimmension(crosswin_window* cw, long* w, long* h)
+{
+    if(cw)
+    {
+        if(w)
+            *w = cw->w;
+
+        if(h)
+            *h = cw->h;
+    }
+}
+
 void crosswin_set_opacity(crosswin_window* w, unsigned char opacity)
 {
     if(w && w->opacity!=opacity)
@@ -238,7 +250,7 @@ void crosswin_set_dimension(crosswin_window* w, long width, long height)
     {
         w->w = labs(width);
         w->h = labs(height);
-    
+
 
 #ifdef __linux__
     xlib_set_dimmension(w);

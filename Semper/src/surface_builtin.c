@@ -72,13 +72,16 @@ int surface_builtin_init(void *holder, surface_builtin_type tp)
                 long h = 0;
                 long x = 0;
                 long y = 0;
+                long sw = 0;
+                long sh = 0;
                 size_t buf_sz = 0;
                 unsigned char *buf = surface_builtin_code(&buf_sz, tp);
                 surface_data* sd = surface_load_memory(cd, buf, buf_sz, NULL);
                 crosswin_set_monitor(sd->sw, 0);
                 crosswin_monitor_resolution(&cd->c, sd->sw, &w, &h);
                 crosswin_monitor_origin(&cd->c, sd->sw, &x, &y);
-                crosswin_set_position(sd->sw, (x + w / 2) - sd->w / 2, (y + h / 2) - sd->h / 2);
+                crosswin_get_dimmension(sd->sw,&sw,&sh);
+                crosswin_set_position(sd->sw, (x + w / 2) - sw / 2, (y + h / 2) - sh / 2);
                 cd->srf_reg = sd;
                 return(0);
             }
@@ -95,11 +98,14 @@ int surface_builtin_init(void *holder, surface_builtin_type tp)
 
             if(o->ttip == NULL && (o->ot.text || o->ot.title))
             {
+                long sx = 0;
+                long sy = 0;
                 size_t buf_sz = 0;
                 unsigned char *buf = surface_builtin_code(&buf_sz, tp);
                 surface_data* sd = surface_load_memory(cd, buf, buf_sz, NULL);
                 sd->hidden = 1;
-                crosswin_set_position(sd->sw, (o->x + osd->x),  o->y + o->h + osd->y);
+                crosswin_get_position(osd->sw,&sx,&sy,NULL);
+                crosswin_set_position(sd->sw, (o->x + sx),  o->y + o->h + sy);
 
                 crosswin_click_through(sd->sw, 1);
 

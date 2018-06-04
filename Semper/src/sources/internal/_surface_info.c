@@ -7,6 +7,7 @@
 #include <mem.h>
 #include <string_util.h>
 #include <skeleton.h>
+#include <crosswin/crosswin.h>
 typedef struct _surface_info
 {
     control_data* cd;
@@ -81,7 +82,10 @@ double surface_info_update(void* spv)
     }
     else
     {
-        return ((double)(si->coord ? sd->y : sd->x));
+        long sx = 0;
+        long sy =0;
+        crosswin_get_dimmension(sd->sw,&sx,&sy);
+        return ((double)(si->coord ? sy : sx));
     }
 
     return ((double)flags);
