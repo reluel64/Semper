@@ -126,7 +126,10 @@ void xlib_set_dimmension(crosswin_window *w)
     XWindowChanges wc = {0};
     wc.width = w->w;
     wc.height = w->h;
-    XConfigureWindow(w->c->display, w->window, CWWidth | CWHeight, &wc);
+    if(w->w && w->h)
+    {
+        XConfigureWindow(w->c->display, w->window, CWWidth | CWHeight, &wc);
+    }
 }
 
 
