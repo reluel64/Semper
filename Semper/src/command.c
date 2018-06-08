@@ -14,6 +14,8 @@
 #include <team.h>
 #include <surface_builtin.h>
 #include <math_parser.h>
+#include <xpander.h>
+#include <parameter.h>
 #define COMMAND_PARAMETER_STACK 10
 
 typedef struct
@@ -360,6 +362,7 @@ COMMAND_HANDLER(handler_hide_fade_command)
     }
 
     skeleton_add_key(sd->scd, "Hidden", "1");
+    sd->ro = 0;
     sd->fade_direction = -1;
     surface_fade(sd);
     return (0);
@@ -378,6 +381,7 @@ COMMAND_HANDLER(handler_show_fade_command)
     }
 
     skeleton_add_key(sd->scd, "Hidden", "0");
+    sd->ro = parameter_byte(sd, "Opacity", 255, XPANDER_SURFACE_CONFIG);
     sd->fade_direction = 1;
     surface_fade(sd);
     return (0);
