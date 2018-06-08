@@ -133,7 +133,6 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
         case WM_WINDOWPOSCHANGING:
         {
             WINDOWPOS *wp = (WINDOWPOS*)lpm;
-
             if(w->lock_z)
             {
                 wp->flags |= SWP_NOZORDER;
@@ -145,7 +144,6 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
 
             break;
         }
-
         case WM_MOUSEMOVE:
         {
             TRACKMOUSEEVENT ev = { 0 };
@@ -317,14 +315,16 @@ void win32_set_opacity(crosswin_window* w)
     UpdateLayeredWindow(w->window, NULL, NULL, NULL, NULL, NULL, 0, &bf, ULW_ALPHA);
 }
 
-void win32_hide(crosswin_window* w)
+void win32_set_visible(crosswin_window* w)
 {
-    SetWindowPos(w->window, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_HIDEWINDOW | SWP_NOACTIVATE);
-}
-
-void win32_show(crosswin_window* w)
-{
-    SetWindowPos(w->window, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW | SWP_NOACTIVATE);
+    if(w->visible)
+    {
+        SetWindowPos(w->window, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW | SWP_NOACTIVATE);
+    }
+    else
+    {
+        SetWindowPos(w->window, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_HIDEWINDOW | SWP_NOACTIVATE);
+    }
 }
 
 void win32_destroy_window(crosswin_window** w)

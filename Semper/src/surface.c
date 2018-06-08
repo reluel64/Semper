@@ -84,6 +84,8 @@ void surface_reset(surface_data* sd)
     unsigned char keep_on_screen = 0 ;
     unsigned char click_through = 0 ;
     unsigned char draggable = 0;
+    unsigned char hidden = 0;
+    unsigned char zorder = 0;
     size_t monitor = 0;
     surface_destroy_structs(sd, 0); //clean the mess just to make things messy again
     sd->srf_col = parameter_color(sd, "SurfaceColor", 0, XPANDER_SURFACE);
@@ -139,21 +141,23 @@ void surface_reset(surface_data* sd)
     }
 
     keep_on_screen = parameter_bool(sd, "KeepOnScreen", 0, XPANDER_SURFACE_CONFIG);
-    sd->hidden = parameter_bool(sd, "Hidden", 0, XPANDER_SURFACE_CONFIG);
+    hidden = parameter_bool(sd, "Hidden", 0, XPANDER_SURFACE_CONFIG);
     draggable = parameter_bool(sd, "Draggable", 1, XPANDER_SURFACE_CONFIG);
     click_through = parameter_bool(sd, "ClickThrough", 0, XPANDER_SURFACE_CONFIG);
     sd->snp = parameter_bool(sd, "KeepPosition", 1, XPANDER_SURFACE_CONFIG);
     sd->rim = parameter_bool(sd, "ReloadIfModified", 0, XPANDER_SURFACE_CONFIG);
     sd->ro = parameter_byte(sd, "Opacity", 255, XPANDER_SURFACE_CONFIG);
     sd->order = (long)parameter_long_long(sd, "Order", 0, XPANDER_SURFACE_CONFIG);
-    sd->zorder = parameter_byte(sd, "ZOrder", crosswin_normal, XPANDER_SURFACE_CONFIG);
+    zorder = parameter_byte(sd, "ZOrder", crosswin_normal, XPANDER_SURFACE_CONFIG);
     monitor = parameter_size_t(sd, "Monitor", 0, XPANDER_SURFACE_CONFIG);
-    sd->fade_direction = (sd->hidden ? -1 : 1);
+    sd->fade_direction = (hidden ? -1 : 1);
     sd->uf = sd->uf == 0 ? 1000 : sd->uf;
     crosswin_set_monitor(sd->sw, monitor);
     crosswin_set_keep_on_screen(sd->sw, keep_on_screen);
     crosswin_set_click_through(sd->sw, click_through);
     crosswin_set_draggable(sd->sw, draggable);
+    crosswin_set_visible(sd->sw, !hidden);
+    crosswin_set_zorder(sd->sw,zorder);
 }
 
 static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
@@ -164,7 +168,8 @@ static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
     size_t  monitor = 0;
     unsigned char draggable = 0;
     crosswin_get_position(sd->sw, &x, &y, &monitor);
-    crosswin_get_draggable(sd->sw,&draggable);
+    crosswin_get_draggable(sd->sw, &draggable);
+
     if(draggable && sd->snp)
     {
         long lx = 0;
@@ -870,7 +875,6 @@ void surface_init_update(surface_data *sd)
     surface_window_init(sd);                                                   // initialize window
     surface_reset(sd); // set or reset the surface parameters
     surface_init_items(sd);                                                    // initialize sources and objects
-    crosswin_set_window_z_order(sd->sw, sd->zorder);
     mouse_set_actions(sd, MOUSE_SURFACE);
 
     temp_cycle = sd->cycle;
@@ -983,9 +987,12 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
 void surface_fade(surface_data* sd)
 {
     unsigned char opacity = 0;
+    unsigned char visible = 0;
+
+    crosswin_get_visible(sd->sw, &visible);
     crosswin_get_opacity(sd->sw, &opacity);
 
-    if((sd->hidden && opacity) || (opacity != sd->ro))
+    if(opacity != sd->ro)
     {
         opacity = CLAMP((int)opacity + (25 * (int)sd->fade_direction), 0, (int)sd->ro ? sd->ro : 255);
         crosswin_set_opacity(sd->sw, opacity);
@@ -994,15 +1001,14 @@ void surface_fade(surface_data* sd)
             event_push(sd->cd->eq, (event_handler)surface_fade, (void*)sd, 33, EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA_HANDLER);
     }
 
-    if(sd->hidden && opacity == 0)
+
+    if(!visible && sd->fade_direction > 0)
     {
-        crosswin_hide(sd->sw);
-        sd->visible = 0;
+        crosswin_set_visible(sd->sw, !visible);
     }
-    else if(sd->hidden == 0 && opacity && sd->visible == 0)
+    else if(visible && opacity == 0 && sd->fade_direction < 0)
     {
-        crosswin_show(sd->sw);
-        sd->visible = 1;
+        crosswin_set_visible(sd->sw, !visible);
     }
 }
 
@@ -1013,12 +1019,14 @@ int surface_update(surface_data* sd)
     source* ts = NULL;
     object* to = NULL;
     object* o = NULL;
+    unsigned char visible = 0;
 
     if(sd == NULL)
     {
         return (-1);
     }
 
+    crosswin_get_visible(sd->sw, &visible);
     /*************UPDATE SOURCES************/
 
     list_enum_part_safe(s, ts, &sd->sources, current)
@@ -1060,7 +1068,10 @@ int surface_update(surface_data* sd)
     }
 
     /*Draw*/
-    sd->hidden ? 0 : crosswin_draw(sd->sw);
+    if(visible)
+    {
+        crosswin_draw(sd->sw);
+    }
 
     /*Handle commands*/
     if(sd->update_act_lock == 0)

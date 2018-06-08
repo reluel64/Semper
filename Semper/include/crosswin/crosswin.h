@@ -114,7 +114,7 @@ typedef struct _crosswin_window
     crosswin* c;
     list_entry current;
     size_t mon;
-
+    unsigned char visible;
     unsigned char opacity;
     void* user_data;
     void *kb_data;
@@ -133,12 +133,12 @@ typedef struct _crosswin_window
     int (*kbd_func)(unsigned  int key_code, void* ms);
     unsigned char draggable;
     unsigned char click_through;
+    void *window;
 #ifdef WIN32
-    HWND window;
+
 #elif __linux__
 
     unsigned char ctrl_down;
-    Window window;
     Pixmap pixmap;
     XIM xInputMethod;
     XIC xInputContext;
@@ -159,8 +159,6 @@ void crosswin_get_opacity(crosswin_window* w, unsigned char *opacity);
 crosswin_window* crosswin_init_window(crosswin* c);
 void crosswin_set_dimension(crosswin_window* w, long width, long height);
 void crosswin_set_mouse_handler(crosswin_window* w, int (*mouse_handler)(crosswin_window* w, mouse_status* ms));
-void crosswin_show(crosswin_window* w);
-void crosswin_hide(crosswin_window* w);
 void crosswin_destroy(crosswin_window** w);
 void crosswin_get_position(crosswin_window* w, long* x, long* y, size_t *monitor);
 void crosswin_get_dimmension(crosswin_window* cw, long* w, long* h);
@@ -171,9 +169,11 @@ void crosswin_get_keep_on_screen(crosswin_window* w, unsigned char *keep_on_scre
 int crosswin_update(crosswin* c);
 void crosswin_monitor_resolution(crosswin* c, crosswin_window *cw, long* w, long* h);
 void crosswin_monitor_origin(crosswin *c, crosswin_window *cw, long *x, long *y);
-void crosswin_set_window_z_order(crosswin_window* w, unsigned char zorder);
 void crosswin_set_kbd_handler(crosswin_window *w, int(*kbd_handler)(unsigned  int key_code, void *p), void *kb_data);
-void crosswin_set_window_z_order(crosswin_window* w, unsigned char zorder);
+void crosswin_set_zorder(crosswin_window* w, unsigned char zorder);
+void crosswin_get_zorder(crosswin_window* w, unsigned char *zorder);
 int crosswin_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *len);
 void crosswin_set_monitor(crosswin_window *w, size_t mon);
+void crosswin_set_visible(crosswin_window* w,unsigned char visible);
+void crosswin_get_visible(crosswin_window* w,unsigned char *visible);
 crosswin_monitor *crosswin_get_monitor(crosswin *c, size_t index);

@@ -324,10 +324,8 @@ COMMAND_HANDLER(handler_show_command)
     }
 
     skeleton_add_key(sd->scd, "hidden", "0");
-    sd->hidden = 0;
-    sd->visible = 1;
     crosswin_set_opacity(sd->sw, sd->ro);
-    crosswin_show(sd->sw);
+    crosswin_set_visible(sd->sw,1);
     return (0);
 }
 
@@ -344,10 +342,8 @@ COMMAND_HANDLER(handler_hide_command)
     }
 
     skeleton_add_key(sd->scd, "Hidden", "1");
-    sd->hidden = 1;
-    sd->visible = 0;
     crosswin_set_opacity(sd->sw, 0);
-    crosswin_hide(sd->sw);
+    crosswin_set_visible(sd->sw,0);
     return (0);
 }
 
@@ -364,9 +360,7 @@ COMMAND_HANDLER(handler_hide_fade_command)
     }
 
     skeleton_add_key(sd->scd, "Hidden", "1");
-    sd->hidden = 1;
     sd->fade_direction = -1;
-
     surface_fade(sd);
     return (0);
 }
@@ -384,7 +378,6 @@ COMMAND_HANDLER(handler_show_fade_command)
     }
 
     skeleton_add_key(sd->scd, "Hidden", "0");
-    sd->hidden = 0;
     sd->fade_direction = 1;
     surface_fade(sd);
     return (0);

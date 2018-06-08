@@ -119,10 +119,11 @@ void crosswin_set_click_through(crosswin_window* w, unsigned char state)
 {
     if(w)
     {
-#ifdef WIN32
-        win32_click_through(w, state);
-#elif __linux__
         w->click_through = state;
+#ifdef WIN32
+        win32_click_through(w);
+#elif __linux__
+
 #endif
     }
 }
@@ -303,19 +304,26 @@ void crosswin_set_kbd_handler(crosswin_window *w, int(*kbd_func)(unsigned  int k
     }
 }
 
-void crosswin_hide(crosswin_window* w)
+void crosswin_set_visible(crosswin_window* w,unsigned char visible)
 {
+    if(w)
+    {
+        w->visible = visible;
 #ifdef WIN32
-    win32_hide(w);
+    win32_set_visible(w);
 #endif
+
+    }
 }
 
-void crosswin_show(crosswin_window* w)
+void crosswin_get_visible(crosswin_window* w,unsigned char *visible)
 {
-#ifdef WIN32
-    win32_show(w);
-#endif
+    if(w&&visible)
+    {
+        *visible = w->visible;
+    }
 }
+
 
 void crosswin_destroy(crosswin_window** w)
 {
@@ -356,7 +364,7 @@ void crosswin_get_keep_on_screen(crosswin_window* w, unsigned char *keep_on_scre
 {
     if(w && keep_on_screen)
     {
-        keep_on_screen  = w->keep_on_screen;
+        *keep_on_screen  = w->keep_on_screen;
     }
 }
 
@@ -372,7 +380,7 @@ static int crosswin_sort_callback(list_entry *le1, list_entry *le2, void *pv)
     else
         return(0);
 }
-void crosswin_set_window_z_order(crosswin_window* w, unsigned char zorder)
+void crosswin_set_zorder(crosswin_window* w, unsigned char zorder)
 {
     if(w)
     {
@@ -389,6 +397,14 @@ void crosswin_set_window_z_order(crosswin_window* w, unsigned char zorder)
 #endif
 
 
+    }
+}
+
+void crosswin_get_zorder(crosswin_window* w, unsigned char *zorder)
+{
+    if(w && zorder)
+    {
+        *zorder = w->zorder;
     }
 }
 
