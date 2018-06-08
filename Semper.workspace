@@ -11,7 +11,6 @@
   <Project Name="Registry" Path="Registry/Registry.project" Active="No"/>
   <Project Name="DiskSpeed" Path="DiskSpeed/DiskSpeed.project" Active="No"/>
   <Project Name="Sample" Path="Sample/Sample.project" Active="No"/>
-  <Project Name="ocv_sniff" Path="ocv_sniff/ocv_sniff.project" Active="No"/>
   <Project Name="OpenHardwareMonitor" Path="OpenHardwareMonitor/OpenHardwareMonitor.project" Active="No"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="no">
