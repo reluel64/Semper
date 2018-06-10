@@ -126,7 +126,7 @@ void surface_reset(surface_data* sd)
 
     if(sw > 0 && sh > 0)
     {
-        crosswin_set_dimension(sd->sw, sw,  sh);
+        crosswin_set_size(sd->sw, sw,  sh);
     }
 
 
@@ -227,7 +227,7 @@ void surface_destroy_structs(surface_data* sd, unsigned char destroy)
         object* to = NULL;
         mouse_destroy_actions(&sd->ma);
         crosswin_set_position(sd->sw, 0, 0);
-        crosswin_set_dimension(sd->sw, 0, 0);
+        crosswin_set_size(sd->sw, 0, 0);
 
         list_enum_part_safe(s, ts, &sd->sources, current)
         {
@@ -408,7 +408,7 @@ static int surface_render_background(surface_data* sd, cairo_t* cr)
     unsigned char *px = NULL;
     long sw = 0;
     long sh = 0;
-    crosswin_get_dimmension(sd->sw, &sw, &sh);
+    crosswin_get_size(sd->sw, &sw, &sh);
     image_cache_query_image(sd->cd->ich, &sd->ia, &px, -1, -1);
 
     if(px)
@@ -466,7 +466,7 @@ int surface_adjust_size(surface_data *sd)
     object *o = NULL;
     long sw = 0;
     long sh = 0;
-    crosswin_get_dimmension(sd->sw, &sw, &sh);
+    crosswin_get_size(sd->sw, &sw, &sh);
 
     if(sd->lock_w == 0)
     {
@@ -509,7 +509,7 @@ int surface_adjust_size(surface_data *sd)
 
     sw = labs(sw);
     sh = labs(sh);
-    crosswin_set_dimension(sd->sw, sw ? sw : 1, sh ? sh : 1);
+    crosswin_set_size(sd->sw, sw ? sw : 1, sh ? sh : 1);
     return(0);
 }
 

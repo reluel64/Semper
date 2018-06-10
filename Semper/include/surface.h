@@ -71,9 +71,6 @@ typedef struct _surface_data
     void* sw;                 // surface window
     char fade_direction;      //does this need explanation? Ok - it is used during fade operations to tell how we should fade the window (close fade, open fade)
     semper_timestamp st;      //used by ReloadIfModified option
-#ifdef __linux__
-    int inotify_watch_id;
-#endif
 } surface_data;
 
 surface_data* surface_by_name(control_data* cd, unsigned char* sn);

@@ -120,7 +120,7 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
         ma = &sd->ma;
         x = 0;
         y = 0;
-        crosswin_get_dimmension(sd->sw,&w,&h);
+        crosswin_get_size(sd->sw,&w,&h);
     }
 
     if(ma == NULL)

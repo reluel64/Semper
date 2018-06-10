@@ -606,7 +606,7 @@ int xpander(xpander_request *xr)
 
     cd = sd->cd;
     crosswin_get_position(sd->sw,&sx,&sy,NULL);
-    crosswin_get_dimmension(sd->sw,&sw,&sh);
+    crosswin_get_size(sd->sw,&sw,&sh);
 #warning "Monitor variables incomplete"
     xpander_table tbl[] =
     {

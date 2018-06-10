@@ -147,7 +147,9 @@
   <Dependencies Name="Debug_Linux">
     <Project Name="Semper"/>
   </Dependencies>
-  <Dependencies Name="NoBuild"/>
+  <Dependencies Name="NoBuild">
+    <Project Name="Semper"/>
+  </Dependencies>
   <Dependencies Name="Release">
     <Project Name="Semper"/>
   </Dependencies>

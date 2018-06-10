@@ -228,7 +228,7 @@ void crosswin_get_position(crosswin_window* w, long* x, long* y, size_t *monitor
     }
 }
 
-void crosswin_get_dimmension(crosswin_window* cw, long* w, long* h)
+void crosswin_get_size(crosswin_window* cw, long* w, long* h)
 {
     if(cw)
     {
@@ -262,13 +262,12 @@ void crosswin_get_opacity(crosswin_window* w, unsigned char *opacity)
     }
 }
 
-void crosswin_set_dimension(crosswin_window* w, long width, long height)
+void crosswin_set_size(crosswin_window* w, long width, long height)
 {
     if(w && (w->w != width || w->h != height))
     {
         w->w = labs(width);
         w->h = labs(height);
-
 
 #ifdef __linux__
         xlib_set_dimmension(w);

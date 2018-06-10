@@ -90,7 +90,7 @@ double surface_info_update(void* spv)
     {
         long sx = 0;
         long sy =0;
-        crosswin_get_dimmension(sd->sw,&sx,&sy);
+        crosswin_get_size(sd->sw,&sx,&sy);
         return ((double)(si->coord ? sy : sx));
     }
 

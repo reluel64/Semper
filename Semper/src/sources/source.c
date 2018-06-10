@@ -14,7 +14,7 @@ Written by Alexandru-Daniel Mărgărit
 #include <semper_api.h>
 #include <bind.h>
 #include <skeleton.h>
-#include <sources/disk.h>
+#include <sources/disk_space.h>
 #include <sources/string.h>
 #include <sources/calculator.h>
 #include <sources/memory.h>
@@ -77,7 +77,7 @@ static size_t source_routines_table(unsigned char* s, source_table **st)
         { "Extension",          NULL,                       NULL,                       NULL,                       NULL,                       NULL,                                             NULL },
         { "Calculator",         calculator_init,            calculator_destroy,         calculator_update,          calculator_reset,           NULL,                                             NULL },
         { "Memory",             memory_init,                memory_destroy,             memory_update,              memory_reset,               NULL,                                             NULL },
-        { "Disk",               disk_init,                  disk_destroy,               disk_update,                disk_reset,                 disk_string,                                      NULL },
+        { "DiskSpace",          disk_space_init,            disk_space_destroy,         disk_space_update,          disk_space_reset,           disk_space_string,                                NULL },
         { "String",             string_source_init,         string_source_destroy,      string_source_update,       string_source_reset,        string_source_string,                             NULL },
         { "Processor",          processor_init,             processor_destroy,          processor_update,           processor_reset,            NULL,                                             NULL },
         { "Iterator",           iterator_init,              iterator_destroy,           iterator_update,            iterator_reset,             NULL,                                 iterator_command },

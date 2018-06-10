@@ -11,6 +11,7 @@
     <File Name="src/semper.c"/>
     <File Name="src/watcher.c"/>
     <VirtualDirectory Name="sources">
+      <File Name="src/sources/disk_space.c"/>
       <VirtualDirectory Name="internal">
         <File Name="src/sources/internal/_diag_show.c"/>
         <File Name="src/sources/internal/_surface_collector.c"/>
@@ -23,7 +24,6 @@
       </VirtualDirectory>
       <File Name="src/sources/action.c"/>
       <File Name="src/sources/calculator.c"/>
-      <File Name="src/sources/disk.c"/>
       <File Name="src/sources/folderinfo.c"/>
       <File Name="src/sources/folderview.c"/>
       <File Name="src/sources/input.c"/>
@@ -175,6 +175,7 @@
     <File Name="include/tooltip.h"/>
     <File Name="include/watcher.h"/>
     <VirtualDirectory Name="sources">
+      <File Name="include/sources/disk_space.h"/>
       <VirtualDirectory Name="internal">
         <File Name="include/sources/internal/_diag_show.h"/>
         <File Name="include/sources/internal/_surfaces_collector.h"/>
@@ -187,7 +188,6 @@
       <File Name="include/sources/action.h"/>
       <File Name="include/sources/average.h"/>
       <File Name="include/sources/calculator.h"/>
-      <File Name="include/sources/disk.h"/>
       <File Name="include/sources/folderinfo.h"/>
       <File Name="include/sources/folderview.h"/>
       <File Name="include/sources/input.h"/>
@@ -269,10 +269,6 @@
   </VirtualDirectory>
   <Description/>
   <Dependencies/>
-  <Dependencies Name="Debug"/>
-  <Dependencies Name="Debug(Shared)"/>
-  <Dependencies Name="Debug_Linux"/>
-  <Dependencies Name="Release"/>
   <Settings Type="Executable">
     <GlobalSettings>
       <Compiler Options="" C_Options="" Assembler="">
@@ -676,4 +672,8 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Debug(Shared)"/>
+  <Dependencies Name="Debug_Linux"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>

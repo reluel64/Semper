@@ -304,7 +304,7 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
     unsigned char mouse_ret = 0;
     long sw = 0;
     long sh = 0;
-    crosswin_get_dimmension(sd->sw,&sw,&sh);
+    crosswin_get_size(sd->sw,&sw,&sh);
 
     if(ms->x >= 0 && ms->y >= 0 && ms->x < sw && ms->y < sh)
     {
@@ -429,7 +429,7 @@ tooltip_position object_tooltip_best(object *o, long *x, long *y)
     crosswin_monitor_origin(&cd->c, sd->sw, &mx, &my);
     crosswin_monitor_resolution(&cd->c, sd->sw, &mw, &mh);
     crosswin_get_position(sd->sw, &sx, &sy, NULL);
-    crosswin_get_dimmension(sd->sw, &sw, &sh);
+    crosswin_get_size(sd->sw, &sw, &sh);
 
     if(pos)
     {
@@ -678,7 +678,7 @@ int object_update(object *o)
 
     long x = 0;
     long y = 0;
-    tooltip_position tp = tooltip_none;
+   // tooltip_position tp = tooltip_none;
     object_tooltip_best(o, &x, &y);
 
     if(o->object_update_rtn)

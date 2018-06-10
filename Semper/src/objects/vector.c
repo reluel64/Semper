@@ -27,6 +27,7 @@ void vector_reset(object *o)
     o->auto_w = o->w;
     list_enum_part(vpc, &v->paths, current)
     {
+        
         o->auto_h = max(o->auto_h, vpc->ext.height + vpc->ext.y);
         o->auto_w = max(o->auto_w, vpc->ext.width + vpc->ext.x);
     }

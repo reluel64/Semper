@@ -410,7 +410,6 @@ void event_queue_destroy(event_queue** eq)
         sfree((void**) & (*eq)->loop_event);
 #endif
         sfree((void**)eq);
-
     }
 }
 

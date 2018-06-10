@@ -858,7 +858,7 @@ static void  semper_init_fonts(control_data *cd)
 }
 #endif
 
-
+#ifndef DEBUG
 static int semper_single_instance(control_data *cd)
 {
     int ret = 1;
@@ -916,7 +916,7 @@ static int semper_single_instance(control_data *cd)
 #endif
     return(ret);
 }
-
+#endif
 
 static int semper_watcher_callback(void *pv, void *wait)
 {
@@ -1212,7 +1212,8 @@ int semper_main(void)
 
 #ifdef WIN32
 #ifdef DEBUG
-int main(int argc, wchar_t *argv[])
+
+int main(int argc, char *argv[])
 
 
 
@@ -1229,7 +1230,7 @@ int main(int argc, char *argv[])
     if(argc < 2)
         return(semper_main());
 
-
+#ifndef DEBUG
     for(size_t i = 1; i < argc; i++)
     {
 #ifdef WIN32
@@ -1239,7 +1240,8 @@ int main(int argc, char *argv[])
 #elif __linux__
         semper_shm_writer(argv[i]);
 #endif
-    }
 
+    }
+#endif
     return(0);
 }
