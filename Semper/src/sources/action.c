@@ -283,9 +283,9 @@ static int action_match(unsigned char* str, unsigned char* pattern)
     return (match_count > 0);
 }
 
-static int action_math_parser(unsigned char *vn, size_t len, double *v, void *pv)
+static int action_math_parser(unsigned char *vn, size_t *len, double *v, void *pv)
 {
-    source *s = source_by_name(pv, vn, len);
+    source *s = source_by_name(pv, vn, *len);
 
     if(s)
     {

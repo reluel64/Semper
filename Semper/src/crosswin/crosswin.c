@@ -44,10 +44,30 @@ int crosswin_update(crosswin* c)
 
     if(up_status)
     {
+        crosswin_monitor *lcm = NULL;
+        size_t mon_cnt = 0;
         c->update = 0;
         c->mon_cnt = 0;
-        sfree((void**)&c->pm);
-        crosswin_get_monitors(c, &c->pm, &c->mon_cnt);
+        
+        crosswin_get_monitors(c, &lcm, &mon_cnt);
+        
+        if(mon_cnt == c->mon_cnt)
+        {
+            up_status=!memcmp(lcm,c->pm,sizeof(crosswin_monitor)*mon_cnt);
+            
+            if(up_status)
+            {
+                sfree((void**)&c->pm);
+                c->mon_cnt = mon_cnt;
+                c->pm=lcm;
+            }
+        }
+        else
+        {
+            sfree((void**)&c->pm);
+            c->mon_cnt = mon_cnt;
+            c->pm=lcm;
+        }
     }
 
     return(up_status);
@@ -310,8 +330,9 @@ void crosswin_set_visible(crosswin_window* w,unsigned char visible)
         w->visible = visible;
 #ifdef WIN32
     win32_set_visible(w);
+#elif __linux__
+    xlib_set_visible(w);
 #endif
-
     }
 }
 

@@ -29,7 +29,7 @@
       <Project Name="SpeedFan" ConfigName="Debug"/>
       <Project Name="ocv_sniff" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="yes">
+    <WorkspaceConfiguration Name="Release" Selected="no">
       <Environment/>
       <Project Name="CoreTemp" ConfigName="Release"/>
       <Project Name="DiskSpeed" ConfigName="NoBuild"/>
@@ -46,7 +46,7 @@
       <Project Name="ocv_sniff" ConfigName="Release"/>
       <Project Name="OpenHardwareMonitor" ConfigName="Release"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Debug(Linux)" Selected="yes">
+    <WorkspaceConfiguration Name="Debug(Linux)" Selected="no">
       <Environment/>
       <Project Name="SpeedFan" ConfigName="Release"/>
       <Project Name="Semper" ConfigName="Debug_Linux"/>

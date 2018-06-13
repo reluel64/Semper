@@ -521,17 +521,15 @@ static int math_parser_gen_queue(unsigned char *f, list_entry *out_queue, math_p
 
                             if(strncasecmp(":", opt[x].on, token_len) == 0)
                                 break;
-
                         }
 
                         if(name == 0)
                             break;
                     }
 
-                    if(mpc(f + i, len, &v, pv) == 0)
+                    if(mpc(f + i, &len, &v, pv) == 0)
                     {
                         math_push_queue(out_queue, NULL, v);
-                        // was_number=1;
                         i += len - 1;
                         continue;
                     }

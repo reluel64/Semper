@@ -112,24 +112,24 @@ static inline unsigned short calculator_random(calculator* c)
     return (c->rnum);
 }
 
-static int calculator_math_parser(unsigned char *vn, size_t len, double *v, void *pv)
+static int calculator_math_parser(unsigned char *vn, size_t *len, double *v, void *pv)
 {
     calculator *c = pv;
 
-    if(strncasecmp("Random", vn, len) == 0)
+    if(strncasecmp("Random", vn, *len) == 0)
     {
 
         *v = (double)calculator_random(c);
         return(0);
     }
-    else if(strncasecmp("SurfaceCycle", vn, len) == 0)
+    else if(strncasecmp("SurfaceCycle", vn, *len) == 0)
     {
         *v = (double)((surface_data*)c->sd)->cycle;
         return(0);
     }
     else
     {
-        source *s = source_by_name(c->sd, vn, len);
+        source *s = source_by_name(c->sd, vn, *len);
 
         if(s)
         {

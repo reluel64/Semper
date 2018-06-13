@@ -37,7 +37,7 @@ int xlib_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *cnt)
 
     XineramaScreenInfo *sinfo = NULL;
 
-    sinfo = XineramaQueryScreens(c->display, cnt);
+    sinfo = XineramaQueryScreens(c->display, (int*)cnt);
 
     if(sinfo)
     {
@@ -85,7 +85,7 @@ void xlib_init_window(crosswin_window *w)
                       ExposureMask            |
                       ButtonPressMask;
 
-    w->window = XCreateWindow(w->c->display						,
+    w->window = (void*)XCreateWindow(w->c->display						,
                               DefaultRootWindow(w->c->display)	,
                               1									,
                               1									,
@@ -108,16 +108,16 @@ void xlib_init_window(crosswin_window *w)
     XSaveContext(w->c->display, (XID)w->window, CONTEXT_ID, (const char*)w);
     Atom type = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE", False);
     Atom value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_DOCK", False);
-    XChangeProperty(w->c->display, w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
+    XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
 
     Hints hints;
     Atom property;
     hints.flags = 2;
     hints.decorations = 0;
     property = XInternAtom(w->c->display, "_MOTIF_WM_HINTS", 1);
-    XChangeProperty(w->c->display, w->window, property, property, 32, PropModeReplace, (unsigned char *)&hints, 5);
+    XChangeProperty(w->c->display, (Window)w->window, property, property, 32, PropModeReplace, (unsigned char *)&hints, 5);
 
-    XMapWindow(w->c->display, w->window);
+    XMapWindow(w->c->display, (Window)w->window);
 
 }
 
@@ -128,11 +128,14 @@ void xlib_set_dimmension(crosswin_window *w)
     wc.height = w->h;
     if(w->w && w->h)
     {
-        XConfigureWindow(w->c->display, w->window, CWWidth | CWHeight, &wc);
+        XConfigureWindow(w->c->display,(Window) w->window, CWWidth | CWHeight, &wc);
     }
 }
 
-
+void xlib_set_visible(crosswin_window *w)
+{
+   return;
+}
 
 static void xlib_render(crosswin_window *w)
 {
@@ -141,7 +144,7 @@ static void xlib_render(crosswin_window *w)
         if(w->offscreen_buffer == NULL)
         {
             w->offscreen_buffer = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w->w, w->h);
-            w->pixmap = XCreatePixmap(w->c->display, w->window, w->w, w->h, 1);
+            w->pixmap = XCreatePixmap(w->c->display, (Window)w->window, w->w, w->h, 1);
             w->offw = (size_t)w->w;
             w->offh = (size_t)w->h;
         }
@@ -149,7 +152,7 @@ static void xlib_render(crosswin_window *w)
         {
             cairo_surface_destroy(w->offscreen_buffer);
             XFreePixmap(w->c->display, w->pixmap);
-            w->pixmap = XCreatePixmap(w->c->display, w->window, w->w, w->h, 1);
+            w->pixmap = XCreatePixmap(w->c->display,(Window) w->window, w->w, w->h, 1);
             w->offscreen_buffer = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w->w, w->h);
             w->offw = (size_t)w->w;
             w->offh = (size_t)w->h;
@@ -177,7 +180,7 @@ static void xlib_render(crosswin_window *w)
 
         cairo_destroy(cr);
         /*Render everything to the window*/
-        cairo_surface_t *xs = cairo_xlib_surface_create(w->c->display, w->window, w->c->vinfo.visual, w->w, w->h);
+        cairo_surface_t *xs = cairo_xlib_surface_create(w->c->display, (Window)w->window, w->c->vinfo.visual, w->w, w->h);
         cr = cairo_create(xs);
         cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
         cairo_set_source_surface(cr, w->offscreen_buffer, 0.0, 0.0);
@@ -235,8 +238,6 @@ void xlib_draw(crosswin_window* w)
 
 int xlib_message_dispatch(crosswin *c)
 {
-
-
     while(XPending(c->display))
     {
 

@@ -631,13 +631,16 @@ void surface_reload(surface_data* sd)
             sd->fade_direction = -1;
             sd->ro = 0;
             surface_fade(sd);
-            event_push(sd->cd->eq, (event_handler)surface_reload, (void*)sd, ((opacity * 2)), EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA_HANDLER);
+            
+            event_push(sd->cd->eq, (event_handler)surface_reload, (void*)sd, ((opacity * 2)), EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA);
         }
         else
         {
+            event_remove(sd->cd->eq, NULL, sd, EVENT_REMOVE_BY_DATA);
             surface_destroy_structs(sd, 1);
             surface_init(&sd->sp, sd->cd, &sd, 0);
             surface_init_update(sd);
+            
         }
     }
 
