@@ -778,8 +778,14 @@ int math_parser(unsigned char *formula, double *res, math_parser_callback mpc, v
             }
             else
             {
-                oq->value = (*oq->oi->mr)(vec, vp);
-
+                if(oq->oi&&oq->oi->mr)
+                {
+                    oq->value = (*oq->oi->mr)(vec, vp);
+                }
+                else
+                {
+                    error = 1; 
+                }
                 if(oq->value == NAN)
                 {
                     error = 1;

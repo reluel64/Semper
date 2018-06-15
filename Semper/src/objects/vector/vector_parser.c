@@ -89,6 +89,7 @@ static int vector_parse_filter(string_tokenizer_status *pi, void* pv)
         return(0);
     }
 
+
     if(sps->quote_type == 0 && (pi->buf[pi->pos] == '"' || pi->buf[pi->pos] == '\''))
         sps->quote_type = pi->buf[pi->pos];
 
@@ -104,15 +105,19 @@ static int vector_parse_filter(string_tokenizer_status *pi, void* pv)
         if(++sps->op == 1)
             return(1);
 
-    if(sps->op && pi->buf[pi->pos] == ')')
-        if(--sps->op == 0)
-            return(0);
+
 
     if(pi->buf[pi->pos] == ';')
         return (sps->op == 0);
 
-    if(sps->op % 2 && pi->buf[pi->pos] == ',')
+    if(sps->op == 1 && pi->buf[pi->pos] == ',')
+    {
         return (1);
+    }
+
+  if(sps->op && pi->buf[pi->pos] == ')')
+        if(--sps->op == 0)
+            return(0);
 
     return (0);
 }
@@ -175,7 +180,7 @@ static int vector_parse_option(vector_parser_info *vpi)
                 start++;
             }
 
-            if(sti.buffer[end - 1] == ')')
+            if(sti.buffer[end - 1] == ')' && sti.buffer[end]!=',')
             {
                 end--;
             }

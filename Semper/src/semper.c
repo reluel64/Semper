@@ -82,13 +82,13 @@ static size_t semper_timestamp_get(void)
 
 size_t tss()
 {
-    #ifdef WIN32
+#ifdef WIN32
     LARGE_INTEGER li;
     QueryPerformanceCounter(&li);
     return(li.QuadPart);
-    #elif __linux__
+#elif __linux__
     return(0);
-    #endif
+#endif
 }
 
 
@@ -1231,6 +1231,7 @@ int main(int argc, char *argv[])
         return(semper_main());
 
 #ifndef DEBUG
+
     for(size_t i = 1; i < argc; i++)
     {
 #ifdef WIN32
@@ -1242,6 +1243,7 @@ int main(int argc, char *argv[])
 #endif
 
     }
+
 #endif
     return(0);
 }

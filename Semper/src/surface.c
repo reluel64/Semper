@@ -157,7 +157,7 @@ void surface_reset(surface_data* sd)
     crosswin_set_click_through(sd->sw, click_through);
     crosswin_set_draggable(sd->sw, draggable);
     crosswin_set_visible(sd->sw, !hidden);
-    crosswin_set_zorder(sd->sw,zorder);
+    crosswin_set_zorder(sd->sw, zorder);
 }
 
 static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
@@ -631,7 +631,7 @@ void surface_reload(surface_data* sd)
             sd->fade_direction = -1;
             sd->ro = 0;
             surface_fade(sd);
-            
+
             event_push(sd->cd->eq, (event_handler)surface_reload, (void*)sd, ((opacity * 2)), EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA);
         }
         else
@@ -640,7 +640,7 @@ void surface_reload(surface_data* sd)
             surface_destroy_structs(sd, 1);
             surface_init(&sd->sp, sd->cd, &sd, 0);
             surface_init_update(sd);
-            
+
         }
     }
 
@@ -884,6 +884,14 @@ void surface_init_update(surface_data *sd)
     sd->cycle = 0;
     surface_update(sd);
     sd->cycle = temp_cycle;
+
+    if(sd->reload_act_lock == 0)
+    {
+        sd->reload_act_lock = 1;
+        command(sd, &sd->reload_act);
+        sd->reload_act_lock = 0;
+    }
+
     event_push(sd->cd->eq, (event_handler)surface_fade, (void*)sd, 0, 0);
 }
 

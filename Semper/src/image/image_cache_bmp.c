@@ -90,7 +90,6 @@ int image_cache_decode_bmp(FILE *fh, image_cache_decoded* icd)
     fseek(fh, bfh.bfOffBits, SEEK_SET);
 
 
-    //////////////////////////////////////////////////////////////////////////////////////////
     switch(bih.biBitCount)
     {
         case 32:
