@@ -505,11 +505,10 @@ void source_reset(source* s)
     sfree((void**)&s->update_act);
     sfree((void**)&s->change_act);
     sfree((void**)&s->team);
-
+    s->vol_var = parameter_bool(s, "Volatile", 0, XPANDER_SOURCE);
     s->paused = parameter_bool(s, "Paused", 0, XPANDER_SOURCE);
     s->inverted = parameter_bool(s, "Inverted", 0, XPANDER_SOURCE);
     s->always_do = parameter_bool(s, "AlwaysDo", 0, XPANDER_SOURCE);
-    s->vol_var = parameter_bool(s, "Volatile", 0, XPANDER_SOURCE);
     s->min_val = parameter_double(s, "MinValue", 0.0, XPANDER_SOURCE);
     s->replacements = parameter_string(s, "Replace", NULL, XPANDER_SOURCE);
     s->disabled = parameter_bool(s, "Disabled", 0, XPANDER_SOURCE);
@@ -603,6 +602,8 @@ int source_update(source* s)
         {
             s->d_info = 0.0;
             s->s_info_len = 0;
+            s->inf_exp_len = 0;
+            sfree((void**)&s->inf_exp);
             sfree((void**)&s->s_info);
         }
 

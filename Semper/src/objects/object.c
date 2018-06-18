@@ -59,7 +59,7 @@ static int object_routines_table(object_routine_entry **ore, unsigned char *on)
         {"Arc",         arc_init,       arc_reset,          arc_update,         arc_render,                   arc_destroy},
         {"Spinner",     spinner_init,   spinner_reset,      spinner_update,     spinner_render,           spinner_destroy},
         {"Button",      button_init,    button_reset,       button_update,      button_render,             button_destroy},
-        {"Vector",      vector_init,    vector_reset,       NULL,               vector_render,             vector_destroy},
+        {"Vector",      vector_init,    vector_reset,       NULL,               vector_render,             vector_destroy}
     };
 
     if(on == NULL || ore == NULL)
@@ -464,6 +464,10 @@ tooltip_position object_tooltip_best(object *o, long *x, long *y)
 
 int object_tooltip_update(object *o)
 {
+    long x = 0;
+    long y = 0;
+    tooltip_position tp = object_tooltip_best(o,&x,&y);
+    printf("TooltipBest %d %d %d\n",tp,x,y);
 #if 0
     surface_data *tsd = o->ttip;
     surface_data *sd = o->sd;
@@ -587,8 +591,6 @@ int object_init(section s, surface_data* sd)
         return (-1);
     }
 
-    o->vol_var = 1;
-    o->divider = 1;
     o->object_type = obj_type;
     o->os = s;
     o->sd = sd;
@@ -679,7 +681,7 @@ int object_update(object *o)
     long x = 0;
     long y = 0;
    // tooltip_position tp = tooltip_none;
-    object_tooltip_best(o, &x, &y);
+    //object_tooltip_best(o, &x, &y);
 
     if(o->object_update_rtn)
     {

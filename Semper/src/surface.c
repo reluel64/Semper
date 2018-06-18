@@ -121,8 +121,9 @@ void surface_reset(surface_data* sd)
     sd->lock_h = sh > 0 ? 1 : 0;
 
     if(sw == 0 || sh == 0)
+    {
         sd->wsz = parameter_bool(sd, "AutoSize", 0, XPANDER_SURFACE);
-
+    }
 
     if(sw > 0 && sh > 0)
     {

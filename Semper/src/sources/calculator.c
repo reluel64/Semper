@@ -11,8 +11,11 @@
 #include <stddef.h>
 #include <math_parser.h>
 
+#define CALCULATOR_RANDOM_MAX_RETRIES 128
+
 typedef struct
 {
+    unsigned char rng_init;
     unsigned char unique;
     unsigned char update;
     unsigned short seed;          // current random number
@@ -51,8 +54,9 @@ static void calculator_knuth_shuffle(unsigned short* v, size_t n)
 
 static inline unsigned short calculator_random(calculator* c)
 {
-    if(c->update)
+    if(c->update || c->rng_init == 0)
     {
+        c->rng_init = 1;
         if(c->unique)
         {
             if(c->la == 0)
@@ -90,17 +94,17 @@ static inline unsigned short calculator_random(calculator* c)
         }
         else
         {
-            unsigned char retries = 128;
+            unsigned char retries = 0;
             unsigned short old_rnum = c->rnum;
 
             do
             {
-                c->rnum = (unsigned short)calculator_xorshift_generator(time(NULL));
+                c->rnum = (unsigned short)calculator_xorshift_generator(time(NULL)+retries + ((surface_data*)c->sd)->cycle);
                 c->seed = c->rnum;
             }
-            while((c->rnum > c->max_random || c->rnum < c->min_random) && retries--);
+            while((c->rnum > c->max_random || c->rnum < c->min_random) && retries++ < CALCULATOR_RANDOM_MAX_RETRIES);
 
-            if(retries == 0)
+            if(retries == CALCULATOR_RANDOM_MAX_RETRIES)
             {
                 c->rnum = old_rnum;
             }
@@ -153,10 +157,11 @@ void calculator_reset(void* spv, void* ip)
 
     calculator* c = spv;
     sfree((void**)&c->frm);
+    c->rng_init = 0;
     c->frm = clone_string(param_string("Function", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "0"));
     c->max_random = (unsigned short)param_double("MaxRandom", ip, 65535.0);
     c->min_random = (unsigned short)param_double("MinRandom", ip, 0.0);
-    c->seed = (unsigned int)time(NULL);
+    c->seed = (unsigned int)time(NULL) + ((surface_data*)c->sd)->cycle;
 
     if(c->max_random == 0)
     {
@@ -168,8 +173,6 @@ void calculator_reset(void* spv, void* ip)
         c->max_random = c->min_random + 1;
     }
 
-    c->update = 1; // set it, temporarly, to 1 in order to obtain a first and potentially the single random number
-    calculator_random(c);
     c->update = param_bool("RefreshRandom", ip, 0);
     c->unique = param_bool("AlwaysRandom", ip, 0);
 

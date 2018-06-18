@@ -327,7 +327,7 @@ COMMAND_HANDLER(handler_show_command)
 
     skeleton_add_key(sd->scd, "hidden", "0");
     crosswin_set_opacity(sd->sw, sd->ro);
-    crosswin_set_visible(sd->sw,1);
+    crosswin_set_visible(sd->sw, 1);
     return (0);
 }
 
@@ -345,7 +345,7 @@ COMMAND_HANDLER(handler_hide_command)
 
     skeleton_add_key(sd->scd, "Hidden", "1");
     crosswin_set_opacity(sd->sw, 0);
-    crosswin_set_visible(sd->sw,0);
+    crosswin_set_visible(sd->sw, 0);
     return (0);
 }
 
@@ -981,7 +981,7 @@ COMMAND_HANDLER(handler_quit_app)
 {
     control_data* cd = sd->cd;
     cd->c.quit = 1;
-    event_push(cd->eq, NULL, NULL, 0, 0);
+    event_push(cd->eq, NULL, NULL, 0, 0); //wake up for the last time
     return(0);
 }
 
@@ -993,13 +993,9 @@ static int command_execute(command_handler_status* chs)
     int ret = 0;
     int found = 0;
 
-    if(chs == NULL)
-    {
-        return (-1);
-    }
-
     static command_info ci[] =
     {
+        //command name          command handler        minimum parameters
         { "UnloadSurface",      handler_unload_surface,     0 },
         { "UpdateSurface",      handler_update_surface,     0 },
         { "ForceDraw",          handler_force_draw,         0 },
@@ -1010,7 +1006,7 @@ static int command_execute(command_handler_status* chs)
         { "LoadRegistry",       handler_load_registry,      0 },
         { "UnLoadRegistry",     handler_unload_registry,    0 },
         { "Quit",               handler_quit_app,           0 },
-//---------------------------------------------------------------------
+
         { "Execute",            handler_execute,            1 },
         { "Variable",           handler_change_variable,    1 },
         { "Update",             handler_update,             1 },
@@ -1026,7 +1022,7 @@ static int command_execute(command_handler_status* chs)
         { "ReloadIfModified",   handler_reload_if_modified, 1 },
         { "SetOpacity",         handler_set_opacity,        1 },
         { "Defer",              handler_defer,              1 },
-//---------------------------------------------------------------------
+
         { "Parameter",          handler_change_param,       2 },
         { "SurfacePos",         handler_surface_pos,        2 },
         { "AddObject",          handler_add_object,         2 },

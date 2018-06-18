@@ -1,6 +1,6 @@
 /*
 Source action
-Part of Project "S"
+Part of Project "Semper"
 Written by Alexandru-Daniel Mărgărit
 */
 #include <sources/source.h>
