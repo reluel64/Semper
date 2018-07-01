@@ -851,7 +851,7 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
 #endif
         }
 
-        //pop a direcotry from the queue
+        //pop a directory from the queue
         if(root != file)
         {
             sfree((void**)&file);

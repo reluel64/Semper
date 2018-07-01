@@ -16,6 +16,17 @@
 #include <image/image_cache.h>
 #include <parameter.h>
 
+void histogram_init(object* o)
+{
+    if(o && o->pv == NULL)
+    {
+        o->pv = zmalloc(sizeof(histogram_object));
+        histogram_object* ho = o->pv;
+        list_entry_init(&ho->val_1);
+        list_entry_init(&ho->val_2);
+    }
+}
+
 void histogram_reset(object* o)
 {
     histogram_object* ho = o->pv;
@@ -64,11 +75,11 @@ void histogram_reset(object* o)
         }
         // ho->v_count=ho->max_hist;
     }
-
-    /* image_cache_unref_image(sd->cd->ich, &ho->h1ia,0);
+#if 0
+    image_cache_unref_image(sd->cd->ich, &ho->h1ia,0);
      image_cache_unref_image(sd->cd->ich, &ho->h2ia,0);
      image_cache_unref_image(sd->cd->ich, &ho->hcia,0);
-    */
+#endif
     sfree((void**)&ho->h1ia.path);
     sfree((void**)&ho->h2ia.path);
     sfree((void**)&ho->hcia.path);
@@ -126,16 +137,7 @@ void histogram_destroy(object* o)
     }
 }
 
-void histogram_init(object* o)
-{
-    if(o && o->pv == NULL)
-    {
-        o->pv = zmalloc(sizeof(histogram_object));
-        histogram_object* ho = o->pv;
-        list_entry_init(&ho->val_1);
-        list_entry_init(&ho->val_2);
-    }
-}
+
 
 int histogram_update(object* o)
 {

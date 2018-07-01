@@ -301,7 +301,11 @@ static void source_unload_lib(void* lib)
 unsigned char  *source_call_str_rtn(source *s, unsigned char *rtn, unsigned char **pms, size_t pm_len)
 {
     unsigned char *str = NULL;
-    static char *rsr_rtn[6] =
+
+
+    if(s->library)
+    {
+         static char *rsr_rtn[6] =
     {
         "init",
         "update",
@@ -310,9 +314,6 @@ unsigned char  *source_call_str_rtn(source *s, unsigned char *rtn, unsigned char
         "reset",
         "string"
     };
-
-    if(s->library)
-    {
         char go = 1;
 
         for(unsigned char i = 0; i < sizeof(rsr_rtn) / sizeof(unsigned char*); i++)

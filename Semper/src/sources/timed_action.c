@@ -68,7 +68,7 @@ static timed_list *timed_list_entry(list_entry *list, size_t index);
 static void timed_action_destroy_list(list_entry *head);
 static void *timed_action_exec(void *pv);
 static int timed_action_string_filter(string_tokenizer_status *pi, void* pv);
-size_t timed_action_fill_list(list_entry *head, string_tokenizer_info *sti, void *ip);
+static size_t timed_action_fill_list(list_entry *head, string_tokenizer_info *sti, void *ip);
 
 
 /*Generic routines*/

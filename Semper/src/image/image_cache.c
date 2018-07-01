@@ -590,7 +590,7 @@ static image_entry *image_cache_look_through(image_cache *ic, image_attributes *
 
             if(memcmp(p1, p2, btc) == 0)
             {
-                //attributes are corresponding but let's check the timestamp
+                //attributes are corresponding. Let's check the timestamp
                 if(memcmp(&sie->st, &st2, sizeof(semper_timestamp)))
                 {
                     //timestamp is not right so let's remove the entry
@@ -598,6 +598,7 @@ static image_entry *image_cache_look_through(image_cache *ic, image_attributes *
                 }
                 else
                 {
+                    //this is the right image
                     return(sie);
                 }
             }
@@ -613,12 +614,14 @@ static image_entry* image_cache_request(void* ich, image_attributes* ia)
 
     if(ich == NULL || ia == NULL || ia->path == NULL)
     {
+        diag_verb("%s Failed to do cache request - ich = %p ia = %p ia->path %p", ich, ia, ia ? ia->path : NULL);
         return (NULL);
     }
 
+    /*Do a search through the cache*/
     ret = image_cache_look_through(ich, ia);
 
-    /*Do a search through the cache*/
+
 
     if(ret == NULL)  /*Not found - try and load it*/
     {

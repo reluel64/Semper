@@ -21,13 +21,6 @@ typedef struct
     long h;
 } image_tile;
 
-typedef struct
-{
-    unsigned char* px;
-    long w;
-    long h;
-    void* ie;
-} image_info;
 
 typedef struct
 {
@@ -65,8 +58,6 @@ typedef struct _image_entry
 
 typedef struct _image_cache
 {
-    size_t flush_interval;
-    size_t validity;
     list_entry images;
     void *cd;
 } image_cache;

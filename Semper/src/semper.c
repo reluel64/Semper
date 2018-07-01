@@ -1132,6 +1132,8 @@ static void *semper_listener(void *p)
 }
 #endif
 
+
+
 int semper_main(void)
 {
     control_data* cd = zmalloc(sizeof(control_data));
@@ -1154,7 +1156,6 @@ int semper_main(void)
     {
         diag_error("Failed to create listener thread");
     }
-
     crosswin_init(&cd->c);
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);

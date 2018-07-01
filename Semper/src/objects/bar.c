@@ -81,11 +81,11 @@ void bar_reset(object* o)
 
 int bar_update(object* o)
 {
-    o->auto_w = o->w;
-    o->auto_h = o->h;
-    ///  surface_data* sd = o->sd;
     bar_object* bo = o->pv;
     bind_numeric bn = { 0 };
+    o->auto_w = o->w;
+    o->auto_h = o->h;
+
 
     bind_update_numeric(o, &bn);
     bo->percents = bind_percentual_value(bn.val, bn.min, bn.max);
@@ -98,7 +98,7 @@ int bar_update(object* o)
         bo->percents_2 = bind_percentual_value(bn_2.val, bn_2.min, bn_2.max);
     }
 
-    /*
+#if 0
         image_cache_unref_image(sd->cd->ich, &bo->b1ia,0);
         image_cache_unref_image(sd->cd->ich, &bo->b2ia,0);
         image_cache_unref_image(sd->cd->ich, &bo->bcia,0);
@@ -106,7 +106,7 @@ int bar_update(object* o)
         image_cache_query_image(sd->cd->ich, &bo->b1ia, NULL, o->w, o->h);
         image_cache_query_image(sd->cd->ich, &bo->b2ia, NULL, o->w, o->h);
         image_cache_query_image(sd->cd->ich, &bo->bcia, NULL, o->w, o->h);
-    */
+#endif
     return (1);
 }
 

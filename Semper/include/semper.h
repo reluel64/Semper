@@ -13,7 +13,7 @@
 #include <crosswin/crosswin.h>
 #include <diag.h>
 #ifndef unused_parameter
-#define unused_parameter(p) ((p)=(p))
+#define unused_parameter(p) ((void)(p))
 #endif
 
 #ifndef min
@@ -32,14 +32,6 @@
 
 #undef CLAMP
 #define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
-
-typedef struct
-{
-#ifdef WIN32
-    OVERLAPPED over;
-#endif
-    void* pv;
-} semper_overlapped;
 
 
 typedef struct
