@@ -48,13 +48,13 @@ int crosswin_update(crosswin* c)
         size_t mon_cnt = 0;
         c->update = 0;
         c->mon_cnt = 0;
-        
+
         crosswin_get_monitors(c, &lcm, &mon_cnt);
-        
+
         if(mon_cnt == c->mon_cnt)
         {
             up_status=!memcmp(lcm,c->pm,sizeof(crosswin_monitor)*mon_cnt);
-            
+
             if(up_status)
             {
                 sfree((void**)&c->pm);

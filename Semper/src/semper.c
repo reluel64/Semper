@@ -21,6 +21,7 @@
 #include <pango/pangocairo.h>
 #ifdef __linux__
 #include <sys/inotify.h>
+#include <sys/eventfd.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -54,6 +55,17 @@ typedef struct
 
 } semper_write_key_data;
 
+typedef struct
+{
+    struct timespec t;
+    /* 1 - process the event loop
+     * 2 - process the message loop
+     */
+    unsigned char process_loop;
+    void *event_wait;
+
+    void *dispfd;
+} semper_event_wait_data;
 
 typedef struct
 {
@@ -725,8 +737,6 @@ static void semper_create_paths(control_data* cd)
 
 #endif
     }
-
-    ////////////////////////////////////////////////////////
 }
 
 #ifdef WIN32
@@ -918,7 +928,7 @@ static int semper_single_instance(control_data *cd)
 }
 #endif
 
-static int semper_watcher_callback(void *pv, void *wait)
+static int semper_watcher_callback(void *pv)
 {
     surface_data* sd = NULL;
     control_data *cd = pv;
@@ -932,7 +942,6 @@ static int semper_watcher_callback(void *pv, void *wait)
             surface_reload(sd);
         }
     }
-    watcher_next(cd->watcher);
     return(0);
 }
 
@@ -1132,10 +1141,75 @@ static void *semper_listener(void *p)
 }
 #endif
 
+static size_t semper_main_wait_fcn(void *pv, size_t timeout)
+{
+    unsigned int status = 0;
+    semper_event_wait_data *sewd = pv;
+    struct timespec t2 = {0};
+    size_t ms = 0;
 
+    if(sewd->process_loop & 0x1)
+    {
+        clock_gettime(CLOCK_MONOTONIC, &sewd->t);
+    }
+
+    sewd->process_loop = 0;
+#ifdef WIN32
+    status = MsgWaitForMultipleObjectsEx(1, &sewd->event_wait, timeout, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
+
+    if(status == WAIT_OBJECT_0 || status == WAIT_TIMEOUT)
+    {
+        sewd->process_loop |= 1;
+    }
+    else
+    {
+        sewd->process_loop |= 2;
+    }
+#elif __linux__
+    struct pollfd events[2];
+    memset(events,0,sizeof(events));
+    events[0].fd=sewd->event_wait;
+    events[0].events = POLLIN;
+    events[1].fd=sewd->dispfd;
+    events[1].events = POLLIN;
+    poll(events, 2, timeout);
+
+    if(events[0].revents)
+    {
+         eventfd_t dummy;
+        sewd->process_loop |= 1;
+        eventfd_read((int)(size_t)sewd->event_wait, &dummy); //consume the event
+    }
+    else if(events[1].revents)
+        sewd->process_loop |= 2;
+
+#endif
+
+    clock_gettime(CLOCK_MONOTONIC, &t2);
+
+    ms = (t2.tv_nsec - sewd->t.tv_nsec) / 1000000 + (t2.tv_sec - sewd->t.tv_sec) * 1000;
+
+    if(ms >= timeout)
+    {
+        sewd->process_loop |= 1;
+    }
+
+    return(ms);
+}
+
+static void semper_main_wake_fcn(void *pv)
+{
+    semper_event_wait_data *sewd = pv;
+    #ifdef  WIN32
+        SetEvent(sewd->event_wait);
+    #elif __linux__
+     eventfd_write((int)(size_t)sewd->event_wait, 0x3010);
+    #endif
+}
 
 int semper_main(void)
 {
+    semper_event_wait_data sewd = {0};
     control_data* cd = zmalloc(sizeof(control_data));
     pthread_t th;
     surface_data *sd = NULL;
@@ -1152,24 +1226,21 @@ int semper_main(void)
 
 #endif
 
-    if(pthread_create(&th, NULL, semper_listener, cd))
-    {
-        diag_error("Failed to create listener thread");
-    }
+#ifdef WIN32
+    sewd.event_wait = CreateEvent(NULL, 0, 0, NULL);
+#elif __linux__
+     sewd.event_wait = (void*)(size_t)eventfd(0x2712, EFD_NONBLOCK);
+#endif
+
+
+
     crosswin_init(&cd->c);
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
-    cd->eq = event_queue_init();
-    cd->watcher = watcher_init(cd->surface_dir);
 
-    event_add_wait(cd->eq, (event_wait_handler)crosswin_message_dispatch, &cd->c, cd->c.disp_fd, 0x1);
-    event_add_wait(cd->eq, (event_wait_handler)semper_check_screen, cd, NULL, 0);
-
-    if(cd->watcher)
-    {
-        event_add_wait(cd->eq, (event_wait_handler)semper_watcher_callback, cd, (void*)((size_t*)cd->watcher)[0], 0x1);
-    }
-
+    sewd.dispfd = cd->c.disp_fd;
+    cd->eq = event_queue_init(semper_main_wait_fcn, semper_main_wake_fcn, &sewd);
+    cd->watcher = watcher_init(cd->surface_dir,cd->eq,semper_watcher_callback,cd);
     semper_load_configuration(cd);
 
 #ifdef WIN32
@@ -1181,6 +1252,11 @@ int semper_main(void)
 
 #endif
 
+     if(pthread_create(&th, NULL, semper_listener, cd))
+    {
+        diag_error("Failed to create listener thread");
+    }
+
     if(semper_load_surfaces(cd) == 0)
     {
         /*launch the catalog if no surface has been loaded due to various reasons*/
@@ -1189,12 +1265,20 @@ int semper_main(void)
 
     while(cd->c.quit == 0) //nothing fancy, just the main event loop
     {
-        if(event_wait(cd->eq))                 /* wait for an event to occur */
+        event_wait(cd->eq);                /* wait for an event to occur */
+        semper_check_screen(cd);
+
+        if(sewd.process_loop & 0x2)
+        {
+            crosswin_message_dispatch(&cd->c);
+        }
+
+        if(sewd.process_loop & 0x1)
         {
             event_process(cd->eq);             /* process the queue */
         }
     }
-
+    watcher_destroy(&cd->watcher);
     /*We left the main loop so we will clean things up*/
     list_enum_part_safe(sd, tsd, &cd->surfaces, current)
     {
@@ -1203,7 +1287,8 @@ int semper_main(void)
 
     while(!event_queue_empty(cd->eq))
     {
-        event_process(cd->eq);             /* process the queue */
+        event_wait(cd->eq);
+        event_process(cd->eq);
     }
 
     semper_save_configuration(cd);

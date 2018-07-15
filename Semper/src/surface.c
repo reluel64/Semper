@@ -631,9 +631,8 @@ void surface_reload(surface_data* sd)
         {
             sd->fade_direction = -1;
             sd->ro = 0;
+            event_push(sd->cd->eq, (event_handler)surface_reload, (void*)sd, ((opacity)), EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA);
             surface_fade(sd);
-
-            event_push(sd->cd->eq, (event_handler)surface_reload, (void*)sd, ((opacity * 2)), EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA);
         }
         else
         {

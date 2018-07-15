@@ -1,4 +1,5 @@
 #pragma once
-void  *watcher_init(unsigned char *dir);
-void *watcher_get_wait(void *wt);
-void watcher_next(void *wt);
+#include <event.h>
+void  *watcher_init(unsigned char *dir, event_queue *meq, event_handler eh, void *pveh);
+int watcher_destroy(void **wd);
+
