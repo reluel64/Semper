@@ -7,6 +7,7 @@
     <Plugin Name="CppCheck"/>
   </Plugins>
   <VirtualDirectory Name="src">
+    <File Name="src/semper_listener.c"/>
     <File Name="src/memf.c"/>
     <File Name="src/semper.c"/>
     <File Name="src/watcher.c"/>
@@ -171,6 +172,7 @@
     <File Name="src/semper_api.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
+    <File Name="include/semper_listener.h"/>
     <File Name="include/memf.h"/>
     <File Name="include/tooltip.h"/>
     <File Name="include/watcher.h"/>
@@ -369,7 +371,7 @@
         <Library Value="dwmapi"/>
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" IntermediateDirectory="$(WorkspacePath)/build/$(ConfigurationName)/$(ProjectName)" Command="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(WorkspacePath)/bin/$(ConfigurationName)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <General OutputFile="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" IntermediateDirectory="$(WorkspacePath)/build/$(ConfigurationName)/$(ProjectName)" Command="$(WorkspacePath)/bin/$(ConfigurationName)/$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="&quot;Quit()&quot;" WorkingDirectory="$(WorkspacePath)/bin/$(ConfigurationName)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
       <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
@@ -475,6 +477,7 @@
         <Preprocessor Value="__USE_MINGW_ANSI_STDIO=1"/>
         <Preprocessor Value="__linux__"/>
         <Preprocessor Value="__USE_LARGEFILE64"/>
+        <Preprocessor Value="DEBUG"/>
       </Compiler>
       <Linker Options="-Wl,--out-implib=$(WorkspacePath)/SDK/libsemper.a;-Wl,--export-dynamic" Required="yes">
         <LibraryPath Value="$(CompilerLib)"/>

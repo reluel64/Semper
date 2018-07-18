@@ -19,6 +19,7 @@
 #include <watcher.h>
 #include <memf.h>
 #include <pango/pangocairo.h>
+#include <semper_listener.h>
 #ifdef __linux__
 #include <sys/inotify.h>
 #include <sys/eventfd.h>
@@ -29,9 +30,7 @@
 #include <poll.h>
 #include <limits.h>
 #include <dirent.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #elif WIN32
 #include <windows.h>
 #include <winbase.h>
@@ -67,21 +66,6 @@ typedef struct
     void *dispfd;
 } semper_event_wait_data;
 
-typedef struct
-{
-    char buf[32 * 1024];
-    int status;
-#ifdef __linux__
-    size_t timestamp; //we will use this under Linux to avoid a nasty limitation
-#endif
-} listener_data;
-
-typedef struct
-{
-    control_data *cd;
-    surface_data *sd;
-    unsigned char *cmd;
-} ldp_data;
 
 #ifdef __linux__
 static size_t semper_timestamp_get(void)
@@ -959,188 +943,6 @@ static int semper_check_screen(control_data *cd)
     return(0);
 }
 
-static int semper_shm_writer(unsigned char *comm)
-{
-#ifdef WIN32
-    void *pp = OpenFileMapping(FILE_MAP_WRITE, 0, "Local\\SemperCommandListener");
-
-    if(pp)
-    {
-        void *pmap = MapViewOfFile(pp, FILE_MAP_WRITE, 0, 0, sizeof(listener_data));
-
-        if(pmap)
-        {
-            listener_data *p = pmap;
-
-            while(p->status)
-                sched_yield();
-
-            strncpy(p->buf, comm, 32 * 1024);
-
-            while(p->status)
-                sched_yield();
-
-            p->status = 1;
-            UnmapViewOfFile(pmap);
-
-        }
-
-        CloseHandle(pp);
-    }
-
-#elif __linux__
-    unsigned char usr[256] = {0};
-    unsigned char buf[280] = {0};
-    getlogin_r(usr, 255);
-    snprintf(buf, 280, "/SemperCommandListener_%s", usr);
-    int mem_fd = shm_open(buf, O_RDWR, 0777);
-
-    if(mem_fd >= 0)
-    {
-
-        listener_data *p = mmap(NULL, sizeof(listener_data), PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, 0);
-
-        if(p)
-        {
-            while(p->status)
-                sched_yield();
-
-            strncpy(p->buf, comm, 32 * 1024);
-
-            while(p->status)
-                sched_yield();
-
-            p->status = 1;
-            munmap(p, sizeof(listener_data));
-        }
-
-        close(mem_fd);
-    }
-
-#endif
-    return(0);
-}
-
-
-#if 1
-
-
-static int semper_listener_dispatcher(ldp_data* ldpd)
-{
-    if(!ldpd)
-    {
-        return (-1);
-    }
-
-    command(ldpd->sd, &ldpd->cmd);
-
-    sfree((void**)&ldpd->cmd);
-    sfree((void**)&ldpd);
-
-    return (0);
-}
-
-
-static void *semper_listener(void *p)
-{
-    control_data *cd = p;
-    surface_data *dummy = NULL;
-    listener_data *pl = NULL;
-#ifdef WIN32
-    void *pp = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(listener_data), "Local\\SemperCommandListener");
-
-    if(pp == NULL)
-        return(0);
-
-    pl = MapViewOfFile(pp, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(listener_data));
-
-    if(pl == NULL)
-    {
-        CloseHandle(pp);
-        return(NULL);
-    }
-
-
-
-
-
-#elif __linux__
-    unsigned char usr[256] = {0};
-    unsigned char buf[280] = {0};
-    getlogin_r(usr, 255);
-    snprintf(buf, 280, "/SemperCommandListener_%s", usr);
-    int mem_fd = shm_open(buf, O_RDWR | O_CREAT, 0777);
-
-
-    if(mem_fd < 0)
-        return(NULL);
-
-    if(mem_fd >= 0)
-    {
-        ftruncate(mem_fd, sizeof(listener_data));
-        pl = mmap(NULL, sizeof(listener_data), PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, 0);
-    }
-
-#endif
-
-    if(pl)
-    {
-        memset(pl, 0, sizeof(listener_data));
-    }
-
-    dummy = zmalloc(sizeof(surface_data));
-    dummy->cd = cd;
-    list_entry_init(&dummy->sources);
-    list_entry_init(&dummy->objects);
-    list_entry_init(&dummy->skhead);
-
-    while(pl && cd->c.quit == 0)
-    {
-#ifdef __linux__
-        pl->timestamp = semper_timestamp_get();
-#endif
-
-        if(pl->status == 1)
-        {
-
-            pl->status = 2;
-            ldp_data* ldpd = zmalloc(sizeof(ldp_data));
-            ldpd->cd = cd;
-            ldpd->sd = dummy;
-            ldpd->cmd = zmalloc(32 * 1024 + 4);
-            strncpy(ldpd->cmd, pl->buf, 32 * 1024);
-            memset(pl->buf, 0, 32 * 1024);
-            event_push(cd->eq, (event_handler)semper_listener_dispatcher, (void*)ldpd, 0, 0); //we will queue this event to be processed later
-            pl->status = 0;
-        }
-
-#ifdef WIN32
-        Sleep(100);
-#elif __linux__
-        usleep(100000);
-#endif
-    }
-
-    sfree((void**)&dummy);
-
-#ifdef WIN32
-
-    if(pl)
-        UnmapViewOfFile(pl);
-
-    if(pp)
-        CloseHandle(pp);
-
-#elif __linux__
-    munmap(pl, sizeof(listener_data));
-    close(mem_fd);
-
-    shm_unlink(buf);
-#endif
-    return(NULL);
-}
-#endif
-
 static size_t semper_main_wait_fcn(void *pv, size_t timeout)
 {
     unsigned int status = 0;
@@ -1165,18 +967,19 @@ static size_t semper_main_wait_fcn(void *pv, size_t timeout)
     {
         sewd->process_loop |= 2;
     }
+
 #elif __linux__
     struct pollfd events[2];
-    memset(events,0,sizeof(events));
-    events[0].fd=sewd->event_wait;
+    memset(events, 0, sizeof(events));
+    events[0].fd = sewd->event_wait;
     events[0].events = POLLIN;
-    events[1].fd=sewd->dispfd;
+    events[1].fd = sewd->dispfd;
     events[1].events = POLLIN;
     poll(events, 2, timeout);
 
     if(events[0].revents)
     {
-         eventfd_t dummy;
+        eventfd_t dummy;
         sewd->process_loop |= 1;
         eventfd_read((int)(size_t)sewd->event_wait, &dummy); //consume the event
     }
@@ -1200,21 +1003,20 @@ static size_t semper_main_wait_fcn(void *pv, size_t timeout)
 static void semper_main_wake_fcn(void *pv)
 {
     semper_event_wait_data *sewd = pv;
-    #ifdef  WIN32
-        SetEvent(sewd->event_wait);
-    #elif __linux__
-     eventfd_write((int)(size_t)sewd->event_wait, 0x3010);
-    #endif
+#ifdef  WIN32
+    SetEvent(sewd->event_wait);
+#elif __linux__
+    eventfd_write((int)(size_t)sewd->event_wait, 0x3010);
+#endif
 }
 
 int semper_main(void)
 {
+
     semper_event_wait_data sewd = {0};
     control_data* cd = zmalloc(sizeof(control_data));
-    pthread_t th;
-    surface_data *sd = NULL;
+    surface_data *sd =NULL;
     surface_data *tsd = NULL;
-
     semper_create_paths(cd);
 
 #ifndef DEBUG
@@ -1229,7 +1031,7 @@ int semper_main(void)
 #ifdef WIN32
     sewd.event_wait = CreateEvent(NULL, 0, 0, NULL);
 #elif __linux__
-     sewd.event_wait = (void*)(size_t)eventfd(0x2712, EFD_NONBLOCK);
+    sewd.event_wait = (void*)(size_t)eventfd(0x2712, EFD_NONBLOCK);
 #endif
 
 
@@ -1240,7 +1042,8 @@ int semper_main(void)
 
     sewd.dispfd = cd->c.disp_fd;
     cd->eq = event_queue_init(semper_main_wait_fcn, semper_main_wake_fcn, &sewd);
-    cd->watcher = watcher_init(cd->surface_dir,cd->eq,semper_watcher_callback,cd);
+    cd->watcher = watcher_init(cd->surface_dir, cd->eq, semper_watcher_callback, cd);
+    cd->listener = semper_listener_init(cd);
     semper_load_configuration(cd);
 
 #ifdef WIN32
@@ -1251,11 +1054,6 @@ int semper_main(void)
 
 
 #endif
-
-     if(pthread_create(&th, NULL, semper_listener, cd))
-    {
-        diag_error("Failed to create listener thread");
-    }
 
     if(semper_load_surfaces(cd) == 0)
     {
@@ -1278,8 +1076,13 @@ int semper_main(void)
             event_process(cd->eq);             /* process the queue */
         }
     }
+
     watcher_destroy(&cd->watcher);
+    semper_listener_destroy(&cd->listener);
     /*We left the main loop so we will clean things up*/
+
+    event_queue_clear(cd->eq);
+
     list_enum_part_safe(sd, tsd, &cd->surfaces, current)
     {
         surface_destroy(sd);
@@ -1292,7 +1095,7 @@ int semper_main(void)
     }
 
     semper_save_configuration(cd);
-    pthread_join(th, NULL);
+
     return (0);
 }
 
@@ -1316,20 +1119,24 @@ int main(int argc, char *argv[])
     if(argc < 2)
         return(semper_main());
 
-#ifndef DEBUG
+
 
     for(size_t i = 1; i < argc; i++)
     {
 #ifdef WIN32
-        unsigned char *cmd = ucs_to_utf8(argv[i], NULL, 0);
-        semper_shm_writer(cmd);
+#ifndef DEBUG
+        size_t bn=0;
+        unsigned char *cmd = ucs_to_utf8(argv[i], &bn, 0);
+        semper_shm_writer(cmd,bn);
         sfree((void**)&cmd);
+#else
+        semper_listener_writer(argv[i],string_length(argv[i]));
+#endif
 #elif __linux__
-        semper_shm_writer(argv[i]);
+        semper_listener_writer(argv[i],string_length(argv[i]));
 #endif
 
     }
 
-#endif
     return(0);
 }

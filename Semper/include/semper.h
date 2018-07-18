@@ -64,9 +64,11 @@ typedef struct
     size_t root_dir_length;
     size_t app_dir_len;
     event_queue* eq;                    //main event queue
+    event_queue* leq;                   //listener event queue
     void *ich;                          //image cache holder
     unsigned char shutdown;
     void *fmap;
+    void *listener;
     /*Surface Watcher*/
 
     void *watcher;
