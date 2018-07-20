@@ -9,7 +9,7 @@
 #include <surface.h>
 #include <event.h>
 #include <dwmapi.h>
-
+#include <mem.h>
 static inline HWND win32_zpos(crosswin_window* w)
 {
     switch(w->zorder)
@@ -181,7 +181,10 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
 
         case WM_QUIT:
         {
-            c->quit = 1;
+            surface_data *sd = w->user_data;
+            control_data *cd = sd->cd;
+            safe_flag_set(cd->quit_flag,1);
+            event_wake(cd->eq);
             return(0);
         }
     }

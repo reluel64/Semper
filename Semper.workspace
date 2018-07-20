@@ -13,7 +13,7 @@
   <Project Name="Sample" Path="Sample/Sample.project" Active="No"/>
   <Project Name="OpenHardwareMonitor" Path="OpenHardwareMonitor/OpenHardwareMonitor.project" Active="No"/>
   <BuildMatrix>
-    <WorkspaceConfiguration Name="Debug" Selected="yes">
+    <WorkspaceConfiguration Name="Debug" Selected="no">
       <Environment/>
       <Project Name="CoreTemp" ConfigName="Debug"/>
       <Project Name="DiskSpeed" ConfigName="NoBuild"/>
@@ -29,7 +29,7 @@
       <Project Name="SpeedFan" ConfigName="Debug"/>
       <Project Name="ocv_sniff" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="no">
+    <WorkspaceConfiguration Name="Release" Selected="yes">
       <Environment/>
       <Project Name="CoreTemp" ConfigName="Release"/>
       <Project Name="DiskSpeed" ConfigName="NoBuild"/>

@@ -37,39 +37,6 @@ static void* zmalloc(size_t bytes)
     return (NULL);
 }
 
-static unsigned short* utf8_to_ucs(unsigned char* str)
-{
-    size_t len = string_length(str);
-
-    if(len == 0)
-    {
-        return (NULL);
-    }
-    size_t di = 0;
-    unsigned short* dest = zmalloc((len + 1) * 2);
-
-    for(size_t si = 0; si < len; si++)
-    {
-        if(str[si] <= 0x7F)
-        {
-            dest[di] = str[si];
-        }
-        else if(str[si] >= 0xE0 && str[si] <= 0xEF)
-        {
-            dest[di] = (((str[si++]) & 0xF) << 12);
-            dest[di] = dest[di] | (((unsigned short)(str[si++]) & 0x103F) << 6);
-            dest[di] = dest[di] | (((unsigned short)(str[si]) & 0x103F));
-        }
-        else if(str[si] >= 0xc0 && str[si] <= 0xDF)
-        {
-            dest[di] = ((((unsigned short)str[si++]) & 0x1F) << 6);
-            dest[di] = dest[di] | (((unsigned short)str[si]) & 0x103F);
-        }
-        di++;
-    }
-    return (dest);
-}
-
 
 void init(void **spv,void *ip)
 {
@@ -139,7 +106,7 @@ void reset(void *spv,void *ip)
         size_t index=0;
         size_t i=0;
         pc->cnt_cnt=0;
-        unsigned short *pth=utf8_to_ucs(counter_path);
+        unsigned short *pth=semper_utf8_to_ucs(counter_path);
         PdhExpandWildCardPathW(NULL,pth,NULL,(DWORD*)&sz,0);
         unsigned short *pth2=zmalloc((sz+1)*2);
         PdhExpandWildCardPathW(NULL,pth,pth2,(DWORD*)&sz,0);
@@ -170,7 +137,7 @@ void reset(void *spv,void *ip)
 
         pc->t=time(NULL);
         PdhCollectQueryData(pc->phq);
-        free(pth);
+        semper_free((void**)&pth);
         free(pth2);
     }
 }

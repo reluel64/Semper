@@ -96,7 +96,6 @@ typedef struct
     unsigned char update;
     size_t mon_cnt;
     unsigned char update_z;
-    unsigned char quit;
     void *disp_fd;
     mouse_data md;
     int (*handle_mouse)(crosswin_window *w);

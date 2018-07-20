@@ -30,7 +30,7 @@ typedef struct
 typedef int (*event_handler)(void*);
 
 
-void*         semper_safe_flag_init(void);
+void*          semper_safe_flag_init(void);
 void*          get_surface(void* ip);
 void*          get_extension_by_name(unsigned char* name, void* ip);
 void*          get_private_data(void* ip);
@@ -40,6 +40,7 @@ void           send_command(void* ir, unsigned char* command);
 void           send_command_ex(void* ir, unsigned char* cmd, size_t timeout, char unique);
 void           semper_safe_flag_set(void *sf, size_t flag);
 void           semper_safe_flag_destroy(void **psf);
+void           semper_free(void **p);
 double         param_double(unsigned char* pn, void* ip, double def);
 size_t         param_size_t(unsigned char* pn, void* ip, size_t def);
 size_t         semper_safe_flag_get(void *sf);
@@ -57,6 +58,8 @@ unsigned char *absolute_path(void *ip, unsigned char *rp, unsigned char pth);
 unsigned char *param_string(unsigned char* pn, unsigned char flags, void* ip, unsigned char* def);
 unsigned char *get_extension_name(void* ip);
 unsigned char  param_bool(unsigned char* pn, void* ip, unsigned char def);
+unsigned short *semper_utf8_to_ucs(unsigned char *s_in);
+unsigned char *semper_ucs_to_utf8(unsigned short *s_in,size_t *len,unsigned char be);
 
 
 #ifndef diag_info

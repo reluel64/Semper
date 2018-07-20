@@ -106,13 +106,13 @@ static void *semper_listener_thread(void *p)
     {
         event_push(sld->eq, semper_listener_prepare, sld, 0, EVENT_NO_WAKE);
         event_wait(sld->eq);
-
+        event_process(sld->eq);
         if(safe_flag_get(sld->kill))
         {
             break;
         }
 
-        event_process(sld->eq);
+
     }
 
 

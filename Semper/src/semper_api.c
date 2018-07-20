@@ -413,3 +413,18 @@ SEMPER_API void *semper_safe_flag_init(void)
 {
     return(safe_flag_init());
 }
+
+SEMPER_API unsigned char *semper_ucs_to_utf8(unsigned short *s_in,size_t *len,unsigned char be)
+{
+    return(ucs_to_utf8(s_in,len,be));
+}
+
+SEMPER_API unsigned short *semper_utf8_to_ucs(unsigned char *s_in)
+{
+    return(utf8_to_ucs(s_in));
+}
+
+SEMPER_API void semper_free(void **p)
+{
+    sfree(p);
+}

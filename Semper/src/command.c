@@ -980,8 +980,8 @@ COMMAND_HANDLER(handler_defer)
 COMMAND_HANDLER(handler_quit_app)
 {
     control_data* cd = sd->cd;
-    cd->c.quit = 1;
-    event_push(cd->eq, NULL, NULL, 0, 0); //wake up for the last time
+    safe_flag_set(cd->quit_flag, 1);
+    event_wake(cd->eq);
     return(0);
 }
 

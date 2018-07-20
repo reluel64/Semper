@@ -405,7 +405,7 @@ void object_render(surface_data* sd, cairo_t* cr)
         }
     }
 }
-#if 1
+#if 0
 tooltip_position object_tooltip_best(object *o, long *x, long *y)
 {
     surface_data *sd = o->sd;
@@ -466,8 +466,8 @@ int object_tooltip_update(object *o)
 {
     long x = 0;
     long y = 0;
-    tooltip_position tp = object_tooltip_best(o,&x,&y);
-    printf("TooltipBest %d %d %d\n",tp,x,y);
+    //tooltip_position tp = object_tooltip_best(o,&x,&y);
+   // printf("TooltipBest %d %d %d\n",tp,x,y);
 #if 0
     surface_data *tsd = o->ttip;
     surface_data *sd = o->sd;

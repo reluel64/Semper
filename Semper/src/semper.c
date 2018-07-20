@@ -1015,7 +1015,7 @@ int semper_main(void)
 
     semper_event_wait_data sewd = {0};
     control_data* cd = zmalloc(sizeof(control_data));
-    surface_data *sd =NULL;
+    surface_data *sd = NULL;
     surface_data *tsd = NULL;
     semper_create_paths(cd);
 
@@ -1035,7 +1035,7 @@ int semper_main(void)
 #endif
 
 
-
+    cd->quit_flag = safe_flag_init();
     crosswin_init(&cd->c);
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
@@ -1061,7 +1061,7 @@ int semper_main(void)
         surface_builtin_init(cd, catalog);
     }
 
-    while(cd->c.quit == 0) //nothing fancy, just the main event loop
+    while(safe_flag_get(cd->quit_flag) == 0) //nothing fancy, just the main event loop
     {
         event_wait(cd->eq);                /* wait for an event to occur */
         semper_check_screen(cd);
@@ -1079,6 +1079,7 @@ int semper_main(void)
 
     watcher_destroy(&cd->watcher);
     semper_listener_destroy(&cd->listener);
+
     /*We left the main loop so we will clean things up*/
 
     event_queue_clear(cd->eq);
@@ -1095,7 +1096,7 @@ int semper_main(void)
     }
 
     semper_save_configuration(cd);
-
+    safe_flag_destroy(&cd->quit_flag);
     return (0);
 }
 
@@ -1125,15 +1126,15 @@ int main(int argc, char *argv[])
     {
 #ifdef WIN32
 #ifndef DEBUG
-        size_t bn=0;
+        size_t bn = 0;
         unsigned char *cmd = ucs_to_utf8(argv[i], &bn, 0);
-        semper_shm_writer(cmd,bn);
+        semper_listener_writer(cmd, string_length(cmd));
         sfree((void**)&cmd);
 #else
-        semper_listener_writer(argv[i],string_length(argv[i]));
+        semper_listener_writer(argv[i], string_length(argv[i]));
 #endif
 #elif __linux__
-        semper_listener_writer(argv[i],string_length(argv[i]));
+        semper_listener_writer(argv[i], string_length(argv[i]));
 #endif
 
     }

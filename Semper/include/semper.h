@@ -69,6 +69,7 @@ typedef struct
     unsigned char shutdown;
     void *fmap;
     void *listener;
+    void *quit_flag;
     /*Surface Watcher*/
 
     void *watcher;

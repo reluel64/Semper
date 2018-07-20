@@ -49,118 +49,6 @@ static void sfree(void** p)
     }
 }
 
-static wchar_t *utf8_to_ucs(unsigned char *str)
-{
-    size_t len = string_length(str);
-
-    if (len == 0)
-    {
-        return(NULL);
-    }
-    size_t di = 0;
-    wchar_t *dest = malloc((len + 1) * 2);
-    memset(dest,0,(len + 1) * 2);
-    for (size_t si = 0; si < len; si++)
-    {
-        if (str[si] <= 0x7F)
-        {
-            dest[di] = str[si];
-        }
-        else if (str[si] >= 0xE0 && str[si] <= 0xEF)
-        {
-            dest[di] = (((str[si++]) & 0xF) << 12);
-            dest[di] = dest[di] | (((unsigned short)(str[si++]) & 0x103F) << 6);
-            dest[di] = dest[di] | (((unsigned short)(str[si]) & 0x103F));
-        }
-        else if (str[si] >= 0xc0 && str[si] <= 0xDF)
-        {
-            dest[di] = ((((unsigned short)str[si++]) & 0x1F) << 6);
-            dest[di] = dest[di] | (((unsigned short)str[si]) & 0x103F);
-        }
-        di++;
-    }
-    return(dest);
-}
-
-static unsigned char *ucs_to_utf8(wchar_t *s_in, size_t *bn, unsigned char be)
-{
-    /*Query the needed bytes to be allocated*/
-    size_t nb = 0;
-    unsigned char *out = NULL;
-    for (size_t i = 0; s_in[i]; i++)
-    {
-        size_t ch = s_in[i];
-        if (be)
-        {
-            unsigned char byte_hi = 0;
-            unsigned char byte_lo = 0;
-            byte_hi = (unsigned char)((ch & 0xFF00) >> 8);
-            byte_lo = (unsigned char)((ch & 0xFF));
-            ch = ((unsigned short)byte_lo) << 8 | (byte_hi);
-        }
-        if (ch < 0x80)
-        {
-            nb++;
-        }
-        else if (ch >= 0x80 &&ch < 0x800)
-        {
-            nb += 2;
-        }
-        else if (ch >= 0x800 && ch < 0xFFFF)
-        {
-            nb += 3;
-        }
-        else if (ch >= 0x10000 && ch < 0x10FFFF)
-        {
-            nb += 4;
-        }
-    }
-    if (nb == 0)
-        return(NULL);
-    out = malloc(nb + 1);
-    memset(out,0,nb + 1);
-    /*Let's encode unicode to UTF-8*/
-    size_t di = 0;
-    for (size_t i = 0; s_in[i]; i++)
-    {
-        size_t ch = s_in[i];
-        if (be)
-        {
-            unsigned char byte_hi = 0;
-            unsigned char byte_lo = 0;
-            byte_hi = (unsigned char)((ch & 0xFF00) >> 8);
-            byte_lo = (unsigned char)((ch & 0xFF));
-            ch = ((unsigned short)byte_lo) << 8 | (byte_hi);
-        }
-        if (ch < 0x80)
-        {
-            out[di++] = (unsigned char)s_in[i];
-        }
-        else if ((size_t)ch >= 0x80 && (size_t)ch < 0x800)
-        {
-            out[di++] = (s_in[i] >> 6) | 0xC0;
-            out[di++] = (s_in[i] & 0x3F) | 0x80;
-        }
-        else if (ch >= 0x800 && ch < 0xFFFF)
-        {
-            out[di++] = (s_in[i] >> 12) | 0xE0;
-            out[di++] = ((s_in[i] >> 6) & 0x3F) | 0x80;
-            out[di++] = (s_in[i] & 0x3F) | 0x80;
-        }
-        else if (ch >= 0x10000 &&ch < 0x10FFFF)
-        {
-            out[di++] = ((unsigned long)s_in[i] >> 18) | 0xF0;
-            out[di++] = ((s_in[i] >> 12) & 0x3F) | 0x80;
-            out[di++] = ((s_in[i] >> 6) & 0x3F) | 0x80;
-            out[di++] = (s_in[i] & 0x3F) | 0x80;
-        }
-    }
-    if(bn)
-        *bn = nb;
-    return(out);
-}
-
-
 void init(void **spv,void *ip)
 {
     *spv=zmalloc(sizeof(registry));
@@ -207,11 +95,11 @@ void reset(void *spv,void *ip)
             r->rt=HKEY_USERS;
     }
 
-    sfree((void**)&r->key_name);
-    sfree((void**)&r->key_value);
+    semper_free((void**)&r->key_name);
+    semper_free((void**)&r->key_value);
 
-    r->key_name=utf8_to_ucs(param_string("KeyName",0x3,ip,NULL));
-    r->key_value=utf8_to_ucs(param_string("KeyValue",0x3,ip,NULL));
+    r->key_name=semper_utf8_to_ucs(param_string("KeyName",0x3,ip,NULL));
+    r->key_value=semper_utf8_to_ucs(param_string("KeyValue",0x3,ip,NULL));
     r->mon=param_bool("QueryChange",ip,1);
 
     if(r->rt)
@@ -225,7 +113,7 @@ double update(void *spv)
 {
     registry *r=spv;
     unsigned int ret=0;
-    sfree((void**)&r->str_val);
+    semper_free((void**)&r->str_val);
     unsigned char attempt=128;
     if(!r->rh)
     {
@@ -271,7 +159,7 @@ double update(void *spv)
         case REG_EXPAND_SZ:
         case REG_MULTI_SZ:
         {
-            r->str_val=ucs_to_utf8((unsigned short*)r->buf,NULL,0);
+            r->str_val=semper_ucs_to_utf8((unsigned short*)r->buf,NULL,0);
             r->num_val=strtod(r->str_val,NULL);
             break;
         }
@@ -305,10 +193,10 @@ void destroy(void **spv)
 {
     registry *r=*spv;
 
-    sfree((void**)&r->key_name);
-    sfree((void**)&r->key_value);
+    semper_free((void**)&r->key_name);
+    semper_free((void**)&r->key_value);
     sfree((void**)&r->buf);
-    sfree((void**)&r->str_val);
+    semper_free((void**)&r->str_val);
 
     if(r->evt)
     {
