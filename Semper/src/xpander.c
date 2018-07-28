@@ -130,15 +130,16 @@ static int xpander_source_func_filter(string_tokenizer_status *pi, void* pv)
         if(++xsts->op == 1)
             return(1);
 
-    if(xsts->op && pi->buf[pi->pos] == ')')
-        if(--xsts->op == 0)
-            return(0);
 
     if(pi->buf[pi->pos] == ';')
         return (xsts->op == 0);
 
-    if(xsts->op % 2 && pi->buf[pi->pos] == ',')
+    if(xsts->op == 1 && pi->buf[pi->pos] == ',')
         return (1);
+
+    if(xsts->op && pi->buf[pi->pos] == ')')
+          if(--xsts->op == 0)
+              return(0);
 
     return (0);
 }

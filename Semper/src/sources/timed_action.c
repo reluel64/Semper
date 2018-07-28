@@ -405,22 +405,23 @@ static int timed_action_string_filter(string_tokenizer_status *pi, void* pv)
         }
     }
 
+    if(pi->buf[pi->pos] == ';')
+    {
+        return (tats->op == 0);
+    }
+
+    if(tats->op == 1 && pi->buf[pi->pos] == ',')
+    {
+        return (1);
+    }
+
+
     if(tats->op && pi->buf[pi->pos] == ')')
     {
         if(--tats->op == 0)
         {
             return(0);
         }
-    }
-
-    if(pi->buf[pi->pos] == ';')
-    {
-        return (tats->op == 0);
-    }
-
-    if(tats->op % 2 && pi->buf[pi->pos] == ',')
-    {
-        return (1);
     }
 
     return (0);

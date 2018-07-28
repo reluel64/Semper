@@ -1088,15 +1088,15 @@ static int command_parse_string_filter(string_tokenizer_status *pi, void* pv)
         if(++cts->op == 1)
             return(1);
 
-    if(cts->op && pi->buf[pi->pos] == ')')
-        if(--cts->op == 0)
-            return(0);
-
     if(pi->buf[pi->pos] == ';')
         return (cts->op == 0);
 
-    if(cts->op % 2 && pi->buf[pi->pos] == ',')
+    if(cts->op == 1 && pi->buf[pi->pos] == ',')
         return (1);
+
+    if(cts->op && pi->buf[pi->pos] == ')')
+           if(--cts->op == 0)
+               return(0);
 
     return (0);
 }

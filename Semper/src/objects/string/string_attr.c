@@ -98,15 +98,17 @@ static int string_parse_filter(string_tokenizer_status *pi, void* pv)
         if(++sps->op == 1)
             return(1);
 
-    if(sps->op && pi->buf[pi->pos] == ')')
-        if(--sps->op == 0)
-            return(0);
+
 
     if(pi->buf[pi->pos] == ';')
         return (sps->op == 0);
 
-    if(sps->op % 2 && pi->buf[pi->pos] == ',')
+    if(sps->op == 1 && pi->buf[pi->pos] == ',')
         return (1);
+
+    if(sps->op && pi->buf[pi->pos] == ')')
+           if(--sps->op == 0)
+               return(0);
 
     return (0);
 }
