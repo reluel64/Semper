@@ -4,7 +4,6 @@
  * Written by Alexandru-Daniel Mărgărit
  * */
 #ifdef WIN32
-#include <SDK/semper_api.h>
 #include <windows.h>
 
 
@@ -34,7 +33,7 @@ typedef struct core_temp_shared_data_ex
     float fPower[128];
     float fMultipliers[256];
 } CoreTempSharedDataEx, *LPCoreTempSharedDataEx, **PPCoreTempSharedDataEx;
-#pragma (pop)
+#pragma pack (pop)
 
 typedef enum
 {
@@ -84,7 +83,7 @@ static coretemp_inf_t coretemp_dispatch_opt(unsigned char *opt)
         "TDP", "Power"
     };
 
-    for(char i = 0; i < sizeof(opts) / sizeof(unsigned char*); i++)
+    for(unsigned char i = 0; i < sizeof(opts) / sizeof(unsigned char*); i++)
     {
         if(strcasecmp(opt, opts[i]) == 0)
         {

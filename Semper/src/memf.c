@@ -78,8 +78,9 @@ size_t mread(void *buf, size_t size, size_t count, memf *mf)
 
 size_t mseek(memf *mf, long off, int origin)
 {
+	int ret = -1;
+
     pthread_mutex_lock(&mf->mtx);
-    int ret = -1;
 
     switch(origin)
     {

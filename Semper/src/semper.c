@@ -36,6 +36,7 @@
 #include <winbase.h>
 #include <wchar.h>
 WINBASEAPI WINBOOL WINAPI QueryFullProcessImageNameW(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
+extern void _cairo_mutex_initialize (void);
 #endif
 extern void crosswin_update_z(crosswin *c);
 
@@ -123,7 +124,7 @@ static int semper_skeleton_ini_handler(unsigned char* sn, unsigned char* kn, uns
         size_t kvl = string_length(kv);
         unsigned char* tmp = zmalloc(sl + kvl + 1);
         strncpy(tmp, shd->kv, sl);
-        strncpy(tmp + sl, kv, kvl);
+        strncpy(tmp + sl, kv, kvl+1);
         sfree((void**)&shd->kv);
         shd->kv = tmp;
         shd->lk = skeleton_add_key(shd->ls, kn, shd->kv);
@@ -670,19 +671,19 @@ static void semper_create_paths(control_data* cd)
 
 
 
-    /////////////////////////////////////////////////////////
+    /*Init Semper.ini path*/
     tsz = rdl + string_length("/Semper.ini") + 1;
     cd->cf = zmalloc(tsz);
     snprintf(cd->cf, tsz, "%s/Semper.ini", cd->root_dir);
 
 
-    /////////////////////////////////////////////////////////
+    /*Init surface directory path*/
     tsz = rdl + string_length("/Surfaces") + 1;
     cd->surface_dir = zmalloc(tsz);
     snprintf(cd->surface_dir, tsz, "%s/Surfaces", cd->root_dir);
     cd->surface_dir_length = tsz - 1;
 
-
+    /*Init Extensions directory path*/
     rdl = cd->app_dir_len;
     tsz = rdl + string_length("/Extensions") + 1;
     cd->ext_app_dir = zmalloc(tsz + 1);
@@ -822,7 +823,7 @@ static void  semper_init_fonts(control_data *cd)
 
     static unsigned char config[] =
     {
-#include <font_config.xml>
+#include <font_config.cxml>
     };
 
     size_t fcfg_len = fcroot_len + sizeof("\\.fontcfg");
@@ -1029,6 +1030,7 @@ int semper_main(void)
 #endif
 
 #ifdef WIN32
+    _cairo_mutex_initialize();
     sewd.event_wait = CreateEvent(NULL, 0, 0, NULL);
 #elif __linux__
     sewd.event_wait = (void*)(size_t)eventfd(0x2712, EFD_NONBLOCK);

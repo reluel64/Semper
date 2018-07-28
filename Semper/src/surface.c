@@ -186,9 +186,10 @@ static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
             unsigned char buf[260] = { 0 };
             snprintf(buf, sizeof(buf), "%ld", x);
             skeleton_add_key(sd->scd, "X", buf);
-            memset(buf, 0, sizeof(buf));
+
             snprintf(buf, sizeof(buf), "%ld", y);
             skeleton_add_key(sd->scd, "Y", buf);
+
             snprintf(buf, sizeof(buf), "%llu", monitor);
             skeleton_add_key(sd->scd, "Monitor", buf);
             /*Defer the parameter update*/
@@ -860,7 +861,7 @@ static int ini_handler(surface_create_skeleton_handler)
         unsigned char* tmp = zmalloc(sl + kvl + 1);
 
         strncpy(tmp, shd->kv, sl);
-        strncpy(tmp + sl, kv, kvl);
+        strncpy(tmp + sl, kv, kvl+1);
 
 
         sfree((void**)&shd->kv);

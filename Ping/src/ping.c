@@ -4,7 +4,6 @@
  */
 
 #ifdef WIN32
-#include <SDK/semper_api.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <Iphlpapi.h>

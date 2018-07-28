@@ -36,9 +36,7 @@ typedef struct
 
 
 typedef
-#ifdef __WIDL__
-[v1_enum]
-#endif
+
 enum _IDOT11_PHY_TYPE
 {
     _dot11_phy_type_unknown = 0,

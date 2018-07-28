@@ -417,6 +417,7 @@ static int string_attr_fill_user(object *o, string_format_type *fmt_type, string
             sa->pattern = zmalloc(len + 1);
             strncpy(sa->pattern, str + start, len);
             *fmt_type = type_invalid;
+            break;
         }
 
         case type_stretch:

@@ -115,9 +115,13 @@ static int vector_parse_filter(string_tokenizer_status *pi, void* pv)
         return (1);
     }
 
-  if(sps->op && pi->buf[pi->pos] == ')')
+    if(sps->op && pi->buf[pi->pos] == ')')
+    {
         if(--sps->op == 0)
+        {
             return(0);
+        }
+    }
 
     return (0);
 }

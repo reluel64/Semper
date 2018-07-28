@@ -1194,6 +1194,7 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
     unsigned char step = 0;
     unsigned char *work = NULL;
     size_t tvec[256] = {0};
+    replacer_tokenizer_status rts = { 0 };
     replace_state rs =
     {
         .ps = rep_pair,
@@ -1203,8 +1204,7 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
         .rl_start = 0,
         .rl_end = 0,
     };
-    replacer_tokenizer_status rts = { 0 };
-    /*command_handler_status   chs=  { 0 };*/
+
     string_tokenizer_info    sti =
     {
         .buffer                  = rep_pair,

@@ -4,7 +4,6 @@
  */
 #ifdef WIN32
 #include <stdlib.h>
-#include <SDK/semper_api.h>
 #include <windows.h>
 #define MAX_LEN 32
 
@@ -104,6 +103,8 @@ double update(void *spv)
             return((double)data.fans[spd->senz_index>data.NumFans?data.NumFans:spd->senz_index]);
         case speedfan_volt:
             return((double)data.volts[spd->senz_index>data.NumVolts?data.NumVolts:spd->senz_index]/100.0);
+        case speedfan_unk:
+        	return(0.0);
     }
     return(0.0);
 }

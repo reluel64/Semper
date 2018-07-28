@@ -276,8 +276,8 @@ static int action_match(unsigned char* str, unsigned char* pattern)
     {
         return (0);
     }
-
-    match_count = pcre_exec(pc, NULL, (char*)str, strl, 0, 0, ovector, sizeof(ovector) / sizeof(int)); /*good explanation at http://libs.wikia.com/wiki/Pcre_exec*/
+    /*good explanation at http://libs.wikia.com/wiki/Pcre_exec*/
+    match_count = pcre_exec(pc, NULL, (char*)str, strl, 0, 0, ovector, sizeof(ovector) / sizeof(int));
     pcre_free(pc);
 
     return (match_count > 0);

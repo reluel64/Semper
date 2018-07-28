@@ -162,9 +162,9 @@ int ini_parser_parse_stream(ini_reader ir, void* data, ini_handler ih, void* pv)
         }
         else if(*line)
         {
-            unsigned char* delim = ini_find_chars(line, "=:");
+            unsigned char* delim = ini_find_chars(line, "=");
 
-            if(*delim == '=' || *delim == ':')
+            if(*delim == '=')
             {
                 *delim = 0;
 

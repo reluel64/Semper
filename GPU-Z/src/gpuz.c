@@ -3,8 +3,7 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  * */
- #ifdef WIN32
-#include <SDK/semper_api.h>
+#ifdef WIN32
 #include <windows.h>
 
 #define string_length(s) ((s==NULL?0:strlen(s)))
@@ -61,7 +60,7 @@ void reset(void *spv,void *ip)
 {
     gpuz_data *gd=spv;
     free(gd->str_val);
-    semper_free(gd->opt);
+    semper_free((void**)&gd->opt);
 
     gd->str_val=NULL;
     gd->opt=NULL;

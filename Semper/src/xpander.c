@@ -516,14 +516,14 @@ static size_t xpander_index_variable(unsigned char *in, size_t in_len, unsigned 
                 {
                     vindex = strtoull(in + 8, NULL, 10);
                 }
-                else if(toupper(in[7]) =='P')
+                else if(toupper(in[7]) == 'P')
                 {
                     vindex = 0;
                 }
             }
             else
             {
-                crosswin_get_position(sd->sw,NULL,NULL,&vindex);
+                crosswin_get_position(sd->sw, NULL, NULL, &vindex);
             }
 
             cm = crosswin_get_monitor(&cd->c, vindex);
@@ -605,8 +605,8 @@ int xpander(xpander_request *xr)
     }
 
     cd = sd->cd;
-    crosswin_get_position(sd->sw,&sx,&sy,NULL);
-    crosswin_get_size(sd->sw,&sw,&sh);
+    crosswin_get_position(sd->sw, &sx, &sy, NULL);
+    crosswin_get_size(sd->sw, &sw, &sh);
 #warning "Monitor variables incomplete"
     xpander_table tbl[] =
     {
@@ -639,11 +639,10 @@ int xpander(xpander_request *xr)
         {
             size_t sym = 0;
             size_t new_len = 0;
-            unsigned char *new_buf = NULL;
             size_t *ovec = 0;
             size_t ovecl = 0;
-
             size_t old_end = 0;
+            unsigned char *new_buf = NULL;
             has_var = 0;
 
             string_tokenizer_info sti =

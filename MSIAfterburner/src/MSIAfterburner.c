@@ -3,7 +3,6 @@
 #include <MAHMSharedMemory.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDK/semper_api.h>
 
 typedef struct
 {
@@ -25,7 +24,7 @@ void reset(void *spv,void *ip)
     free(mab->res_name);
     mab->res_name=NULL;
     mab->res_name=strdup(param_string("ResourceName",EXTENSION_XPAND_ALL,ip,NULL));
-    mab->res_id=param_size_t("resourceID",ip,0xFFFFFFFF);
+    mab->res_id=param_size_t("ResourceID",ip,0xFFFFFFFF);
 }
 
 double update(void *spv)

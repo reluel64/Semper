@@ -4,7 +4,6 @@
  */
  #ifdef WIN32
 #include <pdh.h>
-#include <SDK/semper_api.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <pdhmsg.h>

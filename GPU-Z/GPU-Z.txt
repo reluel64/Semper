@@ -1,1 +1,0 @@
-D:/Semper_Workspace/build/Release/GPU-Z/src_gpuz.c.o   

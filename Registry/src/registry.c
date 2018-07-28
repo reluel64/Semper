@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <Windows.h>
-#include <SDK/semper_api.h>
 
 #define string_length(s) (((s) == NULL ? 0 : strlen((s))))
 

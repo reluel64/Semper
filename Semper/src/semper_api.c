@@ -29,7 +29,6 @@
 typedef struct
 {
     surface_data* sd;
-    control_data* cd;
     unsigned char* comm;
 } extension_command;
 extern int diag_log(unsigned char lvl, char *fmt, ...);
@@ -164,14 +163,15 @@ SEMPER_API int is_parent_candidate(void* pc, void* ip)
 
 static int extension_command_handler(extension_command* ec)
 {
-    if(!ec)
+    if(!ec||!ec->sd)
     {
         return (-1);
     }
 
     surface_data *sd = NULL;
+    control_data *cd = ec->sd->cd;
     int command_exec = 0;
-    list_enum_part(sd, &ec->cd->surfaces, current)
+    list_enum_part(sd, &cd->surfaces, current)
     {
         if(ec->sd == sd)
         {
@@ -183,7 +183,7 @@ static int extension_command_handler(extension_command* ec)
 
     if(command_exec == 0)
     {
-        if(ec->cd->srf_reg == ec->sd)
+        if(cd->srf_reg == ec->sd)
         {
             command(ec->sd, &ec->comm);
             command_exec = 1;
@@ -209,12 +209,10 @@ SEMPER_API void send_command_ex(void* ir, unsigned char* cmd, size_t timeout, ch
         flags |= timeout > 0 ? EVENT_PUSH_TIMER : 0;
         source* s = ir;
         surface_data* sd = s->sd;
-        control_data* cd = sd->cd;
         extension_command* ec = zmalloc(sizeof(extension_command));
         ec->sd = sd;
-        ec->cd = cd;
         ec->comm = clone_string(cmd);
-        event_push(cd->eq, (event_handler)extension_command_handler, (void*)ec, timeout, flags); //we will queue this event to be processed later
+        event_push(sd->cd->eq, (event_handler)extension_command_handler, (void*)ec, timeout, flags); //we will queue this event to be processed later
     }
 }
 
@@ -286,6 +284,7 @@ SEMPER_API unsigned char *get_path(void *ip, unsigned char pth)
     source *s = ip;
     surface_data *sd = s->sd;
     control_data *cd = sd->cd;
+    sfree((void**)&s->ext_str);
 
     switch(pth)
     {
@@ -293,17 +292,21 @@ SEMPER_API unsigned char *get_path(void *ip, unsigned char pth)
             return(NULL);
 
         case EXTENSION_PATH_SEMPER:
-            return(cd->root_dir);
-
+            s->ext_str = clone_string(cd->root_dir);
+            break;
         case EXTENSION_PATH_EXTENSIONS:
-            return(cd->ext_dir);
-
+            s->ext_str = clone_string(cd->ext_dir);
+            break;
         case EXTENSION_PATH_SURFACE:
-            return(sd->sp.surface_dir);
-
+            s->ext_str = clone_string(sd->sp.surface_dir);
+            break;
         case EXTENSION_PATH_SURFACES:
-            return(cd->surface_dir);
+            s->ext_str = clone_string(cd->surface_dir);
+            break;
     }
+
+    return(s->ext_str);
+
 }
 
 
@@ -414,9 +417,9 @@ SEMPER_API void *semper_safe_flag_init(void)
     return(safe_flag_init());
 }
 
-SEMPER_API unsigned char *semper_ucs_to_utf8(unsigned short *s_in,size_t *len,unsigned char be)
+SEMPER_API unsigned char *semper_ucs_to_utf8(unsigned short *s_in, size_t *len, unsigned char be)
 {
-    return(ucs_to_utf8(s_in,len,be));
+    return(ucs_to_utf8(s_in, len, be));
 }
 
 SEMPER_API unsigned short *semper_utf8_to_ucs(unsigned char *s_in)
