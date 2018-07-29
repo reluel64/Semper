@@ -1,4 +1,4 @@
-/*WiFi information source
+/* WiFi information source
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  */
@@ -35,9 +35,7 @@ typedef struct
 #ifdef WIN32
 
 
-typedef
-
-enum _IDOT11_PHY_TYPE
+typedef enum _IDOT11_PHY_TYPE
 {
     _dot11_phy_type_unknown = 0,
     _dot11_phy_type_any = dot11_phy_type_unknown,

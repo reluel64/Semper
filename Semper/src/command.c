@@ -1043,8 +1043,13 @@ static int command_execute(command_handler_status* chs)
                 if((ci[i].min_parameters == 0) || (ci[i].min_parameters <= chs->cpm.plength))
                 {
                     ret = ci[i].handler(chs->sd, &chs->cpm);
-                    break;
+
                 }
+                else
+                {
+                	diag_error("Not enough parameters to execute %s",chs->comm_name);
+                }
+                break;
 
             }
         }
@@ -1217,9 +1222,12 @@ int command(surface_data* sd, unsigned char **pa)
 
     sfree((void**)&sti.ovecoff);
 
-    /*If the string has been set during command processing then *pa will not be NULL and we could free the stored command.
+    /*If the string has been set during command processing
+     * then *pa will not be NULL and we could free the stored command.
      * Otherwise we just  restore the value
-     * In this way we do not have to allocate additional memory to store a copy of the string*/
+     * In this way we do not have to allocate additional
+     * memory to store a copy of the string
+     * */
 
     if(*pa == NULL)
         *pa = sti.buffer;

@@ -208,7 +208,7 @@ int semper_listener_writer(unsigned char *comm, size_t len)
         if(pmap)
         {
             listener_data *p = pmap;
-            memcpy(p->buf, comm, 32 * 1024);
+            memcpy(p->buf, comm, min(len,32 * 1024));
             UnmapViewOfFile(pmap);
         }
 

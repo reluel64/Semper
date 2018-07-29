@@ -124,12 +124,8 @@ void surface_reset(surface_data* sd)
     {
         sd->wsz = parameter_bool(sd, "AutoSize", 0, XPANDER_SURFACE);
     }
-
-    if(sw > 0 && sh > 0)
-    {
-        crosswin_set_size(sd->sw, sw,  sh);
-    }
-
+    /*Set the initial size - it will be properly adjusted later in surface_adjust_size()*/
+    crosswin_set_size(sd->sw, sw,  sh);
 
     /*Let's read the configuration from the Semper.ini*/
     if(sd->snp)

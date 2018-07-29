@@ -1103,18 +1103,8 @@ int semper_main(void)
 }
 
 #ifdef WIN32
-#ifdef DEBUG
-
-int main(int argc, char *argv[])
-
-
-
-#else
 int wmain(int argc, wchar_t *argv[])
-#endif
 #elif __linux__
-#include <spawn.h>
-
 int main(int argc, char *argv[])
 
 #endif
@@ -1122,19 +1112,13 @@ int main(int argc, char *argv[])
     if(argc < 2)
         return(semper_main());
 
-
-
     for(size_t i = 1; i < argc; i++)
     {
 #ifdef WIN32
-#ifndef DEBUG
         size_t bn = 0;
         unsigned char *cmd = ucs_to_utf8(argv[i], &bn, 0);
         semper_listener_writer(cmd, string_length(cmd));
         sfree((void**)&cmd);
-#else
-        semper_listener_writer(argv[i], string_length(argv[i]));
-#endif
 #elif __linux__
         semper_listener_writer(argv[i], string_length(argv[i]));
 #endif
