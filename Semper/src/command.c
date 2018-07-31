@@ -514,7 +514,7 @@ COMMAND_HANDLER(handler_surface_pos)
 
     if(cp->plength >= 3)
     {
-        sd = surface_by_name(sd->cd, cp->pms[3]);
+        sd = surface_by_name(sd->cd, cp->pms[2]);
     }
 
     if(sd == NULL || cp->plength < 2)
@@ -528,6 +528,26 @@ COMMAND_HANDLER(handler_surface_pos)
     if(!math_parser(x, &xd, NULL, NULL) && !math_parser(y, &yd, NULL, NULL))
     {
         crosswin_set_position(sd->sw, (long)xd, (long)yd);
+
+        if(sd->snp)
+        {
+        	long x = 0;
+        	long y =0;
+        	size_t monitor = 0;
+        	unsigned char buf[260] = { 0 };
+        	crosswin_get_position(sd->sw, &x, &y, &monitor);
+
+            snprintf(buf, sizeof(buf), "%ld", x);
+            skeleton_add_key(sd->scd, "X", buf);
+
+            snprintf(buf, sizeof(buf), "%ld", y);
+            skeleton_add_key(sd->scd, "Y", buf);
+
+            snprintf(buf, sizeof(buf), "%llu", monitor);
+            skeleton_add_key(sd->scd, "Monitor", buf);
+            /*Defer the parameter update*/
+            event_push(sd->cd->eq, (event_handler)semper_save_configuration, (void*)sd->cd, 100, EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA_HANDLER);
+        }
     }
 
     return (1);

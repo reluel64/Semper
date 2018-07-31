@@ -137,6 +137,11 @@ void surface_reset(surface_data* sd)
         crosswin_set_position(sd->sw, x, y);
     }
 
+    if(sd->def_divider == 0)
+    {
+    	sd->def_divider = 1;
+    }
+
     keep_on_screen = parameter_bool(sd, "KeepOnScreen", 0, XPANDER_SURFACE_CONFIG);
     hidden = parameter_bool(sd, "Hidden", 0, XPANDER_SURFACE_CONFIG);
     draggable = parameter_bool(sd, "Draggable", 1, XPANDER_SURFACE_CONFIG);

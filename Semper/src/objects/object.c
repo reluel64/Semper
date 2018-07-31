@@ -659,16 +659,18 @@ void object_reset(object* o)
     {
         o->object_reset_rtn(o);
     }
-
+    /*Just in case the user tries to force the divider to be 0*/
     if(o->divider == 0)
     {
-        o->divider = 1;
+        o->divider = sd->def_divider;
     }
 }
 
 int object_update(object *o)
 {
     surface_data* sd = o->sd;
+    long x = 0;
+    long y = 0;
 
     if(o->vol_var)
     {
@@ -676,10 +678,10 @@ int object_update(object *o)
     }
 
     if(o->enabled == 0)
+    {
         return (0);
+    }
 
-    long x = 0;
-    long y = 0;
    // tooltip_position tp = tooltip_none;
     //object_tooltip_best(o, &x, &y);
 
