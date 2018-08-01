@@ -350,13 +350,13 @@ double folderview_update(void *spv)
 
     if(fh->type == _parent)
     {
-        if(fp->work == 0 && fp->thread)
+        if(safe_flag_get(fp->work) == 0 && fp->thread)
         {
             pthread_join(fp->thread, NULL);
             fp->thread = 0;
         }
 
-        if(fp->work == 0 && fp->update && fp->thread == 0)
+        if(safe_flag_get(fp->work) == 0 && safe_flag_get(fp->update) && fp->thread == 0)
         {
             int status = 0;
             safe_flag_set(fp->work, 1);
@@ -446,7 +446,7 @@ void folderview_command(void* spv, unsigned char* command)
     folderview_child  *fc = fh->type == _child ? fh->data : NULL;
     folderview_parent *fp = fh->type == _parent ? fh->data : (fc != NULL ? fc->parent : NULL);
 
-    if(fp->work == 0)
+    if(safe_flag_get(fp->work)== 0)
     {
         pthread_mutex_lock(&fp->mutex);
 
@@ -683,7 +683,7 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
 
     while(file)
     {
-        if(f->stop == 0)
+        if(safe_flag_get(f->stop)== 0)
         {
 
             size_t fpsz = string_length(file);
@@ -732,7 +732,7 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
 #endif
 #ifdef WIN32
 
-                if(f->stop || fh == INVALID_HANDLE_VALUE)
+                if(safe_flag_get(f->stop) || fh == INVALID_HANDLE_VALUE)
                 {
                     break;
                 }
@@ -835,11 +835,11 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
 
 #ifdef WIN32
 
-            while(f->stop == 0 && FindNextFileW(fh, &wfd));
+            while(safe_flag_get(f->stop) == 0 && FindNextFileW(fh, &wfd));
 
 #elif __linux__
 
-            while((dat = readdir(dh)) != NULL);
+            while(safe_flag_get(f->stop) == 0 && (dat = readdir(dh)) != NULL);
 
 #endif
 
@@ -998,7 +998,7 @@ static void folderview_item_child_sync(folderview_parent *fp, unsigned char flag
 
             for(size_t i = 0; i <= fp->child_count; i++)
             {
-                if(fp->stop)
+                if(safe_flag_get(fp->stop))
                 {
                     break;
                 }
@@ -1071,14 +1071,14 @@ static void *folderview_collect_thread(void* vfi)
 
         folderview_collect(fp->path, fp, NULL, &new_head); //get the file list
 
-        if(fp->stop == 0 && linked_list_empty(&new_head) == 0)
+        if(safe_flag_get(fp->stop) == 0 && linked_list_empty(&new_head) == 0)
         {
             if(fp->collect_mode == 1)
             {
                 folderview_item *fi = NULL;
                 list_enum_part(fi, &new_head, current)
                 {
-                    if(fp->stop)
+                    if(safe_flag_get(fp->stop))
                         break;
 
                     if(fi->dir)
@@ -1086,7 +1086,7 @@ static void *folderview_collect_thread(void* vfi)
                 }
             }
 
-            if(fp->stop)
+            if(safe_flag_get(fp->stop))
             {
                 folderview_destroy_list(&new_head);
             }
@@ -1107,9 +1107,7 @@ static void *folderview_collect_thread(void* vfi)
         }
     }
 
-    pthread_mutex_lock(&fp->mutex);
-    fp->work = 0;
-    pthread_mutex_unlock(&fp->mutex);
+    safe_flag_set(fp->work,0);
 
     if(fp->qcomplete_act)
         send_command(fp->ip, fp->qcomplete_act);

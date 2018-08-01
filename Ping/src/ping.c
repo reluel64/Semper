@@ -160,7 +160,8 @@ static void *ping_calculate(void *spv)
             pthread_mutex_lock(&p->mutex);
             p->ping_val = -1;
             p->addr=0;
-            p->th_active = 0;
+            semper_safe_flag_set(p->th_active,0);
+            free(finish_act);
             pthread_mutex_unlock(&p->mutex);
             return(NULL);
         }
@@ -194,7 +195,7 @@ static void *ping_calculate(void *spv)
 
 
     free(finish_act);
-   semper_safe_flag_set(p->th_active, 0);
+    semper_safe_flag_set(p->th_active, 0);
     return(NULL);
 }
 

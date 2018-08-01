@@ -15,7 +15,6 @@
 #include <sources/source.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <string_util.h>
 #include <mem.h>
 #include <pthread.h>
@@ -155,7 +154,7 @@ double webget_update(void *spv)
 {
     webget *w = spv;
 
-    if((w->work == 0 && w->worker) || w->update)
+    if((safe_flag_get(w->work) == 0 && w->worker) || safe_flag_get(w->update))
     {
         if(w->worker)
         {
@@ -174,7 +173,7 @@ double webget_update(void *spv)
         }
     }
 
-    if(w->worker == 0 && w->address && (w->c_rate == 0 || w->update))
+    if(w->worker == 0 && w->address && (w->c_rate == 0 || safe_flag_get(w->update)))
     {
 
         int status = 0;
@@ -395,7 +394,7 @@ static int webget_post_worker_update(webget *w)
             send_command(w->ip, w->parse_fail_act);
         }
     }
-    else if(ww && ww->fp && ww->dwl_mode & DOWNLOAD_TO_FILE) //no buffer? let's see if we do have a file downloaded for us
+    else if(ww && ww->fp && (ww->dwl_mode & DOWNLOAD_TO_FILE)) //no buffer? let's see if we do have a file downloaded for us
     {
         sfree((void**)&w->result);
         w->result = ww->fp;
@@ -473,8 +472,8 @@ static int webget_post_worker_update(webget *w)
         w->temp = NULL;
     }
 
-    if(w->update)
-        w->update--;
+    if(safe_flag_get(w->update))
+        safe_flag_set(w->update,safe_flag_get(w->update)-1);
 
     return(ret);
 }
@@ -754,7 +753,7 @@ static void *webget_worker_thread(void *p)
     }
 
     pthread_mutex_unlock(&w->mutex);
-    w->work = 0;
+    safe_flag_set(w->work, 0);
     return(NULL);
 
 }

@@ -617,10 +617,10 @@ int xpander(xpander_request *xr)
         { "Extensions",                          cd->ext_dir,                     NULL },
         { "Semper",                             cd->root_dir,                     NULL },
         { "ThisSection",     skeleton_get_section_name(sect),                     NULL },
-        { "SurfaceX",                                 &sx,     xpander_convert_long },
-        { "SurfaceY",                                 &sy,     xpander_convert_long },
-        { "SurfaceW",                                 &sw,     xpander_convert_long },
-        { "SurfaceH",                                 &sh,     xpander_convert_long },
+        { "SurfaceX",                                    &sx,     xpander_convert_long },
+        { "SurfaceY",                                    &sy,     xpander_convert_long },
+        { "SurfaceW",                                    &sw,     xpander_convert_long },
+        { "SurfaceH",                                    &sh,     xpander_convert_long },
 #ifdef WIN32
         { "OS",                               "Windows",                          NULL }
 #elif __linux__

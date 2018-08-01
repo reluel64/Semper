@@ -230,12 +230,12 @@ static void * ohm_query(void *pv)
         pthread_mutex_unlock(&ohm->mutex);
         gettimeofday(&tv, NULL);
 
-        pthread_mutex_init(&mtx, NULL);
+
         ts.tv_sec = time(NULL) + 1000 / 1000;
         ts.tv_nsec = tv.tv_usec * 1000 + 1000 * 1000 * (1000 % 1000);
         ts.tv_sec += ts.tv_nsec / (1000 * 1000 * 1000);
         ts.tv_nsec %= (1000 * 1000 * 1000);
-
+        pthread_mutex_init(&mtx, NULL);
         pthread_mutex_lock(&mtx);
         pthread_cond_timedwait(&ohm->cond, &mtx, &ts);
         pthread_mutex_unlock(&mtx);

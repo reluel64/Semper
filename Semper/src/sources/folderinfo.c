@@ -237,7 +237,7 @@ static void* folderinfo_collect_thread(void* vfi)
     fi->ofile_count = fi->file_count;
     fi->ofolder_count = fi->folder_count;
     fi->osize = fi->size;
-    fi->working = 0;
+    safe_flag_set(fi->working,0);
     return(NULL);
 }
 #endif
