@@ -506,23 +506,31 @@ static int math_parser_gen_queue(unsigned char *f, list_entry *out_queue, math_p
                     size_t len = 0;
                     int name = 1;
                     double v = 0.0;
-
+                    /*Calculate the length and stop when running out of operators
+                     *
+                     */
                     for(len = 0; f[i + len] && name == 1; len++)
                     {
                         for(size_t x = 0; x < sizeof(opt) / sizeof(operator_info); x++)
                         {
                             token_len = string_length(opt[x].on);
 
+                            /*If we reach an operator we
+                             * stop the search and call
+                             * the callback*/
                             if(strncasecmp(f + i + len, opt[x].on, token_len) == 0)
                             {
                                 name = 0;
                                 break;
                             }
 
+                            /*The last operator is ":" so if we reach it, we will
+                             * stop and go to the next position in buffer
+                             * */
                             if(strncasecmp(":", opt[x].on, token_len) == 0)
                                 break;
                         }
-
+                        /*exit before incrementing len*/
                         if(name == 0)
                             break;
                     }
