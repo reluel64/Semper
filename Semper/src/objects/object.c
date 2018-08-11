@@ -24,6 +24,7 @@ Written by Alexandru-Daniel Mărgărit
 #include <mouse.h>
 #include <parameter.h>
 #include <surface_builtin.h>
+#include <surface.h>
 
 typedef struct
 {
@@ -35,15 +36,6 @@ typedef struct
     void (*object_destroy_rtn)(object* o);
 
 } object_routine_entry;
-
-typedef enum
-{
-    tooltip_none,
-    tooltip_top,
-    tooltip_bottom,
-    tooltip_left,
-    tooltip_right
-} tooltip_position;
 
 static int object_routines_table(object_routine_entry **ore, unsigned char *on)
 {
@@ -139,7 +131,10 @@ int object_calculate_coordinates(object* o)
     long pox = 0;
     long poy = 0;
     object* po = o;
-
+    long nx = o->x;
+    long ny = o->y;
+    unsigned char reps[260] = { 0 };
+    unsigned char* out = NULL;
     /*we are going backwards to obtain the coordinates of the previous object
      * If the object is disabled, we will go backwards until we reach the head of the list or a enabled object*/
     while(1)
@@ -168,17 +163,10 @@ int object_calculate_coordinates(object* o)
         poy = po->y;
     }
 
-    long nx = o->x;
-    long ny = o->y;
-    unsigned char reps[260] = { 0 };
-    unsigned char* out = NULL;
-
     snprintf(reps, sizeof(reps), "(r,+%ld);(R,+%ld)", pox, pow + pox);
     out = replace(o->sx, reps, 0);
     nx = (long) compute_formula(out);
     sfree((void**) &out);
-
-    memset(reps, 0, sizeof(reps));
 
     snprintf(reps, sizeof(reps), "(r,+%ld);(R,+%ld)", poy, poh + poy);
     out = replace(o->sy, reps, 0);
@@ -293,7 +281,96 @@ object* object_by_name(surface_data* sd, unsigned char* on, size_t len)
     return (NULL);
 }
 
-tooltip_position object_tooltip_best(object *o, long *x, long *y);
+
+
+
+static int object_tooltip_update(object *o)
+{
+    static unsigned char *empty_txt = "Parameter(Text,Disabled,1)";
+    static unsigned char *empty_title = "Parameter(Title,Disabled,1)";
+
+    if(o->ttip == NULL)
+    {
+        return(-1);
+    }
+
+    if(o->ot.title)
+    {
+        string_bind titsb = {0};
+        titsb.s_in = o->ot.title;
+        titsb.percentual = o->ot.percentual;
+        titsb.scale = o->ot.scale;
+        titsb.self_scaling = o->ot.scaling;
+        titsb.decimals = o->ot.decimals;
+        bind_update_string(o, &titsb);
+
+        if(titsb.s_out)
+        {
+            unsigned char titfmt[] = {"Parameter(Title,Text,\"%s\")"};
+            size_t fbuf = sizeof(titfmt) + string_length(titsb.s_out);
+            unsigned char *buf = zmalloc(fbuf + 1);
+
+            if(titsb.s_out[0] != ' ')
+            {
+                snprintf(buf, fbuf, titfmt, titsb.s_out);
+                command(o->ttip, &buf);
+            }
+
+            sfree((void**) &buf);
+        }
+    }
+    else
+    {
+        command(o->ttip, &empty_title);
+    }
+
+    if(o->ot.text)
+    {
+        string_bind txtsb = {0};
+        txtsb.s_in = o->ot.text;
+        txtsb.percentual = o->ot.percentual;
+        txtsb.scale = o->ot.scale;
+        txtsb.self_scaling = o->ot.scaling;
+        txtsb.decimals = o->ot.decimals;
+        bind_update_string(o, &txtsb);
+
+        if(txtsb.s_out)
+        {
+            unsigned char txtfmt[] = {"Parameter(Text,Text,\"%s\")"};
+            size_t fbuf = sizeof(txtfmt) + string_length(txtsb.s_out);
+            unsigned char *buf = zmalloc(fbuf + 1);
+
+            if(txtsb.s_out[0] != ' ')
+            {
+                snprintf(buf, fbuf, txtfmt, txtsb.s_out);
+                command(o->ttip, &buf);
+            }
+
+            sfree((void**) &buf);
+        }
+    }
+    else
+    {
+        command(o->ttip, &empty_txt);
+    }
+
+
+    /*The tooltip relies on the parent object to update its contents.
+     * Therefore, we need 3 fast update cycles to have everything nice
+     * Cycles:
+     * 1) Update the Title and the Text with the parameters set above
+     * 2) Update the background size
+     * 3) Update the reflect the new content*/
+
+
+    for(unsigned char cycle = 0; cycle < 3; cycle++)
+    {
+        surface_update(o->ttip);
+    }
+    //command(o->ttip, &show_fade);
+
+    return(0);
+}
 
 int object_hit_testing(surface_data* sd, mouse_status* ms)
 {
@@ -349,8 +426,37 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
                 {
                     button_mouse(o, ms);
                 }
+                if(ms->hover==mouse_hover)
+                {
+                    if(((object*)o)->ttip == NULL)
+                    {
+                        surface_builtin_init((void*)o, 1);
+                    }
 
+                    if(((object*)o)->ttip)
+                    {
+                        long sdx = 0;
+                        long sdy = 0;
+                        size_t mon = 0;
+                        object_tooltip_update(o);
+                        crosswin_set_keep_on_screen(((surface_data*)o->ttip)->sw,1);
+                        crosswin_get_position(((surface_data*)((object*)o)->sd)->sw,&sdx,&sdy,&mon);
+                        surface_data *ttip_sd = ((object*)o)->ttip;
+                        crosswin_set_monitor(ttip_sd->sw,mon);
+                        crosswin_set_position(ttip_sd->sw,sdx + ms->x + 10, sdy + ms->y + 10);
+                        crosswin_set_zorder(ttip_sd->sw, crosswin_topmost);
+                        crosswin_set_keep_on_screen(((surface_data*)o->ttip)->sw,1);
+                        crosswin_set_visible(ttip_sd->sw,1);
+                        event_push(sd->cd->eq,(event_handler)surface_fade,(void*)o->ttip,150,EVENT_PUSH_TIMER);
+                    }
+
+                }
+                else
+                {
+                    surface_builtin_destroy(&((object*)o)->ttip);
+                }
                 mouse_ret = mouse_handle_button(o, MOUSE_OBJECT, ms);
+
                 found = 1;
                 break;
             }
@@ -365,16 +471,20 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
         cairo_surface_destroy(cs);
     }
 
-    //trigger leave event for other objects
+    /*trigger leave event for other objects*/
 
     list_enum_part(lo, &sd->objects, current)
     {
         if(lo != o)
         {
-            mouse_status dms = { 0 }; // dummy mouse status to signal that other objects are not important so they should trigger  MouseLeaveAction
+            /* dummy mouse status to signal that other objects
+             * are not in focus so they should trigger
+             * MouseLeaveAction
+             */
+            mouse_status dms = { 0 };
             dms.state = mouse_button_state_none;
             dms.hover = mouse_unhover;
-
+            surface_builtin_destroy(&((object*)lo)->ttip);
             if(lo->object_type == 9)    //Button
             {
                 button_mouse(lo, &dms);
@@ -385,185 +495,6 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
     }
 
     return (found && mouse_ret);
-}
-
-void object_render(surface_data* sd, cairo_t* cr)
-{
-    object* o = NULL;
-    list_enum_part(o, &sd->objects, current)
-    {
-        if(o->die == 1)
-        {
-            continue;
-        }
-
-        object_calculate_coordinates(o);
-
-        if(o->enabled && o->hidden == 0)
-        {
-            object_render_internal(o, cr);
-        }
-    }
-}
-#if 0
-tooltip_position object_tooltip_best(object *o, long *x, long *y)
-{
-    surface_data *sd = o->sd;
-    control_data *cd = sd->cd;
-    tooltip_position tp = tooltip_none;
-    long sx = 0;
-    long sy = 0;
-    long sw = 0;
-    long sh = 0;
-    long mx = 0;
-    long my = 0;
-    long mw = 0;
-    long mh = 0;
-    int pos = 0; /* 0 - up/down | 1 left/right  */
-
-    long ow = o->w < 0 ? o->auto_w : o->w;
-    long oh = o->h < 0 ? o->auto_h : o->h;
-
-    pos = (ow >= oh) ? 0 : 1;   /*set the direction*/
-
-    crosswin_monitor_origin(&cd->c, sd->sw, &mx, &my);
-    crosswin_monitor_resolution(&cd->c, sd->sw, &mw, &mh);
-    crosswin_get_position(sd->sw, &sx, &sy, NULL);
-    crosswin_get_size(sd->sw, &sw, &sh);
-
-    if(pos)
-    {
-        *x = sx + o->x + ow;
-        *y = sy + o->y + oh / 2;
-        tp = tooltip_right;
-
-        if(sx + o->x > mw - (sw + o->x + ow))
-        {
-            (*x) -= ow;
-            tp = tooltip_left;
-        }
-    }
-    else
-    {
-
-        *x = sx + o->x + ow / 2;
-        *y = sy + o->y + oh;
-        tp = tooltip_bottom;
-
-        if(sy + o->y > mh - (sy + o->y + oh))
-        {
-            tp = tooltip_top;
-            (*y) -= oh;
-        }
-    }
-
-    return(tp);
-}
-
-#endif
-
-int object_tooltip_update(object *o)
-{
-    long x = 0;
-    long y = 0;
-    //tooltip_position tp = object_tooltip_best(o,&x,&y);
-   // printf("TooltipBest %d %d %d\n",tp,x,y);
-#if 0
-    surface_data *tsd = o->ttip;
-    surface_data *sd = o->sd;
-    long sx =0;
-    long sy =0;
-    long sw = 0;
-    if(o->ot.title)
-    {
-        string_bind titsb = {0};
-        titsb.s_in = o->ot.title;
-        titsb.percentual = o->ot.percentual;
-        titsb.scale = o->ot.scale;
-        titsb.self_scaling = o->ot.scaling;
-        titsb.decimals = o->ot.decimals;
-        bind_update_string(o, &titsb);
-
-        if(titsb.s_out)
-        {
-            unsigned char titfmt[] = {"Variable(Title,\"%s\")"};
-            size_t fbuf = sizeof(titfmt) + string_length(titsb.s_out);
-            unsigned char *buf = zmalloc(fbuf + 1);
-
-            if(titsb.s_out[0] != ' ')
-            {
-                snprintf(buf, fbuf, titfmt, titsb.s_out);
-                command(o->ttip, &buf);
-            }
-
-            sfree((void**) &buf);
-        }
-    }
-    else
-    {
-        static unsigned char *empty_title = "Parameter(Title,Disabled,1); \
-                                     Parameter(Title,W,0);\
-                                     Parameter(Title,H,0);\
-                                     Parameter(Title,X,0);\
-                                     Parameter(Title,Y,0);\
-                                     Parameter(Text,Y,5r);";
-        command(o->ttip, &empty_title);
-    }
-
-    if(o->ot.text)
-    {
-        string_bind txtsb = {0};
-        txtsb.s_in = o->ot.text;
-        txtsb.percentual = o->ot.percentual;
-        txtsb.scale = o->ot.scale;
-        txtsb.self_scaling = o->ot.scaling;
-        txtsb.decimals = o->ot.decimals;
-        bind_update_string(o, &txtsb);
-
-        if(txtsb.s_out)
-        {
-            unsigned char txtfmt[] = {"Variable(Text,\"%s\")"};
-            size_t fbuf = sizeof(txtfmt) + string_length(txtsb.s_out);
-            unsigned char *buf = zmalloc(fbuf + 1);
-
-            if(txtsb.s_out[0] != ' ')
-            {
-                snprintf(buf, fbuf, txtfmt, txtsb.s_out);
-                command(o->ttip, &buf);
-            }
-
-            sfree((void**) &buf);
-        }
-    }
-    else
-    {
-
-        static  unsigned char *empty_txt = "Parameter(Text,Disabled,1);\
-                                  Parameter(Text,W,0);\
-                                  Parameter(Text,H,0);\
-                                  Parameter(Text,X,0);\
-                                  Parameter(Text,Y,0);";
-        command(o->ttip, &empty_txt);
-    }
-
-    unsigned char *show_fade = "ShowFade()";
-
-    /*The tooltip relies on the parent object to update its contents.
-     * Therefore, we need 3 fast update cycles to have everything nice
-     * Cycles:
-     * 1) Update the Title and the Text with the parameters set above
-     * 2) Update the background size
-     * 3) Update the reflect the new content*/
-    for(char cycle = 0; cycle < 3; cycle++)
-    {
-        surface_update(o->ttip);
-    }
-    crosswin_get_position(sd->sw,&sx,&sy,NULL);
-    crosswin_get_dimmension(tsd->sw,&sw,NULL);
-    crosswin_set_position(tsd->sw, (o->x + o->w / 2 + sx) - sw / 2,  o->y + o->h + sy);
-    command(o->ttip, &show_fade);
-#endif
-    return (0);
 }
 
 int object_init(section s, surface_data* sd)
@@ -596,10 +527,10 @@ int object_init(section s, surface_data* sd)
     o->sd = sd;
 
     /*For the moment we will initialize the function pointers here but this may change in the future*/
-    o->object_init_rtn = ore->object_init_rtn;
-    o->object_reset_rtn = ore->object_reset_rtn;
-    o->object_update_rtn = ore->object_update_rtn;
-    o->object_render_rtn = ore->object_render_rtn;
+    o->object_init_rtn    = ore->object_init_rtn;
+    o->object_reset_rtn   = ore->object_reset_rtn;
+    o->object_update_rtn  = ore->object_update_rtn;
+    o->object_render_rtn  = ore->object_render_rtn;
     o->object_destroy_rtn = ore->object_destroy_rtn;
 
     list_entry_init(&o->current);
@@ -659,6 +590,7 @@ void object_reset(object* o)
     {
         o->object_reset_rtn(o);
     }
+
     /*Just in case the user tries to force the divider to be 0*/
     if(o->divider == 0)
     {
@@ -669,8 +601,6 @@ void object_reset(object* o)
 int object_update(object *o)
 {
     surface_data* sd = o->sd;
-    long x = 0;
-    long y = 0;
 
     if(o->vol_var)
     {
@@ -679,11 +609,17 @@ int object_update(object *o)
 
     if(o->enabled == 0)
     {
+        sfree((void**) &o->sx);
+        sfree((void**) &o->sy);
+        o->w = 0;
+        o->h = 0;
+        o->x = 0;
+        o->y = 0;
+        o->auto_h = 0;
+        o->auto_w = 0;
         return (0);
     }
 
-   // tooltip_position tp = tooltip_none;
-    //object_tooltip_best(o, &x, &y);
 
     if(o->object_update_rtn)
     {
@@ -706,16 +642,35 @@ int object_update(object *o)
 }
 
 
+void object_render(surface_data* sd, cairo_t* cr)
+{
+    object* o = NULL;
+    list_enum_part(o, &sd->objects, current)
+    {
+        if(o->die == 1)
+        {
+            continue;
+        }
+
+        object_calculate_coordinates(o);
+
+        if(o->enabled && o->hidden == 0)
+        {
+            object_render_internal(o, cr);
+        }
+    }
+}
+
 void object_destroy(object** o)
 {
     if(o && *o)
     {
+
         object* to = *o;
         sfree((void**) &to->update_act);
         sfree((void**) &to->team);
         sfree((void**) &to->sx);
         sfree((void**) &to->sy);
-
         sfree((void**) &to->ot.title);
         sfree((void**) &to->ot.text);
 

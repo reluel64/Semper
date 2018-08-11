@@ -40,7 +40,7 @@ typedef struct _source
     unsigned char* team;
     size_t avg_count;
     void* avg_pv;
-    unsigned char* update_act; // action to be perfomed when the source is updated
+    unsigned char* update_act; // action to be performed when the source is updated
     unsigned char* change_act; // action to be performed when the value is changed (can be the numerical or the string)
     unsigned char change_act_lock;
     unsigned char update_act_lock;

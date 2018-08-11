@@ -8,7 +8,8 @@
 #include <crosswin/crosswin.h>
 #include <linked_list.h>
 #include <mouse.h>
-
+#define SURFACE_INIT_MEMORY 0x1
+#define SURFACE_INIT_CHECK  0x2
 #define cairo_set_color(cr,color) \
     { \
         double alpha=((double)(((color)&0xff000000)>>24)) /255.0; \
@@ -25,7 +26,6 @@ typedef struct _surface_paths
     unsigned char* surface_dir;                     // absolute surface directory
     unsigned char* surface_file;                    // file name
     unsigned char* surface_rel_dir;                 // surface relative name (acts as the surface name)
-    // unsigned char* inc;                             // surface header directory
     size_t variant;                                 // this is used to obtain file name
 } surface_paths;
 

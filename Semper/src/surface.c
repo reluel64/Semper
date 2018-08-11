@@ -605,9 +605,6 @@ static int surface_create_paths(control_data* cd, surface_paths* sp, size_t vari
     sp->data_dir = zmalloc(surface_fdir_length + 7); // allocate memory for dir_path/Data
     snprintf(sp->data_dir, surface_fdir_length + 6, "%s/Data", sp->surface_dir);
 
-    // sp->inc = zmalloc(surface_fdir_length + 10); // allocate memory for dir_path/Include
-    //snprintf(sp->inc, surface_fdir_length + 9, "%s/Include", sp->surface_dir);
-
     sp->variant = variant;
     sp->surface_rel_dir = clone_string(name);
 
@@ -640,19 +637,17 @@ void surface_reload(surface_data* sd)
         {
             event_remove(sd->cd->eq, NULL, sd, EVENT_REMOVE_BY_DATA);
             surface_destroy_structs(sd, 1);
-            surface_init(&sd->sp, sd->cd, &sd, 0);
+            surface_init(&sd->sp, sd->cd, &sd, SURFACE_INIT_CHECK);
             surface_init_update(sd);
 
         }
     }
-
-
 }
 
 surface_data *surface_load_memory(control_data *cd, unsigned char *buf, size_t buf_sz, surface_data **sd)
 {
     surface_reader_stat srs = {.size = buf_sz, .buf = buf, .current = 0 };
-    surface_data *rsd = surface_init(&srs, cd, sd, 1);
+    surface_data *rsd = surface_init(&srs, cd, sd, SURFACE_INIT_MEMORY);
 
     if(rsd)
     {
@@ -675,7 +670,7 @@ size_t surface_load(control_data* cd, unsigned char* name, size_t variant)
 
     surface_paths sp = { 0 };
     surface_create_paths(cd, &sp, variant, name);
-    sd = surface_init(&sp, cd, NULL, 0);
+    sd = surface_init(&sp, cd, NULL, SURFACE_INIT_CHECK);
 
     if(sd)
     {
@@ -716,7 +711,7 @@ static char* surface_read_from_memory(char* str, size_t ccount, surface_reader_s
     memset(str, 0, ccount);
     size_t i = 0;
 
-    for(; srrs->buf[srrs->current] != '\n' && srrs->current < srrs->size; srrs->current++, i++)
+    for(; srrs->current < srrs->size && srrs->buf[srrs->current] != '\n'; srrs->current++, i++)
     {
         str[i] = srrs->buf[srrs->current];
     }
@@ -897,7 +892,7 @@ void surface_init_update(surface_data *sd)
     event_push(sd->cd->eq, (event_handler)surface_fade, (void*)sd, 0, 0);
 }
 
-static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd, unsigned char memory)
+static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd, unsigned char flags)
 {
     surface_paths *sp = pv;
 
@@ -911,7 +906,7 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
         tsd = *sd;
     }
 
-    if(memory)
+    if(flags & SURFACE_INIT_MEMORY)
     {
         sp = NULL;
     }
@@ -924,22 +919,27 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
      * case we are coming from a surface that has been reloaded
      * */
     event_remove(cd->eq, NULL, tsd, EVENT_REMOVE_BY_DATA);
+    if(flags & SURFACE_INIT_CHECK)
+    {
+        if(flags & SURFACE_INIT_MEMORY)
+        {
+            ini_parser_parse_stream((ini_reader)surface_read_from_memory, pv, surface_validate_handler, &valid);
+            ((surface_reader_stat*)pv)->current = 0;
 
-    if(memory == 0)
-    {
-        ini_parser_parse_file(sp->file_path, surface_validate_handler, &valid); // call the validation handler
-    }
-    else
-    {
-        ini_parser_parse_stream((ini_reader)surface_read_from_memory, pv, surface_validate_handler, &valid);
-        ((surface_reader_stat*)pv)->current = 0;
+        }
+        else
+        {
+            ini_parser_parse_file(sp->file_path, surface_validate_handler, &valid); // call the validation handler
+        }
+
+
+        if(valid == 0)
+        {
+            diag_error("Invalid surface");
+            return (NULL);
+        }
     }
 
-    if(valid == 0)
-    {
-        diag_error("Invalid surface");
-        return (NULL);
-    }
 
     if(tsd == NULL)
     {
@@ -975,13 +975,13 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
 
     shd.pv = tsd;
 
-    if(memory == 0)
+    if(flags & SURFACE_INIT_MEMORY)
     {
-        ini_parser_parse_file(sp->file_path, surface_create_skeleton_handler, &shd); // we will create the skeleton
+        ini_parser_parse_stream((ini_reader)surface_read_from_memory, pv, surface_create_skeleton_handler, &shd);
     }
     else
     {
-        ini_parser_parse_stream((ini_reader)surface_read_from_memory, pv, surface_create_skeleton_handler, &shd);
+        ini_parser_parse_file(sp->file_path, surface_create_skeleton_handler, &shd); // we will create the skeleton
     }
 
     sfree((void**)&shd.kv);                                                 // free a small yet important to free residue

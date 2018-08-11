@@ -16,6 +16,9 @@
 #include <math_parser.h>
 #include <xpander.h>
 #include <parameter.h>
+
+
+#define DEFER_COMMAND 0x2712 /*In the past this value meant something but now it's just a meaningless ID*/
 #define COMMAND_PARAMETER_STACK 10
 
 typedef struct
@@ -55,8 +58,6 @@ typedef struct
 } command_tokenizer_status;
 
 #define COMMAND_HANDLER( _func_name ) static int(_func_name)(surface_data * sd, command_parameters * cp)
-#define DEFER_COMMAND 0x2712
-
 
 static int command_defer_handler(command_defer_data* ec)
 {
@@ -1135,7 +1136,7 @@ int command(surface_data* sd, unsigned char **pa)
 
     if(pa == NULL || *pa == NULL || sd == NULL || sd->cd == NULL)
     {
-        diag_warn("%s %d control_data %p surface_data %p action %p", __FUNCTION__, __LINE__, sd->cd, sd, pa);
+        diag_warn("%s %d control_data %p surface_data %p action %p", __FUNCTION__, __LINE__, (sd?sd->cd:NULL), sd, pa);
         return (-1);
     }
 

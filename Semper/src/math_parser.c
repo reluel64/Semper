@@ -1,9 +1,7 @@
 /*Implementation of a math parser
  * using Edsger Dijkstra's shunting yard algorithm
- */
-
-/*Part of Project 'Semper'
- * Writen by Alexandru-Daniel Mărgărit
+ * Part of Project 'Semper'
+ * Written by Alexandru-Daniel Mărgărit
  */
 #undef __STRICT_ANSI__
 #include <stdio.h>

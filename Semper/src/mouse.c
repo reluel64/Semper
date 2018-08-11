@@ -203,20 +203,10 @@ int mouse_handle_button(void* pv, unsigned char mode, mouse_status* ms)
             {
                 if(ms->hover == mouse_hover)
                 {
-                    if(mode == MOUSE_OBJECT)
-                    {
-                        surface_builtin_init(pv, 1);
-                    }
-
                     mcomm = ma->ha;
                 }
                 else if(ms->hover == mouse_unhover && ma->omhs != mouse_none)
                 {
-                    if(mode == MOUSE_OBJECT)
-                    {
-                        surface_builtin_destroy(&((object*)pv)->ttip);
-                    }
-
                     mcomm = ma->nha;
                 }
 

@@ -165,10 +165,10 @@ void calculator_reset(void* spv, void* ip)
 
     if(c->max_random == 0)
     {
-        c->max_random = 100;
+        c->max_random = 65535;
     }
 
-    if(c->max_random == c->min_random)
+    if(c->max_random <= c->min_random)
     {
         c->max_random = c->min_random + 1;
     }

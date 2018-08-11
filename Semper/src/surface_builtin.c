@@ -98,21 +98,15 @@ int surface_builtin_init(void *holder, surface_builtin_type tp)
 
             if(o->ttip == NULL && (o->ot.text || o->ot.title))
             {
-                long sx = 0;
-                long sy = 0;
                 size_t buf_sz = 0;
                 unsigned char *buf = surface_builtin_code(&buf_sz, tp);
                 surface_data* sd = surface_load_memory(cd, buf, buf_sz, NULL);
+                event_remove(cd->eq,(event_handler)surface_fade,sd,EVENT_REMOVE_BY_DATA_HANDLER);
                 crosswin_set_visible(sd->sw,0);
-                crosswin_get_position(osd->sw,&sx,&sy,NULL);
-                crosswin_set_position(sd->sw, (o->x + sx),  o->y + o->h + sy);
-
                 crosswin_set_click_through(sd->sw, 1);
+                crosswin_set_opacity(sd->sw,0);
 
-                crosswin_set_zorder(sd->sw, crosswin_topmost);
                 o->ttip = sd;
-                crosswin_set_visible(sd->sw,0);
-                object_tooltip_update(o);
 
                 return(0);
             }

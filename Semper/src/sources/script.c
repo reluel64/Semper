@@ -4,8 +4,11 @@
  * Written by Alexandru-Daniel Mărgărit
  */
 
-/*The reason of scripting support is to have a source-like behaviour without digging deep in the code
- * Also, it is safer and faster to write a script as it runs in its own context and can't harm the main core. Well, it may harm the performance a bit*/
+/*The reason of scripting support is to have a
+ * source-like behavior without digging deep in the code
+ * Also, it is safer and faster to write a script as it
+ * runs in its own context and can't harm the main core.
+ * Well, it may harm the performance a bit*/
 
 #include <mem.h>
 #include <string_util.h>

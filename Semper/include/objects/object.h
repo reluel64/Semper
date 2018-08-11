@@ -79,6 +79,5 @@ void object_destroy(object** o);
 int object_init(section s, surface_data* sd);
 int object_hit_testing(surface_data* sd, mouse_status* ms);
 void object_render(surface_data* sd, cairo_t* cr);
-int object_tooltip_update(object *o);
 void object_reset(object* o);
 int object_calculate_coordinates(object* o);
