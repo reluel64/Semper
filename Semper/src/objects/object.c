@@ -452,7 +452,7 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
                         crosswin_set_zorder(ttip_sd->sw, crosswin_topmost);
                         crosswin_set_keep_on_screen(ttip_sd->sw,1);
                         crosswin_set_visible(ttip_sd->sw,1);
-                        event_push(sd->cd->eq,(event_handler)surface_fade,(void*)o->ttip,150,EVENT_PUSH_TIMER);
+                        event_push(sd->cd->eq,(event_handler)surface_fade,(void*)o->ttip,1000,EVENT_PUSH_TIMER);
                     }
 
                 }

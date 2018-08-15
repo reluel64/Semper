@@ -68,10 +68,8 @@ extern PangoAttribute *string_attr_stretch(PangoStretch stretch, size_t start, s
 extern PangoAttribute *string_attr_rise(int rise, size_t start, size_t end);
 extern PangoAttribute *string_attr_case(unsigned char case_type, size_t start, size_t end);
 extern PangoAttribute *string_attr_spacing(int spacing, size_t start, size_t end);
-extern PangoAttribute *string_attr_gradient(string_attributes *sa, size_t start, size_t end);
-extern PangoAttribute *string_attr_outline(string_attributes *sa, size_t start, size_t end);
-extern int             string_attr_case_handler(PangoAttribute *pa, void *pv);
 extern PangoAttribute *string_attr_color(unsigned char cl_type, string_attributes *sa, size_t start, size_t end);
+extern int             string_attr_case_handler(PangoAttribute *pa, void *pv);
 
 static int string_parse_filter(string_tokenizer_status *pi, void* pv)
 {
