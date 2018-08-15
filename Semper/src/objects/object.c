@@ -365,7 +365,7 @@ static int object_tooltip_update(object *o)
      * 2) Update the background size
      * 3) Update the reflect the new content*/
 
-    snprintf(tmp_cmd,sizeof(tmp_cmd),"Parameter(Background,BackColor,0x%08x)",o->ot.tooltip_color);
+    snprintf(tmp_cmd,sizeof(tmp_cmd),"Parameter(Background,BackColor,0x%08x)",o->ot.color);
     command(o->ttip,&tmp_cmd_buf);
     for(unsigned char cycle = 0; cycle < 3; cycle++)
     {
@@ -452,7 +452,7 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
                         crosswin_set_zorder(ttip_sd->sw, crosswin_topmost);
                         crosswin_set_keep_on_screen(ttip_sd->sw,1);
                         crosswin_set_visible(ttip_sd->sw,1);
-                        event_push(sd->cd->eq,(event_handler)surface_fade,(void*)o->ttip,1000,EVENT_PUSH_TIMER);
+                        event_push(sd->cd->eq,(event_handler)surface_fade,(void*)o->ttip,o->ot.timeout,EVENT_PUSH_TIMER);
                     }
 
                 }
@@ -589,8 +589,15 @@ void object_reset(object* o)
     o->ot.scale = parameter_double(o, "ToolTipScale", 0, XPANDER_OBJECT);
     o->ot.scaling = parameter_self_scaling(o, "ToolTipSelfScaling", 0, XPANDER_OBJECT);
     o->ot.decimals = parameter_byte(o, "ToolTipDecimals", 0, XPANDER_OBJECT);
-    o->ot.tooltip_color = parameter_color(o, "TooltipColor", 0xff000000, XPANDER_OBJECT);
+    o->ot.color = parameter_color(o, "TooltipColor", 0xff000000, XPANDER_OBJECT);
+    o->ot.timeout = parameter_size_t (o, "TooltipTimeout", 500, XPANDER_OBJECT);
     /*Do the private reset of the object */
+
+    if(o->ot.timeout == 0)
+    {
+        o->ot.timeout = 500;
+    }
+
     if(o->object_reset_rtn)
     {
         o->object_reset_rtn(o);
