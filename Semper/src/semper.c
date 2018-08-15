@@ -20,6 +20,7 @@
 #include <memf.h>
 #include <pango/pangocairo.h>
 #include <semper_listener.h>
+#include <font_config.h>
 #ifdef __linux__
 #include <sys/inotify.h>
 #include <sys/eventfd.h>
@@ -821,10 +822,6 @@ static void  semper_init_fonts(control_data *cd)
     sfree((void**)&tmp);
 
 
-    static unsigned char config[] =
-    {
-#include <font_config.cxml>
-    };
 
     size_t fcfg_len = fcroot_len + sizeof("\\.fontcfg");
     unsigned char *win_fonts = expand_env_var("%systemroot%\\fonts");
@@ -835,7 +832,7 @@ static void  semper_init_fonts(control_data *cd)
 
     if(f)
     {
-        fwrite(config, sizeof(config) - 1, 1, f);
+        fwrite(font_cfg_xml, font_cfg_xml_len, 1, f);
         fprintf(f, "<dir>%s</dir>\n<dir>%s</dir>\n<cachedir>%s</cachedir>\n</fontconfig>", win_fonts, cd->surface_dir, fcroot);
         fclose(f);
     }

@@ -120,6 +120,7 @@
 								<option id="gnu.c.link.option.ldflags.1963006238" name="Linker flags" superClass="gnu.c.link.option.ldflags" useByScannerDiscovery="false" value="-static -Wl,--dynamicbase,--high-entropy-va,--nxcompat" valueType="string"/>
 								<option defaultValue="true" id="gnu.c.link.option.shared.159342923" name="Shared (-shared)" superClass="gnu.c.link.option.shared" useByScannerDiscovery="false" valueType="boolean"/>
 								<option id="gnu.c.link.option.noshared.2038018593" name="No shared libraries (-static)" superClass="gnu.c.link.option.noshared" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+								<option id="gnu.c.link.option.strip.652774965" name="Omit all symbol information (-s)" superClass="gnu.c.link.option.strip" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.629692156" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

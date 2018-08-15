@@ -7,6 +7,11 @@
 #include <windows.h>
 #define MAX_LEN 32
 
+/*
+ * TODO: This source should be enhanced to
+ * use only one shared memory instance
+ * to gather information for the other sources
+ */
 #pragma pack(push, 1)
 typedef struct
 {

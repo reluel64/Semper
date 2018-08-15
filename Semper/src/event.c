@@ -276,7 +276,6 @@ void event_process(event_queue* eq)
 
             if((e->time <= e->pos) || !(e->flags & EVENT_PUSH_TIMER))
             {
-               
 
                 if(e->handler)
                 {

@@ -347,7 +347,7 @@ static int math_parser_gen_queue(unsigned char *f, list_entry *out_queue, math_p
         { "-",      OP_PRIO(0x04), OP_AS_LE, 2, (math_rtn)          math_sub},
         /*
          * the power operator has to be declared before
-         * multiplication otherwise the exression is not evaluated properly.
+         * multiplication otherwise the expression is not evaluated properly.
          */
         { "**",     OP_PRIO(0x02), OP_AS_RI, 2, (math_rtn)          math_pow},
         { "*",      OP_PRIO(0x03), OP_AS_LE, 2, (math_rtn)          math_mul},

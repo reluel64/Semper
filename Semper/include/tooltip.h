@@ -204,7 +204,6 @@
 "Object=Image\n"
 "W=10+max([Title:W],[Text:W])\n"
 "H=5+max([Text:Y]+[Text:H],[Title:Y]+[Title:H])\n"
-"BackColor=255;0;0;255\n"
 "\n"
 "[Title]\n"
 "Volatile=1\n"

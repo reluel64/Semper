@@ -267,7 +267,7 @@ void destroy(void **spv)
     recycler_notifier_destroy(r);
     sfree(spv);
 }
-//---------------------------------------------------------------
+
 
 
 static void *recycler_query_thread(void *p)
@@ -449,7 +449,8 @@ static unsigned char *recycler_query_user_sid(size_t *len)
     return(str_sid);
 }
 
-/*In-house replacement for SHQueryRecycleBinW*/
+/*In-house replacement for SHQueryRecycleBinW
+ * That can be canceled at any time and can be customized*/
 static int recycler_query_user(recycler *r, double *val)
 {
     /*Get the user SID*/

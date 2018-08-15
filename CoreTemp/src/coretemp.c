@@ -7,6 +7,12 @@
 #include <windows.h>
 
 
+/*
+ * TODO: This source should be enhanced to
+ * use only one shared memory instance
+ * to gather information for the other sources
+ */
+
 /*copied from CoreTemp SDK*/
 #pragma pack(push)
 #pragma pack(4)

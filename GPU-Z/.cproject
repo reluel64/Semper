@@ -117,6 +117,7 @@
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
 								</inputType>
+								<outputType id="cdt.managedbuild.tool.gnu.c.linker.output.so.589821590" outputPrefix="" superClass="cdt.managedbuild.tool.gnu.c.linker.output.so"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.880863916" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.774152490" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" valueType="boolean"/>

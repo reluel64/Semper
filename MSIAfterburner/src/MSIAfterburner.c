@@ -4,6 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+
+/*
+ * TODO: This source should be enhanced to
+ * use only one shared memory instance
+ * to gather information for the other sources
+ */
 typedef struct
 {
     unsigned char *res_name;

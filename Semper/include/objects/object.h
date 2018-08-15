@@ -24,6 +24,7 @@ typedef struct
     unsigned int scaling;
     unsigned char decimals;
     unsigned char percentual;
+    unsigned int tooltip_color;
 } object_tooltip;
 
 typedef struct _object object;

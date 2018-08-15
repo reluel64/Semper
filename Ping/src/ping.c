@@ -25,6 +25,7 @@ typedef struct
     void* ip;
     double ping_val;
     pthread_mutex_t mutex;
+    void *event;
 } ping;
 
 static void *ping_calculate(void *spv);
@@ -39,6 +40,7 @@ void init(void** spv, void* ip)
     pthread_mutex_init(&p->mutex,&mutex_attr);
     pthread_mutexattr_destroy(&mutex_attr);
     p->th_active=semper_safe_flag_init();
+    p->event = CreateEvent(NULL,0,0,NULL);
     p->ip = ip;
     *spv = p;
 }
@@ -103,7 +105,8 @@ double update(void* spv)
 void destroy(void** spv)
 {
     ping* p = *spv;
-
+    SetEvent(p->event);
+    CloseHandle(p->event);
     if(p->th)
     {
         pthread_join(p->th, NULL);
@@ -177,7 +180,11 @@ static void *ping_calculate(void *spv)
 
     if(icmp_handle != INVALID_HANDLE_VALUE)
     {
-        if(IcmpSendEcho(icmp_handle, addr, NULL, 0, NULL, &buf, buf_sz, timeout))
+        IcmpSendEcho2(icmp_handle, p->event,NULL,NULL,addr, NULL, 0, NULL, &buf, buf_sz, timeout);
+
+
+        WaitForSingleObject(p->event,-1);
+        if(buf.Status == 0)
         {
             p->ping_val = (double)buf.RoundTripTime;
             send_command(p->ip, finish_act);

@@ -288,7 +288,10 @@ static int object_tooltip_update(object *o)
 {
     static unsigned char *empty_txt = "Parameter(Text,Disabled,1)";
     static unsigned char *empty_title = "Parameter(Title,Disabled,1)";
-
+    unsigned char tmp_cmd[64]={0};
+    unsigned char *tmp_cmd_buf=tmp_cmd;
+    static int i= 0;
+                      printf("Event %d\n",i++);
     if(o->ttip == NULL)
     {
         return(-1);
@@ -362,7 +365,8 @@ static int object_tooltip_update(object *o)
      * 2) Update the background size
      * 3) Update the reflect the new content*/
 
-
+    snprintf(tmp_cmd,sizeof(tmp_cmd),"Parameter(Background,BackColor,0x%08x)",o->ot.tooltip_color);
+    command(o->ttip,&tmp_cmd_buf);
     for(unsigned char cycle = 0; cycle < 3; cycle++)
     {
         surface_update(o->ttip);
@@ -431,21 +435,22 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
                     if(((object*)o)->ttip == NULL)
                     {
                         surface_builtin_init((void*)o, 1);
+
                     }
 
                     if(((object*)o)->ttip)
                     {
+                        surface_data *ttip_sd = ((object*)o)->ttip;
                         long sdx = 0;
                         long sdy = 0;
                         size_t mon = 0;
                         object_tooltip_update(o);
-                        crosswin_set_keep_on_screen(((surface_data*)o->ttip)->sw,1);
-                        crosswin_get_position(((surface_data*)((object*)o)->sd)->sw,&sdx,&sdy,&mon);
-                        surface_data *ttip_sd = ((object*)o)->ttip;
+                        crosswin_get_position(sd->sw,&sdx,&sdy,&mon);
+
                         crosswin_set_monitor(ttip_sd->sw,mon);
                         crosswin_set_position(ttip_sd->sw,sdx + ms->x + 10, sdy + ms->y + 10);
                         crosswin_set_zorder(ttip_sd->sw, crosswin_topmost);
-                        crosswin_set_keep_on_screen(((surface_data*)o->ttip)->sw,1);
+                        crosswin_set_keep_on_screen(ttip_sd->sw,1);
                         crosswin_set_visible(ttip_sd->sw,1);
                         event_push(sd->cd->eq,(event_handler)surface_fade,(void*)o->ttip,150,EVENT_PUSH_TIMER);
                     }
@@ -584,7 +589,7 @@ void object_reset(object* o)
     o->ot.scale = parameter_double(o, "ToolTipScale", 0, XPANDER_OBJECT);
     o->ot.scaling = parameter_self_scaling(o, "ToolTipSelfScaling", 0, XPANDER_OBJECT);
     o->ot.decimals = parameter_byte(o, "ToolTipDecimals", 0, XPANDER_OBJECT);
-
+    o->ot.tooltip_color = parameter_color(o, "TooltipColor", 0xff000000, XPANDER_OBJECT);
     /*Do the private reset of the object */
     if(o->object_reset_rtn)
     {
