@@ -13,7 +13,9 @@
 #include <objects/object.h>
 #include <sources/source.h>
 #include <bind.h>
-
+#ifdef __linux__
+#include <ctype.h>
+#endif
 
 #define XPANDER_MODIFIER_SCALE    (1<<0)
 #define XPANDER_MODIFIER_PERCENT  (1<<1)

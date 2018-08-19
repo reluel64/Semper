@@ -282,8 +282,6 @@ object* object_by_name(surface_data* sd, unsigned char* on, size_t len)
 }
 
 
-
-
 static int object_tooltip_update(object *o)
 {
     static unsigned char *empty_txt = "Parameter(Text,Disabled,1)";
@@ -371,7 +369,6 @@ static int object_tooltip_update(object *o)
     {
         surface_update(o->ttip);
     }
-    //command(o->ttip, &show_fade);
 
     return(0);
 }

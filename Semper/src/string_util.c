@@ -609,9 +609,10 @@ static char *string_util_xpand_linux_env(unsigned char *str)
 
 unsigned char* expand_env_var(unsigned char* path)
 {
-    size_t mem_n = 0;
+
     unsigned char* ret = NULL;
 #ifdef WIN32
+    size_t mem_n = 0;
     wchar_t* unip = utf8_to_ucs(path);
 
     mem_n = ExpandEnvironmentStringsW(unip, NULL, 0);

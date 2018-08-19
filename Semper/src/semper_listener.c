@@ -10,6 +10,7 @@
 #include <semaphore.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <unistd.h>
 #endif
 typedef struct
 {
@@ -136,13 +137,13 @@ void *semper_listener_init(control_data *cd)
     unsigned char buf[280] = {0};
     snprintf(buf, 280, "/SemperCommandListener_%s", usr);
     sfree((void**)&usr);
-    sld->mmap = (void*)shm_open(buf, O_RDWR | O_CREAT, 0777);
+    sld->mmap =(void*)(size_t)shm_open(buf, O_RDWR | O_CREAT, 0777);
     if(sld->mmap >= 0)
     {
-        ftruncate(sld->mmap, sizeof(listener_data));
-        sld->ld = mmap(NULL, sizeof(listener_data), PROT_READ | PROT_WRITE, MAP_SHARED, sld->mmap, 0);
+        ftruncate((int)(size_t)sld->mmap, sizeof(listener_data));
+        sld->ld = mmap(NULL, sizeof(listener_data), PROT_READ | PROT_WRITE, MAP_SHARED, (int)(size_t)sld->mmap, 0);
     }
-    int ret =sem_init(&sld->ld->sem_wake,1,0);
+    sem_init(&sld->ld->sem_wake,1,0);
     sem_init(&sld->ld->sem_write,1,1);
 #endif
     sld->kill = safe_flag_init();
@@ -184,7 +185,7 @@ void semper_listener_destroy(void **p)
     sem_destroy(&sld->ld->sem_wake);
     sem_destroy(&sld->ld->sem_write);
     munmap(sld->ld, sizeof(listener_data));
-    close(sld->mmap);
+    close((int)(size_t)sld->mmap);
 
 #endif
     sfree((void**)&sld->dummy);

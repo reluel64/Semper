@@ -47,13 +47,12 @@ int crosswin_update(crosswin* c)
         crosswin_monitor *lcm = NULL;
         size_t mon_cnt = 0;
         c->update = 0;
-        c->mon_cnt = 0;
 
         crosswin_get_monitors(c, &lcm, &mon_cnt);
 
         if(mon_cnt == c->mon_cnt)
         {
-            up_status=!memcmp(lcm,c->pm,sizeof(crosswin_monitor)*mon_cnt);
+            up_status=memcmp(lcm,c->pm,sizeof(crosswin_monitor)*mon_cnt);
 
             if(up_status)
             {
@@ -195,7 +194,7 @@ void crosswin_set_position(crosswin_window* w, long x, long y)
         w->x = x;
         w->y = y;
 
-        if(w->keep_on_screen == 1)
+        if(w->keep_on_screen)
         {
             if(w->x < cm->x)
                 w->x = cm->x;
@@ -569,37 +568,3 @@ static int crosswin_mouse_handle(crosswin_window *cw)
 
     return(0);
 }
-
-
-#if 0
-static void crosswin_move_window(crosswin_window *w, long cx, long cy, unsigned char move)
-{
-    if(move > 1)
-    {
-        w->cposx =  w->cposx == 0 ? cx : w->cposx;
-        w->cposy =  w->cposy == 0 ? cy : w->cposy;
-    }
-
-    if(move == 0)
-    {
-        w->dragging = 0;
-
-    }
-    else if(w->draggable && !w->mouse.handled)
-    {
-        long x = w->x + (cx - w->cposx);
-        long y = w->y + (cy - w->cposy);
-
-        if(w->x != x || w->y != y)
-        {
-            w->dragging = 1;
-        }
-
-        crosswin_set_position(w, x, y);
-    }
-
-    w->cposx = cx;
-    w->cposy = cy;
-}
-
-#endif

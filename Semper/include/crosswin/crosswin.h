@@ -138,6 +138,8 @@ typedef struct _crosswin_window
 #elif __linux__
 
     unsigned char ctrl_down;
+    void *xlib_surface;
+    void *xlib_bitmap;
     Pixmap pixmap;
     XIM xInputMethod;
     XIC xInputContext;

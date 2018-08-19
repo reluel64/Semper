@@ -12,20 +12,21 @@
 
 typedef struct Hints
 {
-    unsigned long   flags;
-    unsigned long   functions;
-    unsigned long   decorations;
-    long            inputMode;
-    unsigned long   status;
+        unsigned long   flags;
+        unsigned long   functions;
+        unsigned long   decorations;
+        long            inputMode;
+        unsigned long   status;
 } Hints;
 
-
+static void xlib_render(crosswin_window *w);
+void xlib_set_zpos(crosswin_window *w);
 void xlib_init_display(crosswin *c)
 {
     c->display = XOpenDisplay(NULL);
-
-    XMatchVisualInfo(c->display, DefaultScreen(c->display), 32, TrueColor, &c->vinfo);
     c->disp_fd = (void*)(size_t)XConnectionNumber(c->display);
+    XMatchVisualInfo(c->display, DefaultScreen(c->display), 32, TrueColor, &c->vinfo);
+
 }
 
 int xlib_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *cnt)
@@ -70,45 +71,56 @@ void xlib_init_window(crosswin_window *w)
     attr.background_pixel = 0;
     attr.border_pixel = 0;
     attr.override_redirect = 0;
-    attr.event_mask = KeyPressMask 		    |
-                      KeymapStateMask         |
-                      StructureNotifyMask     |
-                      SubstructureNotifyMask  |
-                      SubstructureRedirectMask |
-                      ButtonReleaseMask 	    |
-                      KeyReleaseMask 		    |
-                      EnterWindowMask 	    |
-                      LeaveWindowMask 	    |
-                      PointerMotionMask 	    |
-                      ButtonMotionMask 	    |
-                      VisibilityChangeMask    |
-                      ExposureMask            |
-                      ButtonPressMask;
+    attr.win_gravity=StaticGravity;
+    attr.event_mask = KeyPressMask   |
+            KeymapStateMask          |
+            StructureNotifyMask      |
+            SubstructureNotifyMask   |
+            SubstructureRedirectMask |
+            ButtonReleaseMask        |
+            KeyReleaseMask           |
+            EnterWindowMask          |
+            LeaveWindowMask          |
+            PointerMotionMask        |
+            ButtonMotionMask         |
+            VisibilityChangeMask     |
+            FocusChangeMask          |
+            ExposureMask             |
+            ButtonPressMask;
 
-    w->window = (void*)XCreateWindow(w->c->display						,
-                              DefaultRootWindow(w->c->display)	,
-                              1									,
-                              1									,
-                              1									,
-                              1									,
-                              0									,
-                              w->c->vinfo.depth					,
-                              InputOutput						,
-                              w->c->vinfo.visual,
-                              CWBorderPixel						|
-                              CWBackPixmap                      |
-                              CWBackPixel                       |
-                              CWColormap  						|
-                              CWEventMask						|
-                              CWCursor 							,
-                              &attr
-                             );
+    w->window = (void*)XCreateWindow(w->c->display ,
+            DefaultRootWindow(w->c->display)         ,
+            1                                        ,
+            1                                        ,
+            1                                        ,
+            1                                        ,
+            0                                        ,
+            w->c->vinfo.depth                        ,
+            InputOutput                              ,
+            w->c->vinfo.visual                       ,
+            CWBorderPixel                            |
+            CWBackPixmap                             |
+            CWBackPixel                              |
+            CWColormap  						|
+            CWEventMask						|
+            CWDontPropagate                |
+            CWCursor 							,
+            &attr
+    );
 
 
     XSaveContext(w->c->display, (XID)w->window, CONTEXT_ID, (const char*)w);
-    Atom type = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE", False);
-    Atom value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_DOCK", False);
+    Atom type = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE", 1);
+    Atom value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_NORMAL", 1);
     XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
+
+    type = XInternAtom(w->c->display, "_NET_WM_STATE", 1);
+    value = XInternAtom(w->c->display, "_NET_WM_STATE_SKIP_TASKBAR", 1);
+    XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
+
+    type = XInternAtom(w->c->display, "_NET_WM_STATE", 1);
+    value = XInternAtom(w->c->display, "_NET_WM_STATE_SKIP_PAGER", 1);
+    XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeAppend, (unsigned char*)&value, 1);
 
     Hints hints;
     Atom property;
@@ -117,24 +129,66 @@ void xlib_init_window(crosswin_window *w)
     property = XInternAtom(w->c->display, "_MOTIF_WM_HINTS", 1);
     XChangeProperty(w->c->display, (Window)w->window, property, property, 32, PropModeReplace, (unsigned char *)&hints, 5);
 
-    XMapWindow(w->c->display, (Window)w->window);
-
 }
 
 void xlib_set_dimmension(crosswin_window *w)
 {
-    XWindowChanges wc = {0};
-    wc.width = w->w;
-    wc.height = w->h;
     if(w->w && w->h)
     {
+        XWindowChanges wc = {0};
+        wc.width = w->w;
+        wc.height = w->h;
         XConfigureWindow(w->c->display,(Window) w->window, CWWidth | CWHeight, &wc);
     }
 }
 
+int xlib_set_opacity(crosswin_window *w)
+{
+    if(w->offscreen_buffer)
+    {
+        cairo_t *cr = cairo_create(w->xlib_surface);
+        cairo_push_group(cr);
+        cairo_set_source_surface(cr, w->offscreen_buffer, 0.0, 0.0);
+        cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+        cairo_paint_with_alpha(cr,(double)w->opacity/255.0); //render it to the window
+        cairo_pop_group_to_source(cr);
+        cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+        cairo_paint(cr);
+        cairo_surface_flush(w->xlib_surface);
+        cairo_destroy(cr); //destroy the context
+        XFlush(w->c->display);
+    }
+    return(0);
+}
+
+void  xlib_set_position(crosswin_window *w)
+{
+    Atom type = XInternAtom(w->c->display, "_NET_MOVERESIZE_WINDOW", 1);
+    XEvent ev={0};
+
+    ev.xclient.data.l[0] = (StaticGravity) | (1<<8)|(1<<9);
+    ev.xclient.message_type  = type;
+    ev.xclient.type = ClientMessage;
+    ev.xclient.format = 32;
+    ev.xclient.data.l[1] = w->x;
+    ev.xclient.data.l[2] = w->y;
+    ev.xclient.window = (Window)w->window;
+    ev.xclient.send_event=1;
+
+    XSendEvent(w->c->display,DefaultRootWindow(w->c->display),0,  StructureNotifyMask|SubstructureNotifyMask   |  SubstructureRedirectMask,&ev);
+
+}
+
 void xlib_set_visible(crosswin_window *w)
 {
-   return;
+    if(w->visible)
+    {
+        XMapWindow(w->c->display, (Window)w->window);
+    }
+    else
+    {
+        XUnmapWindow(w->c->display, (Window)w->window);
+    }
 }
 
 static void xlib_render(crosswin_window *w)
@@ -143,118 +197,92 @@ static void xlib_render(crosswin_window *w)
     {
         if(w->offscreen_buffer == NULL)
         {
-            w->offscreen_buffer = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w->w, w->h);
             w->pixmap = XCreatePixmap(w->c->display, (Window)w->window, w->w, w->h, 1);
+            w->offscreen_buffer = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w->w, w->h);
+            w->xlib_surface=cairo_xlib_surface_create(w->c->display, (Window)w->window, w->c->vinfo.visual, w->w, w->h);
+            w->xlib_bitmap = cairo_xlib_surface_create_for_bitmap(w->c->display, w->pixmap, DefaultScreenOfDisplay(w->c->display), w->w, w->h);
             w->offw = (size_t)w->w;
             w->offh = (size_t)w->h;
         }
         else if(w->offscreen_buffer && (w->offw != (size_t)w->w || w->offh != (size_t)w->h))
         {
             cairo_surface_destroy(w->offscreen_buffer);
+            cairo_surface_destroy(w->xlib_surface);
+            cairo_surface_destroy(w->xlib_bitmap);
             XFreePixmap(w->c->display, w->pixmap);
+
             w->pixmap = XCreatePixmap(w->c->display,(Window) w->window, w->w, w->h, 1);
+            w->xlib_bitmap = cairo_xlib_surface_create_for_bitmap(w->c->display, w->pixmap, DefaultScreenOfDisplay(w->c->display), w->w, w->h);
             w->offscreen_buffer = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w->w, w->h);
+            w->xlib_surface=cairo_xlib_surface_create(w->c->display, (Window)w->window, w->c->vinfo.visual, w->w, w->h);
+
             w->offw = (size_t)w->w;
             w->offh = (size_t)w->h;
         }
 
         cairo_t* cr = cairo_create(w->offscreen_buffer); // create a cairo context to gain access to surface rendering routine
-
-        if(w->opacity != 255)
-        {
-            cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-            cairo_paint(cr);
-            cairo_push_group(cr); //push the first group (do the rendering here)
-
-            w->render_func(w, cr);
-            cairo_pop_group_to_source(cr); //pop the second group and set it as source
-
-            cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); //we want the source
-            cairo_paint_with_alpha(cr, (double)w->opacity / 255.0); //render it with alpha
-
-        }
-        else
-        {
-            w->render_func(w, cr);
-        }
-
+        w->render_func(w, cr);
         cairo_destroy(cr);
+
+
         /*Render everything to the window*/
-        cairo_surface_t *xs = cairo_xlib_surface_create(w->c->display, (Window)w->window, w->c->vinfo.visual, w->w, w->h);
-        cr = cairo_create(xs);
+        cr = cairo_create(w->xlib_surface);
         cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
         cairo_set_source_surface(cr, w->offscreen_buffer, 0.0, 0.0);
-        cairo_paint(cr); //render it to the window
-
+        cairo_paint_with_alpha(cr,(double)w->opacity/255.0); //render it to the window
         cairo_destroy(cr); //destroy the context
-        cairo_surface_destroy(xs);
+        cairo_surface_flush(w->xlib_surface);
     }
 }
 
 void xlib_set_mask(crosswin_window *w)
 {
-    cairo_surface_t *xs = cairo_xlib_surface_create_for_bitmap(w->c->display, w->pixmap, DefaultScreenOfDisplay(w->c->display), w->w, w->h);
-    cairo_t *cr = cairo_create(xs);
+
+    cairo_t *cr = cairo_create(w->xlib_bitmap);
 
     if(w->click_through == 0 && w->offscreen_buffer)
     {
         cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-        unsigned int *buf = (unsigned int*)cairo_image_surface_get_data(w->offscreen_buffer);
-
-        if(buf)
-        {
-            for(size_t i = 0; i < (size_t)w->w * (size_t)w->h; i++)
-            {
-                if(buf[i] & 0xff000000)
-                {
-                    buf[i] |= 0xff000000;
-                }
-            }
-
-            cairo_surface_mark_dirty(w->offscreen_buffer);
-        }
-
         cairo_set_source_surface(cr, w->offscreen_buffer, 0.0, 0.0);
-        cairo_paint(cr); //render it to the window
     }
     else
     {
         cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-        cairo_paint(cr);
     }
-
-    XShapeCombineMask(w->c->display, w->window, ShapeInput, 0, 0, w->pixmap, ShapeSet);
+    cairo_paint(cr); //render it to the window
+    cairo_surface_flush(w->xlib_bitmap);
+    XShapeCombineMask(w->c->display,(Window) w->window, ShapeInput, 0, 0, w->pixmap, ShapeSet);
 
     cairo_destroy(cr);
-    cairo_surface_destroy(xs);
+
 }
 
 void xlib_draw(crosswin_window* w)
 {
     xlib_render(w);
     xlib_set_mask(w);
-    XSync(w->c->display, 1);
+    XFlush(w->c->display);
 }
 
 int xlib_message_dispatch(crosswin *c)
 {
-    while(XPending(c->display))
+    XEvent ev = {0};
+
+    while(XPending(c->display)>0)
     {
-
-        XEvent ev = {0};
+        XSync(c->display,0);
         crosswin_window *w = NULL;
-
         XNextEvent(c->display, &ev);
-
         XFindContext(c->display, ev.xany.window, CONTEXT_ID, (char**)&w);
 
-        if(c == NULL || w == NULL)
+        if(w == NULL)
+        {
             continue;
+        }
 
         switch(ev.xany.type)
         {
             case KeyPress:
-            {
                 /*This is pretty ugly as I did not want to call the utf8_to_ucs() but for the moment it does the job*/
                 if(ev.xkey.keycode == 105 || ev.xkey.keycode == 37)
                     c->md.ctrl = 1;
@@ -269,8 +297,8 @@ int xlib_message_dispatch(crosswin *c)
                     {
                         unsigned char buf[9] = {0};
                         unsigned short *temp = NULL;
-
                         Status status = 0;
+
                         Xutf8LookupString(w->xInputContext, &ev.xkey, (char*)&buf, 8, NULL, &status);
 
                         temp = utf8_to_ucs(buf);
@@ -282,20 +310,25 @@ int xlib_message_dispatch(crosswin *c)
                     if(symbol && w->kbd_func)
                         w->kbd_func(symbol, w->kb_data);
                 }
-
                 break;
-            }
 
             case KeyRelease:
-            {
                 if(ev.xkey.keycode == 105 || ev.xkey.keycode == 37)
                     c->md.ctrl = 0;
-
                 break;
-            }
 
+            case EnterNotify:
             case MotionNotify:
             {
+                XEvent dev={0};
+                /*Get the latest MotionNotify*/
+                while(XCheckTypedWindowEvent(w->c->display,(Window)w->window,MotionNotify,&dev))
+                {
+                    if(dev.xmotion.time>=ev.xmotion.time)
+                    {
+                        ev=dev;
+                    }
+                }
                 c->md.x = ev.xmotion.x;
                 c->md.y = ev.xmotion.y;
                 c->md.root_x = ev.xmotion.x_root;
@@ -304,8 +337,8 @@ int xlib_message_dispatch(crosswin *c)
                 w->c->handle_mouse(w);
                 break;
             }
-
             case ButtonRelease:
+            {
                 c->md.x = ev.xbutton.x;
                 c->md.y = ev.xbutton.y;
                 c->md.state = mouse_button_state_unpressed;
@@ -337,10 +370,11 @@ int xlib_message_dispatch(crosswin *c)
 
                 w->c->handle_mouse(w);
                 break;
+            }
 
             case ButtonPress:
-
-                XSetInputFocus(w->c->display, w->window, RevertToParent, 0);
+            {
+                XSetInputFocus(w->c->display, (Window)w->window, RevertToParent, 0);
                 c->md.x = ev.xbutton.x;
                 c->md.y = ev.xbutton.y;
                 c->md.state = mouse_button_state_pressed;
@@ -363,7 +397,7 @@ int xlib_message_dispatch(crosswin *c)
 
                 w->c->handle_mouse(w);
                 break;
-
+            }
             case LeaveNotify:
                 XSetInputFocus(w->c->display, None, RevertToParent, 0);
                 c->md.hover = mouse_unhover;
@@ -373,65 +407,86 @@ int xlib_message_dispatch(crosswin *c)
             case DestroyNotify:
             {
                 surface_data *sd = w->user_data;
-                event_push(sd->cd->eq, (event_handler)surface_destroy, (void*)sd, 0, EVENT_REMOVE_BY_DATA);
+                surface_destroy(sd);
                 break;
             }
             case Expose:
-            c->update = 1;
-            break;
+                xlib_set_position(w);
+                c->update = 1;
+                break;
+            case ReparentNotify:
+            case ConfigureNotify:
+                break;
 
-
+            case FocusIn:
+            case FocusOut:
+                if(w->zorder == crosswin_desktop||w->zorder ==crosswin_topmost )
+                {
+                    xlib_set_zpos(w);
+                }
+                break;
         }
-
     }
 
     return(0);
 }
 
-int xlib_set_opacity(crosswin_window *w)
-{
-    xlib_draw(w);
-    return(0);
-}
-
-void  xlib_set_position(crosswin_window *w)
-{
-    XMoveWindow(w->c->display, w->window, w->x, w->y); /*Move the window*/
-}
-
 void xlib_destroy_window(crosswin_window **w)
 {
+    Display *disp =(*w)->c->display;
     xlib_destroy_input_context(*w);
 
-    XDeleteContext((*w)->c->display, (XID)(*w)->window, CONTEXT_ID);
-    XDestroyWindow((*w)->c->display, (*w)->window);
-
-    XFreePixmap((*w)->c->display, (*w)->pixmap);
     cairo_surface_destroy((*w)->offscreen_buffer);
+    cairo_surface_destroy((*w)->xlib_surface);
+    cairo_surface_destroy((*w)->xlib_bitmap);
+
+    XDeleteContext((*w)->c->display, (XID)(*w)->window, CONTEXT_ID);
+    XDestroyWindow((*w)->c->display, (Window)(*w)->window);
+    XFreePixmap((*w)->c->display, (*w)->pixmap);
+
+    XFlush(disp);
     free(*w);
+
 }
+
 
 void xlib_set_zpos(crosswin_window *w)
 {
-    return;
+
+   // surface_data *sd = w->user_data;
+    Atom type =0;
+    Atom value = 0;
 
     switch(w->zorder)
     {
-        case crosswin_topmost:
-            // xlib_set_above(w,0);
+        case crosswin_normal:
+            type = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE", 1);
+            value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_NORMAL", 1);
+            XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
             break;
 
         case crosswin_desktop:
-            //xlib_set_below(w,0);
-            break;
-
-        case crosswin_normal:
-            // xlib_set_normal(w);
+            type = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE", 1);
+            value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_DESKTOP", 1);
+            XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
             break;
 
         case crosswin_bottom:
+            type = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE", 1);
+            value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_NORMAL", 1);
+            XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
+            break;
+
+        case crosswin_topmost:
+            type = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE", 1);
+            value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_DOCK", 1);
+            XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
+            break;
+
         case crosswin_top:
-            diag_error("%s crosswin_bottom and crosswin_top not implemented", __FILE__);
+            type = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE", 1);
+            value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_NORMAL", 1);
+            XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
             break;
     }
 }
@@ -483,6 +538,7 @@ int xlib_destroy_input_context(crosswin_window *w)
     w->xInputMethod ? XCloseIM(w->xInputMethod) : 0;
     w->xInputContext = NULL;
     w->xInputMethod = NULL;
+
     return(0);
 }
 
