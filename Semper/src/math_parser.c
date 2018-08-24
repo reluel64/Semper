@@ -21,7 +21,7 @@
 #define string_length(x) ((x)?strlen((x)):0)
 #define max(a,b) ((a)>(b))?(a):(b)
 #define min(a,b) ((a)>(b))?(b):(a)
-
+#define ALLOW_BASE_2
 typedef double (*math_rtn)(double *vec, size_t vec_sz);
 
 typedef struct
@@ -427,7 +427,7 @@ static int math_parser_gen_queue(unsigned char *f, list_entry *out_queue, math_p
         unsigned char *n = NULL;
         double v = 0.0;
 
-#if 1 //I've had some trouble in making this to work. If it's causing troubles again I'll just set this to 0 until I fix it
+#ifdef ALLOW_BASE_2
         v = (double)strtoll(f + i, (char**)&n, 2);
 
         if(toupper(n[0]) != 'B')
@@ -465,7 +465,6 @@ static int math_parser_gen_queue(unsigned char *f, list_entry *out_queue, math_p
             i = (n - f) - 1;
             was_number = 1;
             math_push_queue(out_queue, NULL, v);
-
         }
         else //Take care of the non-numeric tokens
         {
@@ -498,13 +497,17 @@ static int math_parser_gen_queue(unsigned char *f, list_entry *out_queue, math_p
             if(token_len == 0 || foi == NULL)
             {
 
-                /*before we are going to declare it a total failure, we'll try to check the callback and see if we're successful*/
+                /*
+                 * before we are going to declare it a total failure,
+                 * we'll try to check the callback and see if we're successful
+                 * */
                 if(mpc)
                 {
                     size_t len = 0;
                     int name = 1;
                     double v = 0.0;
-                    /*Calculate the length and stop when running out of operators
+                    /*
+                     * Calculate the length and stop when running out of operators
                      *
                      */
                     for(len = 0; f[i + len] && name == 1; len++)
@@ -528,7 +531,9 @@ static int math_parser_gen_queue(unsigned char *f, list_entry *out_queue, math_p
                             if(strncasecmp(":", opt[x].on, token_len) == 0)
                                 break;
                         }
+
                         /*exit before incrementing len*/
+
                         if(name == 0)
                             break;
                     }

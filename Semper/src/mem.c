@@ -1,5 +1,5 @@
 /*
- * Memroy related routines
+ * Memory related routines
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  */
@@ -108,7 +108,9 @@ int put_file_in_memory(unsigned char* file, void** out, size_t* sz)
 
     return (-1);
 }
-
+/*Merge sort using the algorithm described here:
+ * https://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
+ */
 int merge_sort(list_entry *head, int(*comp)(list_entry *l1, list_entry *l2, void *pv), void *pv)
 {
     size_t group_size = 1;
@@ -139,7 +141,7 @@ int merge_sort(list_entry *head, int(*comp)(list_entry *l1, list_entry *l2, void
                     break;
             }
 
-            h2_sz = group_size; //asssume the lists are equal
+            h2_sz = group_size; //assume the lists are equal
             merges++;
 
             while(h1_sz || (list_2 != head && h2_sz))
@@ -192,7 +194,7 @@ int merge_sort(list_entry *head, int(*comp)(list_entry *l1, list_entry *l2, void
         if(merges <= 1)
             break;
         else
-            group_size *= 2; //incerase the group number
+            group_size *= 2; //increase the group number
     }
 
     return(0);

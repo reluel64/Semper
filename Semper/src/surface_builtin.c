@@ -78,7 +78,7 @@ int surface_builtin_init(void *holder, surface_builtin_type tp)
                 unsigned char *buf = surface_builtin_code(&buf_sz, tp);
                 surface_data* sd = surface_load_memory(cd, buf, buf_sz, NULL);
                 crosswin_set_monitor(sd->sw, 0);
-                crosswin_set_zorder(sd->sw,crosswin_normal);
+                crosswin_set_zorder(sd->sw,crosswin_desktop);
                 crosswin_monitor_resolution(&cd->c, sd->sw, &w, &h);
                 crosswin_monitor_origin(&cd->c, sd->sw, &x, &y);
                 crosswin_get_size(sd->sw,&sw,&sh);

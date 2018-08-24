@@ -172,7 +172,7 @@ double disk_space_update(void* spv)
 unsigned char* disk_space_string(void* spv)
 {
     disk* d = spv;
-
+#ifdef WIN32
     static unsigned char* types[] =
     {
         "Unknown",
@@ -183,18 +183,21 @@ unsigned char* disk_space_string(void* spv)
         "CD-ROM",
         "RAM-Disk"
     };
-
+#endif
     if(d->type && d->label == 0)
     {
 
 #ifdef WIN32
         return (types[GetDriveType(d->name)]);
 #elif __linux__
+#if 0
         unsigned char removable = disk_space_check_removable(d->name);
-        // (removable==0)?return(types[3]):0;
-        //  (removable==1)?return(types[2]):0;
-        // (removable==2)?return(types[1]):0;
+         (removable==0)?return(types[3]):0;
+          (removable==1)?return(types[2]):0;
+         (removable==2)?return(types[1]):0;
+#endif
         return(NULL);
+
 #endif
     }
     else if(d->type == 0 && d->label)

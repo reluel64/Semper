@@ -15,6 +15,9 @@
 #include <cairo/cairo-xlib.h>
 #endif
 
+#define CROSSWIN_UPDATE_MONITORS (1<<0)
+#define CROSSWIN_UPDATE_ZORDER   (1<<1)
+
 typedef struct _crosswin_window crosswin_window;
 
 typedef enum
@@ -92,18 +95,16 @@ typedef struct
 
 typedef struct
 {
-    crosswin_monitor *pm;            //parent monitor (used for keep on screen)
+
     unsigned char update;
-    size_t mon_cnt;
-    unsigned char update_z;
-    void *disp_fd;
     mouse_data md;
     int (*handle_mouse)(crosswin_window *w);
-    crosswin_window *helper;
     list_entry windows;
+    crosswin_monitor *pm;            //parent monitor (used for keep on screen)
+    size_t mon_cnt;
 #ifdef __linux__
     void *display;
-
+    void *disp_fd;
     XVisualInfo vinfo;
 #endif
 } crosswin;
@@ -115,15 +116,14 @@ typedef struct _crosswin_window
     size_t mon;
     unsigned char visible;
     unsigned char opacity;
-    void* user_data;
+    void *user_data;
     void *kb_data;
-    void* offscreen_buffer;
+    void *offscreen_buffer;
     long x;
     long y;
     long h;
     long w;
     unsigned char keep_on_screen;
-    unsigned char lock_z;
     crosswin_position zorder;
     size_t offw;
     size_t offh;
@@ -134,7 +134,6 @@ typedef struct _crosswin_window
     unsigned char click_through;
     void *window;
 #ifdef WIN32
-
 #elif __linux__
 
     unsigned char ctrl_down;
@@ -144,6 +143,7 @@ typedef struct _crosswin_window
     XIM xInputMethod;
     XIC xInputContext;
 #endif
+
 } crosswin_window;
 
 void crosswin_init(crosswin* c);

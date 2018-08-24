@@ -481,8 +481,9 @@ unsigned char* ucs32_to_utf8(unsigned int* s_in, size_t* bn, unsigned char be)
 
 
 #ifdef __linux__
-static int variable_tokenizer(string_tokenizer_status *sti, int  *fl)
+static int variable_tokenizer(string_tokenizer_status *sti, void *pv)
 {
+    int *fl = (int*)pv;
     if(sti->reset)
     {
         *fl = 0;

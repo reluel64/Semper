@@ -36,11 +36,12 @@ typedef struct
 } folderinfo_dir_list;
 
 
-
+#ifdef WIN32
 static size_t file_size(size_t low, size_t high)
 {
     return (low | (high << 32));
 }
+#endif
 
 void folderinfo_init(void** spv, void* ip)
 {

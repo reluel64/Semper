@@ -214,7 +214,7 @@ SEMPER_API int diag_log(unsigned char lvl, char *fmt, ...)
     int r = 0;
     size_t buf_start = 0;
     pthread_mutex_lock(&ds->mutex);
-    unsigned char buf[DIAG_MEM_ENTRY_LENGTH] = {0};
+    static unsigned char buf[DIAG_MEM_ENTRY_LENGTH] = {0};
 
     struct timespec t2 = {0};
     clock_gettime(CLOCK_MONOTONIC, &t2);

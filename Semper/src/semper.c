@@ -64,8 +64,9 @@ typedef struct
      */
     unsigned char process_loop;
     void *event_wait;
-
+#ifdef __linux__
     void *dispfd;
+#endif
 } semper_event_wait_data;
 
 
@@ -969,9 +970,9 @@ static size_t semper_main_wait_fcn(void *pv, size_t timeout)
 #elif __linux__
     struct pollfd events[2];
     memset(events, 0, sizeof(events));
-    events[0].fd = sewd->event_wait;
+    events[0].fd = (int)(size_t)sewd->event_wait;
     events[0].events = POLLIN;
-    events[1].fd = sewd->dispfd;
+    events[1].fd = (int)(size_t)sewd->dispfd;
     events[1].events = POLLIN;
     poll(events, 2, timeout);
 
@@ -1039,7 +1040,10 @@ int semper_main(void)
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
 
+#ifdef __linux__
     sewd.dispfd = cd->c.disp_fd;
+#endif
+
     cd->eq = event_queue_init(semper_main_wait_fcn, semper_main_wake_fcn, &sewd);
     cd->watcher = watcher_init(cd->surface_dir, cd->eq, semper_watcher_callback, cd);
     cd->listener = semper_listener_init(cd);

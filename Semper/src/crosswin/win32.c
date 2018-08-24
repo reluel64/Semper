@@ -133,6 +133,7 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
         case WM_WINDOWPOSCHANGING:
         {
             WINDOWPOS *wp = (WINDOWPOS*)lpm;
+#if 0
             if(w->lock_z)
             {
                 wp->flags |= SWP_NOZORDER;
@@ -141,7 +142,9 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
             {
                 wp->hwndInsertAfter = win32_zpos(w);
             }
-
+#else
+           // wp->flags |= SWP_NOZORDER;
+#endif
             break;
         }
         case WM_MOUSEMOVE:

@@ -8,6 +8,7 @@
 #include <wchar.h>
 #include <string_util.h>
 #include <ctype.h>
+#include <inttypes.h>
 typedef enum _encoding { ucs2 = 1, ucs2_be } encoding;
 
 typedef struct _ini_ucs2

@@ -150,9 +150,9 @@ static size_t watcher_event_wait(void *pv, size_t timeout)
 
  struct pollfd events[2];
     memset(events,0,sizeof(events));
-    events[0].fd=wd->base_fd;
+    events[0].fd=(int)(size_t)wd->base_fd;
     events[0].events = POLLIN;
-    events[1].fd=wd->wake_event;
+    events[1].fd=(int)(size_t)wd->wake_event;
     events[1].events = POLLIN;
     poll(events, 2, -1);
     if(events[1].revents)
