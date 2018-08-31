@@ -15,6 +15,7 @@
 #include <cairo/cairo-xlib.h>
 #endif
 
+#include <event.h>
 #define CROSSWIN_UPDATE_MONITORS (1<<0)
 #define CROSSWIN_UPDATE_ZORDER   (1<<1)
 
@@ -95,13 +96,16 @@ typedef struct
 
 typedef struct
 {
-
+    unsigned char restacking;
+    event_queue *eq;
+    size_t top_win_id;
     unsigned char update;
     mouse_data md;
     int (*handle_mouse)(crosswin_window *w);
     list_entry windows;
     crosswin_monitor *pm;            //parent monitor (used for keep on screen)
     size_t mon_cnt;
+    void *cd;
 #ifdef __linux__
     void *display;
     void *disp_fd;
@@ -114,6 +118,7 @@ typedef struct _crosswin_window
     crosswin* c;
     list_entry current;
     size_t mon;
+    unsigned char lock_z;
     unsigned char visible;
     unsigned char opacity;
     void *user_data;

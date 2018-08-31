@@ -441,7 +441,6 @@ void xlib_destroy_window(crosswin_window **w)
     Display *disp =(*w)->c->display;
     xlib_destroy_input_context(*w);
 
-    cairo_surface_destroy((*w)->offscreen_buffer);
     cairo_surface_destroy((*w)->xlib_surface);
     cairo_surface_destroy((*w)->xlib_bitmap);
 
@@ -450,7 +449,6 @@ void xlib_destroy_window(crosswin_window **w)
     XFreePixmap((*w)->c->display, (*w)->pixmap);
 
     XFlush(disp);
-    free(*w);
 }
 
 

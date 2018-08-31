@@ -956,7 +956,7 @@ static size_t semper_main_wait_fcn(void *pv, size_t timeout)
 
     sewd->process_loop = 0;
 #ifdef WIN32
-    status = MsgWaitForMultipleObjectsEx(1, &sewd->event_wait, timeout, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
+    status = MsgWaitForMultipleObjectsEx(1, &sewd->event_wait, timeout, QS_ALLEVENTS, MWMO_INPUTAVAILABLE|MWMO_ALERTABLE);
 
     if(status == WAIT_OBJECT_0 || status == WAIT_TIMEOUT)
     {
@@ -1047,6 +1047,8 @@ int semper_main(void)
     cd->eq = event_queue_init(semper_main_wait_fcn, semper_main_wake_fcn, &sewd);
     cd->watcher = watcher_init(cd->surface_dir, cd->eq, semper_watcher_callback, cd);
     cd->listener = semper_listener_init(cd);
+    cd->c.eq=cd->eq;
+    cd->c.cd;
     semper_load_configuration(cd);
 
 #ifdef WIN32
@@ -1067,6 +1069,7 @@ int semper_main(void)
     while(safe_flag_get(cd->quit_flag) == 0) //nothing fancy, just the main event loop
     {
         event_wait(cd->eq);                /* wait for an event to occur */
+
         semper_check_screen(cd);
 
         if(sewd.process_loop & 0x2)

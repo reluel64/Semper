@@ -10,27 +10,7 @@
 #include <event.h>
 #include <dwmapi.h>
 #include <mem.h>
-static inline HWND win32_zpos(crosswin_window* w)
-{
-    switch(w->zorder)
-    {
-        case crosswin_desktop:
-        case crosswin_bottom:
-            return(HWND_BOTTOM);
 
-        case crosswin_normal:
-            return (HWND_NOTOPMOST);
-
-        case crosswin_top:
-            return (HWND_TOP);
-
-        case crosswin_topmost:
-            return (HWND_TOPMOST);
-
-        default:
-            return (0);
-    }
-}
 
 static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, WPARAM wpm, LPARAM lpm)
 {
@@ -41,6 +21,7 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
 
     crosswin *c = w->c;
     mouse_data *md = &c->md;
+    surface_data *sd = w->user_data;
 
     switch(message)
     {
@@ -117,7 +98,11 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
 
             return(0);
         }
-
+        case WM_WINDOWPOSCHANGING:
+        {
+            c->update |=CROSSWIN_UPDATE_ZORDER;
+            return(0);
+        }
         case WM_CHAR:
         case WM_UNICHAR:
         case WM_SYSCHAR:
@@ -128,24 +113,6 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
             }
 
             return(0);
-        }
-
-        case WM_WINDOWPOSCHANGING:
-        {
-            WINDOWPOS *wp = (WINDOWPOS*)lpm;
-#if 0
-            if(w->lock_z)
-            {
-                wp->flags |= SWP_NOZORDER;
-            }
-            else
-            {
-                wp->hwndInsertAfter = win32_zpos(w);
-            }
-#else
-           // wp->flags |= SWP_NOZORDER;
-#endif
-            break;
         }
         case WM_MOUSEMOVE:
         {
@@ -171,29 +138,25 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
 
         case WM_CLOSE:
         {
-            surface_data *sd = w->user_data;
-            event_push(sd->cd->eq, (event_handler)surface_destroy, (void*)sd, 0, EVENT_REMOVE_BY_DATA);
+            event_push(c->eq, (event_handler)surface_destroy, (void*)sd, 0, EVENT_REMOVE_BY_DATA);
             return(0);
         }
 
         case WM_DISPLAYCHANGE:
         {
-            c->update = 1;
+            c->update |= CROSSWIN_UPDATE_MONITORS;
             break;
-        }
-
-        case WM_QUIT:
-        {
-            surface_data *sd = w->user_data;
-            control_data *cd = sd->cd;
-            safe_flag_set(cd->quit_flag,1);
-            event_wake(cd->eq);
-            return(0);
         }
     }
 
     return (DefWindowProc(win, message, wpm, lpm));
 }
+
+__stdcall static void win32_event_proc(HWINEVENTHOOK evh, long unsigned int evt,HWND win,long obj,long child,long unsigned int thid,long unsigned int evtime)
+{
+    ;
+}
+
 
 void win32_init_class(void)
 {
@@ -205,6 +168,8 @@ void win32_init_class(void)
     wclass.hCursor = LoadImageA(NULL, MAKEINTRESOURCE(32512), IMAGE_CURSOR, 0, 0, LR_SHARED);
     wclass.cbSize = sizeof(WNDCLASSEXW);
     RegisterClassExW(&wclass);
+    SetWinEventHook(EVENT_SYSTEM_FOREGROUND,EVENT_SYSTEM_FOREGROUND,NULL,win32_event_proc,0,0,WINEVENT_SKIPOWNPROCESS|WINEVENT_OUTOFCONTEXT);
+
 
 }
 
@@ -229,6 +194,12 @@ void win32_message_dispatch(crosswin *c)
 
     while(PeekMessageW(&msg, NULL, 0, 0, 1))
     {
+        if(msg.message==WM_QUIT)
+        {
+            control_data *cd = c->cd;
+            safe_flag_set(cd->quit_flag,1);
+            event_wake(cd->eq);
+        }
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
@@ -270,15 +241,17 @@ int win32_get_monitors(crosswin_monitor **cm, size_t *cnt)
 
 void win32_draw(crosswin_window* w)
 {
-    BLENDFUNCTION bf =
-    {
-        .AlphaFormat = AC_SRC_ALPHA,
-        .BlendFlags = 0,
-        .BlendOp = AC_SRC_OVER,
-        .SourceConstantAlpha = w->opacity
-    };
     static POINT pt = { 0, 0 };
     SIZE sz = { w->w, w->h };
+
+    BLENDFUNCTION bf =
+    {
+            .AlphaFormat = AC_SRC_ALPHA,
+            .BlendFlags = 0,
+            .BlendOp = AC_SRC_OVER,
+            .SourceConstantAlpha = w->opacity
+    };
+
 
     if(w->offscreen_buffer == NULL || (w->offw != (size_t)w->w || w->offh != (size_t)w->h))
     {
@@ -313,38 +286,46 @@ void win32_set_position(crosswin_window* w)
 
 void win32_set_opacity(crosswin_window* w)
 {
-    BLENDFUNCTION bf;
-    bf.AlphaFormat = AC_SRC_ALPHA;
-    bf.BlendFlags = 0;
-    bf.BlendOp = AC_SRC_OVER;
-    bf.SourceConstantAlpha = w->opacity;
+    BLENDFUNCTION bf =
+    {
+            .AlphaFormat = AC_SRC_ALPHA,
+            .BlendFlags = 0,
+            .BlendOp = AC_SRC_OVER,
+            .SourceConstantAlpha = w->opacity
+    };
     UpdateLayeredWindow(w->window, NULL, NULL, NULL, NULL, NULL, 0, &bf, ULW_ALPHA);
 }
 
 void win32_set_visible(crosswin_window* w)
 {
-    if(w->visible)
-    {
-        SetWindowPos(w->window, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW | SWP_NOACTIVATE);
-    }
-    else
-    {
-        SetWindowPos(w->window, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_HIDEWINDOW | SWP_NOACTIVATE);
-    }
+    SetWindowPos(w->window, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | (w->visible? SWP_SHOWWINDOW:SWP_HIDEWINDOW) | SWP_NOACTIVATE);
 }
 
 void win32_destroy_window(crosswin_window** w)
 {
     SetWindowLongPtrW((*w)->window, GWLP_USERDATA, 0);
     DestroyWindow((*w)->window);
-    cairo_surface_destroy((*w)->offscreen_buffer);
-    free(*w);
-    *w = NULL;
 }
 
 void win32_set_zpos(crosswin_window *w)
 {
-    SetWindowPos(w->window, win32_zpos(w), 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+
+    switch(w->zorder)
+    {
+        case crosswin_desktop:
+        case crosswin_bottom:
+            SetWindowPos(w->window,HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOSIZE | SWP_NOMOVE|SWP_NOSENDCHANGING|SWP_NOOWNERZORDER);
+            break;
+        case crosswin_normal:
+            SetWindowPos(w->window,HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOSIZE | SWP_NOMOVE|SWP_NOSENDCHANGING|SWP_NOOWNERZORDER);
+            break;
+        case crosswin_top:
+        case crosswin_topmost:
+            SetWindowPos(w->window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOSIZE | SWP_NOMOVE|SWP_NOSENDCHANGING|SWP_NOOWNERZORDER);
+            break;
+        default:
+            break; /*make the compiler happy :-) */
+    }
 }
 
 #endif
