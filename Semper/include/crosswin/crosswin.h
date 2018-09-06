@@ -18,7 +18,7 @@
 #include <event.h>
 #define CROSSWIN_UPDATE_MONITORS (1<<0)
 #define CROSSWIN_UPDATE_ZORDER   (1<<1)
-
+#define CROSSWIN_UPDATE_SHOW_DESKTOP (1<<2)
 typedef struct _crosswin_window crosswin_window;
 
 typedef enum
@@ -27,7 +27,9 @@ typedef enum
     crosswin_bottom,
     crosswin_normal,
     crosswin_top,
-    crosswin_topmost
+    crosswin_topmost,
+    crosswin_desktop_sh,
+    crosswin_bottom_sh,
 } crosswin_position;
 
 typedef enum
@@ -96,10 +98,11 @@ typedef struct
 
 typedef struct
 {
-    unsigned char restacking;
+    unsigned char update;
+    unsigned char show_desktop;
+    unsigned char lock_z;
     event_queue *eq;
     size_t top_win_id;
-    unsigned char update;
     mouse_data md;
     int (*handle_mouse)(crosswin_window *w);
     list_entry windows;
@@ -118,7 +121,7 @@ typedef struct _crosswin_window
     crosswin* c;
     list_entry current;
     size_t mon;
-    unsigned char lock_z;
+
     unsigned char visible;
     unsigned char opacity;
     void *user_data;

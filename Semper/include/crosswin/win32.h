@@ -13,3 +13,4 @@ void win32_destroy_window(crosswin_window** w);
 void win32_show_silent(crosswin_window* w);
 void win32_set_zpos(crosswin_window *w);
 int win32_get_monitors(crosswin_monitor **cm, size_t *cnt);
+void win32_check_desktop(crosswin *c);

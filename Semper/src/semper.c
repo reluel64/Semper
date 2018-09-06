@@ -1048,7 +1048,7 @@ int semper_main(void)
     cd->watcher = watcher_init(cd->surface_dir, cd->eq, semper_watcher_callback, cd);
     cd->listener = semper_listener_init(cd);
     cd->c.eq=cd->eq;
-    cd->c.cd;
+    cd->c.cd = cd;
     semper_load_configuration(cd);
 
 #ifdef WIN32

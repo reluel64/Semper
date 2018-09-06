@@ -520,11 +520,14 @@ void xlib_set_zpos(crosswin_window *w)
             XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
             break;
     }
-
-
-
 }
 
+
+void xlib_check_desktop(crosswin *c)
+{
+
+    #warning "Not implemented"
+}
 
 int xlib_create_input_context(crosswin_window *w)
 {

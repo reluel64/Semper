@@ -10,11 +10,10 @@
 #include <event.h>
 #include <dwmapi.h>
 #include <mem.h>
-
-
+extern int crosswin_restack(crosswin *c);
 static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, WPARAM wpm, LPARAM lpm)
 {
-    crosswin_window* w = (crosswin_window*)GetWindowLongPtrW(win, GWLP_USERDATA);
+    crosswin_window* w = (crosswin_window*)GetWindowLongPtrA(win, GWLP_USERDATA);
 
     if(w == NULL)
         return (DefWindowProc(win, message, wpm, lpm));
@@ -100,6 +99,8 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
         }
         case WM_WINDOWPOSCHANGING:
         {
+            WINDOWPOS *wp=(WINDOWPOS*)lpm;
+            wp->flags|=SWP_NOZORDER|SWP_NOOWNERZORDER;
             c->update |=CROSSWIN_UPDATE_ZORDER;
             return(0);
         }
@@ -145,6 +146,7 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
         case WM_DISPLAYCHANGE:
         {
             c->update |= CROSSWIN_UPDATE_MONITORS;
+            event_wake(c->eq);
             break;
         }
     }
@@ -152,40 +154,91 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
     return (DefWindowProc(win, message, wpm, lpm));
 }
 
-__stdcall static void win32_event_proc(HWINEVENTHOOK evh, long unsigned int evt,HWND win,long obj,long child,long unsigned int thid,long unsigned int evtime)
+static int win32_event_proc_enum_win(HWND win,LPARAM lpm)
 {
-    ;
+    DWORD pid=0;
+
+    GetWindowThreadProcessId(win,&pid);
+
+    if(pid == GetCurrentProcessId ())
+    {
+        unsigned char cname[255] = {0};
+        GetClassNameA(win,cname,254);
+
+        if(!strncasecmp("SemperSurface",cname,sizeof("SemperSurface")-1))
+        {
+            crosswin_window* w = (crosswin_window*)GetWindowLongPtrA(win, GWLP_USERDATA);
+
+            if(w)
+            {
+                crosswin **pc = (crosswin**)lpm;
+                (*pc) = w->c;
+                return(0);
+            }
+        }
+    }
+
+    return(1);
 }
 
+static void win32_event_proc(HWINEVENTHOOK evh, long unsigned int evt,HWND win,long obj,long child,long unsigned int thid,long unsigned int evtime)
+{
+    crosswin *c = NULL;
+    EnumWindows(win32_event_proc_enum_win,(LPARAM)&c);
+
+
+    if(c)
+    {
+        c->update|=CROSSWIN_UPDATE_ZORDER;
+    }
+}
+
+void win32_check_desktop(crosswin *c)
+{
+    DWORD pid_fg = 0;
+    DWORD pid_worker = 0;
+    void *fg_window = GetForegroundWindow();
+    c->update &= ~CROSSWIN_UPDATE_SHOW_DESKTOP;
+
+
+    HWND worker = FindWindowExA(fg_window,NULL,"SHELLDLL_DefView",NULL);
+    GetWindowThreadProcessId(worker,&pid_worker);
+    GetWindowThreadProcessId(fg_window,&pid_fg);
+
+    if(pid_worker == pid_fg && worker && IsWindowVisible(worker))
+    {
+        printf("Show Desktop\n");
+        c->update |= CROSSWIN_UPDATE_SHOW_DESKTOP|CROSSWIN_UPDATE_ZORDER;
+    }
+}
 
 void win32_init_class(void)
 {
-    WNDCLASSEXW wclass = { 0 };
-    memset(&wclass, 0, sizeof(WNDCLASSEX));
+
+    WNDCLASSEXA wclass = { 0 };
+    memset(&wclass, 0, sizeof(WNDCLASSEXA));
     wclass.style = (CS_DBLCLKS & 0) | CS_NOCLOSE | CS_OWNDC;
     wclass.lpfnWndProc = win32_message_callback;
-    wclass.lpszClassName = L"SemperSurface";
+    wclass.lpszClassName = "SemperSurface";
     wclass.hCursor = LoadImageA(NULL, MAKEINTRESOURCE(32512), IMAGE_CURSOR, 0, 0, LR_SHARED);
     wclass.cbSize = sizeof(WNDCLASSEXW);
-    RegisterClassExW(&wclass);
-    SetWinEventHook(EVENT_SYSTEM_FOREGROUND,EVENT_SYSTEM_FOREGROUND,NULL,win32_event_proc,0,0,WINEVENT_SKIPOWNPROCESS|WINEVENT_OUTOFCONTEXT);
-
-
+    RegisterClassExA(&wclass);
+    /*SetWinEventHook(EVENT_SYSTEM_FOREGROUND ,EVENT_SYSTEM_FOREGROUND,NULL,win32_event_proc,0,0,WINEVENT_SKIPOWNPROCESS|WINEVENT_OUTOFCONTEXT);*/
 }
 
 void win32_init_window(crosswin_window* w)
 {
     size_t no_peek = 1;
-    w->window = CreateWindowExW(WS_EX_TOOLWINDOW | WS_EX_LAYERED, L"SemperSurface", L"Surface", WS_POPUP, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
-    SetWindowLongPtrW(w->window, GWLP_USERDATA, (LONG_PTR)w);
+    w->window = CreateWindowExA(WS_EX_TOOLWINDOW | WS_EX_LAYERED, "SemperSurface", "Surface", WS_POPUP, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
+    SetWindowLongPtrA(w->window, GWLP_USERDATA, (LONG_PTR)w);
     DwmSetWindowAttribute(w->window, DWMWA_EXCLUDED_FROM_PEEK, &no_peek, sizeof(no_peek));
 }
 
 void win32_click_through(crosswin_window* w, unsigned char state)
 {
-    unsigned int cstatus = GetWindowLongPtrW(w->window, GWL_EXSTYLE);
+    unsigned int cstatus = GetWindowLongPtrA(w->window, GWL_EXSTYLE);
     cstatus = state ? cstatus | WS_EX_TRANSPARENT : cstatus & ~WS_EX_TRANSPARENT;
-    SetWindowLongPtrW(w->window, GWL_EXSTYLE, cstatus);
+    SetWindowLongPtrA(w->window, GWL_EXSTYLE, cstatus);
 }
 
 void win32_message_dispatch(crosswin *c)
@@ -303,7 +356,7 @@ void win32_set_visible(crosswin_window* w)
 
 void win32_destroy_window(crosswin_window** w)
 {
-    SetWindowLongPtrW((*w)->window, GWLP_USERDATA, 0);
+    SetWindowLongPtrA((*w)->window, GWLP_USERDATA, 0);
     DestroyWindow((*w)->window);
 }
 
@@ -312,18 +365,23 @@ void win32_set_zpos(crosswin_window *w)
 
     switch(w->zorder)
     {
+        case crosswin_desktop_sh:
+        case crosswin_bottom_sh:
+            SetWindowPos(w->window,HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOSIZE | SWP_NOMOVE|SWP_NOSENDCHANGING);
+            break;
         case crosswin_desktop:
         case crosswin_bottom:
-            SetWindowPos(w->window,HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOSIZE | SWP_NOMOVE|SWP_NOSENDCHANGING|SWP_NOOWNERZORDER);
+            SetWindowPos(w->window,HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOSIZE | SWP_NOMOVE|SWP_NOSENDCHANGING);
             break;
         case crosswin_normal:
-            SetWindowPos(w->window,HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOSIZE | SWP_NOMOVE|SWP_NOSENDCHANGING|SWP_NOOWNERZORDER);
+            SetWindowPos(w->window,HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOSIZE | SWP_NOMOVE|SWP_NOSENDCHANGING);
             break;
         case crosswin_top:
         case crosswin_topmost:
-            SetWindowPos(w->window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOSIZE | SWP_NOMOVE|SWP_NOSENDCHANGING|SWP_NOOWNERZORDER);
+            SetWindowPos(w->window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOSIZE | SWP_NOMOVE|SWP_NOSENDCHANGING);
             break;
         default:
+            SetWindowPos(w->window, HWND_TOP, 0, 0, 0, 0, SWP_NOACTIVATE|SWP_NOSIZE | SWP_NOMOVE|SWP_NOSENDCHANGING);
             break; /*make the compiler happy :-) */
     }
 }

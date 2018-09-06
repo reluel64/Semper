@@ -18,15 +18,15 @@
 #include <semper.h>
 #include <mem.h>
 #include <surface.h>
-int crosswin_restack(crosswin *c);
+static int crosswin_restack(crosswin *c);
 static int crosswin_mouse_handle(crosswin_window *cw);
+static void crosswin_update_zorder(crosswin_window *cw);
 crosswin_monitor *crosswin_get_monitor(crosswin *c, size_t index);
 
 void crosswin_init(crosswin* c)
 {
     list_entry_init(&c->windows);
     c->handle_mouse = crosswin_mouse_handle;
-
 #ifdef WIN32
     win32_init_class();
 #elif __linux__
@@ -38,34 +38,13 @@ void crosswin_init(crosswin* c)
     c->update = CROSSWIN_UPDATE_ZORDER;
 }
 
-static int crosswin_sort_callback(list_entry *le1, list_entry *le2, void *pv)
-{
-    crosswin_window *cw1 = element_of(le1, crosswin_window, current);
-    crosswin_window *cw2 = element_of(le2, crosswin_window, current);
-
-    if((cw1->zorder == cw2->zorder) &&(cw1 == (crosswin_window*)pv))
-    {
-        if(cw1->zorder<crosswin_normal)
-            return(-1);
-        else if(cw1->zorder>crosswin_normal)
-            return(1);
-        else
-            return(0);
-    }
-    if(cw1->zorder < cw2->zorder)
-        return(-1);
-    else if(cw1->zorder > cw2->zorder)
-        return(1);
-    else
-        return(0);
-}
 
 int crosswin_update(crosswin* c)
 {
     unsigned char up_status = c->update;
     crosswin_monitor *lcm = NULL;
     size_t mon_cnt = 0;
-    c->update = 0;
+
 
     if(!up_status)
     {
@@ -84,46 +63,107 @@ int crosswin_update(crosswin* c)
         }
     }
 
-    if(up_status&CROSSWIN_UPDATE_ZORDER)
+    if(up_status&(CROSSWIN_UPDATE_ZORDER|CROSSWIN_UPDATE_SHOW_DESKTOP))
     {
-        up_status&=~CROSSWIN_UPDATE_ZORDER;
-        crosswin_restack(c);
+        up_status&=~(CROSSWIN_UPDATE_ZORDER|CROSSWIN_UPDATE_SHOW_DESKTOP);
     }
-
+    //c->update = 0;
     return(up_status);
 }
 
-int crosswin_restack(crosswin *c)
+static void crosswin_check_desktop(crosswin *c)
 {
+#ifdef WIN32
+    win32_check_desktop(c);
+#elif __linux__
+    xlib_check_desktop(c);
+#endif
+}
 
+static int crosswin_sort_callback(list_entry *le1, list_entry *le2, void *pv)
+{
+    crosswin_window *cw1 = element_of(le1, crosswin_window, current);
+    crosswin_window *cw2 = element_of(le2, crosswin_window, current);
+
+    if((cw1->zorder == cw2->zorder))
+    {
+        if((cw1 == (crosswin_window*)pv))
+        {
+            if(cw1->zorder<crosswin_normal)
+                return(-1);
+            else if(cw1->zorder>crosswin_normal)
+                return(1);
+            else
+                return(1);
+        }
+        else if((cw2 == (crosswin_window*)pv))
+        {
+            if(cw2->zorder<crosswin_normal)
+                return(1);
+            else if(cw2->zorder>crosswin_normal)
+                return(-1);
+            else
+                return(1);
+        }
+    }
+    if(cw1->zorder < cw2->zorder)
+        return(-1);
+    else if(cw1->zorder > cw2->zorder)
+        return(1);
+    else
+        return(0);
+}
+
+
+
+static int crosswin_restack(crosswin *c)
+{
+    unsigned char show_desktop = 0;
     crosswin_window *cw = NULL;
-    unsigned char have_topmost=0;
+    event_push(c->eq,(event_handler)crosswin_restack,c,500,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
+    crosswin_check_desktop(c);
+    show_desktop = !!(c->update & CROSSWIN_UPDATE_SHOW_DESKTOP);
 
-    /*Sort the windows*/
+
+    if(!(c->update & (CROSSWIN_UPDATE_ZORDER))&&(show_desktop==c->show_desktop))
+        return(-1);
+
     merge_sort(&c->windows, crosswin_sort_callback, (void*)c->top_win_id);
 
-#if 0
-    crosswin_position reorder_batch = crosswin_none;
-    if(c->top_win_id)
-    {
-        cw = (crosswin_window*)c->top_win_id;
-        reorder_batch = cw->zorder;
-    }
-#endif
     /*Set the position*/
+    c->lock_z = 0;
 
     list_enum_part(cw,&c->windows,current)
     {
-        if(cw->zorder == crosswin_topmost)
-            have_topmost = 1;
-        crosswin_set_zorder(cw,cw->zorder);
-    }
-    c->top_win_id = 0;
+        /*If the show_desktop is 1 and c->show_desktop is 0 or
+         * the window is a normal window try to restack
+         */
+        if((show_desktop!=c->show_desktop && show_desktop)||cw->zorder == crosswin_normal)
+        {
+            crosswin_position op =  cw->zorder;
+            cw->zorder = -1;
+            crosswin_update_zorder(cw);
 
-    if(have_topmost)
-    {
-        event_push(c->eq,crosswin_restack,c,500,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
+            if(op == crosswin_bottom)
+                op = crosswin_bottom_sh;
+            else if(op == crosswin_desktop)
+                op = crosswin_desktop_sh;
+            else
+                cw->zorder =op;
+
+        }
+        crosswin_update_zorder(cw);
+
+        if(cw->zorder == crosswin_bottom_sh)
+            cw->zorder = crosswin_bottom;
+        else if(cw->zorder == crosswin_desktop_sh)
+            cw->zorder = crosswin_desktop;
     }
+
+    c->lock_z = 1;
+    c->show_desktop = show_desktop;
+    c->top_win_id = 0;
+    c->update&=~(CROSSWIN_UPDATE_ZORDER|CROSSWIN_UPDATE_SHOW_DESKTOP);
     return(0);
 }
 
@@ -163,7 +203,7 @@ crosswin_window* crosswin_init_window(crosswin* c)
 #elif __linux__
     xlib_init_window(w);
 #endif
-
+    crosswin_restack(c);
 
     return (w);
 }
@@ -198,7 +238,7 @@ void crosswin_set_click_through(crosswin_window* w, unsigned char state)
 #ifdef WIN32
         win32_click_through(w);
 #elif __linux__
-
+#warning "Not implemented"
 #endif
     }
 }
@@ -450,24 +490,28 @@ void crosswin_get_keep_on_screen(crosswin_window* w, unsigned char *keep_on_scre
         *keep_on_screen  = w->keep_on_screen;
     }
 }
+
+static void crosswin_update_zorder(crosswin_window *cw)
+{
+
+#ifdef WIN32
+    win32_set_zpos(cw);
+#elif __linux__
+    xlib_set_zpos(cw);
+#endif
+
+}
+
 void crosswin_set_zorder(crosswin_window* w, unsigned char zorder)
 {
     if(w)
     {
-        w->lock_z = 0;
-        w->zorder = zorder;
-        // if(w->zorder != zorder)
+        if(w->zorder != zorder)
         {
-            //  w->c->update|=CROSSWIN_UPDATE_ZORDER; /*We are restacking stuff*/
-#ifdef WIN32
-            win32_set_zpos(w);
-#elif __linux__
-            xlib_set_zpos(w);
-#endif
+            w->zorder = zorder;
+            w->c->update|=CROSSWIN_UPDATE_ZORDER; /*We are restacking stuff*/
+            crosswin_update_zorder(w);
         }
-
-        w->lock_z = 1;
-
     }
 }
 
@@ -499,11 +543,6 @@ static int crosswin_mouse_handle(crosswin_window *cw)
     long ly = md->cposy;
     md->cposx = md->root_x;
     md->cposy = md->root_y;
-
-    if(md->hover==mouse_hover)
-    {
-        //crosswin_restack(cw->c);
-    }
 
     if(md->state == mouse_button_state_unpressed && md->drag)
     {
@@ -608,8 +647,6 @@ static int crosswin_mouse_handle(crosswin_window *cw)
         if(cw->x != x || cw->y != y)
         {
             md->drag = 1;
-
-
             crosswin_set_position(cw, x, y);
         }
     }
