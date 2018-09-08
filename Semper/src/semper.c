@@ -935,7 +935,7 @@ static int semper_check_screen(control_data *cd)
         surface_data *sd = NULL;
         list_enum_part(sd, &cd->surfaces, current)
         {
-            surface_reload(sd);
+            command(sd,&sd->disp_change_act);
         }
     }
 

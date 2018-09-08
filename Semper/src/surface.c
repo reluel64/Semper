@@ -97,6 +97,7 @@ void surface_reset(surface_data* sd)
     sd->update_act =  parameter_string(sd, "SurfaceUpdateAction", NULL, XPANDER_SURFACE);
     sd->reload_act =  parameter_string(sd, "SurfaceReloadAction", NULL, XPANDER_SURFACE);
     sd->unload_act =  parameter_string(sd, "SurfaceUnloadAction", NULL, XPANDER_SURFACE);
+    sd->disp_change_act = parameter_string(sd, "DisplayChangeAction", NULL, XPANDER_SURFACE);
     sh = parameter_long_long(sd, "Height", 0, XPANDER_SURFACE);
     sw = parameter_long_long(sd, "Width", 0, XPANDER_SURFACE);
     sd->def_divider = parameter_size_t(sd, "DefaultDivider", 1, XPANDER_SURFACE);

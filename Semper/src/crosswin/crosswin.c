@@ -46,10 +46,6 @@ int crosswin_update(crosswin* c)
     size_t mon_cnt = 0;
 
 
-    if(!up_status)
-    {
-        return(up_status);
-    }
 
     if(up_status & CROSSWIN_UPDATE_MONITORS)
     {
@@ -65,10 +61,10 @@ int crosswin_update(crosswin* c)
 
     if(up_status&(CROSSWIN_UPDATE_ZORDER|CROSSWIN_UPDATE_SHOW_DESKTOP))
     {
-        up_status&=~(CROSSWIN_UPDATE_ZORDER|CROSSWIN_UPDATE_SHOW_DESKTOP);
+
     }
-    //c->update = 0;
-    return(up_status);
+
+    return(up_status & CROSSWIN_UPDATE_MONITORS); /*report only this flag*/
 }
 
 static void crosswin_check_desktop(crosswin *c)
@@ -131,7 +127,6 @@ static int crosswin_restack(crosswin *c)
     merge_sort(&c->windows, crosswin_sort_callback, (void*)c->top_win_id);
 
     /*Set the position*/
-    c->lock_z = 0;
 
     list_enum_part(cw,&c->windows,current)
     {
@@ -160,7 +155,6 @@ static int crosswin_restack(crosswin *c)
             cw->zorder = crosswin_desktop;
     }
 
-    c->lock_z = 1;
     c->show_desktop = show_desktop;
     c->top_win_id = 0;
     c->update&=~(CROSSWIN_UPDATE_ZORDER|CROSSWIN_UPDATE_SHOW_DESKTOP);

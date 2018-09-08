@@ -41,18 +41,20 @@ typedef struct _surface_data
 
     //Surface Parameters
     long order;
+
     unsigned int srf_col;      //main color of the surface - if not specified by the user, this will be 0
     unsigned int srf_col_2;    //second surface color - setting this will result in a gradient background
     unsigned char wsz: 2;       // volatile window size bit 0 - AutoSize; bit 1 - Need resize;
     unsigned char ro;          // required opacity
     unsigned char snp: 1;        // store new position
     unsigned char rim: 1;        // reload if modified
-    unsigned char* team;
-    unsigned char* focus_act;
-    unsigned char* unfocus_act;
-    unsigned char* update_act;
-    unsigned char* reload_act;
-    unsigned char* unload_act;
+    unsigned char *team;
+    unsigned char *focus_act;
+    unsigned char *unfocus_act;
+    unsigned char *update_act;
+    unsigned char *reload_act;
+    unsigned char *unload_act;
+    unsigned char *disp_change_act;
     mouse_hover_state mhs;
     mouse_hover_state omhs;
     unsigned char update_act_lock: 1;

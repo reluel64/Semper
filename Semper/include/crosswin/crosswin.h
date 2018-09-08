@@ -100,7 +100,6 @@ typedef struct
 {
     unsigned char update;
     unsigned char show_desktop;
-    unsigned char lock_z;
     event_queue *eq;
     size_t top_win_id;
     mouse_data md;
