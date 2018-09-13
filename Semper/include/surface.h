@@ -75,6 +75,7 @@ typedef struct _surface_data
     semper_timestamp st;      //used by ReloadIfModified option
 } surface_data;
 
+
 surface_data* surface_by_name(control_data* cd, unsigned char* sn);
 void surface_reset(surface_data* sd);
 int surface_destroy(surface_data* sd);

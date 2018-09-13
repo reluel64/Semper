@@ -32,12 +32,14 @@
 #include <limits.h>
 #include <dirent.h>
 #include <sys/stat.h>
-#elif WIN32
+#else
+#if defined(WIN32)
 #include <windows.h>
 #include <winbase.h>
 #include <wchar.h>
 WINBASEAPI WINBOOL WINAPI QueryFullProcessImageNameW(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
 extern void _cairo_mutex_initialize (void);
+#endif
 #endif
 extern void crosswin_update_z(crosswin *c);
 
@@ -930,13 +932,15 @@ static int semper_watcher_callback(void *pv)
 
 static int semper_check_screen(control_data *cd)
 {
-    if(crosswin_update(&cd->c))
+    if(crosswin_update(&cd->c) & CROSSWIN_UPDATE_MONITORS)
     {
         surface_data *sd = NULL;
         list_enum_part(sd, &cd->surfaces, current)
         {
             command(sd,&sd->disp_change_act);
         }
+
+        crosswin_update_done(&cd->c,CROSSWIN_UPDATE_MONITORS);
     }
 
     return(0);

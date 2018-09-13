@@ -27,9 +27,7 @@ typedef enum
     crosswin_bottom,
     crosswin_normal,
     crosswin_top,
-    crosswin_topmost,
-    crosswin_desktop_sh,
-    crosswin_bottom_sh,
+    crosswin_topmost
 } crosswin_position;
 
 typedef enum
@@ -153,6 +151,7 @@ typedef struct _crosswin_window
 
 } crosswin_window;
 
+void crosswin_update_done(crosswin *c, unsigned char flag);
 void crosswin_init(crosswin* c);
 void crosswin_message_dispatch(crosswin *c);
 void crosswin_set_window_data(crosswin_window* w, void* pv);

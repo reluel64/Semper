@@ -3,6 +3,7 @@
 	<name>MSIAfterburner</name>
 	<comment></comment>
 	<projects>
+		<project>Semper</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
