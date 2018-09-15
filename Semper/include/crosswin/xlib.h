@@ -16,4 +16,5 @@ int xlib_create_input_context(crosswin_window *w);
 int xlib_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *cnt);
 void xlib_set_visible(crosswin_window *w);
 void xlib_check_desktop(crosswin *c);
+void xlib_click_through(crosswin_window *w);
 #endif

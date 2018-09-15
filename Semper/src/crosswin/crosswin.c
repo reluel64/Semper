@@ -276,7 +276,7 @@ void crosswin_set_click_through(crosswin_window* w, unsigned char state)
 #ifdef WIN32
         win32_click_through(w);
 #elif __linux__
-#warning "Not implemented"
+        xlib_click_through(w);
 #endif
     }
 }
