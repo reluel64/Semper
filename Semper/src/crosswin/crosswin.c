@@ -163,7 +163,7 @@ static int crosswin_restack(crosswin *c)
 
     if(c->show_desktop)
     {
-        event_push(c->eq,(event_handler)crosswin_restack,c,60,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
+        event_push(c->eq,(event_handler)crosswin_restack,c,1000,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
     }
     else
     {

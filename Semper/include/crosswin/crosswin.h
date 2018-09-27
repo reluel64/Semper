@@ -16,9 +16,10 @@
 #endif
 
 #include <event.h>
-#define CROSSWIN_UPDATE_MONITORS (1<<0)
-#define CROSSWIN_UPDATE_ZORDER   (1<<1)
+#define CROSSWIN_UPDATE_MONITORS     (1<<0)
+#define CROSSWIN_UPDATE_ZORDER       (1<<1)
 #define CROSSWIN_UPDATE_SHOW_DESKTOP (1<<2)
+#define CROSSWIN_UPDATE_FIX_ZORDER   (1<<3)
 typedef struct _crosswin_window crosswin_window;
 
 typedef enum
@@ -110,6 +111,7 @@ typedef struct
     void *display;
     void *disp_fd;
     XVisualInfo vinfo;
+    void *colormap;
 #endif
 } crosswin;
 
@@ -138,15 +140,16 @@ typedef struct _crosswin_window
     unsigned char draggable;
     unsigned char click_through;
     void *window;
-#ifdef WIN32
-#elif __linux__
 
+#if defined(__linux__)
     unsigned char ctrl_down;
+    unsigned char upper;
     void *xlib_surface;
     void *xlib_bitmap;
     Pixmap pixmap;
     XIM xInputMethod;
     XIC xInputContext;
+
 #endif
 
 } crosswin_window;

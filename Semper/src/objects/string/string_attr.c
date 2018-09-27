@@ -644,6 +644,10 @@ int string_attr_update(string_object *so)
     unsigned int ovec[300];
     int erroff = 0;
 
+    /*Apply the main attribute then for each pattern of
+     * the text apply the specified set of attributes
+     */
+
     list_enum_part(sa, &so->attr, current)
     {
         pcre *ctx = NULL;

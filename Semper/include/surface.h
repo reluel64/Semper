@@ -68,7 +68,7 @@ typedef struct _surface_data
     section sv;               //[surface-Variables]
     section scd;              // section from Semper.ini
     size_t def_divider;       //default update divider
-    size_t uf;                // update frequency (miliseconds)
+    size_t uf;                // update frequency (milliseconds)
     mouse_actions ma;         // mouse actions
     void* sw;                 // surface window
     char fade_direction;      //does this need explanation? Ok - it is used during fade operations to tell how we should fade the window (close fade, open fade)

@@ -238,144 +238,6 @@ static size_t semper_load_surfaces(control_data* cd)
     return(srf_loaded);
 }
 
-static int ini_handler(semper_write_key_handler)
-{
-    semper_write_key_data* swkd = pv;
-
-    /*Just treat the new line*/
-    if(!kn && !kv && !sn && !com)
-    {
-        size_t pos = ftell(swkd->nf);
-
-        if(pos > 3)
-        {
-            swkd->new_lines++;
-            fprintf(swkd->nf, "\n");
-        }
-
-        return (0);
-
-    }
-
-    swkd->has_content = 1;
-    /*The section is about to change so we get the ending offset*/
-
-    if(swkd->sect_off > swkd->sect_end_off && strcasecmp(sn, swkd->sn))
-    {
-        swkd->sect_end_off = ftello(swkd->nf) - swkd->new_lines;
-        fseeko(swkd->nf, -(((long)swkd->new_lines) - 1), SEEK_CUR);
-        swkd->new_lines = 0;
-
-        if(swkd->key_found == 0)
-        {
-            fprintf(swkd->nf, "%s=%s\n", swkd->kn, (swkd->kv ? swkd->kv : (unsigned char*)""));
-        }
-    }
-
-    /*We have to process a section*/
-    if(sn && !kn)
-    {
-        fprintf(swkd->nf, *com ? "[%s]\t\t%s\n" : "[%s]\n", sn, *com ? com : (unsigned char*)""); /*Spit it out*/
-
-        /*this is the section - store the offset*/
-        if(!strcasecmp(sn, swkd->sn))
-        {
-            swkd->sect_off = ftello(swkd->nf); /*save the offset of the section start*/
-            swkd->key_found = 0;
-        }
-
-        return (0);
-    }
-
-    /*We found the key so we replace it with the new one*/
-    else if(sn && kn && !strcasecmp(sn, swkd->sn) && !strcasecmp(kn, swkd->kn)) /*we have the section and the key so let's print it out*/
-    {
-        fprintf(swkd->nf, (*com ? "%s=%s\t\t%s\n" : "%s=%s\n"), swkd->kn, (swkd->kv ? swkd->kv : (unsigned char*)""), (*com ? com : (unsigned char*)""));
-        swkd->key_found = 1;
-        return (0);
-    }
-    else
-    {
-        fprintf(swkd->nf, (*com ? "%s=%s\t\t%s\n" : "%s=%s\n"), kn, (kv ? kv : (unsigned char*)""), (*com ? com : (unsigned char*)""));
-        return (0);
-    }
-
-    /*Write multi-line value*/
-    if(!kn)
-    {
-        fprintf(swkd->nf, (*com ? "%s\t\t;%s\n" : "%s\n"), kv, (*com ? com : (unsigned char*)""));
-    }
-
-    return (0);
-}
-
-
-int semper_write_key(unsigned char* file, unsigned char* sn, unsigned char* kn, unsigned char* kv)
-{
-    if(!file || !sn || !kn || !kv)
-        return (-1);
-
-    semper_write_key_data swkd = {.nf = NULL, .sn = sn, .kv = kv, .kn = kn, .sect_found = 0, .key_found = 0 };
-    size_t sz = string_length(file);
-    unsigned char temp = file[sz - 1];
-    static size_t utf8_bom = 0xBFBBEF; /*such UTF-8 signature, much 3 bytes*/
-
-
-    file[sz - 1] = 0;
-    unsigned char* tfn = clone_string(file);
-    file[sz - 1] = temp;
-
-#ifdef WIN32
-    unsigned short* ucsn = utf8_to_ucs(tfn);
-    swkd.nf = _wfopen(ucsn, L"wb+");
-#else
-    swkd.nf = fopen(tfn, "wb+");
-#endif
-
-
-
-    if(swkd.nf == NULL)
-        return (-2);
-
-    setvbuf(swkd.nf, NULL, _IONBF, 0);
-    fwrite(&utf8_bom, 3, 1, swkd.nf);
-    ini_parser_parse_file(file, semper_write_key_handler, &swkd);
-
-    if(swkd.sect_off == 0) /*section was not found*/
-    {
-        if(swkd.has_content)
-        {
-            fprintf(swkd.nf, "\n[%s]\n%s=%s", sn, kn, kv);
-        }
-        else
-        {
-            fprintf(swkd.nf, "[%s]\n%s=%s", sn, kn, kv);
-        }
-    }
-    else if(swkd.key_found == 0 &&
-            swkd.sect_end_off < swkd.sect_off) /*this should happen if it is at the end of file*/
-    {
-        fprintf(swkd.nf, "%s=%s", kn, kv);
-    }
-
-    fclose(swkd.nf);
-
-#ifdef WIN32
-    unsigned short* ucs = utf8_to_ucs(file);
-    SetFileAttributesW(ucs, FILE_ATTRIBUTE_NORMAL);
-    _wremove(ucs);
-    _wrename(ucsn, ucs);
-    sfree((void**)&ucs);
-    sfree((void**)&ucsn);
-#else
-    remove(file);
-    rename(tfn, file);
-#endif
-    sfree((void**)&tfn);
-
-    return (0);
-}
-
 
 static int ini_handler(semper_write_key_memory_handler)
 {
@@ -414,7 +276,7 @@ static int ini_handler(semper_write_key_memory_handler)
     /*We have to process a section*/
     if(sn && !kn)
     {
-        mprintf(swkd->nf, *com ? "[%s]\t\t%s\n" : "[%s]\n", sn, *com ? com : (unsigned char*)""); /*Spit it out*/
+        mprintf(swkd->nf, *com ? "[%s]        %s\n" : "[%s]\n", sn, *com ? com : (unsigned char*)""); /*Spit it out*/
 
         /*this is the section - store the offset*/
         if(!strcasecmp(sn, swkd->sn))
@@ -429,27 +291,27 @@ static int ini_handler(semper_write_key_memory_handler)
     /*We found the key so we replace it with the new one*/
     else if(sn && kn && !strcasecmp(sn, swkd->sn) && !strcasecmp(kn, swkd->kn)) /*we have the section and the key so let's print it out*/
     {
-        mprintf(swkd->nf, (*com ? "%s=%s\t\t%s\n" : "%s=%s\n"), swkd->kn, (swkd->kv ? swkd->kv : (unsigned char*)""), (*com ? com : (unsigned char*)""));
+        mprintf(swkd->nf, (*com ? "%s=%s        %s\n" : "%s=%s\n"), swkd->kn, (swkd->kv ? swkd->kv : (unsigned char*)""), (*com ? com : (unsigned char*)""));
         swkd->key_found = 1;
         return (0);
     }
     else
     {
-        mprintf(swkd->nf, (*com ? "%s=%s\t\t%s\n" : "%s=%s\n"), kn, (kv ? kv : (unsigned char*)""), (*com ? com : (unsigned char*)""));
+        mprintf(swkd->nf, (*com ? "%s=%s        %s\n" : "%s=%s\n"), kn, (kv ? kv : (unsigned char*)""), (*com ? com : (unsigned char*)""));
         return (0);
     }
 
     /*Write multi-line value*/
     if(!kn)
     {
-        mprintf(swkd->nf, (*com ? "%s\t\t;%s\n" : "%s\n"), kv, (*com ? com : (unsigned char*)""));
+        mprintf(swkd->nf, (*com ? "%s        ;%s\n" : "%s\n"), kv, (*com ? com : (unsigned char*)""));
     }
 
     return (0);
 }
 
 
-int semper_write_key_memory(memf *src, memf *dest, unsigned char* sn, unsigned char* kn, unsigned char* kv)
+static int semper_write_key_memory(memf *src, memf *dest, unsigned char* sn, unsigned char* kn, unsigned char* kv)
 {
     if(!src || !dest || !sn || !kn || !kv)
         return (-1);

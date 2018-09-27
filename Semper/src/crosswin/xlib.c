@@ -7,6 +7,7 @@
 #include <surface.h>
 #include <event.h>
 #include <mem.h>
+#include <unistd.h>
 #include <X11/extensions/Xinerama.h>
 #define CONTEXT_ID 0x2712
 
@@ -21,12 +22,14 @@ typedef struct Hints
 
 static void xlib_render(crosswin_window *w);
 void xlib_set_zpos(crosswin_window *w);
+static int xlib_fixup_zpos(crosswin *c);
 
 void xlib_init_display(crosswin *c)
 {
     c->display = XOpenDisplay(NULL);
     c->disp_fd = (void*)(size_t)XConnectionNumber(c->display);
     XMatchVisualInfo(c->display, DefaultScreen(c->display), 32, TrueColor, &c->vinfo);
+    c->colormap = (void*)XCreateColormap(c->display, DefaultRootWindow(c->display), c->vinfo.visual, AllocNone);
 }
 
 int xlib_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *cnt)
@@ -61,26 +64,22 @@ int xlib_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *cnt)
 
 }
 
-
-void xlib_init_window(crosswin_window *w)
+static void xlib_window_attributes(XSetWindowAttributes *xa,crosswin *c)
 {
-    XSetWindowAttributes attr;
-    Atom type =0;
-    Atom value = 0;
-    memset(&attr, 0, sizeof(attr));
-    attr.colormap = XCreateColormap(w->c->display, DefaultRootWindow(w->c->display), w->c->vinfo.visual, AllocNone);
-    attr.background_pixel = 0;
-    attr.border_pixel = 0;
-    attr.override_redirect = 0;
-    attr.win_gravity=StaticGravity;
-    attr.event_mask =
+    memset(xa, 0, sizeof(XSetWindowAttributes));
+    xa->colormap = (Colormap)c->colormap;
+    xa->background_pixel = 0;
+    xa->border_pixel = 0;
+    xa->override_redirect = 0;
+    xa->win_gravity=StaticGravity;
+    xa->event_mask =
             KeyPressMask             |
+            KeyReleaseMask           |
             KeymapStateMask          |
             StructureNotifyMask      |
             SubstructureNotifyMask   |
             SubstructureRedirectMask |
             ButtonReleaseMask        |
-            KeyReleaseMask           |
             EnterWindowMask          |
             LeaveWindowMask          |
             PointerMotionMask        |
@@ -90,6 +89,16 @@ void xlib_init_window(crosswin_window *w)
             ExposureMask             |
             PropertyChangeMask       |
             ButtonPressMask;
+
+}
+
+void xlib_init_window(crosswin_window *w)
+{
+    Atom type =0;
+    Atom value = 0;
+    XSetWindowAttributes attr;
+
+    xlib_window_attributes(&attr,w->c);
 
     w->window = (void*)XCreateWindow(w->c->display ,
             DefaultRootWindow(w->c->display)         ,
@@ -107,20 +116,13 @@ void xlib_init_window(crosswin_window *w)
             CWColormap                               |
             CWEventMask                              |
             CWDontPropagate                          |
+            CWOverrideRedirect                       |
             CWCursor 							     ,
             &attr
     );
 
-
     XSaveContext(w->c->display, (XID)w->window, CONTEXT_ID, (const char*)w);
-
-    type = XInternAtom(w->c->display, "_NET_WM_STATE", 1);
-    value = XInternAtom(w->c->display, "_NET_WM_STATE_SKIP_TASKBAR", 1);
-    XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
-
-    type = XInternAtom(w->c->display, "_NET_WM_STATE", 1);
-    value = XInternAtom(w->c->display, "_NET_WM_STATE_SKIP_PAGER", 1);
-    XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeAppend, (unsigned char*)&value, 1);
+    size_t pid = (size_t)getpid();
 
     Hints hints;
     Atom property;
@@ -129,6 +131,14 @@ void xlib_init_window(crosswin_window *w)
     property = XInternAtom(w->c->display, "_MOTIF_WM_HINTS", 1);
     XChangeProperty(w->c->display, (Window)w->window, property, property, 32, PropModeReplace, (unsigned char *)&hints, 5);
 
+    XSync(w->c->display,0);
+    type =  XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE",1);
+    value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_UTILITY", 1);
+
+    XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
+
+    type = XInternAtom(w->c->display,"_NET_WM_PID",1);
+    XChangeProperty(w->c->display,  (Window)w->window, type, XA_CARDINAL, 32,PropModeReplace,  (unsigned char*) &pid, 1);
 }
 
 void xlib_set_dimmension(crosswin_window *w)
@@ -177,6 +187,7 @@ void  xlib_set_position(crosswin_window *w)
 
     XSendEvent(w->c->display,DefaultRootWindow(w->c->display),0,  StructureNotifyMask|SubstructureNotifyMask   |  SubstructureRedirectMask,&ev);
 
+    XSync(w->c->display,0);
 }
 
 void xlib_set_visible(crosswin_window *w)
@@ -224,14 +235,19 @@ static void xlib_render(crosswin_window *w)
         w->render_func(w, cr);
         cairo_destroy(cr);
 
-
         /*Render everything to the window*/
+
         cr = cairo_create(w->xlib_surface);
+        cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+        cairo_push_group(cr);
         cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
         cairo_set_source_surface(cr, w->offscreen_buffer, 0.0, 0.0);
         cairo_paint_with_alpha(cr,(double)w->opacity/255.0); //render it to the window
-        cairo_destroy(cr); //destroy the context
+        cairo_pop_group_to_source(cr);
+        cairo_paint(cr);
+
         cairo_surface_flush(w->xlib_surface);
+        cairo_destroy(cr); //destroy the context
     }
 }
 
@@ -257,7 +273,6 @@ void xlib_set_mask(crosswin_window *w)
     }
 }
 
-
 void xlib_click_through(crosswin_window *w)
 {
     xlib_set_mask(w);
@@ -273,9 +288,10 @@ void xlib_draw(crosswin_window* w)
 int xlib_message_dispatch(crosswin *c)
 {
     XEvent ev = {0};
+
     while(XPending(c->display)>0)
     {
-        XSync(c->display,0);
+        XEvent dev={0};
         crosswin_window *w = NULL;
         XNextEvent(c->display, &ev);
         XFindContext(c->display, ev.xany.window, CONTEXT_ID, (char**)&w);
@@ -325,7 +341,7 @@ int xlib_message_dispatch(crosswin *c)
             case EnterNotify:
             case MotionNotify:
             {
-                XEvent dev={0};
+
                 /*Get the latest MotionNotify*/
                 while(XCheckTypedWindowEvent(w->c->display,(Window)w->window,MotionNotify,&dev))
                 {
@@ -342,6 +358,9 @@ int xlib_message_dispatch(crosswin *c)
                 w->c->handle_mouse(w);
                 break;
             }
+            case ClientMessage:
+                printf("This is a client\n");
+                break;
             case ButtonRelease:
             {
                 c->md.x = ev.xbutton.x;
@@ -416,16 +435,15 @@ int xlib_message_dispatch(crosswin *c)
             }
             case Expose:
                 xlib_set_position(w);
-                c->update = 1;
+                c->update = CROSSWIN_UPDATE_MONITORS;
                 break;
             case ReparentNotify:
             case ConfigureNotify:
             case FocusIn:
             case FocusOut:
-                c->update|=CROSSWIN_UPDATE_ZORDER;
-            break;
+                break;
         }
-        XSync(c->display,0);
+
     }
 
     return(0);
@@ -446,62 +464,194 @@ void xlib_destroy_window(crosswin_window **w)
     XFlush(disp);
 }
 
+static void xlib_set_window_active(crosswin_window *w)
+{
+    Atom active_win =  XInternAtom(w->c->display, "_NET_ACTIVE_WINDOW", 1);
+    XEvent ev={0};
+
+    ev.xclient.message_type  = active_win;
+    ev.xclient.format = 32;
+    ev.xclient.type=ClientMessage;
+    ev.xclient.window = (Window)w->window;
+    ev.xclient.send_event=1;
+    XSendEvent(w->c->display,DefaultRootWindow(w->c->display),0,  StructureNotifyMask|SubstructureNotifyMask   ,&ev);
+
+}
+
+static void xlib_set_window_below(crosswin_window *w)
+{
+    Atom state =  XInternAtom(w->c->display, "_NET_WM_STATE", 1);
+    Atom actual_state =  XInternAtom(w->c->display, "_NET_WM_STATE_BELOW", 1);
+    XEvent ev={0};
+
+    ev.xclient.message_type  = state;
+    ev.xclient.format = 32;
+    ev.xclient.type=ClientMessage;
+    ev.xclient.window = (Window)w->window;
+    ev.xclient.send_event=1;
+    ev.xclient.data.l[0] = 1;
+    ev.xclient.data.l[1] = actual_state;
+    XSendEvent(w->c->display,DefaultRootWindow(w->c->display),0,  StructureNotifyMask|SubstructureNotifyMask   ,&ev);
+}
+
+static void xlib_set_window_above(crosswin_window *w)
+{
+    Atom state =  XInternAtom(w->c->display, "_NET_WM_STATE", 1);
+    Atom actual_state =  XInternAtom(w->c->display, "_NET_WM_STATE_ABOVE", 1);
+    XEvent ev={0};
+
+    ev.xclient.message_type  = state;
+    ev.xclient.format = 32;
+    ev.xclient.type=ClientMessage;
+    ev.xclient.window = (Window)w->window;
+    ev.xclient.send_event=1;
+    ev.xclient.data.l[0] = 1;
+    ev.xclient.data.l[1] = actual_state;
+    XSendEvent(w->c->display,DefaultRootWindow(w->c->display),0,  StructureNotifyMask|SubstructureNotifyMask, &ev);
+}
+
+static int xlib_fixup_zpos(crosswin *c)
+{
+
+    int ret_val = 0;
+    Window *stack = NULL;
+    Window *server = NULL;
+    size_t server_cnt=0;
+    size_t stack_cnt = 0;
+    unsigned int chld_count=0;
+
+    Atom type = XInternAtom(c->display, "_NET_CLIENT_LIST_STACKING", 1);
+    Atom ret=0;
+    int fmt_ret=0;
+    unsigned long item_ret=0;
+    unsigned long bret=0;
+    Window * chld=NULL;
+    XSync(c->display,0);
+    if(XGetWindowProperty(c->display,DefaultRootWindow(c->display),type,0,10000,0,XA_WINDOW,&ret,&fmt_ret,&item_ret,&bret,(unsigned char**)&chld))
+    {
+        return(0);
+    }
+
+    chld_count=item_ret;
+    crosswin_window *cw = NULL;
+
+    list_enum_part(cw,&c->windows,current)
+    {
+        Window *tmp = realloc(stack,sizeof(Window)*(stack_cnt+1));
+
+        if(tmp)
+        {
+            stack = tmp;
+            stack[stack_cnt++] = (Window)cw->window;
+        }
+    }
+
+    for(unsigned int i=0;i<chld_count;i++)
+    {
+
+        list_enum_part(cw,&c->windows,current)
+        {
+            if((Window)cw->window == chld[i])
+            {
+                Window *tmp = realloc(server,sizeof(Window)*(server_cnt+1));
+
+                if(tmp)
+                {
+                    server = tmp;
+                    server[server_cnt++] = (Window)cw->window;
+                }
+                break;
+            }
+         }
+    }
+
+    XFree(chld);
+
+    ret_val = (server_cnt==stack_cnt) && !!memcmp(stack,server,sizeof(Window)*stack_cnt);
+    sfree((void**)&stack);
+    sfree((void**)&server);
+
+    return(ret_val);
+}
+
+
 
 void xlib_set_zpos(crosswin_window *w)
 {
-#if 0
-Window root;
-Window parent;
-Window *chld;
-int chld_count=0;
+    Atom state = XInternAtom(w->c->display, "_NET_WM_STATE", 1);
+    Atom abv = XInternAtom(w->c->display, "_NET_WM_STATE_ABOVE", 1);
+    Atom type =  XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE",1);
+    Atom value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_UTILITY", 1);
+    Atom skip_taskbar = XInternAtom(w->c->display,"_NET_WM_STATE_SKIP_TASKBAR",1);
+    Atom skip_pager = XInternAtom(w->c->display,"_NET_WM_STATE_SKIP_PAGER",1);
+    Atom win_style[2] = {skip_pager,skip_taskbar};
 
-XQueryTree(w->c->display,DefaultRootWindow(w->c->display),&root,&parent,&chld,&chld_count);
-#endif
-Atom type =0;
-Atom value = 0;
+    XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
+    XChangeProperty(w->c->display, (Window)w->window, state, XA_ATOM, 32, PropModeReplace, (unsigned char*)win_style, sizeof(win_style)/sizeof(Atom));
 
-
-switch(w->zorder)
-{
-    case crosswin_normal:
-        type = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE", 1);
-        value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_NORMAL", 1);
-        XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
-
+    switch(w->zorder)
+    {
+        case crosswin_normal:
+        {
+            XEvent ev={0};
+            ev.xclient.message_type  = state;
+            ev.xclient.format = 32;
+            ev.xclient.type=ClientMessage;
+            ev.xclient.window = (Window)w->window;
+            ev.xclient.send_event=1;
+            ev.xclient.data.l[0] = w->c->show_desktop;
+            ev.xclient.data.l[1] = abv;
+            XSendEvent(w->c->display,DefaultRootWindow(w->c->display),0,  StructureNotifyMask|SubstructureNotifyMask   ,&ev);
+        }
         break;
 
-    case crosswin_desktop:
+        case crosswin_desktop:
+        case crosswin_bottom:
+            xlib_set_window_below(w);
+            if((w->c->update & CROSSWIN_UPDATE_FIX_ZORDER))
+            {
+                xlib_set_window_active(w);
+            }
+            break;
+        case crosswin_top:
+        case crosswin_topmost:
+            xlib_set_window_above(w);
+            if((w->c->update & CROSSWIN_UPDATE_FIX_ZORDER))
+            {
+                xlib_set_window_active(w);
+            }
 
-        type = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE", 1);
-        value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_NORMAL", 1);
-        XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
-        XSync(w->c->display,0);
-        XLowerWindow(w->c->display,w->window);
-        break;
-
-    case crosswin_bottom:
-        type = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE", 1);
-        value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_NORMAL", 1);
-        XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
-        XLowerWindow(w->c->display,w->window);
-
-        break;
-    case crosswin_top:
-    case crosswin_topmost:
-        type = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE", 1);
-        value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_DOCK", 1);
-        XChangeProperty(w->c->display, (Window)w->window, type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&value, 1);
-
-        break;
-}
-
+            break;
+    }
+    XSync(w->c->display,0);
+    XFlush(w->c->display);
 }
 
 
 void xlib_check_desktop(crosswin *c)
 {
-
-#warning "Not implemented"
+    if(xlib_fixup_zpos(c))
+    {
+        c->update |= (CROSSWIN_UPDATE_ZORDER|CROSSWIN_UPDATE_FIX_ZORDER);
+    }
+    Atom type = XInternAtom(c->display, "_NET_SHOWING_DESKTOP", 1);
+    Atom ret=0;
+    int fmt_ret=0;
+    unsigned long item_ret=0;
+    unsigned long bret=0;
+    unsigned char * re=0;
+    if(!XGetWindowProperty(c->display,DefaultRootWindow(c->display),type,0,1,0,XA_CARDINAL,&ret,&fmt_ret,&item_ret,&bret,&re))
+    {
+        if(re)
+        {
+            if(((!(*re) && c->show_desktop)||((*re) && !c->show_desktop)))
+            {
+                c->update|=CROSSWIN_UPDATE_ZORDER;
+                c->show_desktop=!c->show_desktop;
+            }
+        }
+        XFree(re);
+    }
 }
 
 int xlib_create_input_context(crosswin_window *w)
@@ -521,7 +671,6 @@ int xlib_create_input_context(crosswin_window *w)
 
             for(int i = 0; i < styles->count_styles; i++)
             {
-
                 if(styles->supported_styles[i] == (XIMPreeditNothing | XIMStatusNothing))
                 {
                     bestMatchStyle =  styles->supported_styles[i];

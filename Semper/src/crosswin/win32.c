@@ -1,4 +1,4 @@
-#ifdef WIN32
+#if defined(WIN32)
 #include <stdio.h>
 #include <windows.h>
 #include <cairo/cairo.h>
@@ -232,7 +232,7 @@ void win32_check_desktop(crosswin *c)
         c->update|=CROSSWIN_UPDATE_ZORDER;
         c->show_desktop=!c->show_desktop;
 
-        printf("ShowDesktop %d\n",c->show_desktop);
+        printf("ShowDesktop %d %p %p\n",c->show_desktop,win,def_shell);
     }
 }
 
@@ -400,6 +400,7 @@ void win32_set_zpos(crosswin_window *w)
             SetWindowPos(w->window, HWND_TOPMOST,  0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOMOVE | SWP_NOSENDCHANGING);
             break;
         default:
+            SetWindowPos(w->window, HWND_TOP,  0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOMOVE | SWP_NOSENDCHANGING);
             break; /*make the compiler happy :-) */
     }
 }
