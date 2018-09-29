@@ -13,6 +13,11 @@
 #include <Sddl.h>
 #include <io.h>
 #include <time.h>
+
+#define string_length(s) (((s) == NULL ? 0 : strlen((s))))
+#define RECYCLER_DIALOG_THREAD 0
+
+
 typedef enum
 {
     recycler_query_items,
@@ -53,7 +58,7 @@ static unsigned char *recycler_query_user_sid(size_t *len);
 static void recycler_notifier_destroy(recycler *r);
 static int recycler_notifier_setup(recycler *r);
 static size_t recycler_get_time(void);
-#define string_length(s) (((s) == NULL ? 0 : strlen((s))))
+
 
 static void *zmalloc(size_t m)
 {
@@ -204,11 +209,15 @@ double update(void *spv)
     return(lret);
 }
 
+#if RECYCLER_DIALOG_THREAD
+
 static void *dialog_thread(void *p)
 {
     SHEmptyRecycleBin(NULL, NULL, 0);
     return(NULL);
 }
+
+#endif
 
 void command(void *spv, unsigned char *cmd)
 {
@@ -220,6 +229,8 @@ void command(void *spv, unsigned char *cmd)
         {
             if(!strcasecmp("Empty", cmd))
             {
+
+#if RECYCLER_DIALOG_THREAD
                 /*Shitty workaround as the SHEmptyRecycleBin() will put the thread
                  * in a non-alertable state which will cause the event queue to stall while
                  * the dialog is up
@@ -232,6 +243,9 @@ void command(void *spv, unsigned char *cmd)
                 pthread_attr_setdetachstate(&th_att, PTHREAD_CREATE_DETACHED);
                 pthread_create(&dummy, &th_att, dialog_thread, spv);
                 pthread_attr_destroy(&th_att);
+#else
+                SHEmptyRecycleBin(NULL, NULL, 0);
+#endif
             }
 
             else if(!strcasecmp("EmptySilent", cmd))

@@ -224,15 +224,13 @@ void win32_check_desktop(crosswin *c)
 
     if(def_shell)
     {
-        win =  FindWindowExA(NULL,def_shell,"SemperSurface",NULL);
+        win =  FindWindowExA(NULL,def_shell,"SemperSurface","ShowDesktop");
     }
 
     if(((!win && c->show_desktop)||(win && !c->show_desktop)))
     {
         c->update|=CROSSWIN_UPDATE_ZORDER;
         c->show_desktop=!c->show_desktop;
-
-        printf("ShowDesktop %d %p %p\n",c->show_desktop,win,def_shell);
     }
 }
 
@@ -263,7 +261,7 @@ void win32_init_window(crosswin_window* w)
 static void win32_show_desktop_window(crosswin_window* w)
 {
     size_t no_peek = 1;
-    w->window = CreateWindowExA(WS_EX_TOOLWINDOW | WS_EX_LAYERED, "SemperSurface", "ShowDesktop", WS_POPUP|WS_DISABLED, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
+    w->window = CreateWindowExA(WS_EX_TOOLWINDOW | WS_EX_LAYERED|WS_EX_TRANSPARENT, "SemperSurface", "ShowDesktop", WS_POPUP|WS_DISABLED, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
     DwmSetWindowAttribute(w->window, DWMWA_EXCLUDED_FROM_PEEK, &no_peek, sizeof(no_peek));
 }
 
