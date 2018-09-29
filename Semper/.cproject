@@ -1,976 +1,495 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
-    	
-    <storageModule moduleId="org.eclipse.cdt.core.settings">
-        		
-        <cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611">
-            			
-            <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611" moduleId="org.eclipse.cdt.core.settings" name="Debug">
-                				
-                <externalSettings>
-                    					
-                    <externalSetting>
-                        						
-                        <entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/Semper"/>
-                        						
-                        <entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/Semper/Debug"/>
-                        						
-                        <entry flags="RESOLVED" kind="libraryFile" name="Semper" srcPrefixMapping="" srcRootPath=""/>
-                        					
-                    </externalSetting>
-                    				
-                </externalSettings>
-                				
-                <extensions>
-                    					
-                    <extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
-                    					
-                    <extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-                    					
-                    <extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-                    					
-                    <extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-                    				
-                </extensions>
-                			
-            </storageModule>
-            			
-            <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-                				
-                <configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611" name="Debug" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=" parent="cdt.managedbuild.config.gnu.cross.exe.debug" prebuildStep="">
-                    					
-                    <folderInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611." name="/" resourcePath="">
-                        						
-                        <toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.debug.1059277656" name="Cross GCC" nonInternalBuilderId="cdt.managedbuild.builder.gnu.cross" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.debug">
-                            							
-                            <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.847385564" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
-                            							
-                            <builder buildPath="${workspace_loc:/Semper}/Debug" enableAutoBuild="false" enabledIncrementalBuild="true" id="org.eclipse.cdt.build.core.internal.builder.2093383149" keepEnvironmentInBuildfile="false" name="CDT Internal Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="org.eclipse.cdt.build.core.internal.builder"/>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.2127128005" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
-                                								
-                                <option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1094266822" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
-                                								
-                                <option defaultValue="gnu.c.debugging.level.max" id="gnu.c.compiler.option.debugging.level.433935672" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.default" valueType="enumerated"/>
-                                								
-                                <option id="gnu.c.compiler.option.dialect.std.162213479" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.1240858080" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
-                                    									
-                                    <listOptionValue builtIn="false" value="__USE_MINGW_ANSI_STDIO=1"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="WIN32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="DEBUG"/>
-                                    								
-                                </option>
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1644510560" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-                                    									
-                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\pango-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\cairo"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\freetype2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\glib-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\..\lib\glib-2.0\include"/>
-                                    								
-                                </option>
-                                								
-                                <option id="gnu.c.compiler.option.misc.other.711381082" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wno-pointer-sign -Wpointer-compare" valueType="string"/>
-                                								
-                                <option id="gnu.c.compiler.option.warnings.wconversion.477745899" name="Implicit conversion warnings (-Wconversion)" superClass="gnu.c.compiler.option.warnings.wconversion" useByScannerDiscovery="false" value="false" valueType="boolean"/>
-                                								
-                                <option id="gnu.c.compiler.option.warnings.extrawarn.715728369" name="Extra warnings (-Wextra)" superClass="gnu.c.compiler.option.warnings.extrawarn" useByScannerDiscovery="false" value="false" valueType="boolean"/>
-                                								
-                                <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.703629536" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
-                                							
-                            </tool>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1509237157" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
-                                								
-                                <option id="gnu.cpp.compiler.option.optimization.level.1059671015" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
-                                								
-                                <option defaultValue="gnu.cpp.compiler.debugging.level.max" id="gnu.cpp.compiler.option.debugging.level.1615323256" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.1998556963" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-                                    									
-                                    <listOptionValue builtIn="false" value="."/>
-                                    									
-                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\pango-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\cairo"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\freetype2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\glib-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\..\lib\glib-2.0\include"/>
-                                    								
-                                </option>
-                                								
-                                <option id="gnu.cpp.compiler.option.dialect.std.1641242735" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
-                                								
-                                <option id="gnu.cpp.compiler.option.other.other.60418344" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0" valueType="string"/>
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.1369955471" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
-                                    									
-                                    <listOptionValue builtIn="false" value="__USE_MINGW_ANSI_STDIO=1"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="WIN32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="DEBUG"/>
-                                    								
-                                </option>
-                                								
-                                <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.981417901" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
-                                							
-                            </tool>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cross.c.linker.621171188" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker">
-                                								
-                                <option defaultValue="true" id="gnu.c.link.option.shared.185408765" name="Shared (-shared)" superClass="gnu.c.link.option.shared" valueType="boolean"/>
-                                							
-                            </tool>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1772947986" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
-                                								
-                                <option defaultValue="true" id="gnu.cpp.link.option.shared.1153640678" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" useByScannerDiscovery="false" value="false" valueType="boolean"/>
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.1425418018" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
-                                    									
-                                    <listOptionValue builtIn="false" value="Iphlpapi"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="curl"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="cairo"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="cairo-gobject"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pangocairo-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gmodule-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gio-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="imm32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="png16"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pangowin32-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pixman-1"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pangoft2-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="shlwapi"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="dnsapi"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="usp10"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="kernel32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="harfbuzz"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="freetype"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="glib-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pango-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gobject-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="glib-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="fontconfig"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="freetype"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="jpeg"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="iconv"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="expat"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="intl"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ole32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="winmm"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="bz2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pcre"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ffi"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="iconv"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ws2_32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gdi32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="crypt32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="idn"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="intl"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="iconv"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ssh2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ssh2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ws2_32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="intl"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="iconv"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="nettle"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gnutls"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="hogweed"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="nettle"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="idn"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ws2_32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="crypt32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gmp"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="intl"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="iconv"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="wldap32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="wlanapi"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gcc"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gcrypt"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gpg-error"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gfortran"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="dwmapi"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="idn2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pthread"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="unistring"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ws2_32"/>
-                                    								
-                                </option>
-                                								
-                                <option id="gnu.cpp.link.option.flags.7793543" name="Linker flags" superClass="gnu.cpp.link.option.flags" useByScannerDiscovery="false" value="-static -municode" valueType="string"/>
-                                								
-                                <option id="gnu.cpp.link.option.implname.730766164" name="Import Library name (-Wl,--out-implib=)" superClass="gnu.cpp.link.option.implname" useByScannerDiscovery="false" value="&quot;${workspace_loc:/${ProjName}/${ConfigName}}/libsemper.a&quot;" valueType="string"/>
-                                								
-                                <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1800628123" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
-                                    									
-                                    <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
-                                    									
-                                    <additionalInput kind="additionalinput" paths="$(LIBS)"/>
-                                    								
-                                </inputType>
-                                								
-                                <outputType id="cdt.managedbuild.tool.gnu.cpp.linker.output.so.1736395977" outputPrefix="" superClass="cdt.managedbuild.tool.gnu.cpp.linker.output.so"/>
-                                								
-                                <outputType id="cdt.managedbuild.tool.gnu.cpp.linker.output.1005500269" outputPrefix="" superClass="cdt.managedbuild.tool.gnu.cpp.linker.output"/>
-                                							
-                            </tool>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cross.archiver.2058659880" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cross.assembler.1590087836" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
-                                								
-                                <inputType id="cdt.managedbuild.tool.gnu.assembler.input.156907012" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
-                                							
-                            </tool>
-                            						
-                        </toolChain>
-                        					
-                    </folderInfo>
-                    				
-                </configuration>
-                			
-            </storageModule>
-            			
-            <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
-            		
-        </cconfiguration>
-        		
-        <cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.release.830555152">
-            			
-            <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.release.830555152" moduleId="org.eclipse.cdt.core.settings" name="Release">
-                				
-                <externalSettings/>
-                				
-                <extensions>
-                    					
-                    <extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
-                    					
-                    <extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-                    					
-                    <extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-                    					
-                    <extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-                    				
-                </extensions>
-                			
-            </storageModule>
-            			
-            <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-                				
-                <configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.release.830555152" name="Release" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=" parent="cdt.managedbuild.config.gnu.cross.exe.release" prebuildStep="">
-                    					
-                    <folderInfo id="cdt.managedbuild.config.gnu.cross.exe.release.830555152." name="/" resourcePath="">
-                        						
-                        <toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.release.225547746" name="Cross GCC" nonInternalBuilderId="cdt.managedbuild.builder.gnu.cross" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.release">
-                            							
-                            <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.1360845464" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
-                            							
-                            <builder autoBuildTarget="all" buildPath="${workspace_loc:/Semper}/Release" cleanBuildTarget="clean" id="org.eclipse.cdt.build.core.internal.builder.1977326286" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="org.eclipse.cdt.build.core.internal.builder"/>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.1045857630" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
-                                								
-                                <option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.option.optimization.level.1314441585" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.c.optimization.level.more" valueType="enumerated"/>
-                                								
-                                <option defaultValue="gnu.c.debugging.level.none" id="gnu.c.compiler.option.debugging.level.525135174" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.812203815" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-                                    									
-                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\pango-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\cairo"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\freetype2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\glib-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\..\lib\glib-2.0\include"/>
-                                    								
-                                </option>
-                                								
-                                <option id="gnu.c.compiler.option.misc.other.1495477204" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wno-pointer-sign -Wl,--exclude-all-symbols" valueType="string"/>
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.108041976" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
-                                    									
-                                    <listOptionValue builtIn="false" value="__USE_MINGW_ANSI_STDIO=1"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="WIN32"/>
-                                    								
-                                </option>
-                                								
-                                <option id="gnu.c.compiler.option.dialect.std.623025660" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
-                                								
-                                <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.805083644" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
-                                							
-                            </tool>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.85267915" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
-                                								
-                                <option id="gnu.cpp.compiler.option.optimization.level.2054146662" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.more" valueType="enumerated"/>
-                                								
-                                <option defaultValue="gnu.cpp.compiler.debugging.level.none" id="gnu.cpp.compiler.option.debugging.level.589326473" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.576381636" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-                                    									
-                                    <listOptionValue builtIn="false" value="."/>
-                                    									
-                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\pango-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\cairo"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\freetype2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\glib-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\..\lib\glib-2.0\include"/>
-                                    								
-                                </option>
-                                								
-                                <option id="gnu.cpp.compiler.option.other.other.1576778769" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wl,--exclude-all-symbols" valueType="string"/>
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.2042758418" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
-                                    									
-                                    <listOptionValue builtIn="false" value="__USE_MINGW_ANSI_STDIO=1"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="WIN32"/>
-                                    								
-                                </option>
-                                								
-                                <option id="gnu.cpp.compiler.option.dialect.std.153137176" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
-                                								
-                                <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1558292836" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
-                                							
-                            </tool>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cross.c.linker.227167068" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker"/>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1546229878" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.178504873" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
-                                    									
-                                    <listOptionValue builtIn="false" value="Iphlpapi"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="curl"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="cairo"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="cairo-gobject"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pangocairo-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gmodule-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gio-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="imm32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="png16"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pangowin32-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pixman-1"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pangoft2-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="shlwapi"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="dnsapi"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="usp10"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="kernel32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="harfbuzz"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="freetype"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="glib-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pango-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gobject-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="glib-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="fontconfig"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="freetype"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="jpeg"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="iconv"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="expat"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="intl"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ole32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="winmm"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="bz2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pcre"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ffi"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="iconv"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ws2_32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gdi32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="crypt32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="idn"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="intl"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="iconv"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ssh2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ssh2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ws2_32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="intl"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="iconv"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="nettle"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gnutls"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="hogweed"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="nettle"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="idn"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ws2_32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="crypt32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gmp"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="intl"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="iconv"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="wldap32"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="wlanapi"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gcc"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gcrypt"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gpg-error"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gfortran"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="dwmapi"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="idn2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pthread"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="unistring"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ws2_32"/>
-                                    								
-                                </option>
-                                								
-                                <option id="gnu.cpp.link.option.shared.765155731" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" useByScannerDiscovery="false" value="false" valueType="boolean"/>
-                                								
-                                <option id="gnu.cpp.link.option.flags.891626646" name="Linker flags" superClass="gnu.cpp.link.option.flags" useByScannerDiscovery="false" value="-static -Wl,--dynamicbase,--high-entropy-va,--nxcompat -mwindows -municode" valueType="string"/>
-                                								
-                                <option id="gnu.cpp.link.option.implname.1410387378" name="Import Library name (-Wl,--out-implib=)" superClass="gnu.cpp.link.option.implname" useByScannerDiscovery="false" value="&quot;${workspace_loc:/${ProjName}/${ConfigName}}/libsemper.a&quot;" valueType="string"/>
-                                								
-                                <option id="gnu.cpp.link.option.strip.1239417545" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" useByScannerDiscovery="false" value="true" valueType="boolean"/>
-                                								
-                                <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1700036327" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
-                                    									
-                                    <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
-                                    									
-                                    <additionalInput kind="additionalinput" paths="$(LIBS)"/>
-                                    								
-                                </inputType>
-                                							
-                            </tool>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cross.archiver.839394937" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cross.assembler.2133549660" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
-                                								
-                                <inputType id="cdt.managedbuild.tool.gnu.assembler.input.46705204" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
-                                							
-                            </tool>
-                            						
-                        </toolChain>
-                        					
-                    </folderInfo>
-                    				
-                </configuration>
-                			
-            </storageModule>
-            			
-            <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
-            		
-        </cconfiguration>
-        		
-        <cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003">
-            			
-            <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003" moduleId="org.eclipse.cdt.core.settings" name="Debug_Linux">
-                				
-                <externalSettings>
-                    					
-                    <externalSetting>
-                        						
-                        <entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/Semper"/>
-                        						
-                        <entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/Semper/Debug"/>
-                        						
-                        <entry flags="RESOLVED" kind="libraryFile" name="Semper" srcPrefixMapping="" srcRootPath=""/>
-                        					
-                    </externalSetting>
-                    				
-                </externalSettings>
-                				
-                <extensions>
-                    					
-                    <extension id="org.eclipse.cdt.core.GNU_ELF" point="org.eclipse.cdt.core.BinaryParser"/>
-                    					
-                    <extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-                    					
-                    <extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-                    					
-                    <extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-                    				
-                </extensions>
-                			
-            </storageModule>
-            			
-            <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-                				
-                <configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" errorParsers="org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003" name="Debug_Linux" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.enablement=null,org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.image=null,org.eclipse.cdt.docker.launcher.containerbuild.property.connection=null" parent="cdt.managedbuild.config.gnu.cross.exe.debug" prebuildStep="">
-                    					
-                    <folderInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003." name="/" resourcePath="">
-                        						
-                        <toolChain id="cdt.managedbuild.toolchain.gnu.base.383592538" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
-                            							
-                            <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.GNU_ELF" id="cdt.managedbuild.target.gnu.platform.base.1210647296" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
-                            							
-                            <builder buildPath="${workspace_loc:/Semper}/Debug_Linux" id="org.eclipse.cdt.build.core.internal.builder.948345300" keepEnvironmentInBuildfile="false" name="CDT Internal Builder" parallelBuildOn="true" parallelizationNumber="unlimited" superClass="org.eclipse.cdt.build.core.internal.builder"/>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.archiver.base.1216846713" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.817505609" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.728196411" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-                                    									
-                                    <listOptionValue builtIn="false" value="."/>
-                                    									
-                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="/usr/include/pango-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="/usr/include/cairo"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="/usr/include/freetype2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="/usr/include/../lib/glib-2.0/include"/>
-                                    								
-                                </option>
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.65105923" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
-                                    									
-                                    <listOptionValue builtIn="false" value="DEBUG"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="__USE_LARGEFILE64"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="LUA_USE_POSIX"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="__linux__"/>
-                                    								
-                                </option>
-                                								
-                                <option id="gnu.cpp.compiler.option.optimization.level.1319850075" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
-                                								
-                                <option defaultValue="gnu.cpp.compiler.debugging.level.max" id="gnu.cpp.compiler.option.debugging.level.382653045" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
-                                								
-                                <option id="gnu.cpp.compiler.option.pthread.14200621" name="Support for pthread (-pthread)" superClass="gnu.cpp.compiler.option.pthread" useByScannerDiscovery="false" value="true" valueType="boolean"/>
-                                								
-                                <option id="gnu.cpp.compiler.option.other.other.783911724" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wno-pointer-sign" valueType="string"/>
-                                								
-                                <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1604912369" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
-                                							
-                            </tool>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.c.compiler.base.1284079524" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1418100282" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-                                    									
-                                    <listOptionValue builtIn="false" value="."/>
-                                    									
-                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="/usr/include/pango-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="/usr/include/cairo"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="/usr/include/freetype2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="/usr/include/../lib/glib-2.0/include"/>
-                                    								
-                                </option>
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.2084941326" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
-                                    									
-                                    <listOptionValue builtIn="false" value="DEBUG"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="__USE_LARGEFILE64"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="LUA_USE_POSIX"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="__linux__"/>
-                                    								
-                                </option>
-                                								
-                                <option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1558574925" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
-                                								
-                                <option defaultValue="gnu.c.debugging.level.max" id="gnu.c.compiler.option.debugging.level.1865300859" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
-                                								
-                                <option id="gnu.c.compiler.option.pthread.1700329947" name="Support for pthread (-pthread)" superClass="gnu.c.compiler.option.pthread" useByScannerDiscovery="false" value="true" valueType="boolean"/>
-                                								
-                                <option id="gnu.c.compiler.option.misc.other.271232857" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wno-pointer-sign" valueType="string"/>
-                                								
-                                <option id="gnu.c.compiler.option.dialect.std.1407254706" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
-                                								
-                                <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.878685192" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
-                                							
-                            </tool>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.c.linker.base.1233811616" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base"/>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.853658632" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base">
-                                								
-                                <option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.1846222380" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
-                                    									
-                                    <listOptionValue builtIn="false" value="curl"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="Xinerama"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="rt"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="Xext"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="dl"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="X11"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="cairo"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="cairo-gobject"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pangocairo-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gmodule-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gio-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="png16"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pixman-1"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pangoft2-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="harfbuzz"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="freetype"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="glib-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pango-1.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gobject-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="glib-2.0"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="fontconfig"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="freetype"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="jpeg"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="expat"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="bz2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pcre"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ffi"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="idn"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ssh2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="ssh2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="nettle"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gnutls"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="hogweed"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="nettle"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="idn"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gmp"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="z"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gcc"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gcrypt"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gpg-error"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="gfortran"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="idn2"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="pthread"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="unistring"/>
-                                    								
-                                </option>
-                                								
-                                <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.476029241" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
-                                    									
-                                    <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
-                                    									
-                                    <additionalInput kind="additionalinput" paths="$(LIBS)"/>
-                                    								
-                                </inputType>
-                                							
-                            </tool>
-                            							
-                            <tool id="cdt.managedbuild.tool.gnu.assembler.base.1874177303" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
-                                								
-                                <inputType id="cdt.managedbuild.tool.gnu.assembler.input.781946032" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
-                                							
-                            </tool>
-                            						
-                        </toolChain>
-                        					
-                    </folderInfo>
-                    				
-                </configuration>
-                			
-            </storageModule>
-            			
-            <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
-            		
-        </cconfiguration>
-        	
-    </storageModule>
-    	
-    <storageModule moduleId="cdtBuildSystem" version="4.0.0">
-        		
-        <project id="Semper.cdt.managedbuild.target.gnu.cross.exe.1039245848" name="Executable" projectType="cdt.managedbuild.target.gnu.cross.exe"/>
-        	
-    </storageModule>
-    	
-    <storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-    	
-    <storageModule moduleId="refreshScope" versionNumber="2">
-        		
-        <configuration configurationName="Multiple configurations">
-            			
-            <resource resourceType="PROJECT" workspacePath="/Semper"/>
-            		
-        </configuration>
-        		
-        <configuration configurationName="Debug_Linux"/>
-        		
-        <configuration configurationName="Debug">
-            			
-            <resource resourceType="PROJECT" workspacePath="/Semper"/>
-            		
-        </configuration>
-        		
-        <configuration configurationName="Release">
-            			
-            <resource resourceType="PROJECT" workspacePath="/Semper"/>
-            		
-        </configuration>
-        	
-    </storageModule>
-    	
-    <storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
-    	
-    <storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
-    	
-    <storageModule moduleId="scannerConfiguration">
-        		
-        <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-        		
-        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.830555152;cdt.managedbuild.config.gnu.cross.exe.release.830555152.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.85267915;cdt.managedbuild.tool.gnu.cpp.compiler.input.1558292836">
-            			
-            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-            		
-        </scannerConfigBuildInfo>
-        		
-        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003;cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1173465114;cdt.managedbuild.tool.gnu.cpp.compiler.input.1651830685">
-            			
-            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-            		
-        </scannerConfigBuildInfo>
-        		
-        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.42106611;cdt.managedbuild.config.gnu.cross.exe.debug.42106611.;cdt.managedbuild.tool.gnu.cross.c.compiler.2127128005;cdt.managedbuild.tool.gnu.c.compiler.input.703629536">
-            			
-            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-            		
-        </scannerConfigBuildInfo>
-        		
-        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.830555152;cdt.managedbuild.config.gnu.cross.exe.release.830555152.;cdt.managedbuild.tool.gnu.cross.c.compiler.1045857630;cdt.managedbuild.tool.gnu.c.compiler.input.805083644">
-            			
-            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-            		
-        </scannerConfigBuildInfo>
-        		
-        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003;cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003.;cdt.managedbuild.tool.gnu.cross.c.compiler.939371320;cdt.managedbuild.tool.gnu.c.compiler.input.606269662">
-            			
-            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-            		
-        </scannerConfigBuildInfo>
-        		
-        <scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.42106611;cdt.managedbuild.config.gnu.cross.exe.debug.42106611.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1509237157;cdt.managedbuild.tool.gnu.cpp.compiler.input.981417901">
-            			
-            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-            		
-        </scannerConfigBuildInfo>
-        	
-    </storageModule>
-    
+	<storageModule moduleId="org.eclipse.cdt.core.settings">
+		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611" moduleId="org.eclipse.cdt.core.settings" name="Debug">
+				<externalSettings>
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/Semper"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/Semper/Debug"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="Semper" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611" name="Debug" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=" parent="cdt.managedbuild.config.gnu.cross.exe.debug" prebuildStep="">
+					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611." name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.debug.1059277656" name="Cross GCC" nonInternalBuilderId="cdt.managedbuild.builder.gnu.cross" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.debug">
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.847385564" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
+							<builder buildPath="${workspace_loc:/Semper}/Debug" enableAutoBuild="false" enabledIncrementalBuild="true" id="org.eclipse.cdt.build.core.internal.builder.2093383149" keepEnvironmentInBuildfile="false" name="CDT Internal Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="org.eclipse.cdt.build.core.internal.builder"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.2127128005" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
+								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1094266822" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option defaultValue="gnu.c.debugging.level.max" id="gnu.c.compiler.option.debugging.level.433935672" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.default" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.dialect.std.162213479" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.1240858080" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="__USE_MINGW_ANSI_STDIO=1"/>
+									<listOptionValue builtIn="false" value="WIN32"/>
+									<listOptionValue builtIn="false" value="DEBUG"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1644510560" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\pango-1.0"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\cairo"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\freetype2"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\glib-2.0"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\..\lib\glib-2.0\include"/>
+								</option>
+								<option id="gnu.c.compiler.option.misc.other.711381082" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wno-pointer-sign -Wpointer-compare" valueType="string"/>
+								<option id="gnu.c.compiler.option.warnings.wconversion.477745899" name="Implicit conversion warnings (-Wconversion)" superClass="gnu.c.compiler.option.warnings.wconversion" useByScannerDiscovery="false" value="false" valueType="boolean"/>
+								<option id="gnu.c.compiler.option.warnings.extrawarn.715728369" name="Extra warnings (-Wextra)" superClass="gnu.c.compiler.option.warnings.extrawarn" useByScannerDiscovery="false" value="false" valueType="boolean"/>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.703629536" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1509237157" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
+								<option id="gnu.cpp.compiler.option.optimization.level.1059671015" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+								<option defaultValue="gnu.cpp.compiler.debugging.level.max" id="gnu.cpp.compiler.option.debugging.level.1615323256" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.1998556963" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="."/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\pango-1.0"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\cairo"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\freetype2"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\glib-2.0"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\..\lib\glib-2.0\include"/>
+								</option>
+								<option id="gnu.cpp.compiler.option.dialect.std.1641242735" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.other.other.60418344" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0" valueType="string"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.1369955471" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="__USE_MINGW_ANSI_STDIO=1"/>
+									<listOptionValue builtIn="false" value="WIN32"/>
+									<listOptionValue builtIn="false" value="DEBUG"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.981417901" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.621171188" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker">
+								<option defaultValue="true" id="gnu.c.link.option.shared.185408765" name="Shared (-shared)" superClass="gnu.c.link.option.shared" valueType="boolean"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1772947986" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
+								<option defaultValue="true" id="gnu.cpp.link.option.shared.1153640678" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" useByScannerDiscovery="false" value="false" valueType="boolean"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.1425418018" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
+									<listOptionValue builtIn="false" value="Iphlpapi"/>
+									<listOptionValue builtIn="false" value="curl"/>
+									<listOptionValue builtIn="false" value="cairo"/>
+									<listOptionValue builtIn="false" value="cairo-gobject"/>
+									<listOptionValue builtIn="false" value="pangocairo-1.0"/>
+									<listOptionValue builtIn="false" value="gmodule-2.0"/>
+									<listOptionValue builtIn="false" value="gio-2.0"/>
+									<listOptionValue builtIn="false" value="imm32"/>
+									<listOptionValue builtIn="false" value="png16"/>
+									<listOptionValue builtIn="false" value="pangowin32-1.0"/>
+									<listOptionValue builtIn="false" value="pixman-1"/>
+									<listOptionValue builtIn="false" value="pangoft2-1.0"/>
+									<listOptionValue builtIn="false" value="shlwapi"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="dnsapi"/>
+									<listOptionValue builtIn="false" value="usp10"/>
+									<listOptionValue builtIn="false" value="kernel32"/>
+									<listOptionValue builtIn="false" value="harfbuzz"/>
+									<listOptionValue builtIn="false" value="freetype"/>
+									<listOptionValue builtIn="false" value="glib-2.0"/>
+									<listOptionValue builtIn="false" value="pango-1.0"/>
+									<listOptionValue builtIn="false" value="gobject-2.0"/>
+									<listOptionValue builtIn="false" value="glib-2.0"/>
+									<listOptionValue builtIn="false" value="fontconfig"/>
+									<listOptionValue builtIn="false" value="freetype"/>
+									<listOptionValue builtIn="false" value="jpeg"/>
+									<listOptionValue builtIn="false" value="iconv"/>
+									<listOptionValue builtIn="false" value="expat"/>
+									<listOptionValue builtIn="false" value="intl"/>
+									<listOptionValue builtIn="false" value="ole32"/>
+									<listOptionValue builtIn="false" value="winmm"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="bz2"/>
+									<listOptionValue builtIn="false" value="pcre"/>
+									<listOptionValue builtIn="false" value="ffi"/>
+									<listOptionValue builtIn="false" value="iconv"/>
+									<listOptionValue builtIn="false" value="ws2_32"/>
+									<listOptionValue builtIn="false" value="gdi32"/>
+									<listOptionValue builtIn="false" value="crypt32"/>
+									<listOptionValue builtIn="false" value="idn"/>
+									<listOptionValue builtIn="false" value="intl"/>
+									<listOptionValue builtIn="false" value="iconv"/>
+									<listOptionValue builtIn="false" value="ssh2"/>
+									<listOptionValue builtIn="false" value="ssh2"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="ws2_32"/>
+									<listOptionValue builtIn="false" value="intl"/>
+									<listOptionValue builtIn="false" value="iconv"/>
+									<listOptionValue builtIn="false" value="nettle"/>
+									<listOptionValue builtIn="false" value="gnutls"/>
+									<listOptionValue builtIn="false" value="hogweed"/>
+									<listOptionValue builtIn="false" value="nettle"/>
+									<listOptionValue builtIn="false" value="idn"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="ws2_32"/>
+									<listOptionValue builtIn="false" value="crypt32"/>
+									<listOptionValue builtIn="false" value="gmp"/>
+									<listOptionValue builtIn="false" value="intl"/>
+									<listOptionValue builtIn="false" value="iconv"/>
+									<listOptionValue builtIn="false" value="wldap32"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="wlanapi"/>
+									<listOptionValue builtIn="false" value="gcc"/>
+									<listOptionValue builtIn="false" value="gcrypt"/>
+									<listOptionValue builtIn="false" value="gpg-error"/>
+									<listOptionValue builtIn="false" value="gfortran"/>
+									<listOptionValue builtIn="false" value="dwmapi"/>
+									<listOptionValue builtIn="false" value="idn2"/>
+									<listOptionValue builtIn="false" value="pthread"/>
+									<listOptionValue builtIn="false" value="unistring"/>
+									<listOptionValue builtIn="false" value="ws2_32"/>
+								</option>
+								<option id="gnu.cpp.link.option.flags.7793543" name="Linker flags" superClass="gnu.cpp.link.option.flags" useByScannerDiscovery="false" value="-static -municode" valueType="string"/>
+								<option id="gnu.cpp.link.option.implname.730766164" name="Import Library name (-Wl,--out-implib=)" superClass="gnu.cpp.link.option.implname" useByScannerDiscovery="false" value="&quot;${workspace_loc:/${ProjName}/${ConfigName}}/libsemper.a&quot;" valueType="string"/>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1800628123" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+								<outputType id="cdt.managedbuild.tool.gnu.cpp.linker.output.so.1736395977" outputPrefix="" superClass="cdt.managedbuild.tool.gnu.cpp.linker.output.so"/>
+								<outputType id="cdt.managedbuild.tool.gnu.cpp.linker.output.1005500269" outputPrefix="" superClass="cdt.managedbuild.tool.gnu.cpp.linker.output"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.2058659880" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.1590087836" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.156907012" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.release.830555152">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.release.830555152" moduleId="org.eclipse.cdt.core.settings" name="Release">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.cross.exe.release.830555152" name="Release" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=" parent="cdt.managedbuild.config.gnu.cross.exe.release" prebuildStep="">
+					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.release.830555152." name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.release.225547746" name="Cross GCC" nonInternalBuilderId="cdt.managedbuild.builder.gnu.cross" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.release">
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.1360845464" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
+							<builder autoBuildTarget="all" buildPath="${workspace_loc:/Semper}/Release" cleanBuildTarget="clean" id="org.eclipse.cdt.build.core.internal.builder.1977326286" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="org.eclipse.cdt.build.core.internal.builder"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.1045857630" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
+								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.option.optimization.level.1314441585" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.c.optimization.level.more" valueType="enumerated"/>
+								<option defaultValue="gnu.c.debugging.level.none" id="gnu.c.compiler.option.debugging.level.525135174" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.812203815" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\pango-1.0"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\cairo"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\freetype2"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\glib-2.0"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\..\lib\glib-2.0\include"/>
+								</option>
+								<option id="gnu.c.compiler.option.misc.other.1495477204" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wno-pointer-sign -Wl,--exclude-all-symbols" valueType="string"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.108041976" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="__USE_MINGW_ANSI_STDIO=1"/>
+									<listOptionValue builtIn="false" value="WIN32"/>
+								</option>
+								<option id="gnu.c.compiler.option.dialect.std.623025660" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.805083644" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.85267915" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
+								<option id="gnu.cpp.compiler.option.optimization.level.2054146662" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.more" valueType="enumerated"/>
+								<option defaultValue="gnu.cpp.compiler.debugging.level.none" id="gnu.cpp.compiler.option.debugging.level.589326473" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.576381636" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="."/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\pango-1.0"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\cairo"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\freetype2"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\glib-2.0"/>
+									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\..\lib\glib-2.0\include"/>
+								</option>
+								<option id="gnu.cpp.compiler.option.other.other.1576778769" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wl,--exclude-all-symbols" valueType="string"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.2042758418" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="__USE_MINGW_ANSI_STDIO=1"/>
+									<listOptionValue builtIn="false" value="WIN32"/>
+								</option>
+								<option id="gnu.cpp.compiler.option.dialect.std.153137176" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1558292836" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.227167068" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1546229878" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.178504873" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
+									<listOptionValue builtIn="false" value="Iphlpapi"/>
+									<listOptionValue builtIn="false" value="curl"/>
+									<listOptionValue builtIn="false" value="cairo"/>
+									<listOptionValue builtIn="false" value="cairo-gobject"/>
+									<listOptionValue builtIn="false" value="pangocairo-1.0"/>
+									<listOptionValue builtIn="false" value="gmodule-2.0"/>
+									<listOptionValue builtIn="false" value="gio-2.0"/>
+									<listOptionValue builtIn="false" value="imm32"/>
+									<listOptionValue builtIn="false" value="png16"/>
+									<listOptionValue builtIn="false" value="pangowin32-1.0"/>
+									<listOptionValue builtIn="false" value="pixman-1"/>
+									<listOptionValue builtIn="false" value="pangoft2-1.0"/>
+									<listOptionValue builtIn="false" value="shlwapi"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="dnsapi"/>
+									<listOptionValue builtIn="false" value="usp10"/>
+									<listOptionValue builtIn="false" value="kernel32"/>
+									<listOptionValue builtIn="false" value="harfbuzz"/>
+									<listOptionValue builtIn="false" value="freetype"/>
+									<listOptionValue builtIn="false" value="glib-2.0"/>
+									<listOptionValue builtIn="false" value="pango-1.0"/>
+									<listOptionValue builtIn="false" value="gobject-2.0"/>
+									<listOptionValue builtIn="false" value="glib-2.0"/>
+									<listOptionValue builtIn="false" value="fontconfig"/>
+									<listOptionValue builtIn="false" value="freetype"/>
+									<listOptionValue builtIn="false" value="jpeg"/>
+									<listOptionValue builtIn="false" value="iconv"/>
+									<listOptionValue builtIn="false" value="expat"/>
+									<listOptionValue builtIn="false" value="intl"/>
+									<listOptionValue builtIn="false" value="ole32"/>
+									<listOptionValue builtIn="false" value="winmm"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="bz2"/>
+									<listOptionValue builtIn="false" value="pcre"/>
+									<listOptionValue builtIn="false" value="ffi"/>
+									<listOptionValue builtIn="false" value="iconv"/>
+									<listOptionValue builtIn="false" value="ws2_32"/>
+									<listOptionValue builtIn="false" value="gdi32"/>
+									<listOptionValue builtIn="false" value="crypt32"/>
+									<listOptionValue builtIn="false" value="idn"/>
+									<listOptionValue builtIn="false" value="intl"/>
+									<listOptionValue builtIn="false" value="iconv"/>
+									<listOptionValue builtIn="false" value="ssh2"/>
+									<listOptionValue builtIn="false" value="ssh2"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="ws2_32"/>
+									<listOptionValue builtIn="false" value="intl"/>
+									<listOptionValue builtIn="false" value="iconv"/>
+									<listOptionValue builtIn="false" value="nettle"/>
+									<listOptionValue builtIn="false" value="gnutls"/>
+									<listOptionValue builtIn="false" value="hogweed"/>
+									<listOptionValue builtIn="false" value="nettle"/>
+									<listOptionValue builtIn="false" value="idn"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="ws2_32"/>
+									<listOptionValue builtIn="false" value="crypt32"/>
+									<listOptionValue builtIn="false" value="gmp"/>
+									<listOptionValue builtIn="false" value="intl"/>
+									<listOptionValue builtIn="false" value="iconv"/>
+									<listOptionValue builtIn="false" value="wldap32"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="wlanapi"/>
+									<listOptionValue builtIn="false" value="gcc"/>
+									<listOptionValue builtIn="false" value="gcrypt"/>
+									<listOptionValue builtIn="false" value="gpg-error"/>
+									<listOptionValue builtIn="false" value="gfortran"/>
+									<listOptionValue builtIn="false" value="dwmapi"/>
+									<listOptionValue builtIn="false" value="idn2"/>
+									<listOptionValue builtIn="false" value="pthread"/>
+									<listOptionValue builtIn="false" value="unistring"/>
+									<listOptionValue builtIn="false" value="ws2_32"/>
+								</option>
+								<option id="gnu.cpp.link.option.shared.765155731" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" useByScannerDiscovery="false" value="false" valueType="boolean"/>
+								<option id="gnu.cpp.link.option.flags.891626646" name="Linker flags" superClass="gnu.cpp.link.option.flags" useByScannerDiscovery="false" value="-static -Wl,--dynamicbase,--high-entropy-va,--nxcompat -mwindows -municode" valueType="string"/>
+								<option id="gnu.cpp.link.option.implname.1410387378" name="Import Library name (-Wl,--out-implib=)" superClass="gnu.cpp.link.option.implname" useByScannerDiscovery="false" value="&quot;${workspace_loc:/${ProjName}/${ConfigName}}/libsemper.a&quot;" valueType="string"/>
+								<option id="gnu.cpp.link.option.strip.1239417545" name="Omit all symbol information (-s)" superClass="gnu.cpp.link.option.strip" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1700036327" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.839394937" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
+							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.2133549660" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.46705204" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003" moduleId="org.eclipse.cdt.core.settings" name="Debug_Linux">
+				<externalSettings>
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/Semper"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/Semper/Debug"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="Semper" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.GNU_ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" errorParsers="org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003" name="Debug_Linux" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.enablement=null,org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.image=null,org.eclipse.cdt.docker.launcher.containerbuild.property.connection=null" parent="cdt.managedbuild.config.gnu.cross.exe.debug" prebuildStep="">
+					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003." name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.base.383592538" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.GNU_ELF" id="cdt.managedbuild.target.gnu.platform.base.1210647296" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
+							<builder buildPath="${workspace_loc:/Semper}/Debug_Linux" id="org.eclipse.cdt.build.core.internal.builder.948345300" keepEnvironmentInBuildfile="false" name="CDT Internal Builder" parallelBuildOn="true" parallelizationNumber="unlimited" superClass="org.eclipse.cdt.build.core.internal.builder"/>
+							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1216846713" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.817505609" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.728196411" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="."/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
+									<listOptionValue builtIn="false" value="/usr/include/pango-1.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/cairo"/>
+									<listOptionValue builtIn="false" value="/usr/include/freetype2"/>
+									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/../lib/glib-2.0/include"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.65105923" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG"/>
+									<listOptionValue builtIn="false" value="__USE_LARGEFILE64"/>
+									<listOptionValue builtIn="false" value="LUA_USE_POSIX"/>
+									<listOptionValue builtIn="false" value="__linux__"/>
+								</option>
+								<option id="gnu.cpp.compiler.option.optimization.level.1319850075" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+								<option defaultValue="gnu.cpp.compiler.debugging.level.max" id="gnu.cpp.compiler.option.debugging.level.382653045" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option id="gnu.cpp.compiler.option.pthread.14200621" name="Support for pthread (-pthread)" superClass="gnu.cpp.compiler.option.pthread" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+								<option id="gnu.cpp.compiler.option.other.other.783911724" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wno-pointer-sign" valueType="string"/>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1604912369" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.1284079524" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1418100282" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="."/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/include}&quot;"/>
+									<listOptionValue builtIn="false" value="/usr/include/pango-1.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/cairo"/>
+									<listOptionValue builtIn="false" value="/usr/include/freetype2"/>
+									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/../lib/glib-2.0/include"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.2084941326" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG"/>
+									<listOptionValue builtIn="false" value="__USE_LARGEFILE64"/>
+									<listOptionValue builtIn="false" value="LUA_USE_POSIX"/>
+									<listOptionValue builtIn="false" value="__linux__"/>
+								</option>
+								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.option.optimization.level.1558574925" name="Optimization Level" superClass="gnu.c.compiler.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option defaultValue="gnu.c.debugging.level.max" id="gnu.c.compiler.option.debugging.level.1865300859" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option id="gnu.c.compiler.option.pthread.1700329947" name="Support for pthread (-pthread)" superClass="gnu.c.compiler.option.pthread" useByScannerDiscovery="false" value="true" valueType="boolean"/>
+								<option id="gnu.c.compiler.option.misc.other.271232857" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wno-pointer-sign" valueType="string"/>
+								<option id="gnu.c.compiler.option.dialect.std.1407254706" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.878685192" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.linker.base.1233811616" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.853658632" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.1846222380" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
+									<listOptionValue builtIn="false" value="curl"/>
+									<listOptionValue builtIn="false" value="Xinerama"/>
+									<listOptionValue builtIn="false" value="rt"/>
+									<listOptionValue builtIn="false" value="Xext"/>
+									<listOptionValue builtIn="false" value="dl"/>
+									<listOptionValue builtIn="false" value="X11"/>
+									<listOptionValue builtIn="false" value="cairo"/>
+									<listOptionValue builtIn="false" value="cairo-gobject"/>
+									<listOptionValue builtIn="false" value="pangocairo-1.0"/>
+									<listOptionValue builtIn="false" value="gmodule-2.0"/>
+									<listOptionValue builtIn="false" value="gio-2.0"/>
+									<listOptionValue builtIn="false" value="png16"/>
+									<listOptionValue builtIn="false" value="pixman-1"/>
+									<listOptionValue builtIn="false" value="pangoft2-1.0"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="harfbuzz"/>
+									<listOptionValue builtIn="false" value="freetype"/>
+									<listOptionValue builtIn="false" value="glib-2.0"/>
+									<listOptionValue builtIn="false" value="pango-1.0"/>
+									<listOptionValue builtIn="false" value="gobject-2.0"/>
+									<listOptionValue builtIn="false" value="glib-2.0"/>
+									<listOptionValue builtIn="false" value="fontconfig"/>
+									<listOptionValue builtIn="false" value="freetype"/>
+									<listOptionValue builtIn="false" value="jpeg"/>
+									<listOptionValue builtIn="false" value="expat"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="bz2"/>
+									<listOptionValue builtIn="false" value="pcre"/>
+									<listOptionValue builtIn="false" value="ffi"/>
+									<listOptionValue builtIn="false" value="idn"/>
+									<listOptionValue builtIn="false" value="ssh2"/>
+									<listOptionValue builtIn="false" value="ssh2"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="nettle"/>
+									<listOptionValue builtIn="false" value="gnutls"/>
+									<listOptionValue builtIn="false" value="hogweed"/>
+									<listOptionValue builtIn="false" value="nettle"/>
+									<listOptionValue builtIn="false" value="idn"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="gmp"/>
+									<listOptionValue builtIn="false" value="z"/>
+									<listOptionValue builtIn="false" value="gcc"/>
+									<listOptionValue builtIn="false" value="gcrypt"/>
+									<listOptionValue builtIn="false" value="gpg-error"/>
+									<listOptionValue builtIn="false" value="gfortran"/>
+									<listOptionValue builtIn="false" value="idn2"/>
+									<listOptionValue builtIn="false" value="pthread"/>
+									<listOptionValue builtIn="false" value="unistring"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.476029241" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.base.1874177303" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.781946032" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+	</storageModule>
+	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+		<project id="Semper.cdt.managedbuild.target.gnu.cross.exe.1039245848" name="Executable" projectType="cdt.managedbuild.target.gnu.cross.exe"/>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Multiple configurations">
+			<resource resourceType="PROJECT" workspacePath="/Semper"/>
+		</configuration>
+		<configuration configurationName="Debug_Linux"/>
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/Semper"/>
+		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/Semper"/>
+		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.830555152;cdt.managedbuild.config.gnu.cross.exe.release.830555152.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.85267915;cdt.managedbuild.tool.gnu.cpp.compiler.input.1558292836">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003;cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1173465114;cdt.managedbuild.tool.gnu.cpp.compiler.input.1651830685">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.42106611;cdt.managedbuild.config.gnu.cross.exe.debug.42106611.;cdt.managedbuild.tool.gnu.cross.c.compiler.2127128005;cdt.managedbuild.tool.gnu.c.compiler.input.703629536">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003;cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003.;cdt.managedbuild.tool.gnu.cpp.compiler.base.817505609;cdt.managedbuild.tool.gnu.cpp.compiler.input.1604912369">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.release.830555152;cdt.managedbuild.config.gnu.cross.exe.release.830555152.;cdt.managedbuild.tool.gnu.cross.c.compiler.1045857630;cdt.managedbuild.tool.gnu.c.compiler.input.805083644">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003;cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003.;cdt.managedbuild.tool.gnu.cross.c.compiler.939371320;cdt.managedbuild.tool.gnu.c.compiler.input.606269662">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003;cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003.;cdt.managedbuild.tool.gnu.c.compiler.base.1284079524;cdt.managedbuild.tool.gnu.c.compiler.input.878685192">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.exe.debug.42106611;cdt.managedbuild.config.gnu.cross.exe.debug.42106611.;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1509237157;cdt.managedbuild.tool.gnu.cpp.compiler.input.981417901">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+	</storageModule>
 </cproject>

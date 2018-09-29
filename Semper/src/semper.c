@@ -41,7 +41,7 @@ WINBASEAPI WINBOOL WINAPI QueryFullProcessImageNameW(HANDLE hProcess, DWORD dwFl
 extern void _cairo_mutex_initialize (void);
 #endif
 #endif
-extern void crosswin_update_z(crosswin *c);
+
 
 typedef struct
 {

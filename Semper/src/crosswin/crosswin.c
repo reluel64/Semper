@@ -28,7 +28,7 @@ void crosswin_init(crosswin* c)
     list_entry_init(&c->windows);
     c->handle_mouse = crosswin_mouse_handle;
 #ifdef WIN32
-    win32_init_class();
+    win32_init_class(c);
 #elif __linux__
     xlib_init_display(c);
 #endif
@@ -94,21 +94,11 @@ static int crosswin_sort_callback(list_entry *le1, list_entry *le2, void *pv)
     {
         if((cw1 == focus))
         {
-            if(cw1->zorder<crosswin_normal)
-                return(-1);
-            else if(cw1->zorder>crosswin_normal)
-                return(1);
-            else
-                return(1);
+            return(1);
         }
         else if((cw2 == focus))
         {
-            if(cw2->zorder<crosswin_normal)
-                return(1);
-            else if(cw2->zorder>crosswin_normal)
-                return(-1);
-            else
-                return(-1);
+            return(-1);
         }
     }
 
@@ -144,8 +134,7 @@ static void crosswin_restack_window(crosswin_window *cw)
         }
     }
 
-    /* restore its position or
-     * the dummy position
+    /* restore its position or the dummy position
      * (in case of desktop or bottom)
      * */
 
@@ -163,7 +152,7 @@ static int crosswin_restack(crosswin *c)
 
     if(c->show_desktop)
     {
-        event_push(c->eq,(event_handler)crosswin_restack,c,1000,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
+        event_push(c->eq,(event_handler)crosswin_restack,c,10,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
     }
     else
     {
@@ -180,25 +169,31 @@ static int crosswin_restack(crosswin *c)
     merge_sort(&c->windows, crosswin_sort_callback, (void*)c->top_win_id);
 
     /*Special case for desktop and bottom windows*/
-    if(c->show_desktop)
+#if defined (WIN32)
+
+    if(!c->show_desktop)
     {
+        list_enum_part_backward(cw,&c->windows,current)
+                {
+            if(cw->zorder == crosswin_bottom)
+                crosswin_restack_window(cw);
+                }
         list_enum_part_backward(cw,&c->windows,current)
         {
             if(cw->zorder == crosswin_desktop)
+            {
                 crosswin_restack_window(cw);
-        }
-
-        list_enum_part_backward(cw,&c->windows,current)
-        {
-            if(cw->zorder == crosswin_bottom)
-                crosswin_restack_window(cw);
+            }
         }
     }
-
+#endif
     /*Do a normal restack if c->show_desktop == 0 or just restack windows that are not desktop or bottom*/
+
     list_enum_part(cw,&c->windows,current)
     {
-        if(!c->show_desktop||(cw->zorder >= crosswin_normal))
+#if defined (WIN32)
+        if(c->show_desktop||(cw->zorder >= crosswin_normal))
+#endif
             crosswin_restack_window(cw);
     }
 

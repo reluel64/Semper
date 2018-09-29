@@ -1,6 +1,6 @@
 #pragma once
 #include <crosswin/crosswin.h>
-void win32_init_class();
+void win32_init_class(crosswin *c);
 crosswin_window* win32_init_window();
 void win32_click_through(crosswin_window* w);
 void win32_draw(crosswin_window* w);

@@ -107,7 +107,10 @@ typedef struct
     crosswin_monitor *pm;            //parent monitor (used for keep on screen)
     size_t mon_cnt;
     void *cd;
-#ifdef __linux__
+#if defined(WIN32)
+    void *show_desktop_window;
+#endif
+#if defined(__linux__)
     void *display;
     void *disp_fd;
     XVisualInfo vinfo;

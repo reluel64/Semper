@@ -10,7 +10,7 @@
 #include <event.h>
 #include <dwmapi.h>
 #include <mem.h>
-
+static void win32_show_desktop_window(crosswin_window* w);
 static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, WPARAM wpm, LPARAM lpm)
 {
     crosswin_window* w = (crosswin_window*)GetWindowLongPtrA(win, GWLP_USERDATA);
@@ -236,7 +236,7 @@ void win32_check_desktop(crosswin *c)
     }
 }
 
-void win32_init_class(void)
+void win32_init_class(crosswin *c)
 {
 
     WNDCLASSEXA wclass = { 0 };
@@ -247,6 +247,8 @@ void win32_init_class(void)
     wclass.hCursor = LoadImageA(NULL, MAKEINTRESOURCE(32512), IMAGE_CURSOR, 0, 0, LR_SHARED);
     wclass.cbSize = sizeof(WNDCLASSEXW);
     RegisterClassExA(&wclass);
+    c->show_desktop_window=zmalloc(sizeof(crosswin_window));
+    win32_show_desktop_window(c->show_desktop_window);
     SetWinEventHook(EVENT_SYSTEM_FOREGROUND ,EVENT_SYSTEM_FOREGROUND,NULL,win32_event_proc,0,0,WINEVENT_SKIPOWNPROCESS|WINEVENT_OUTOFCONTEXT);
 }
 
@@ -255,6 +257,13 @@ void win32_init_window(crosswin_window* w)
     size_t no_peek = 1;
     w->window = CreateWindowExA(WS_EX_TOOLWINDOW | WS_EX_LAYERED, "SemperSurface", "Surface", WS_POPUP, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
     SetWindowLongPtrA(w->window, GWLP_USERDATA, (LONG_PTR)w);
+    DwmSetWindowAttribute(w->window, DWMWA_EXCLUDED_FROM_PEEK, &no_peek, sizeof(no_peek));
+}
+
+static void win32_show_desktop_window(crosswin_window* w)
+{
+    size_t no_peek = 1;
+    w->window = CreateWindowExA(WS_EX_TOOLWINDOW | WS_EX_LAYERED, "SemperSurface", "ShowDesktop", WS_POPUP|WS_DISABLED, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
     DwmSetWindowAttribute(w->window, DWMWA_EXCLUDED_FROM_PEEK, &no_peek, sizeof(no_peek));
 }
 
