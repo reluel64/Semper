@@ -227,14 +227,14 @@ void win32_check_desktop(crosswin *c)
         win =  FindWindowExA(NULL,def_shell,"SemperSurface","ShowDesktop");
     }
 
-    if(((!win && (c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP))||(win && !(c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP))))
+    if(((!win && (c->flags&CROSSWIN_SHOW_DESKTOP))||(win && !(c->flags&CROSSWIN_SHOW_DESKTOP))))
     {
         c->flags|=CROSSWIN_UPDATE_ZORDER;
 
-        if(c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP)
-            c->flags&=~CROSSWIN_UPDATE_SHOW_DESKTOP;
+        if(c->flags&CROSSWIN_SHOW_DESKTOP)
+            c->flags&=~CROSSWIN_SHOW_DESKTOP;
         else
-            c->flags|=CROSSWIN_UPDATE_SHOW_DESKTOP;
+            c->flags|=CROSSWIN_SHOW_DESKTOP;
 
     }
 }

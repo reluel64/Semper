@@ -18,8 +18,8 @@
 #include <event.h>
 #define CROSSWIN_UPDATE_MONITORS     (1<<0)
 #define CROSSWIN_UPDATE_ZORDER       (1<<1)
-#define CROSSWIN_UPDATE_SHOW_DESKTOP (1<<2)
-#define CROSSWIN_UPDATE_FIX_ZORDER   (1<<3)
+#define CROSSWIN_SHOW_DESKTOP (1<<2)
+#define CROSSWIN_FIX_ZORDER   (1<<3)
 typedef struct _crosswin_window crosswin_window;
 
 typedef enum

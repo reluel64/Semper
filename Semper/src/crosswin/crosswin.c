@@ -111,12 +111,12 @@ static void crosswin_restack_window(crosswin_window *cw)
 
 
     /*Raise the window*/
-    if((c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP)||normal_in_focus)
+    if((c->flags&CROSSWIN_SHOW_DESKTOP)||normal_in_focus)
     {
         cw->zorder = crosswin_top;
         crosswin_update_zorder(cw);
 
-        if((c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP) && (op == crosswin_bottom || op == crosswin_desktop))
+        if((c->flags&CROSSWIN_SHOW_DESKTOP) && (op == crosswin_bottom || op == crosswin_desktop))
         {
             cw->zorder = crosswin_normal;
         }
@@ -141,15 +141,7 @@ static int crosswin_restack(crosswin *c)
     crosswin_window *cw = NULL;
     crosswin_check_desktop(c);
 
-
-    // if(c->show_desktop)
-    {
-        event_push(c->eq,(event_handler)crosswin_restack,c,250,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
-    }
-    //  else
-    // {
-    //      event_push(c->eq,(event_handler)crosswin_restack,c,250,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
-    //  }
+    event_push(c->eq,(event_handler)crosswin_restack,c,250,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
 
     if(!(c->flags & (CROSSWIN_UPDATE_ZORDER)))
     {
@@ -163,7 +155,7 @@ static int crosswin_restack(crosswin *c)
     /*Special case for desktop and bottom windows*/
 #if defined (WIN32)
 
-    if(c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP)
+    if(c->flags&CROSSWIN_SHOW_DESKTOP)
     {
         list_enum_part_backward(cw,&c->windows,current)
         {
@@ -188,7 +180,7 @@ static int crosswin_restack(crosswin *c)
     list_enum_part(cw,&c->windows,current)
     {
 #if defined (WIN32)
-        if((c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP)||(cw->zorder >= crosswin_normal))
+        if((c->flags&CROSSWIN_SHOW_DESKTOP)||(cw->zorder >= crosswin_normal))
 #endif
             crosswin_restack_window(cw);
     }
