@@ -97,8 +97,7 @@ typedef struct
 
 typedef struct
 {
-    unsigned char update;
-    unsigned char show_desktop;
+    unsigned char flags;
     event_queue *eq;
     size_t top_win_id;
     mouse_data md;
@@ -157,7 +156,7 @@ typedef struct _crosswin_window
 
 } crosswin_window;
 
-void crosswin_update_done(crosswin *c, unsigned char flag);
+
 void crosswin_init(crosswin* c);
 void crosswin_message_dispatch(crosswin *c);
 void crosswin_set_window_data(crosswin_window* w, void* pv);

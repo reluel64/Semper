@@ -101,7 +101,7 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
         {
             WINDOWPOS *wp=(WINDOWPOS*)lpm;
             wp->flags|=SWP_NOZORDER|SWP_NOOWNERZORDER;
-            c->update |=CROSSWIN_UPDATE_ZORDER;
+            c->flags |=CROSSWIN_UPDATE_ZORDER;
             return(0);
         }
         case WM_CHAR:
@@ -145,7 +145,7 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
 
         case WM_DISPLAYCHANGE:
         {
-            c->update |= CROSSWIN_UPDATE_MONITORS;
+            c->flags |= CROSSWIN_UPDATE_MONITORS;
             event_wake(c->eq);
             break;
         }
@@ -188,7 +188,7 @@ static void win32_event_proc(HWINEVENTHOOK evh, long unsigned int evt,HWND win,l
 
     if(c)
     {
-        c->update|=CROSSWIN_UPDATE_ZORDER;
+        c->flags|=CROSSWIN_UPDATE_ZORDER;
     }
 }
 
@@ -227,10 +227,15 @@ void win32_check_desktop(crosswin *c)
         win =  FindWindowExA(NULL,def_shell,"SemperSurface","ShowDesktop");
     }
 
-    if(((!win && c->show_desktop)||(win && !c->show_desktop)))
+    if(((!win && (c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP))||(win && !(c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP))))
     {
-        c->update|=CROSSWIN_UPDATE_ZORDER;
-        c->show_desktop=!c->show_desktop;
+        c->flags|=CROSSWIN_UPDATE_ZORDER;
+
+        if(c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP)
+            c->flags&=~CROSSWIN_UPDATE_SHOW_DESKTOP;
+        else
+            c->flags|=CROSSWIN_UPDATE_SHOW_DESKTOP;
+
     }
 }
 

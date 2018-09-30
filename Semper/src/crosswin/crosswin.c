@@ -33,16 +33,16 @@ void crosswin_init(crosswin* c)
     xlib_init_display(c);
 #endif
 
-    c->update = CROSSWIN_UPDATE_MONITORS;
+    c->flags = CROSSWIN_UPDATE_MONITORS;
     crosswin_update(c);
 
-    c->update = CROSSWIN_UPDATE_ZORDER;
+    c->flags = CROSSWIN_UPDATE_ZORDER;
 }
 
 
 int crosswin_update(crosswin* c)
 {
-    unsigned char up_status = c->update;
+    unsigned char up_status = c->flags;
     crosswin_monitor *lcm = NULL;
     size_t mon_cnt = 0;
 
@@ -58,22 +58,14 @@ int crosswin_update(crosswin* c)
         }
     }
 
-    if(up_status&(CROSSWIN_UPDATE_ZORDER|CROSSWIN_UPDATE_SHOW_DESKTOP))
+    if(up_status&(CROSSWIN_UPDATE_ZORDER))
     {
-
         crosswin_restack(c);
     }
 
     return(up_status);
 }
 
-void crosswin_update_done(crosswin *c, unsigned char flag)
-{
-    if(c)
-    {
-        c->update&=~flag;
-    }
-}
 
 static void crosswin_check_desktop(crosswin *c)
 {
@@ -119,12 +111,12 @@ static void crosswin_restack_window(crosswin_window *cw)
 
 
     /*Raise the window*/
-    if(c->show_desktop||normal_in_focus)
+    if((c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP)||normal_in_focus)
     {
         cw->zorder = crosswin_top;
         crosswin_update_zorder(cw);
 
-        if(c->show_desktop && (op == crosswin_bottom || op == crosswin_desktop))
+        if((c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP) && (op == crosswin_bottom || op == crosswin_desktop))
         {
             cw->zorder = crosswin_normal;
         }
@@ -150,16 +142,16 @@ static int crosswin_restack(crosswin *c)
     crosswin_check_desktop(c);
 
 
-    if(c->show_desktop)
-    {
-        event_push(c->eq,(event_handler)crosswin_restack,c,10,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
-    }
-    else
+    // if(c->show_desktop)
     {
         event_push(c->eq,(event_handler)crosswin_restack,c,250,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
     }
+    //  else
+    // {
+    //      event_push(c->eq,(event_handler)crosswin_restack,c,250,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
+    //  }
 
-    if(!(c->update & (CROSSWIN_UPDATE_ZORDER)))
+    if(!(c->flags & (CROSSWIN_UPDATE_ZORDER)))
     {
         c->top_win_id = 0;
         return(-1);
@@ -171,13 +163,17 @@ static int crosswin_restack(crosswin *c)
     /*Special case for desktop and bottom windows*/
 #if defined (WIN32)
 
-    if(!c->show_desktop)
+    if(c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP)
     {
         list_enum_part_backward(cw,&c->windows,current)
-                {
+        {
             if(cw->zorder == crosswin_bottom)
+            {
                 crosswin_restack_window(cw);
-                }
+            }
+        }
+
+
         list_enum_part_backward(cw,&c->windows,current)
         {
             if(cw->zorder == crosswin_desktop)
@@ -192,13 +188,14 @@ static int crosswin_restack(crosswin *c)
     list_enum_part(cw,&c->windows,current)
     {
 #if defined (WIN32)
-        if(c->show_desktop||(cw->zorder >= crosswin_normal))
+        if((c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP)||(cw->zorder >= crosswin_normal))
 #endif
             crosswin_restack_window(cw);
     }
 
     c->top_win_id = 0;
-    crosswin_update_done(c,(CROSSWIN_UPDATE_ZORDER|CROSSWIN_UPDATE_SHOW_DESKTOP));
+    c->flags&=~CROSSWIN_UPDATE_ZORDER;
+
     return(0);
 }
 
@@ -542,7 +539,7 @@ void crosswin_set_zorder(crosswin_window* w, unsigned char zorder)
         if(w->zorder != zorder)
         {
             w->zorder = zorder;
-            w->c->update|=CROSSWIN_UPDATE_ZORDER; /*We are restacking stuff*/
+            w->c->flags|=CROSSWIN_UPDATE_ZORDER; /*We are restacking stuff*/
             crosswin_update_zorder(w);
         }
     }

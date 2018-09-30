@@ -1,4 +1,4 @@
-#ifdef __linux__
+#if defined(__linux__)
 #include <stdio.h>
 #include <SDK/semper_api.h>
 #include <stdlib.h>

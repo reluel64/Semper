@@ -435,7 +435,7 @@ int xlib_message_dispatch(crosswin *c)
             }
             case Expose:
                 xlib_set_position(w);
-                c->update = CROSSWIN_UPDATE_MONITORS;
+                c->flags = CROSSWIN_UPDATE_MONITORS;
                 break;
             case ReparentNotify:
             case ConfigureNotify:
@@ -599,7 +599,7 @@ void xlib_set_zpos(crosswin_window *w)
             ev.xclient.type=ClientMessage;
             ev.xclient.window = (Window)w->window;
             ev.xclient.send_event=1;
-            ev.xclient.data.l[0] = w->c->show_desktop;
+            ev.xclient.data.l[0] = !!(w->c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP));
             ev.xclient.data.l[1] = abv;
             XSendEvent(w->c->display,DefaultRootWindow(w->c->display),0,  StructureNotifyMask|SubstructureNotifyMask   ,&ev);
         }
@@ -608,7 +608,7 @@ void xlib_set_zpos(crosswin_window *w)
         case crosswin_desktop:
         case crosswin_bottom:
             xlib_set_window_below(w);
-            if((w->c->update & CROSSWIN_UPDATE_FIX_ZORDER))
+            if((w->c->flags & CROSSWIN_UPDATE_FIX_ZORDER))
             {
                 xlib_set_window_active(w);
             }
@@ -616,7 +616,7 @@ void xlib_set_zpos(crosswin_window *w)
         case crosswin_top:
         case crosswin_topmost:
             xlib_set_window_above(w);
-            if((w->c->update & CROSSWIN_UPDATE_FIX_ZORDER))
+            if((w->c->flags & CROSSWIN_UPDATE_FIX_ZORDER))
             {
                 xlib_set_window_active(w);
             }
@@ -632,7 +632,7 @@ void xlib_check_desktop(crosswin *c)
 {
     if(xlib_fixup_zpos(c))
     {
-        c->update |= (CROSSWIN_UPDATE_ZORDER|CROSSWIN_UPDATE_FIX_ZORDER);
+        c->flags |= (CROSSWIN_UPDATE_ZORDER|CROSSWIN_UPDATE_FIX_ZORDER);
     }
     Atom type = XInternAtom(c->display, "_NET_SHOWING_DESKTOP", 1);
     Atom ret=0;
@@ -644,10 +644,13 @@ void xlib_check_desktop(crosswin *c)
     {
         if(re)
         {
-            if(((!(*re) && c->show_desktop)||((*re) && !c->show_desktop)))
+            if(((!(*re) && (c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP))||((*re) && !(c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP))))
             {
-                c->update|=CROSSWIN_UPDATE_ZORDER;
-                c->show_desktop=!c->show_desktop;
+                c->flags|=CROSSWIN_UPDATE_ZORDER;
+                if(c->flags&CROSSWIN_UPDATE_SHOW_DESKTOP)
+                           c->flags&=~CROSSWIN_UPDATE_SHOW_DESKTOP;
+                       else
+                           c->flags|=CROSSWIN_UPDATE_SHOW_DESKTOP;
             }
         }
         XFree(re);

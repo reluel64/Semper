@@ -801,8 +801,8 @@ static int semper_check_screen(control_data *cd)
         {
             command(sd,&sd->disp_change_act);
         }
+        cd->c.flags&=~CROSSWIN_UPDATE_MONITORS;
 
-        crosswin_update_done(&cd->c,CROSSWIN_UPDATE_MONITORS);
     }
 
     return(0);
