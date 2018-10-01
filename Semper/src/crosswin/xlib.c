@@ -131,7 +131,7 @@ void xlib_init_window(crosswin_window *w)
     property = XInternAtom(w->c->display, "_MOTIF_WM_HINTS", 1);
     XChangeProperty(w->c->display, (Window)w->window, property, property, 32, PropModeReplace, (unsigned char *)&hints, 5);
 
-    XSync(w->c->display,0);
+
     type =  XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE",1);
     value = XInternAtom(w->c->display, "_NET_WM_WINDOW_TYPE_UTILITY", 1);
 
@@ -166,6 +166,7 @@ int xlib_set_opacity(crosswin_window *w)
         cairo_paint(cr);
         cairo_surface_flush(w->xlib_surface);
         cairo_destroy(cr); //destroy the context
+        XSync(w->c->display,0);
         XFlush(w->c->display);
     }
     return(0);
@@ -341,7 +342,6 @@ int xlib_message_dispatch(crosswin *c)
             case EnterNotify:
             case MotionNotify:
             {
-
                 /*Get the latest MotionNotify*/
                 while(XCheckTypedWindowEvent(w->c->display,(Window)w->window,MotionNotify,&dev))
                 {
@@ -358,9 +358,6 @@ int xlib_message_dispatch(crosswin *c)
                 w->c->handle_mouse(w);
                 break;
             }
-            case ClientMessage:
-                printf("This is a client\n");
-                break;
             case ButtonRelease:
             {
                 c->md.x = ev.xbutton.x;
@@ -402,7 +399,8 @@ int xlib_message_dispatch(crosswin *c)
                 c->md.x = ev.xbutton.x;
                 c->md.y = ev.xbutton.y;
                 c->md.state = mouse_button_state_pressed;
-
+                c->flags|=CROSSWIN_UPDATE_ZORDER;
+                event_push(c->eq,(event_handler)crosswin_update,c,0,EVENT_REMOVE_BY_DATA_HANDLER);
                 switch(ev.xbutton.button)
                 {
                     case Button1:
@@ -439,11 +437,13 @@ int xlib_message_dispatch(crosswin *c)
                 break;
             case ReparentNotify:
             case ConfigureNotify:
-            case FocusIn:
-            case FocusOut:
+
+                if(ev.xconfigure.send_event==0)
+                {
+                    c->flags|=CROSSWIN_UPDATE_ZORDER;
+                }
                 break;
         }
-
     }
 
     return(0);
@@ -526,7 +526,7 @@ static int xlib_fixup_zpos(crosswin *c)
     unsigned long item_ret=0;
     unsigned long bret=0;
     Window * chld=NULL;
-    XSync(c->display,0);
+
     if(XGetWindowProperty(c->display,DefaultRootWindow(c->display),type,0,10000,0,XA_WINDOW,&ret,&fmt_ret,&item_ret,&bret,(unsigned char**)&chld))
     {
         return(0);
@@ -550,7 +550,7 @@ static int xlib_fixup_zpos(crosswin *c)
     {
 
         list_enum_part(cw,&c->windows,current)
-                {
+        {
             if((Window)cw->window == chld[i])
             {
                 Window *tmp = realloc(server,sizeof(Window)*(server_cnt+1));
@@ -562,7 +562,7 @@ static int xlib_fixup_zpos(crosswin *c)
                 }
                 break;
             }
-                }
+         }
     }
 
     XFree(chld);

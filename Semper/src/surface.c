@@ -7,16 +7,17 @@
 #include <cairo/cairo.h>
 #include <crosswin/crosswin.h>
 
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
-#elif __linux__
+#else
+#if defined(__linux__)
 #include <sys/types.h>
 #include <sys/param.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/inotify.h>
 #endif
-
+#endif
 #include <math.h>
 #include <semper.h>
 #include <objects/object.h>
@@ -968,10 +969,10 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
         memcpy(&tsd->sp, sp, sizeof(surface_paths));
     }
 
-    surface_modified(tsd);                                                   // get the initial timestamp
+    surface_modified(tsd);  /* get the initial timestamp*/
 
     /* The reason to use a skeleton for the ini file and not the actual ini is flexibility and performance
-     * A tree structure is easier to maintain than an acutal buffer, and is easier to modify
+     * A tree structure is easier to maintain than a buffer, and is easier to modify
      */
 
     shd.pv = tsd;
@@ -982,12 +983,12 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
     }
     else
     {
-        ini_parser_parse_file(sp->file_path, surface_create_skeleton_handler, &shd); // we will create the skeleton
+        ini_parser_parse_file(sp->file_path, surface_create_skeleton_handler, &shd); /* we will create the skeleton*/
     }
 
-    sfree((void**)&shd.kv);                                                 // free a small yet important to free residue
+    sfree((void**)&shd.kv);                                                 /* free a small yet important to free residue*/
 
-    tsd->snp = 1;                                                          // give the reset routine a chance to read X and Y from the skeleton
+    tsd->snp = 1;                                                          /* give the reset routine a chance to read X and Y from the skeleton*/
     tsd->spm = skeleton_get_section(&tsd->skhead, "Surface");
 
     if(sp)
@@ -1002,9 +1003,11 @@ void surface_fade(surface_data* sd)
 {
     unsigned char opacity = 0;
     unsigned char visible = 0;
-
+    unsigned char crt_opacity = 0;
     crosswin_get_visible(sd->sw, &visible);
     crosswin_get_opacity(sd->sw, &opacity);
+
+    crt_opacity=opacity;
 
     if(opacity != sd->ro)
     {

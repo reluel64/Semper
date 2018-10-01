@@ -35,8 +35,7 @@ void crosswin_init(crosswin* c)
 
     c->flags = CROSSWIN_UPDATE_MONITORS;
     crosswin_update(c);
-
-    c->flags = CROSSWIN_UPDATE_ZORDER;
+    c->flags = CROSSWIN_UPDATE_ZORDER|CROSSWIN_FIX_ZORDER; /*assume we are wrong right from the start :-)*/
 }
 
 
@@ -442,7 +441,7 @@ void crosswin_set_kbd_handler(crosswin_window *w, int(*kbd_func)(unsigned  int k
 
 void crosswin_set_visible(crosswin_window* w,unsigned char visible)
 {
-    if(w)
+    if(w&&w->visible!=visible)
     {
         w->visible = visible;
 #ifdef WIN32

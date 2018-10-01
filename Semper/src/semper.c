@@ -810,7 +810,7 @@ static int semper_check_screen(control_data *cd)
 
 static size_t semper_main_wait_fcn(void *pv, size_t timeout)
 {
-    unsigned int status = 0;
+
     semper_event_wait_data *sewd = pv;
     struct timespec t2 = {0};
     size_t ms = 0;
@@ -821,7 +821,8 @@ static size_t semper_main_wait_fcn(void *pv, size_t timeout)
     }
 
     sewd->process_loop = 0;
-#ifdef WIN32
+#if defined (WIN32)
+    unsigned int status = 0;
     status = MsgWaitForMultipleObjectsEx(1, &sewd->event_wait, timeout, QS_ALLEVENTS, MWMO_INPUTAVAILABLE|MWMO_ALERTABLE);
 
     if(status == WAIT_OBJECT_0 || status == WAIT_TIMEOUT)
@@ -833,7 +834,8 @@ static size_t semper_main_wait_fcn(void *pv, size_t timeout)
         sewd->process_loop |= 2;
     }
 
-#elif __linux__
+#else
+#if defined(__linux__)
     struct pollfd events[2];
     memset(events, 0, sizeof(events));
     events[0].fd = (int)(size_t)sewd->event_wait;
@@ -852,7 +854,7 @@ static size_t semper_main_wait_fcn(void *pv, size_t timeout)
         sewd->process_loop |= 2;
 
 #endif
-
+#endif
     clock_gettime(CLOCK_MONOTONIC, &t2);
 
     ms = (t2.tv_nsec - sewd->t.tv_nsec) / 1000000 + (t2.tv_sec - sewd->t.tv_sec) * 1000;
@@ -915,6 +917,7 @@ int semper_main(void)
     cd->listener = semper_listener_init(cd);
     cd->c.eq=cd->eq;
     cd->c.cd = cd;
+
     semper_load_configuration(cd);
 
 #ifdef WIN32
