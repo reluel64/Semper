@@ -18,7 +18,7 @@
 #include <parameter.h>
 
 
-#define DEFER_COMMAND 0x2712 /*In the past this value meant something but now it's just a meaningless ID*/
+#define DEFER_COMMAND 0x2712
 #define COMMAND_PARAMETER_STACK 10
 
 typedef struct
