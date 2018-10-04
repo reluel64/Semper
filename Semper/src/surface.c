@@ -28,7 +28,7 @@
 #include <skeleton.h>
 #include <xpander.h>
 #include <parameter.h>
-
+#include <mouse.h>
 
 #define SURFACE_INCLUDE_MAX_DEPTH 100
 /*Forward declarations */
@@ -1003,11 +1003,8 @@ void surface_fade(surface_data* sd)
 {
     unsigned char opacity = 0;
     unsigned char visible = 0;
-    unsigned char crt_opacity = 0;
     crosswin_get_visible(sd->sw, &visible);
     crosswin_get_opacity(sd->sw, &opacity);
-
-    crt_opacity=opacity;
 
     if(opacity != sd->ro)
     {
@@ -1036,14 +1033,13 @@ int surface_update(surface_data* sd)
     source* ts = NULL;
     object* to = NULL;
     object* o = NULL;
-    unsigned char visible = 0;
+
 
     if(sd == NULL)
     {
         return (-1);
     }
 
-    crosswin_get_visible(sd->sw, &visible);
     /*************UPDATE SOURCES************/
 
     list_enum_part_safe(s, ts, &sd->sources, current)
@@ -1085,10 +1081,9 @@ int surface_update(surface_data* sd)
     }
 
     /*Draw*/
-    if(visible)
-    {
-        crosswin_draw(sd->sw);
-    }
+
+    crosswin_draw(sd->sw);
+
 
     /*Handle commands*/
     if(sd->update_act_lock == 0)

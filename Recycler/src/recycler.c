@@ -108,7 +108,6 @@ static size_t file_size(size_t low, size_t high)
 #endif
 void init(void **spv, void *ip)
 {
-
     diag_info("Initializing Recycler with context 0x%p", ip);
     recycler *r = zmalloc(sizeof(recycler));
     r->ip = ip;

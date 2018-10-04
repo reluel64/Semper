@@ -274,7 +274,7 @@ void crosswin_get_click_through(crosswin_window* w, unsigned char *state)
 
 void crosswin_draw(crosswin_window* w)
 {
-    if(w)
+    if(w&&w->visible)
     {
         crosswin_set_position(w, w->x, w->y);
 
@@ -289,7 +289,9 @@ void crosswin_draw(crosswin_window* w)
 void crosswin_set_render(crosswin_window* w, void (*render)(crosswin_window* pv, void* cr))
 {
     if(w)
+    {
         w->render_func = render;
+    }
 }
 
 crosswin_monitor *crosswin_get_monitor(crosswin *c, size_t index)

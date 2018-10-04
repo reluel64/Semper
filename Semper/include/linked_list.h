@@ -3,6 +3,7 @@
 #define offsetof(STRUCT, MEMBER) ((size_t) & ((STRUCT*)0)->MEMBER)
 #define element_of(current, type, member) ((type*)((char*)current - offsetof(type, member)))
 
+
 typedef struct _list_entry
 {
     struct _list_entry *next, *prev;
