@@ -223,7 +223,7 @@ int line_update(object* o)
         lv->value = bn.val;
         list_entry_init(&lv->current);
         linked_list_add(&lv->current, &ld->values);
-        lv = element_of(ld->values.prev, line_value, current);
+        lv = element_of(ld->values.prev, lv, current);
         linked_list_remove(&lv->current);
         sfree((void**)&lv);
     }

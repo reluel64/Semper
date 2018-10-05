@@ -190,14 +190,14 @@ int histogram_update(object* o)
 
         if(!linked_list_empty(&ho->val_1))
         {
-            hv1 = element_of(ho->val_1.prev, histogram_value, current);
+            hv1 = element_of(ho->val_1.prev, hv1, current);
             linked_list_remove(&hv1->current);
             sfree((void**)&hv1);
         }
 
         if(!linked_list_empty(&ho->val_1))
         {
-            hv2 = element_of(ho->val_2.prev, histogram_value, current);
+            hv2 = element_of(ho->val_2.prev, hv2, current);
             linked_list_remove(&hv2->current);
             sfree((void**)&hv2);
         }
@@ -267,8 +267,8 @@ int histogram_render(object* o, cairo_t* cr)
     }
 
     /*Render the common part*/
-    histogram_value* hv1 = element_of(ho->val_1.next, histogram_value, current);
-    histogram_value* hv2 = element_of(ho->val_2.next, histogram_value, current);
+    histogram_value* hv1 = element_of(ho->val_1.next, hv1, current);
+    histogram_value* hv2 = element_of(ho->val_2.next, hv2, current);
 
     for(size_t i = 0; i < ho->v_count; i++)
     {
@@ -315,8 +315,8 @@ int histogram_render(object* o, cairo_t* cr)
         }
 
         cairo_rectangle(cr, cx, cy, cw, ch);
-        hv1 = element_of(hv1->current.next, histogram_value, current);
-        hv2 = element_of(hv2->current.next, histogram_value, current);
+        hv1 = element_of(hv1->current.next, hv1, current);
+        hv2 = element_of(hv2->current.next, hv2, current);
     }
 
     cairo_fill(cr);
@@ -330,8 +330,8 @@ int histogram_render(object* o, cairo_t* cr)
     for(unsigned char h = 0; h < 2; h++)
     {
 
-        hv1 = element_of(ho->val_1.next, histogram_value, current);
-        hv2 = element_of(ho->val_2.next, histogram_value, current);
+        hv1 = element_of(ho->val_1.next, hv1, current);
+        hv2 = element_of(ho->val_2.next, hv2, current);
 
         for(size_t i = 0; i < ho->v_count; i++)
         {
@@ -381,8 +381,8 @@ int histogram_render(object* o, cairo_t* cr)
 
             cairo_rectangle(cr, cx, cy, cw, ch);
 
-            hv1 = element_of(hv1->current.next, histogram_value, current);
-            hv2 = element_of(hv2->current.next, histogram_value, current);
+            hv1 = element_of(hv1->current.next, hv1, current);
+            hv2 = element_of(hv2->current.next, hv2, current);
         }
 
         if((h == 0 ? px1 : px2) == NULL)

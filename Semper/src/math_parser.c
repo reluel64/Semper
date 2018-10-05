@@ -282,7 +282,7 @@ static inline void *math_peek(list_entry *head)
         return(NULL);
     }
 
-    stack_element *se = element_of(head->prev, stack_element, current);
+    stack_element *se = element_of(head->prev, se, current);
     return(se->inf);
 }
 
@@ -293,7 +293,7 @@ static inline void *math_pop(list_entry *head)
         return(NULL);
     }
 
-    stack_element *se = element_of(head->prev, stack_element, current);
+    stack_element *se = element_of(head->prev, se, current);
     void *ret = se->inf;
     linked_list_remove(&se->current);
     sfree((void**)&se);

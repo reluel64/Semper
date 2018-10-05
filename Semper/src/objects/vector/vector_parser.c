@@ -1075,7 +1075,7 @@ void vector_parser_destroy(object *o)
 
     while(v->paths.next != NULL && !linked_list_empty(&v->paths))
     {
-        vector_path_common  *vpc = element_of(v->paths.next, vector_path_common, current);
+        vector_path_common  *vpc = element_of(v->paths.next, vpc, current);
         vector_parser_destroy_item(&vpc);
     }
 }
@@ -1140,8 +1140,8 @@ static cairo_pattern_t *vector_parser_join_adapt_gradient(cairo_rectangle_t *ext
 
 static int vector_parser_sort(list_entry *l1, list_entry *l2, void *pv)
 {
-    vector_path_common *vpc1 = element_of(l1, vector_path_common, current);
-    vector_path_common *vpc2 = element_of(l2, vector_path_common, current);
+    vector_path_common *vpc1 = element_of(l1, vpc1, current);
+    vector_path_common *vpc2 = element_of(l2, vpc2, current);
     int res = 0;
 
 

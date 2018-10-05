@@ -77,8 +77,8 @@ static void crosswin_check_desktop(crosswin *c)
 
 static int crosswin_sort_callback(list_entry *le1, list_entry *le2, void *pv)
 {
-    crosswin_window *cw1 = element_of(le1, crosswin_window, current);
-    crosswin_window *cw2 = element_of(le2, crosswin_window, current);
+    crosswin_window *cw1 = element_of(le1, cw1, current);
+    crosswin_window *cw2 = element_of(le2, cw2, current);
     crosswin_window *focus = pv;
 
     if((cw1->zorder == cw2->zorder))

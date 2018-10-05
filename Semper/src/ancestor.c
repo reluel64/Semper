@@ -270,7 +270,7 @@ void *ancestor_fusion(void *r, unsigned char  *npm, unsigned char xpander_flags,
 
         if(linked_list_empty(&status_stack))
         {
-            as = element_of(status_stack.prev, ancestor_status, current); //pop the previous context
+            as = element_of(status_stack.prev, as, current); //pop the previous context
         }
 
         if(stop || linked_list_empty(&status_stack))

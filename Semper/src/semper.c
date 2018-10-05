@@ -975,6 +975,14 @@ int semper_main(void)
     return (0);
 }
 
+#undef offsetof
+#undef element_of
+#if 1
+
+#endif
+
+//#define pos(type,member) ((((char*)(&(type)->member))-((char*)type)))
+
 #ifdef WIN32
 int wmain(int argc, wchar_t *argv[])
 #elif __linux__
@@ -982,6 +990,7 @@ int main(int argc, char *argv[])
 
 #endif
 {
+
     if(argc < 2)
         return(semper_main());
 

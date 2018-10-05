@@ -30,7 +30,7 @@ typedef struct
 
 typedef struct _object object;
 
-typedef struct _object
+struct _object
 {
     list_entry bindings;
     list_entry current;
@@ -73,7 +73,7 @@ typedef struct _object
     void (*object_init_rtn)(object* o);
     void (*object_reset_rtn)(object* o);
 
-} object;
+};
 
 int object_update(object* o);
 object* object_by_name(surface_data* sd, unsigned char* on, size_t len);

@@ -544,7 +544,7 @@ static size_t webget_curl_worker_callback(char *buf, size_t size, size_t nmemb, 
             err = 1;
     }
 
-    if(ww->dwl_mode & DOWNLOAD_TO_FILE && err == 0)
+    if((ww->dwl_mode & DOWNLOAD_TO_FILE) && err == 0)
     {
         if(ww->f == NULL || fwrite(buf, size, nmemb, ww->f) != nmemb * size)
             err = 1;
@@ -591,7 +591,7 @@ static int webget_curl_download(unsigned char *link, webget_worker *ww)
     ret = (ret == 0) ? curl_easy_perform(c_state) : ret;
     ww->dwl_mode = dwl_mode_temp;
 
-    if(ww->dwl_mode & DOWNLOAD_TO_FILE && ret == 0)
+    if((ww->dwl_mode & DOWNLOAD_TO_FILE) && ret == 0)
     {
         if(ww->buf)
         {

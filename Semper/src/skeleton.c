@@ -102,7 +102,7 @@ section skeleton_first_section(section shead)
         return(NULL);
     }
 
-    internal_section* rs = element_of(lh->next, internal_section, current);
+    internal_section* rs = element_of(lh->next, rs, current);
 
     if(&rs->current == lh)
     {
@@ -126,7 +126,7 @@ section skeleton_next_section(section s, section shead)
         return (NULL);
     }
 
-    internal_section* rs = element_of(is->current.next, internal_section, current);
+    internal_section* rs = element_of(is->current.next, rs, current);
     return (rs);
 }
 
@@ -195,7 +195,7 @@ key skeleton_first_key(section s)
         return (NULL);
     }
 
-    internal_key* ik = element_of(is->keys.next, internal_key, current);
+    internal_key* ik = element_of(is->keys.next, ik, current);
 
     return (ik);
 }
@@ -215,7 +215,7 @@ key skeleton_next_key(key k, section s)
         return (NULL);
     }
 
-    internal_key* rk = element_of(ik->current.next, internal_key, current);
+    internal_key* rk = element_of(ik->current.next, ik, current);
 
     return (rk);
 }
@@ -259,17 +259,17 @@ void skeleton_remove_section(section* s)
     if(s && *s)
     {
         internal_section* is = *s;
-        sfree((void**)&is->sn);
-        list_entry* temp = NULL;
-        list_entry* pos = NULL;
 
-        list_enum_safe(pos, temp, (&is->keys))
+        internal_key* temp = NULL;
+        internal_key* pos = NULL;
+
+        list_enum_part_safe(pos, temp, (&is->keys),current)
         {
-            internal_key* k = element_of(pos, internal_key, current);
-            skeleton_key_remove((void**)&k);
-        }
 
+            skeleton_key_remove((void**)&pos);
+        }
         linked_list_remove(&is->current);
+        sfree((void**)&is->sn);
         sfree(s);
     }
 }
@@ -280,15 +280,12 @@ int skeleton_destroy(section shead)
     {
         return(-1);
     }
+    internal_section *is = NULL;
+    internal_section *tis = NULL;
 
-    list_entry* sle = shead;
-    list_entry* temp = NULL;
-    list_entry* pos = NULL;
-
-    list_enum_safe(pos, temp, sle)
+    list_enum_part_safe(is,tis,(list_entry*)shead, current)
     {
-        internal_section* sec = element_of(pos, internal_section, current);
-        skeleton_remove_section((void**)&sec);
+        skeleton_remove_section((void**)&is);
     }
 
     return (0);

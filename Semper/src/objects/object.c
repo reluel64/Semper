@@ -141,7 +141,7 @@ int object_calculate_coordinates(object* o)
     {
         if(po->current.prev != &sd->objects)
         {
-            po = element_of(po->current.prev, object, current);
+            po = element_of(po->current.prev, po, current);
 
             if(po->enabled)
             {

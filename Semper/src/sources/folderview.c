@@ -532,12 +532,12 @@ void folderview_command(void* spv, unsigned char* command)
                     {
                         if(up)
                         {
-                            fp->start = element_of(fp->start->current.prev, folderview_item, current);
+                            fp->start = element_of(fp->start->current.prev, fp->start, current);
 
                         }
                         else
                         {
-                            fp->start = element_of(fp->start->current.next, folderview_item, current);
+                            fp->start = element_of(fp->start->current.next, fp->start, current);
                         }
 
                         safe_flag_set(fp->update, UPDATE_SYNC);
@@ -631,8 +631,8 @@ void folderview_destroy(void **spv)
 static int folderview_sort_compare(list_entry *l1, list_entry *l2, void *pv)
 {
     int res = 0;
-    folderview_item *fi1 = element_of(l1, folderview_item, current);
-    folderview_item *fi2 = element_of(l2, folderview_item, current);
+    folderview_item *fi1 = element_of(l1, fi1, current);
+    folderview_item *fi2 = element_of(l2, fi2, current);
     folderview_parent *fp = pv;
 
     if(fp->stype == s_name && fi1->name && fi2->name)
@@ -859,7 +859,7 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
 
         if(linked_list_empty(&qbase) == 0)
         {
-            folderview_dir_list *fdl = element_of(qbase.prev, folderview_dir_list, current);
+            folderview_dir_list *fdl = element_of(qbase.prev, fdl, current);
             file = fdl->dir;
             linked_list_remove(&fdl->current);
             sfree((void**)&fdl);
@@ -1016,7 +1016,7 @@ static void folderview_item_child_sync(folderview_parent *fp, unsigned char flag
                 if(fi->current.next == &fp->files)
                     break;
 
-                fi = element_of(fi->current.next, folderview_item, current);
+                fi = element_of(fi->current.next, fi, current);
             }
         }
 
@@ -1096,7 +1096,7 @@ static void *folderview_collect_thread(void* vfi)
                 pthread_mutex_lock(&fp->mutex);
                 linked_list_replace(&new_head, &fp->files);
                 merge_sort(&fp->files, folderview_sort_compare, fp);
-                fp->start = element_of(fp->files.next, folderview_item, current);
+                fp->start = element_of(fp->files.next, fp->start, current);
                 folderview_item_child_sync(fp, SYNC_ICONS | SYNC_CHILDREN | SYNC_RSYNC);
                 pthread_mutex_unlock(&fp->mutex);
             }

@@ -203,7 +203,7 @@ double surface_lister_update(void* spv)
                 return(0.0);
             }
 
-            slfl = element_of(slfl->current.prev, surface_lister_file_list, current);
+            slfl = element_of(slfl->current.prev, slfl, current);
         }
 
         if(i == 0)
@@ -241,7 +241,7 @@ unsigned char *surface_lister_string(void* spv)
                 return(NULL);
             }
 
-            slfl = element_of(slfl->current.prev, surface_lister_file_list, current);
+            slfl = element_of(slfl->current.prev, slfl, current);
         }
 
         if(i == 0)
@@ -271,7 +271,7 @@ void surface_lister_command(void* spv, unsigned char* command)
                 break;
             }
 
-            slfl = element_of(slfl->current.prev, surface_lister_file_list, current);
+            slfl = element_of(slfl->current.prev, slfl, current);
         }
 
         if(i == 0)
@@ -344,7 +344,7 @@ void surface_lister_command(void* spv, unsigned char* command)
                     if(sl->current_item)
                         sl->current_item--;
 
-                    sl->start = element_of(sl->start->current.next, surface_lister_file_list, current);
+                    sl->start = element_of(sl->start->current.next, sl->start, current);
                 }
             }
             else if(strcasecmp("Down", command) == 0 && sl->items - sl->current_item > sl->child_count)
@@ -352,7 +352,7 @@ void surface_lister_command(void* spv, unsigned char* command)
                 if(sl->start->current.prev != &sl->file_list)
                 {
                     sl->current_item++;
-                    sl->start = element_of(sl->start->current.prev, surface_lister_file_list, current);
+                    sl->start = element_of(sl->start->current.prev, sl->start, current);
                 }
             }
         }

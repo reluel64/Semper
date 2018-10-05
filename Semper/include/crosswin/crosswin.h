@@ -117,7 +117,7 @@ typedef struct
 #endif
 } crosswin;
 
-typedef struct _crosswin_window
+struct _crosswin_window
 {
     crosswin* c;
     list_entry current;
@@ -154,7 +154,7 @@ typedef struct _crosswin_window
 
 #endif
 
-} crosswin_window;
+};
 
 
 void crosswin_init(crosswin* c);

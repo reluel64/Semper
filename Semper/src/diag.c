@@ -246,7 +246,7 @@ SEMPER_API int diag_log(unsigned char lvl, char *fmt, ...)
     {
         if(linked_list_empty(&ds->mem_log) == 0)
         {
-            diag_mem_log *l = element_of(ds->mem_log.prev, diag_mem_log, current);
+            diag_mem_log *l = element_of(ds->mem_log.prev, l, current);
             linked_list_remove(&l->current);
             sfree((void**)&l->log_buf);
             sfree((void**)&l);

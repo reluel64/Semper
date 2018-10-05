@@ -177,7 +177,7 @@ static double source_average_update(source *s, double value)
     }
     else
     {
-        tsav = element_of(sa->values.prev, source_average_val, current);
+        tsav = element_of(sa->values.prev, tsav, current);
         linked_list_remove(&tsav->current);
         sa->total -= tsav->value;
         list_entry_init(&tsav->current);

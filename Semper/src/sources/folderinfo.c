@@ -210,7 +210,7 @@ static int folderinfo_collect(unsigned char* root, folderinfo* fi)
 
         if(linked_list_empty(&qbase) == 0)
         {
-            folderinfo_dir_list *fdl = element_of(qbase.prev, folderinfo_dir_list, current);
+            folderinfo_dir_list *fdl = element_of(qbase.prev, fdl, current);
             file = fdl->dir;
             linked_list_remove(&fdl->current);
             sfree((void**)&fdl);
