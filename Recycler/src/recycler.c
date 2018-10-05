@@ -620,7 +620,7 @@ static int recycler_query_user(recycler *r, double *val)
 
             if(linked_list_empty(&qbase) == 0)
             {
-                recycler_dir_list *fdl = element_of(qbase.prev, recycler_dir_list, current);
+                recycler_dir_list *fdl = element_of(qbase.prev, fdl, current);
                 file = fdl->dir;
                 linked_list_remove(&fdl->current);
                 sfree((void**)&fdl);

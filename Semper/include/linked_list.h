@@ -1,16 +1,14 @@
 #pragma once
 
 #if 1
-#define pos(STRUCT, MEMBER) ((size_t) ((char*) (&(STRUCT)->MEMBER)-((char*)(STRUCT))))
-#define element_of(current, type, member) (void*)(((char*)current - pos(type, member)))
+#define moffset(STRUCT, MEMBER) ((size_t) ((char*) (&(STRUCT)->MEMBER)-((char*)(STRUCT))))
+#define element_of(current, type, member) (void*)(((char*)current - moffset(type, member)))
 #else
 
 #undef offsetof
 #define pos(STRUCT, MEMBER) ((size_t) & ((STRUCT*)0)->MEMBER)
 #define element_of(current, type, member) ((type*)((char*)current - (char*)offsetof(type, member)))
 #endif
-
-
 
 
 typedef struct _list_entry
