@@ -2,7 +2,7 @@
  *Surface specific routines
  *Project 'Semper'
  *Written by Alexandru-Daniel Mărgărit
-*/
+ */
 #include <surface.h>
 #include <cairo/cairo.h>
 #include <crosswin/crosswin.h>
@@ -40,9 +40,9 @@ static int ini_handler(surface_create_skeleton_handler);
 
 typedef struct
 {
-    size_t size;
-    char* buf;
-    size_t current;
+        size_t size;
+        char* buf;
+        size_t current;
 } surface_reader_stat;
 
 int surface_modified(surface_data *sd)
@@ -88,7 +88,38 @@ void surface_reset(surface_data* sd)
     unsigned char hidden = 0;
     unsigned char zorder = 0;
     size_t monitor = 0;
+
     surface_destroy_structs(sd, 0); //clean the mess just to make things messy again
+
+    if(sd->snp)
+    {
+        long x = 0;
+        long y = 0;
+        x = parameter_long_long(sd, "X", 0, XPANDER_SURFACE_CONFIG);
+        y = parameter_long_long(sd, "Y", 0, XPANDER_SURFACE_CONFIG);
+        crosswin_set_position(sd->sw, x, y);
+    }
+
+    /*Set parameters from Semper.ini*/
+    keep_on_screen = parameter_bool(sd, "KeepOnScreen", 0, XPANDER_SURFACE_CONFIG);
+    hidden = parameter_bool(sd, "Hidden", 0, XPANDER_SURFACE_CONFIG);
+    draggable = parameter_bool(sd, "Draggable", 1, XPANDER_SURFACE_CONFIG);
+    click_through = parameter_bool(sd, "ClickThrough", 0, XPANDER_SURFACE_CONFIG);
+    sd->snp = parameter_bool(sd, "KeepPosition", 1, XPANDER_SURFACE_CONFIG);
+    sd->rim = parameter_bool(sd, "ReloadIfModified", 0, XPANDER_SURFACE_CONFIG);
+    sd->ro = parameter_byte(sd, "Opacity", 255, XPANDER_SURFACE_CONFIG);
+    sd->order = (long)parameter_long_long(sd, "Order", 0, XPANDER_SURFACE_CONFIG);
+    zorder = parameter_byte(sd, "ZOrder", crosswin_normal, XPANDER_SURFACE_CONFIG);
+    monitor = parameter_size_t(sd, "Monitor", 0, XPANDER_SURFACE_CONFIG);
+
+    crosswin_set_monitor(sd->sw, monitor);
+    crosswin_set_keep_on_screen(sd->sw, keep_on_screen);
+    crosswin_set_click_through(sd->sw, click_through);
+    crosswin_set_draggable(sd->sw, draggable);
+    crosswin_set_visible(sd->sw, !hidden);
+    crosswin_set_zorder(sd->sw, zorder);
+
+    /*Set parameters from [Semper]*/
     sd->srf_col = parameter_color(sd, "SurfaceColor", 0, XPANDER_SURFACE);
     sd->srf_col_2 = parameter_color(sd, "SurfaceColor2", 0, XPANDER_SURFACE);
     sd->team = parameter_string(sd, "Team", NULL, XPANDER_SURFACE);
@@ -130,38 +161,16 @@ void surface_reset(surface_data* sd)
     crosswin_set_size(sd->sw, sw,  sh);
 
     /*Let's read the configuration from the Semper.ini*/
-    if(sd->snp)
-    {
-        long x = 0;
-        long y = 0;
-        x = parameter_long_long(sd, "X", 0, XPANDER_SURFACE_CONFIG);
-        y = parameter_long_long(sd, "Y", 0, XPANDER_SURFACE_CONFIG);
-        crosswin_set_position(sd->sw, x, y);
-    }
+
 
     if(sd->def_divider == 0)
     {
-    	sd->def_divider = 1;
+        sd->def_divider = 1;
     }
 
-    keep_on_screen = parameter_bool(sd, "KeepOnScreen", 0, XPANDER_SURFACE_CONFIG);
-    hidden = parameter_bool(sd, "Hidden", 0, XPANDER_SURFACE_CONFIG);
-    draggable = parameter_bool(sd, "Draggable", 1, XPANDER_SURFACE_CONFIG);
-    click_through = parameter_bool(sd, "ClickThrough", 0, XPANDER_SURFACE_CONFIG);
-    sd->snp = parameter_bool(sd, "KeepPosition", 1, XPANDER_SURFACE_CONFIG);
-    sd->rim = parameter_bool(sd, "ReloadIfModified", 0, XPANDER_SURFACE_CONFIG);
-    sd->ro = parameter_byte(sd, "Opacity", 255, XPANDER_SURFACE_CONFIG);
-    sd->order = (long)parameter_long_long(sd, "Order", 0, XPANDER_SURFACE_CONFIG);
-    zorder = parameter_byte(sd, "ZOrder", crosswin_normal, XPANDER_SURFACE_CONFIG);
-    monitor = parameter_size_t(sd, "Monitor", 0, XPANDER_SURFACE_CONFIG);
     sd->fade_direction = (hidden ? -1 : 1);
     sd->uf = sd->uf == 0 ? 1000 : sd->uf;
-    crosswin_set_monitor(sd->sw, monitor);
-    crosswin_set_keep_on_screen(sd->sw, keep_on_screen);
-    crosswin_set_click_through(sd->sw, click_through);
-    crosswin_set_draggable(sd->sw, draggable);
-    crosswin_set_visible(sd->sw, !hidden);
-    crosswin_set_zorder(sd->sw, zorder);
+
 }
 
 static int surface_mouse_handler(crosswin_window* w, mouse_status* ms)
@@ -742,8 +751,8 @@ static void surface_init_items(surface_data* sd)
         unsigned char* sn = skeleton_get_section_name(cs);
 
         if(sn && (!strcasecmp(sn, "Surface") 	  ||
-                  !strcasecmp(sn, "Surface-Meta") ||
-                  !strcasecmp(sn, "Surface-Variables"))) // if the current section is one of those, we will skip them
+                !strcasecmp(sn, "Surface-Meta") ||
+                !strcasecmp(sn, "Surface-Variables"))) // if the current section is one of those, we will skip them
         {
             continue;
         }
@@ -769,9 +778,9 @@ static void surface_init_items(surface_data* sd)
     {
         object_reset(o);
         /*we need to perform the first update cycle to
-        *obtain the surface size in case it it not
-        *volatile or is not specified by the user
-        * */
+         *obtain the surface size in case it it not
+         *volatile or is not specified by the user
+         * */
         object_update(o);
     }
 }
@@ -964,8 +973,8 @@ static surface_data* surface_init(void *pv, control_data* cd, surface_data** sd,
     if(sp)
     {
         /*create a local copy of the paths (warning: we do not free the previously allocated paths.
-        *We're just copying the addresses
-        * */
+         *We're just copying the addresses
+         * */
         memcpy(&tsd->sp, sp, sizeof(surface_paths));
     }
 
@@ -1096,7 +1105,7 @@ int surface_update(surface_data* sd)
     if(sd->omhs != sd->mhs && sd->mhs != mouse_none)
     {
         sd->mhs == mouse_hover ? (sd->focus_act ? command(sd, &sd->focus_act) : 0) :
-        (sd->focus_act ? command(sd, &sd->unfocus_act) : 0);
+                (sd->focus_act ? command(sd, &sd->unfocus_act) : 0);
         sd->omhs = sd->mhs;
     }
 

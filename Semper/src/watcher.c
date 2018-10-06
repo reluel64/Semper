@@ -1,5 +1,5 @@
 /*
- * Surface watcher
+ * Directory watcher
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  */

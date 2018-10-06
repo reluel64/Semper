@@ -312,7 +312,7 @@ static int win32_get_monitors_callback(HMONITOR mon, HDC dcmon, LPRECT prect, LP
         tcm[*cnt].x = prect->left;
         tcm[*cnt].y = prect->top;
         tcm[*cnt].h = prect->bottom - prect->top;
-        tcm[*cnt].w = prect->right - prect->left;
+        tcm[*cnt].w = prect->right  - prect->left;
         tcm[*cnt].index = (*cnt);
         (*cnt)++;
     }

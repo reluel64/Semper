@@ -112,13 +112,7 @@ static void *semper_listener_thread(void *p)
         {
             break;
         }
-
-
     }
-
-
-
-
 
     return(NULL);
 }
