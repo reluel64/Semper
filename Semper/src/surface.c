@@ -631,27 +631,12 @@ static int surface_create_paths(control_data* cd, surface_paths* sp, size_t vari
 void surface_reload(surface_data* sd)
 {
 
-    unsigned char opacity = 0;
-
     if(sd)
     {
-        crosswin_get_opacity(sd->sw, &opacity);
-
-        if(opacity)
-        {
-            sd->fade_direction = -1;
-            sd->ro = 0;
-            event_push(sd->cd->eq, (event_handler)surface_reload, (void*)sd, ((opacity)), EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA);
-            surface_fade(sd);
-        }
-        else
-        {
             event_remove(sd->cd->eq, NULL, sd, EVENT_REMOVE_BY_DATA);
             surface_destroy_structs(sd, 1);
             surface_init(&sd->sp, sd->cd, &sd, SURFACE_INIT_CHECK);
             surface_init_update(sd);
-
-        }
     }
 }
 

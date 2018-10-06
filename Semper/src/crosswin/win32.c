@@ -412,7 +412,6 @@ void win32_set_zpos(crosswin_window *w)
             SetWindowPos(w->window, HWND_TOPMOST,  0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOMOVE | SWP_NOSENDCHANGING);
             break;
         default:
-            SetWindowPos(w->window, HWND_TOP,  0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOMOVE | SWP_NOSENDCHANGING);
             break; /*make the compiler happy :-) */
     }
 }

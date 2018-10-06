@@ -1,8 +1,8 @@
 /*
-* Command handling routines
-* Part of Project 'Semper'
-* Written by Alexandru-Daniel Mărgărit
-*/
+ * Command handling routines
+ * Part of Project 'Semper'
+ * Written by Alexandru-Daniel Mărgărit
+ */
 
 #include <surface.h>
 #include <semper.h>
@@ -23,38 +23,38 @@
 
 typedef struct
 {
-    surface_data* sd;
-    control_data* cd;
-    unsigned char* comm;
+        surface_data* sd;
+        control_data* cd;
+        unsigned char* comm;
 } command_defer_data;
 
 typedef struct
 {
-    unsigned char* pms[COMMAND_PARAMETER_STACK];
-    size_t plength;
-    unsigned char *rem_cmd;
+        unsigned char* pms[COMMAND_PARAMETER_STACK];
+        size_t plength;
+        unsigned char *rem_cmd;
 } command_parameters;
 
 typedef struct
 {
-    unsigned char* act_name;
-    int (*handler)(surface_data* sd, command_parameters* cp);
-    size_t min_parameters;
+        unsigned char* act_name;
+        int (*handler)(surface_data* sd, command_parameters* cp);
+        size_t min_parameters;
 } command_info;
 
 typedef struct
 {
-    unsigned char* comm_name; // command name
-    command_parameters cpm;
-    surface_data* sd;
+        unsigned char* comm_name; // command name
+        command_parameters cpm;
+        surface_data* sd;
 
 } command_handler_status;
 
 typedef struct
 {
-    size_t op;
-    size_t quotes;
-    unsigned char quote_type;
+        size_t op;
+        size_t quotes;
+        unsigned char quote_type;
 } command_tokenizer_status;
 
 #define COMMAND_HANDLER( _func_name ) static int(_func_name)(surface_data * sd, command_parameters * cp)
@@ -532,11 +532,11 @@ COMMAND_HANDLER(handler_surface_pos)
 
         if(sd->snp)
         {
-        	long x = 0;
-        	long y =0;
-        	size_t monitor = 0;
-        	unsigned char buf[260] = { 0 };
-        	crosswin_get_position(sd->sw, &x, &y, &monitor);
+            long x = 0;
+            long y =0;
+            size_t monitor = 0;
+            unsigned char buf[260] = { 0 };
+            crosswin_get_position(sd->sw, &x, &y, &monitor);
 
             snprintf(buf, sizeof(buf), "%ld", x);
             skeleton_add_key(sd->scd, "X", buf);
@@ -910,22 +910,22 @@ COMMAND_HANDLER(handler_update)
     if(!strcasecmp(cp->pms[0], "S*"))
     {
         list_enum_part(s, &lsd->sources, current)
-        {
+                {
             if(s->die == 0)
             {
                 source_update(s);
             }
-        }
+                }
     }
     else if(!strcasecmp(cp->pms[0], "O*"))
     {
         list_enum_part(o, &lsd->objects, current)
-        {
+                {
             if(o->die == 0)
             {
                 object_update(o);
             }
-        }
+                }
     }
     else if(o && o->die == 0)
     {
@@ -1007,6 +1007,23 @@ COMMAND_HANDLER(handler_quit_app)
 }
 
 
+COMMAND_HANDLER(handler_reload_surface)
+{
+    if(cp && cp->plength > 1)
+    {
+        sd = surface_by_name(sd->cd, cp->pms[1]);
+
+        if(sd == NULL)
+        {
+            return (-1);
+        }
+    }
+
+    event_push(sd->cd->eq,(event_handler)surface_reload,sd,0,EVENT_REMOVE_BY_DATA);
+
+    return(0);
+}
+
 /******************************************************************************/
 
 static int command_execute(command_handler_status* chs)
@@ -1016,40 +1033,42 @@ static int command_execute(command_handler_status* chs)
 
     static command_info ci[] =
     {
-        //command name          command handler        minimum parameters
-        { "UnloadSurface",      handler_unload_surface,     0 },
-        { "UpdateSurface",      handler_update_surface,     0 },
-        { "ForceDraw",          handler_force_draw,         0 },
-        { "Show",               handler_show_command,       0 },
-        { "Hide",               handler_hide_command,       0 },
-        { "ShowFade",           handler_show_fade_command,  0 },
-        { "HideFade",           handler_hide_fade_command,  0 },
-        { "LoadRegistry",       handler_load_registry,      0 },
-        { "UnLoadRegistry",     handler_unload_registry,    0 },
-        { "Quit",               handler_quit_app,           0 },
+            //command name          command handler        minimum parameters
+            { "UnloadSurface",      handler_unload_surface,     0 },
+            { "UpdateSurface",      handler_update_surface,     0 },
+            { "ForceDraw",          handler_force_draw,         0 },
+            { "Show",               handler_show_command,       0 },
+            { "Hide",               handler_hide_command,       0 },
+            { "ShowFade",           handler_show_fade_command,  0 },
+            { "HideFade",           handler_hide_fade_command,  0 },
+            { "LoadRegistry",       handler_load_registry,      0 },
+            { "UnLoadRegistry",     handler_unload_registry,    0 },
+            { "Quit",               handler_quit_app,           0 },
+            { "Reload",             handler_reload_surface,     0 },
 
-        { "Execute",            handler_execute,            1 },
-        { "Variable",           handler_change_variable,    1 },
-        { "Update",             handler_update,             1 },
-        { "Reset",              handler_reset,              1 },
-        { "SwitchSource",       handler_switch_source,      1 },
-        { "LoadSurface",        handler_load_surface,       1 },
-        { "Remove",             handler_remove,             1 },
-        { "UpdateTeam",         handler_update_team,        1 },
-        { "Draggable",          handler_draggable_command,  1 },
-        { "KeepOnScreen",       handler_keep_on_screen,     1 },
-        { "KeepPosition",       handler_keep_position,      1 },
-        { "ClickThrough",       handler_click_through,      1 },
-        { "ReloadIfModified",   handler_reload_if_modified, 1 },
-        { "SetOpacity",         handler_set_opacity,        1 },
-        { "Defer",              handler_defer,              1 },
+            { "Execute",            handler_execute,            1 },
+            { "Variable",           handler_change_variable,    1 },
+            { "Update",             handler_update,             1 },
+            { "Reset",              handler_reset,              1 },
+            { "SwitchSource",       handler_switch_source,      1 },
+            { "LoadSurface",        handler_load_surface,       1 },
+            { "Remove",             handler_remove,             1 },
+            { "UpdateTeam",         handler_update_team,        1 },
+            { "Draggable",          handler_draggable_command,  1 },
+            { "KeepOnScreen",       handler_keep_on_screen,     1 },
+            { "KeepPosition",       handler_keep_position,      1 },
+            { "ClickThrough",       handler_click_through,      1 },
+            { "ReloadIfModified",   handler_reload_if_modified, 1 },
+            { "SetOpacity",         handler_set_opacity,        1 },
+            { "Defer",              handler_defer,              1 },
 
-        { "Parameter",          handler_change_param,       2 },
-        { "SurfacePos",         handler_surface_pos,        2 },
-        { "AddObject",          handler_add_object,         2 },
-        { "ParameterTeam",      handler_parameter_team,     2 },
-        { "SourceCommand",      handler_source_command,     2 },
-        { "AddSource",          handler_add_source,         2 }
+
+            { "Parameter",          handler_change_param,       2 },
+            { "SurfacePos",         handler_surface_pos,        2 },
+            { "AddObject",          handler_add_object,         2 },
+            { "ParameterTeam",      handler_parameter_team,     2 },
+            { "SourceCommand",      handler_source_command,     2 },
+            { "AddSource",          handler_add_source,         2 }
     };
 
     if(chs->comm_name)
@@ -1068,7 +1087,7 @@ static int command_execute(command_handler_status* chs)
                 }
                 else
                 {
-                	diag_error("Not enough parameters to execute %s",chs->comm_name);
+                    diag_error("Not enough parameters to execute %s",chs->comm_name);
                 }
                 break;
 
@@ -1121,8 +1140,8 @@ static int command_parse_string_filter(string_tokenizer_status *pi, void* pv)
         return (1);
 
     if(cts->op && pi->buf[pi->pos] == ')')
-           if(--cts->op == 0)
-               return(0);
+        if(--cts->op == 0)
+            return(0);
 
     return (0);
 }
@@ -1144,11 +1163,11 @@ int command(surface_data* sd, unsigned char **pa)
     command_handler_status   chs =  { 0 };
     string_tokenizer_info    sti =
     {
-        .buffer                  = *pa, //store the string address here
-        .filter_data             = &cts,
-        .string_tokenizer_filter = command_parse_string_filter,
-        .ovecoff                 = NULL,
-        .oveclen                 = 0
+            .buffer                  = *pa, //store the string address here
+            .filter_data             = &cts,
+            .string_tokenizer_filter = command_parse_string_filter,
+            .ovecoff                 = NULL,
+            .oveclen                 = 0
     };
 
     *pa = NULL;

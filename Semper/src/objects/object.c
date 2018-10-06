@@ -78,8 +78,9 @@ static int object_routines_table(object_routine_entry **ore, unsigned char *on)
     return (0);
 }
 
-static void object_render_background(object* o, cairo_t* cr)
+static int object_render_background(object* o, cairo_t* cr)
 {
+
     long w = o->w < 0 ? o->auto_w : o->w;
     long h = o->h < 0 ? o->auto_h : o->h;
     unsigned char* color = NULL;
@@ -115,6 +116,7 @@ static void object_render_background(object* o, cairo_t* cr)
     cairo_set_source(cr, background);
     cairo_fill(cr);
     cairo_pattern_destroy(background);
+    return(0);
 }
 
 int object_calculate_coordinates(object* o)
