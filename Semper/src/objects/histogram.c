@@ -16,6 +16,8 @@
 #include <image/image_cache.h>
 #include <parameter.h>
 
+#warning "Code needs testing"
+
 void histogram_init(object* o)
 {
     if(o && o->pv == NULL)
@@ -138,7 +140,6 @@ void histogram_destroy(object* o)
 }
 
 
-
 int histogram_update(object* o)
 {
     surface_data* sd = o->sd;
@@ -192,25 +193,20 @@ int histogram_update(object* o)
         {
             hv1 = element_of(ho->val_1.prev, hv1, current);
             linked_list_remove(&hv1->current);
-            sfree((void**)&hv1);
+            list_entry_init(&hv1->current);
+            linked_list_add(&hv1->current,&ho->val_1);
+            hv1->value = bn.val;
         }
 
-        if(!linked_list_empty(&ho->val_1))
+        if(!linked_list_empty(&ho->val_2))
         {
             hv2 = element_of(ho->val_2.prev, hv2, current);
             linked_list_remove(&hv2->current);
-            sfree((void**)&hv2);
+            list_entry_init(&hv2->current);
+            linked_list_add(&hv2->current,&ho->val_2);
+            hv2->value = bn_2.val;
+
         }
-
-        hv1 = zmalloc(sizeof(histogram_value));
-        hv2 = zmalloc(sizeof(histogram_value));
-
-        list_entry_init(&hv1->current);
-        list_entry_init(&hv2->current);
-        hv1->value = bn.val;
-        hv2->value = bn_2.val;
-        linked_list_add(&hv1->current, &ho->val_1);
-        linked_list_add(&hv2->current, &ho->val_2);
     }
 
     image_cache_unref_image(sd->cd->ich, &ho->h1ia, 0);

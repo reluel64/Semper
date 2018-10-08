@@ -981,8 +981,6 @@ int semper_main(void)
 
 #endif
 
-//#define pos(type,member) ((((char*)(&(type)->member))-((char*)type)))
-
 #ifdef WIN32
 int wmain(int argc, wchar_t *argv[])
 #elif __linux__

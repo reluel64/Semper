@@ -122,7 +122,7 @@ struct _crosswin_window
     crosswin* c;
     list_entry current;
     size_t mon;
-
+    unsigned detect_monitor;
     unsigned char visible;
     unsigned char opacity;
     void *user_data;
@@ -184,8 +184,9 @@ void crosswin_monitor_origin(crosswin *c, crosswin_window *cw, long *x, long *y)
 void crosswin_set_kbd_handler(crosswin_window *w, int(*kbd_handler)(unsigned  int key_code, void *p), void *kb_data);
 void crosswin_set_zorder(crosswin_window* w, unsigned char zorder);
 void crosswin_get_zorder(crosswin_window* w, unsigned char *zorder);
-int crosswin_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *len);
 void crosswin_set_monitor(crosswin_window *w, size_t mon);
 void crosswin_set_visible(crosswin_window* w,unsigned char visible);
 void crosswin_get_visible(crosswin_window* w,unsigned char *visible);
 crosswin_monitor *crosswin_get_monitor(crosswin *c, size_t index);
+void crosswin_set_detect_monitor(crosswin_window *w,unsigned char option);
+void crosswin_get_detect_monitor(crosswin_window *w,unsigned char *option);

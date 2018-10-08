@@ -176,13 +176,14 @@ void  xlib_set_position(crosswin_window *w)
 {
     Atom type = XInternAtom(w->c->display, "_NET_MOVERESIZE_WINDOW", 1);
     XEvent ev={0};
+    crosswin_monitor *cm = crosswin_get_monitor(w->c, w->mon);
 
     ev.xclient.data.l[0] = (StaticGravity) | (1<<8)|(1<<9);
     ev.xclient.message_type  = type;
     ev.xclient.type = ClientMessage;
     ev.xclient.format = 32;
-    ev.xclient.data.l[1] = w->x;
-    ev.xclient.data.l[2] = w->y;
+    ev.xclient.data.l[1] = w->x+cm->x;
+    ev.xclient.data.l[2] = w->y+cm->y;
     ev.xclient.window = (Window)w->window;
     ev.xclient.send_event=1;
 

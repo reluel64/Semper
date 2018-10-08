@@ -323,7 +323,6 @@ static int win32_get_monitors_callback(HMONITOR mon, HDC dcmon, LPRECT prect, LP
 
 int win32_get_monitors(crosswin_monitor **cm, size_t *cnt)
 {
-    *cnt = 0;
     void *data[2] = {cm, cnt};
     return(EnumDisplayMonitors(NULL, NULL, win32_get_monitors_callback, (LPARAM)data) == 1 ? 0 : -1);
 }
@@ -369,7 +368,11 @@ void win32_draw(crosswin_window* w)
 
 void win32_set_position(crosswin_window* w)
 {
-    POINT ptd = { w->x, w->y };
+    crosswin_monitor *cm = crosswin_get_monitor(w->c, w->mon);
+    POINT ptd = {cm->x + w->x, cm->y+w->y };
+
+    printf("X %d WX %d Y %d WY %d\n",ptd.x,w->x,ptd.y,w->y);
+
     UpdateLayeredWindow(w->window, NULL, &ptd, NULL, NULL, NULL, 0, NULL, 0);
 }
 

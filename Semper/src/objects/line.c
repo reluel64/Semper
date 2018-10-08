@@ -11,6 +11,8 @@
 #include <xpander.h>
 #include <enumerator.h>
 
+#warning "Code needs testing"
+
 static void line_data_destroy(line_data** ld);
 
 void line_destroy(object* o)
@@ -160,20 +162,8 @@ void line_reset(object* o)
     enumerator_finish(&es);
     lo->max_pts = dim;
 
-    if(lo->max_pts > lo->v_count)
-    {
-        line_data* ld = NULL;
-        list_enum_part(ld, &lo->lines, current)
-        {
-            for(size_t i = 0; i < lo->max_pts - lo->v_count; i++)
-            {
-                line_value* lv = zmalloc(sizeof(line_value));
-                list_entry_init(&lv->current);
-                linked_list_add_last(&lv->current, &ld->values);
-            }
-        }
-    }
-    else if(lo->max_pts < lo->v_count)
+
+    if(lo->max_pts < lo->v_count)
     {
         line_data* ld = NULL;
         list_enum_part(ld, &lo->lines, current)
@@ -205,6 +195,7 @@ int line_update(object* o)
 
     list_enum_part(ld, &lo->lines, current)
     {
+        line_value* lv = NULL;
         bind_numeric bn = { 0 };
         bn.index = ld->index;
         bind_update_numeric(o, &bn);
@@ -219,13 +210,27 @@ int line_update(object* o)
             ld->min = bn.min;
         }
 
-        line_value* lv = zmalloc(sizeof(line_value));
-        lv->value = bn.val;
-        list_entry_init(&lv->current);
-        linked_list_add(&lv->current, &ld->values);
-        lv = element_of(ld->values.prev, lv, current);
-        linked_list_remove(&lv->current);
-        sfree((void**)&lv);
+        if(lo->max_pts > lo->v_count)
+        {
+            lv = zmalloc(sizeof(line_value));
+            list_entry_init(&lv->current);
+            lv->value = bn.val;
+            list_entry_init(&lv->current);
+            linked_list_add(&lv->current, &ld->values);
+        }
+        else
+        {
+            lv = element_of(ld->values.prev, lv, current);
+            linked_list_remove(&lv->current);
+            list_entry_init(&lv->current);
+            linked_list_add(&lv->current, &ld->values);
+            lv->value = bn.val;
+        }
+    }
+
+    if(lo->v_count < lo->max_pts)
+    {
+        lo->v_count++;
     }
 
     return (1);

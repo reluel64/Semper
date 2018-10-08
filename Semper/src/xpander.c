@@ -521,7 +521,7 @@ static size_t xpander_index_variable(unsigned char *in, size_t in_len, unsigned 
                 }
                 else if(toupper(in[7]) == 'P')
                 {
-                    vindex = 0;
+                    vindex = 1;
                 }
             }
             else

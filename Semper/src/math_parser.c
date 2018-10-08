@@ -255,8 +255,6 @@ static double math_clamp(double *vec)
     return(vec[1]);
 }
 
-
-
 /*Stack Util*/
 static inline void math_push_queue(list_entry *head, operator_info *oi, double val)
 {
@@ -371,7 +369,7 @@ static int math_parser_gen_queue(unsigned char *f, list_entry *out_queue, math_p
         {">",       OP_PRIO(0x06), OP_AS_LE, 2, (math_rtn)           math_gt},
         {"!=",      OP_PRIO(0x07), OP_AS_LE, 2, (math_rtn)          math_neq},
         /*
-         * even the operator is actually "?:", we split it in
+         * even if the operator is actually "?:", we split it in
          *half and the actual work is done by the ":" operator function
          */
         {"?",       OP_PRIO(0x0e), OP_AS_RI, 1, (math_rtn)         math_cond},

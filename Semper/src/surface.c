@@ -87,6 +87,7 @@ void surface_reset(surface_data* sd)
     unsigned char draggable = 0;
     unsigned char hidden = 0;
     unsigned char zorder = 0;
+    unsigned char detect_monitor = 0;
     size_t monitor = 0;
 
     surface_destroy_structs(sd, 0); //clean the mess just to make things messy again
@@ -111,6 +112,7 @@ void surface_reset(surface_data* sd)
     sd->order = (long)parameter_long_long(sd, "Order", 0, XPANDER_SURFACE_CONFIG);
     zorder = parameter_byte(sd, "ZOrder", crosswin_normal, XPANDER_SURFACE_CONFIG);
     monitor = parameter_size_t(sd, "Monitor", 0, XPANDER_SURFACE_CONFIG);
+    detect_monitor = parameter_bool(sd, "DetectMonitor", 0, XPANDER_SURFACE_CONFIG);
 
     crosswin_set_monitor(sd->sw, monitor);
     crosswin_set_keep_on_screen(sd->sw, keep_on_screen);
@@ -118,6 +120,7 @@ void surface_reset(surface_data* sd)
     crosswin_set_draggable(sd->sw, draggable);
     crosswin_set_visible(sd->sw, !hidden);
     crosswin_set_zorder(sd->sw, zorder);
+    crosswin_set_detect_monitor(sd->sw,detect_monitor);
 
     /*Set parameters from [Semper]*/
     sd->srf_col = parameter_color(sd, "SurfaceColor", 0, XPANDER_SURFACE);

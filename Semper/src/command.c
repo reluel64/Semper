@@ -1028,7 +1028,7 @@ COMMAND_HANDLER(handler_reload_surface)
 
 static int command_execute(command_handler_status* chs)
 {
-    int ret = 0;
+    int ret = -1;
     int found = 0;
 
     static command_info ci[] =
@@ -1044,7 +1044,7 @@ static int command_execute(command_handler_status* chs)
             { "LoadRegistry",       handler_load_registry,      0 },
             { "UnLoadRegistry",     handler_unload_registry,    0 },
             { "Quit",               handler_quit_app,           0 },
-            { "Reload",             handler_reload_surface,     0 },
+            { "ReloadSurface",      handler_reload_surface,     0 },
 
             { "Execute",            handler_execute,            1 },
             { "Variable",           handler_change_variable,    1 },
@@ -1061,7 +1061,6 @@ static int command_execute(command_handler_status* chs)
             { "ReloadIfModified",   handler_reload_if_modified, 1 },
             { "SetOpacity",         handler_set_opacity,        1 },
             { "Defer",              handler_defer,              1 },
-
 
             { "Parameter",          handler_change_param,       2 },
             { "SurfacePos",         handler_surface_pos,        2 },

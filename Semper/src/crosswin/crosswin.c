@@ -22,7 +22,7 @@ static int crosswin_restack(crosswin *c);
 static int crosswin_mouse_handle(crosswin_window *cw);
 static void crosswin_update_zorder(crosswin_window *cw);
 crosswin_monitor *crosswin_get_monitor(crosswin *c, size_t index);
-
+static int crosswin_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *len);
 void crosswin_init(crosswin* c)
 {
     list_entry_init(&c->windows);
@@ -157,12 +157,12 @@ static int crosswin_restack(crosswin *c)
     if(c->flags&CROSSWIN_SHOW_DESKTOP)
     {
         list_enum_part_backward(cw,&c->windows,current)
-        {
+                                                        {
             if(cw->zorder == crosswin_bottom)
             {
                 crosswin_restack_window(cw);
             }
-        }
+                                                        }
 
 
         list_enum_part_backward(cw,&c->windows,current)
@@ -229,14 +229,33 @@ crosswin_window* crosswin_init_window(crosswin* c)
     return (w);
 }
 
-int crosswin_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *len)
+static int crosswin_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *len)
 {
 #ifdef WIN32
     unused_parameter(c);
-    return(win32_get_monitors(cm, len));
+    *len = 1;
+    *cm=realloc(*cm,sizeof(crosswin_monitor));
+    memset(*cm,0,sizeof(crosswin_monitor));
+    win32_get_monitors(cm, len);
 #elif __linux__
-    return(xlib_get_monitors(c, cm, len));
+    xlib_get_monitors(c, cm, len);
 #endif
+
+
+    /*Let's calculate the virtual screen*/
+
+    for(size_t i=1;i<(*len);i++)
+    {
+        (*cm)[0].x=min((*cm)[i].x,(*cm)[0].x);
+        (*cm)[0].y=min((*cm)[i].y,(*cm)[0].y);
+        (*cm)[0].w=max((*cm)[i].w+(*cm)[i].x,(*cm)[0].w);
+        (*cm)[0].h=max((*cm)[i].h+(*cm)[i].y,(*cm)[0].h);
+    }
+
+    (*cm)[0].w=(*cm)[0].w-(*cm)[0].x;
+    (*cm)[0].h=(*cm)[0].h-(*cm)[0].y;
+    printf("Virtual Screen X %d Y %d W %d H %d\n", (*cm)[0].x,(*cm)[0].y,(*cm)[0].w,(*cm)[0].h);
+    return(0);
 }
 
 
@@ -306,37 +325,57 @@ crosswin_monitor *crosswin_get_monitor(crosswin *c, size_t index)
 void crosswin_set_position(crosswin_window* w, long x, long y)
 {
 
-    if(w && ((w->x != x) || (w->y != y)))
+    if(w)
     {
+
         crosswin* c = w->c;
         crosswin_monitor *cm = crosswin_get_monitor(c, w->mon);
         w->x = x;
         w->y = y;
+        long tx = cm->x + x;
+        long ty = cm->y + y;
 
         if(w->keep_on_screen)
         {
-            if(w->x < cm->x)
-                w->x = cm->x;
+            if(tx < cm->x)
+                w->x = 0;
 
-            else if(w->x + w->w > cm->w + cm->x)
-                w->x = (cm->w + cm->x) - w->w;
+            else if(tx + w->w > cm->w)
+                w->x = max((cm->w ) - w->w,0);
 
-            if(w->y < cm->y)
-                w->y = cm->y;
+            if(ty < cm->y)
+                w->y = 0;
 
-            else if(w->y + w->h > cm->h + cm->y)
-                w->y = (cm->h + cm->y) - w->h;
+            else if(ty + w->h > cm->h)
+                w->y = max((cm->h  ) - w->h,0);
         }
-        else
+
+        else if(w->detect_monitor)
         {
-
-            for(size_t i = 0; i < c->mon_cnt; i++)
+            for(size_t i = 1; i < c->mon_cnt; i++)
             {
-                cm = crosswin_get_monitor(w->c, i);
+                crosswin_monitor *ncm = crosswin_get_monitor(w->c, i);
 
-                if(w->x >= cm->x && w->x <= (cm->w + cm->x) && w->y >= cm->y && w->y <= cm->h + cm->y)
+                if(tx >= ncm->x && tx <= (ncm->x+ncm->w) && ty >= ncm->y && ty <= ncm->y+ncm->h )
                 {
-                    w->mon = i;
+                    printf("detecting\n");
+
+
+                    /*Adjust the offsets*/
+                    if(w->mon!=i)
+                    {
+                        w->mon=i;
+
+                        if(w->x >= cm->w)
+                            w->x = 0;
+                        else
+                            w->x = ncm->w;
+
+                        if(w->y >= cm->h)
+                             w->y = 0;
+                        else
+                            w->y=ncm->h;
+                    }
                     break;
                 }
             }
@@ -348,6 +387,26 @@ void crosswin_set_position(crosswin_window* w, long x, long y)
         xlib_set_position(w);
 #endif
 
+    }
+}
+
+void crosswin_set_detect_monitor(crosswin_window *w,unsigned char option)
+{
+    if(w)
+    {
+        w->detect_monitor=option;
+        if(w->detect_monitor)
+        {
+            crosswin_set_position(w,w->x,w->y);
+        }
+    }
+}
+
+void crosswin_get_detect_monitor(crosswin_window *w,unsigned char *option)
+{
+    if(w)
+    {
+        *option=w->detect_monitor;
     }
 }
 
@@ -418,6 +477,7 @@ void crosswin_set_monitor(crosswin_window *w, size_t mon)
     if(w)
     {
         w->mon = mon;
+        crosswin_set_position(w,w->x,w->y);
     }
 }
 
