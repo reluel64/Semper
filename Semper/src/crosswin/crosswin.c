@@ -350,33 +350,31 @@ void crosswin_set_position(crosswin_window* w, long x, long y)
                 w->y = max((cm->h  ) - w->h,0);
         }
 
-        else if(w->detect_monitor)
+        else if(w->detect_monitor && w->x!=0 && w->y!=0)
         {
             for(size_t i = 1; i < c->mon_cnt; i++)
             {
                 crosswin_monitor *ncm = crosswin_get_monitor(w->c, i);
 
-                if(tx >= ncm->x && tx <= (ncm->x+ncm->w) && ty >= ncm->y && ty <= ncm->y+ncm->h )
+                if(tx >= ncm->x && tx <= (ncm->x+ncm->w) && ty >= ncm->y && ty <= (ncm->y+ncm->h) )
                 {
-                    printf("detecting\n");
-
-
                     /*Adjust the offsets*/
                     if(w->mon!=i)
                     {
                         w->mon=i;
 
-                        if(w->x >= cm->w)
-                            w->x = 0;
-                        else
+                        if(w->x < 0)
                             w->x = ncm->w;
+                        else if(w->x >= cm->w)
+                            w->x = 0;
 
-                        if(w->y >= cm->h)
-                             w->y = 0;
-                        else
-                            w->y=ncm->h;
+                        if(w->y < 0)
+                             w->y = ncm->h;
+                        else if(w->y>=cm->h)
+                            w->y=0;
+
+                        break;
                     }
-                    break;
                 }
             }
         }

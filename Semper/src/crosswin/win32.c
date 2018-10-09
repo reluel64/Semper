@@ -241,7 +241,6 @@ void win32_check_desktop(crosswin *c)
 
 void win32_init_class(crosswin *c)
 {
-
     WNDCLASSEXA wclass = { 0 };
     memset(&wclass, 0, sizeof(WNDCLASSEXA));
     wclass.style = (CS_DBLCLKS & 0) | CS_NOCLOSE | CS_OWNDC;
@@ -318,7 +317,6 @@ static int win32_get_monitors_callback(HMONITOR mon, HDC dcmon, LPRECT prect, LP
     }
 
     return(1);
-
 }
 
 int win32_get_monitors(crosswin_monitor **cm, size_t *cnt)
@@ -370,9 +368,6 @@ void win32_set_position(crosswin_window* w)
 {
     crosswin_monitor *cm = crosswin_get_monitor(w->c, w->mon);
     POINT ptd = {cm->x + w->x, cm->y+w->y };
-
-    printf("X %d WX %d Y %d WY %d\n",ptd.x,w->x,ptd.y,w->y);
-
     UpdateLayeredWindow(w->window, NULL, &ptd, NULL, NULL, NULL, 0, NULL, 0);
 }
 
