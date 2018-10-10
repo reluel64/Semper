@@ -20,6 +20,7 @@
 #define CROSSWIN_UPDATE_ZORDER       (1<<1)
 #define CROSSWIN_SHOW_DESKTOP (1<<2)
 #define CROSSWIN_FIX_ZORDER   (1<<3)
+#define CROSSWIN_CHECK_ZORDER_FOR_FIX (1<<4)
 typedef struct _crosswin_window crosswin_window;
 
 typedef enum

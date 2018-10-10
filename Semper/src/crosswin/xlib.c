@@ -22,6 +22,7 @@ typedef struct Hints
 
 static void xlib_render(crosswin_window *w);
 void xlib_set_zpos(crosswin_window *w);
+
 static int xlib_fixup_zpos(crosswin *c);
 
 void xlib_init_display(crosswin *c)
@@ -40,22 +41,27 @@ int xlib_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *cnt)
     }
 
     XineramaScreenInfo *sinfo = NULL;
-
-    sinfo = XineramaQueryScreens(c->display, (int*)cnt);
+    int lcount = 0;
+    sinfo = XineramaQueryScreens(c->display, &lcount);
 
     if(sinfo)
     {
-        *cm = zmalloc(sizeof(crosswin_monitor) * (*cnt));
-
-        for(size_t i = 0; i < *cnt; i++)
+        crosswin_monitor *tcm = realloc(*cm,sizeof(crosswin_monitor) * ((*cnt)+lcount));
+        if(tcm)
         {
-            (*cm)[i].h = sinfo[i].height;
-            (*cm)[i].w = sinfo[i].width;
-            (*cm)[i].x = sinfo[i].x_org;
-            (*cm)[i].y = sinfo[i].y_org;
-            (*cm)[i].index = i;
-        }
+            for(size_t i = 1; i < lcount+1; i++)
+            {
+                (tcm)[i].h = sinfo[i-1].height;
+                (tcm)[i].w = sinfo[i-1].width;
+                (tcm)[i].x = sinfo[i-1].x_org;
+                (tcm)[i].y = sinfo[i-1].y_org;
+                (tcm)[i].index = i;
+            }
 
+
+            (*cnt)+=lcount;
+            *cm=tcm;
+        }
         XFree(sinfo);
         return(0);
     }
@@ -343,6 +349,8 @@ int xlib_message_dispatch(crosswin *c)
             case EnterNotify:
             case MotionNotify:
             {
+
+                c->flags|=CROSSWIN_CHECK_ZORDER_FOR_FIX;
                 /*Get the latest MotionNotify*/
                 while(XCheckTypedWindowEvent(w->c->display,(Window)w->window,MotionNotify,&dev))
                 {
@@ -400,8 +408,7 @@ int xlib_message_dispatch(crosswin *c)
                 c->md.x = ev.xbutton.x;
                 c->md.y = ev.xbutton.y;
                 c->md.state = mouse_button_state_pressed;
-                c->flags|=CROSSWIN_UPDATE_ZORDER;
-                event_push(c->eq,(event_handler)crosswin_update,c,0,EVENT_REMOVE_BY_DATA_HANDLER);
+                c->flags|=CROSSWIN_CHECK_ZORDER_FOR_FIX;
                 switch(ev.xbutton.button)
                 {
                     case Button1:
@@ -436,14 +443,12 @@ int xlib_message_dispatch(crosswin *c)
                 xlib_set_position(w);
                 c->flags = CROSSWIN_UPDATE_MONITORS;
                 break;
+
             case ReparentNotify:
             case ConfigureNotify:
-
-                if(ev.xconfigure.send_event==0)
-                {
-                    c->flags|=CROSSWIN_UPDATE_ZORDER;
-                }
+                c->flags|=CROSSWIN_CHECK_ZORDER_FOR_FIX;
                 break;
+
         }
     }
 
@@ -511,6 +516,7 @@ static void xlib_set_window_above(crosswin_window *w)
     XSendEvent(w->c->display,DefaultRootWindow(w->c->display),0,  StructureNotifyMask|SubstructureNotifyMask, &ev);
 }
 
+
 static int xlib_fixup_zpos(crosswin *c)
 {
 
@@ -576,7 +582,6 @@ static int xlib_fixup_zpos(crosswin *c)
 }
 
 
-
 void xlib_set_zpos(crosswin_window *w)
 {
     Atom state = XInternAtom(w->c->display, "_NET_WM_STATE", 1);
@@ -631,10 +636,12 @@ void xlib_set_zpos(crosswin_window *w)
 
 void xlib_check_desktop(crosswin *c)
 {
-    if(xlib_fixup_zpos(c))
+    if((c->flags & CROSSWIN_CHECK_ZORDER_FOR_FIX) && xlib_fixup_zpos(c))
     {
         c->flags |= (CROSSWIN_UPDATE_ZORDER|CROSSWIN_FIX_ZORDER);
     }
+
+    c->flags&=~CROSSWIN_CHECK_ZORDER_FOR_FIX;
     Atom type = XInternAtom(c->display, "_NET_SHOWING_DESKTOP", 1);
     Atom ret=0;
     int fmt_ret=0;
@@ -647,7 +654,7 @@ void xlib_check_desktop(crosswin *c)
         {
             if(((!(*re) && (c->flags&CROSSWIN_SHOW_DESKTOP))||((*re) && !(c->flags&CROSSWIN_SHOW_DESKTOP))))
             {
-                c->flags|=CROSSWIN_UPDATE_ZORDER;
+                c->flags|=CROSSWIN_UPDATE_ZORDER|CROSSWIN_FIX_ZORDER;
 
                 if(c->flags&CROSSWIN_SHOW_DESKTOP)
                     c->flags&=~CROSSWIN_SHOW_DESKTOP;

@@ -183,9 +183,12 @@ static int win32_event_proc_enum_win(HWND win,LPARAM lpm)
 
 static void win32_event_proc(HWINEVENTHOOK evh, long unsigned int evt,HWND win,long obj,long child,long unsigned int thid,long unsigned int evtime)
 {
-    crosswin *c = NULL;
-    EnumWindows(win32_event_proc_enum_win,(LPARAM)&c);
+    static crosswin *c = NULL;
 
+    if(c == NULL)
+    {
+        EnumWindows(win32_event_proc_enum_win,(LPARAM)&c);
+    }
     if(c)
     {
         c->flags|=CROSSWIN_UPDATE_ZORDER;
@@ -216,9 +219,12 @@ static int win32_check_proc_enum_win(HWND win,LPARAM lpm)
 
 void win32_check_desktop(crosswin *c)
 {
-    void *def_shell  = NULL;
+   static void *def_shell  = NULL;
 
-    EnumWindows(win32_check_proc_enum_win,(LPARAM)&def_shell);
+   if(def_shell == NULL || !IsWindow(def_shell))
+   {
+       EnumWindows(win32_check_proc_enum_win,(LPARAM)&def_shell);
+   }
     void *win = NULL;
 
 

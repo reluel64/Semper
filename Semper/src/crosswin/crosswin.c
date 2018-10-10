@@ -57,7 +57,7 @@ int crosswin_update(crosswin* c)
         }
     }
 
-    if(up_status&(CROSSWIN_UPDATE_ZORDER))
+    if(up_status&(CROSSWIN_UPDATE_ZORDER|CROSSWIN_CHECK_ZORDER_FOR_FIX))
     {
         crosswin_restack(c);
     }
@@ -140,7 +140,7 @@ static int crosswin_restack(crosswin *c)
     crosswin_window *cw = NULL;
     crosswin_check_desktop(c);
 
-    event_push(c->eq,(event_handler)crosswin_restack,c,250,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
+   event_push(c->eq,(event_handler)crosswin_restack,c,250,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
 
     if(!(c->flags & (CROSSWIN_UPDATE_ZORDER)))
     {
@@ -231,11 +231,12 @@ crosswin_window* crosswin_init_window(crosswin* c)
 
 static int crosswin_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *len)
 {
-#ifdef WIN32
     unused_parameter(c);
-    *len = 1;
-    *cm=realloc(*cm,sizeof(crosswin_monitor));
-    memset(*cm,0,sizeof(crosswin_monitor));
+       *len = 1;
+       *cm=realloc(*cm,sizeof(crosswin_monitor));
+
+#ifdef WIN32
+
     win32_get_monitors(cm, len);
 #elif __linux__
     xlib_get_monitors(c, cm, len);
@@ -243,7 +244,7 @@ static int crosswin_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *len
 
 
     /*Let's calculate the virtual screen*/
-
+    memset(*cm,0,sizeof(crosswin_monitor));
     for(size_t i=1;i<(*len);i++)
     {
         (*cm)[0].x=min((*cm)[i].x,(*cm)[0].x);
@@ -254,6 +255,7 @@ static int crosswin_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *len
 
     (*cm)[0].w=(*cm)[0].w-(*cm)[0].x;
     (*cm)[0].h=(*cm)[0].h-(*cm)[0].y;
+
     printf("Virtual Screen X %d Y %d W %d H %d\n", (*cm)[0].x,(*cm)[0].y,(*cm)[0].w,(*cm)[0].h);
     return(0);
 }
