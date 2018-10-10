@@ -185,7 +185,6 @@ void line_reset(object* o)
         }
     }
 
-    lo->v_count = lo->max_pts;
 }
 
 int line_update(object* o)
@@ -231,6 +230,10 @@ int line_update(object* o)
     if(lo->v_count < lo->max_pts)
     {
         lo->v_count++;
+    }
+    else
+    {
+        lo->v_count = lo->max_pts;
     }
 
     return (1);
