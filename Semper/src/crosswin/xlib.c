@@ -95,7 +95,6 @@ static void xlib_window_attributes(XSetWindowAttributes *xa,crosswin *c)
             ExposureMask             |
             PropertyChangeMask       |
             ButtonPressMask;
-
 }
 
 void xlib_init_window(crosswin_window *w)
@@ -404,7 +403,7 @@ int xlib_message_dispatch(crosswin *c)
 
             case ButtonPress:
             {
-                XSetInputFocus(w->c->display, (Window)w->window, RevertToParent, 0);
+               // XSetInputFocus(w->c->display, (Window)w->window, RevertToParent, 0);
                 c->md.x = ev.xbutton.x;
                 c->md.y = ev.xbutton.y;
                 c->md.state = mouse_button_state_pressed;
@@ -443,7 +442,7 @@ int xlib_message_dispatch(crosswin *c)
                 xlib_set_position(w);
                 c->flags = CROSSWIN_UPDATE_MONITORS;
                 break;
-
+            case FocusIn:
             case ReparentNotify:
             case ConfigureNotify:
                 c->flags|=CROSSWIN_CHECK_ZORDER_FOR_FIX;

@@ -256,7 +256,7 @@ static int crosswin_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *len
     (*cm)[0].w=(*cm)[0].w-(*cm)[0].x;
     (*cm)[0].h=(*cm)[0].h-(*cm)[0].y;
 
-    printf("Virtual Screen X %d Y %d W %d H %d\n", (*cm)[0].x,(*cm)[0].y,(*cm)[0].w,(*cm)[0].h);
+
     return(0);
 }
 

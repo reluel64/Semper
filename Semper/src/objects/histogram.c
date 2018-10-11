@@ -75,7 +75,7 @@ void histogram_reset(object* o)
             sfree((void**)&hv);
             i--;
         }
-        // ho->v_count=ho->max_hist;
+         ho->v_count=ho->max_hist;
     }
 #if 0
     image_cache_unref_image(sd->cd->ich, &ho->h1ia,0);
