@@ -111,7 +111,7 @@ void surface_reset(surface_data* sd)
     sd->ro = parameter_byte(sd, "Opacity", 255, XPANDER_SURFACE_CONFIG);
     sd->order = (long)parameter_long_long(sd, "Order", 0, XPANDER_SURFACE_CONFIG);
     zorder = parameter_byte(sd, "ZOrder", crosswin_normal, XPANDER_SURFACE_CONFIG);
-    monitor = parameter_size_t(sd, "Monitor", 0, XPANDER_SURFACE_CONFIG);
+    monitor = parameter_size_t(sd, "Monitor", 1, XPANDER_SURFACE_CONFIG);
     detect_monitor = parameter_bool(sd, "DetectMonitor", 0, XPANDER_SURFACE_CONFIG);
 
     crosswin_set_monitor(sd->sw, monitor);
