@@ -21,41 +21,41 @@
 
 typedef struct
 {
-    unsigned char *command;
+        unsigned char *command;
 
-    size_t index;
-    list_entry current;
+        size_t index;
+        list_entry current;
 } input_text_command;
 
 typedef struct
 {
-    size_t  buf_pos;   /*current position in buffer*/
-    size_t buf_lim;     /*buffer limit - read only*/
-    size_t buf_sz;
-    size_t cursor_pos;  /*where is the cursor positioned*/
-    size_t ret_str_len;
-    size_t ovec_pos;
-    size_t wcommand;
-    size_t start_command;
-    size_t end_command;
-    unsigned int *buf;
-    unsigned char number_only;
-    unsigned char dot_set;
-    unsigned char active;
-    unsigned char *current_command;
-    unsigned char *ret_str; /*the string that should be returned or used for command processing*/
-    void *ip;
-    crosswin_window *w;
-    list_entry commands;
-    tokenize_string_info tsi;
+        size_t  buf_pos;   /*current position in buffer*/
+        size_t buf_lim;     /*buffer limit - read only*/
+        size_t buf_sz;
+        size_t cursor_pos;  /*where is the cursor positioned*/
+        size_t ret_str_len;
+        size_t ovec_pos;
+        size_t wcommand;
+        size_t start_command;
+        size_t end_command;
+        unsigned int *buf;
+        unsigned char number_only;
+        unsigned char dot_set;
+        unsigned char active;
+        unsigned char *current_command;
+        unsigned char *ret_str; /*the string that should be returned or used for command processing*/
+        void *ip;
+        crosswin_window *w;
+        list_entry commands;
+        tokenize_string_info tsi;
 } input_text;
 
 
 typedef struct
 {
-    size_t op;
-    size_t quotes;
-    unsigned char quote_type;
+        size_t op;
+        size_t quotes;
+        unsigned char quote_type;
 } input_tokenizer_status;
 
 
@@ -254,6 +254,7 @@ static void input_destroy_list(input_text *it)
     list_enum_part_safe(itc, titc, &it->commands, current)
     {
         sfree((void**)&itc->command);
+        linked_list_remove(&itc->current);
         sfree((void**)&itc);
     }
 }
@@ -361,25 +362,28 @@ void input_init(void **spv, void *ip)
 
 void input_reset(void *spv, void *ip)
 {
+
     input_text *it = spv;
-    sfree((void**)&it->buf);
-    it->buf_lim = param_size_t("MaxTextSize", ip, 0);
-    it->number_only = param_bool("NumberOnly", ip, 0);
-    it->ret_str = zmalloc(2);
-    it->current_command = NULL;
-    input_populate_list(it);
-
-    tokenize_string_free(&it->tsi);
-    it->ovec_pos = 0;
-
-    if(it->buf_lim)
+    if(it->active==0)
     {
-        it->buf = zmalloc((it->buf_lim + 1) * sizeof(unsigned int));
-    }
-    else
-    {
-        it->buf = zmalloc(sizeof(unsigned int) * 3);
-        it->buf_sz = 2;
+        sfree((void**)&it->buf);
+        it->buf_lim = param_size_t("MaxTextSize", ip, 0);
+        it->number_only = param_bool("NumberOnly", ip, 0);
+        it->current_command = NULL;
+        input_populate_list(it);
+
+        tokenize_string_free(&it->tsi);
+        it->ovec_pos = 0;
+
+        if(it->buf_lim)
+        {
+            it->buf = zmalloc((it->buf_lim + 1) * sizeof(unsigned int));
+        }
+        else
+        {
+            it->buf = zmalloc(sizeof(unsigned int) * 3);
+            it->buf_sz = 2;
+        }
     }
 }
 
@@ -387,7 +391,7 @@ double input_update(void *spv)
 {
     input_text *it = spv;
 
-    if(it->active)
+    if(it->active && it->ret_str)
     {
         if(it->w->kb_data != it)
             it->ret_str[it->ret_str_len] = 0;
@@ -401,7 +405,6 @@ double input_update(void *spv)
 unsigned char *input_string(void *spv)
 {
     input_text *it = spv;
-
     return(it->ret_str ? it->ret_str : (unsigned char*)"");
 }
 

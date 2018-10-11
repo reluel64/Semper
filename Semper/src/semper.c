@@ -368,10 +368,14 @@ int semper_save_configuration(control_data* cd)
     memf *dest = NULL;
     FILE *cfg = NULL;
 
-    if(put_file_in_memory(cd->cf, &buf, &sz) < 0)
+
+    if(s==NULL)
     {
         return(-1);
     }
+
+    put_file_in_memory(cd->cf, &buf, &sz);
+
 
     src = mopen(sz);
     mwrite(buf, sz, 1, src);
@@ -432,13 +436,13 @@ int semper_save_configuration(control_data* cd)
 static unsigned char semper_is_portable(unsigned char *app_dir, size_t len)
 {
     unsigned char portable = 0;
-    size_t ini_len = string_length("/Semper.ini");
-    unsigned char *semp_ini = zmalloc(len + ini_len + 1);
-    snprintf(semp_ini, ini_len + len + 1, "%s/Semper.ini", app_dir);
-    uniform_slashes(semp_ini);
+    size_t srf_len = string_length("/Surfaces");
+    unsigned char *surfaces = zmalloc(len + srf_len + 1);
+    snprintf(surfaces, srf_len + len + 1, "%s/Surfaces", app_dir);
+    uniform_slashes(surfaces);
 #ifdef WIN32
 
-    unsigned short *ucs = utf8_to_ucs(semp_ini);
+    unsigned short *ucs = utf8_to_ucs(surfaces);
 
     if(_waccess(ucs, 0) == 0)
         portable = 1;
@@ -450,7 +454,7 @@ static unsigned char semper_is_portable(unsigned char *app_dir, size_t len)
         portable = 1;
 
 #endif
-    sfree((void**)&semp_ini);
+    sfree((void**)&surfaces);
     return(portable);
 }
 

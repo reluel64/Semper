@@ -336,7 +336,7 @@ void crosswin_set_position(crosswin_window* w, long x, long y)
         w->y = y;
         long tx = cm->x + x;
         long ty = cm->y + y;
-
+#warning "Faulty code"
         if(w->keep_on_screen)
         {
             if(tx < cm->x)

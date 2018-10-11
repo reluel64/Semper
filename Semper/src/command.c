@@ -314,6 +314,48 @@ COMMAND_HANDLER(handler_click_through)
     return (0);
 }
 
+
+COMMAND_HANDLER(handler_detect_monitor)
+{
+    unsigned char detect_monitor = 0;
+
+    if(cp->plength > 1)
+    {
+        sd = surface_by_name(sd->cd, cp->pms[1]);
+    }
+
+    if(sd == NULL)
+    {
+        return (-1);
+    }
+
+    crosswin_get_detect_monitor(sd->sw, &detect_monitor);
+
+    if(!strcasecmp("-1", cp->pms[0]))
+    {
+        if(detect_monitor)
+        {
+            skeleton_add_key(sd->scd, "DetectMonitor", "0");
+        }
+        else
+        {
+            skeleton_add_key(sd->scd, "DetectMonitor", "1");
+        }
+
+        detect_monitor = !detect_monitor;
+
+    }
+    else
+    {
+        skeleton_add_key(sd->scd, "DetectMonitor", cp->pms[0]);
+        detect_monitor = atoi(cp->pms[0]);
+    }
+
+    crosswin_set_detect_monitor(sd->sw, detect_monitor);
+    return (0);
+}
+
+
 COMMAND_HANDLER(handler_show_command)
 {
     if(cp->plength > 0)
@@ -1059,6 +1101,7 @@ static int command_execute(command_handler_status* chs)
             { "KeepPosition",       handler_keep_position,      1 },
             { "ClickThrough",       handler_click_through,      1 },
             { "ReloadIfModified",   handler_reload_if_modified, 1 },
+            { "DetectMonitor",      handler_detect_monitor,     1 },
             { "SetOpacity",         handler_set_opacity,        1 },
             { "Defer",              handler_defer,              1 },
 

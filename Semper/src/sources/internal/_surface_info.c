@@ -72,9 +72,11 @@ double surface_info_update(void* spv)
         unsigned char keep_on_screen = 0;
         unsigned char draggable = 0;
         unsigned char click_through = 0 ;
+        unsigned char detect_monitor = 0;
         crosswin_get_keep_on_screen(sd->sw,&keep_on_screen);
         crosswin_get_click_through(sd->sw,&click_through);
         crosswin_get_draggable(sd->sw,&draggable);
+        crosswin_get_detect_monitor(sd->sw,&detect_monitor);
         flags |= ((size_t)keep_on_screen)                                 << 0;
         flags |= ((size_t)draggable)                                      << 1;
         flags |= ((size_t)sd->snp)                                        << 2;
@@ -85,12 +87,13 @@ double surface_info_update(void* spv)
         flags |= ((size_t)(surface_info_meta(sd, "Version") != NULL))     << 7;
         flags |= ((size_t)(surface_info_meta(sd, "License") != NULL))     << 8;
         flags |= ((size_t)(surface_info_meta(sd, "Information") != NULL)) << 9;
+        flags |= ((size_t)detect_monitor)                                 << 10;
     }
     else
     {
         long sx = 0;
         long sy =0;
-        crosswin_get_size(sd->sw,&sx,&sy);
+        crosswin_get_position(sd->sw,&sx,&sy,NULL);
         return ((double)(si->coord ? sy : sx));
     }
 
