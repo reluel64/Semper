@@ -212,7 +212,7 @@ double surface_lister_update(void* spv)
         }
     }
 
-#if 0
+#if 1
     else if(sl->parent == NULL && sl->update)
 #else
     else if(sl->parent == NULL)
@@ -337,6 +337,7 @@ void surface_lister_command(void* spv, unsigned char* command)
         }
         else if(sl->start)
         {
+
             if(strcasecmp("Up", command) == 0)
             {
                 if(sl->start->current.next != &sl->file_list)

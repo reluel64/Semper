@@ -277,9 +277,7 @@ static void input_populate_list(input_text *it)
 
         input_text_command *itc = zmalloc(sizeof(input_text_command));
         itc->command = clone_string(param_string(ev, EXTENSION_XPAND_ALL, it->ip, NULL));
-#ifdef DEBUG
-        printf("%s\n",itc->command);
-#endif
+
         sscanf(ev, "Command%llu", &itc->index);
         list_entry_init(&itc->current);
         linked_list_add_last(&itc->current, &it->commands);

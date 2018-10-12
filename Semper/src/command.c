@@ -1188,7 +1188,7 @@ static int command_parse_string_filter(string_tokenizer_status *pi, void* pv)
     return (0);
 }
 
-
+#warning "Need to revise routines based on string_tokenizer"
 int command(surface_data* sd, unsigned char **pa)
 {
     unsigned char push_params = 0;
@@ -1266,8 +1266,8 @@ int command(surface_data* sd, unsigned char **pa)
         {
             if((execute && end != start) || execute == 0)
             {
-                chs.cpm.pms[stack_pos] = zmalloc((end - start) + 1);
-                strncpy(chs.cpm.pms[stack_pos], sti.buffer + start, end - start);
+                chs.cpm.pms[stack_pos] = zmalloc((end - start)+1);
+                strncpy(chs.cpm.pms[stack_pos], sti.buffer + start, (end - start));
                 stack_pos++;
                 chs.cpm.plength++;
             }

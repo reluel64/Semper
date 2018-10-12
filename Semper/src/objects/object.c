@@ -411,7 +411,7 @@ int object_hit_testing(surface_data* sd, mouse_status* ms)
         {
             cairo_set_operator(ctx, CAIRO_OPERATOR_SOURCE);
 
-            if(o->enabled == 0 || o->hidden || !object_may_hit(o, ctx, (double) ms->x, (double) ms->y, cs, stride))
+            if(o->enabled == 0 || o->hidden|| !object_may_hit(o, ctx, (double) ms->x, (double) ms->y, cs, stride) )
             {
                 continue;
             }
