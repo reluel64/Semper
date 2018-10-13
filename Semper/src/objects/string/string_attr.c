@@ -588,7 +588,7 @@ static int string_fill_text_format(object *o)
                     start++;
                 }
 
-                if(sti.buffer[end - 1] == ')')
+                if(sti.buffer[end - 1] == ')'&&sti.buffer[end]!=',')
                 {
                     end--;
                 }

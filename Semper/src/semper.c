@@ -883,15 +883,12 @@ static void semper_main_wake_fcn(void *pv)
 
 int semper_main(void)
 {
-    unsigned char *buf = strdup("LoadSurface(Test-(10),registry.ini)");
     semper_event_wait_data sewd = {0};
     control_data* cd = zmalloc(sizeof(control_data));
     surface_data *sd = NULL;
     surface_data *tsd = NULL;
-    surface_data sd1 ={0};
-    sd1.cd=cd;
     semper_create_paths(cd);
-    command(&sd1,&buf);
+
 #ifndef DEBUG
 
     if(semper_single_instance(cd) == 0)

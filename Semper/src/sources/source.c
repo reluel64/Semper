@@ -2,7 +2,7 @@
 Source generic routines
 Part of Project 'Semper'
 Written by Alexandru-Daniel Mărgărit
-*/
+ */
 
 #include <surface.h>
 #include <math.h>
@@ -45,27 +45,27 @@ Written by Alexandru-Daniel Mărgărit
 typedef unsigned char *(*src_str_rtn)(void *ip, unsigned char **pms, size_t pms_len);
 typedef struct
 {
-    unsigned char *source_name;
-    void (*source_init_rtn)(void** spv, void* ip);
-    void (*source_destroy_rtn)(void** spv);
-    double (*source_update_rtn)(void* spv);
-    void (*source_reset_rtn)(void* spv, void* ip);
-    unsigned char* (*source_string_rtn)(void* spv);
-    void (*source_command_rtn)(void* spv, unsigned char* comm);
+        unsigned char *source_name;
+        void (*source_init_rtn)(void** spv, void* ip);
+        void (*source_destroy_rtn)(void** spv);
+        double (*source_update_rtn)(void* spv);
+        void (*source_reset_rtn)(void* spv, void* ip);
+        unsigned char* (*source_string_rtn)(void* spv);
+        void (*source_command_rtn)(void* spv, unsigned char* comm);
 
 } source_table;
 
 typedef struct _avg_val
 {
-    double value;
-    list_entry current;
+        double value;
+        list_entry current;
 } source_average_val;
 
 typedef struct _average
 {
-    size_t count; // current number of elements in list
-    list_entry values;
-    double total;
+        size_t count; // current number of elements in list
+        list_entry values;
+        double total;
 } source_average;
 
 
@@ -73,29 +73,29 @@ static size_t source_routines_table(unsigned char* s, source_table **st)
 {
     static source_table table[] =
     {
-        // Source name          Init routine                Destroy routine             Update routine              Reset routine               String routine                          Command routine
-        { "Extension",          NULL,                       NULL,                       NULL,                       NULL,                       NULL,                                             NULL },
-        { "Calculator",         calculator_init,            calculator_destroy,         calculator_update,          calculator_reset,           NULL,                                             NULL },
-        { "Memory",             memory_init,                memory_destroy,             memory_update,              memory_reset,               NULL,                                             NULL },
-        { "DiskSpace",          disk_space_init,            disk_space_destroy,         disk_space_update,          disk_space_reset,           disk_space_string,                                NULL },
-        { "String",             string_source_init,         string_source_destroy,      string_source_update,       string_source_reset,        string_source_string,                             NULL },
-        { "Processor",          processor_init,             processor_destroy,          processor_update,           processor_reset,            NULL,                                             NULL },
-        { "Iterator",           iterator_init,              iterator_destroy,           iterator_update,            iterator_reset,             NULL,                                 iterator_command },
-        { "FolderInfo",         folderinfo_init,            folderinfo_destroy,         folderinfo_update,          folderinfo_reset,           NULL,                                             NULL },
-        { "WebGet",             webget_init,                webget_destroy,             webget_update,              webget_reset,               webget_string,                                    NULL },
+            // Source name          Init routine                Destroy routine             Update routine              Reset routine               String routine                          Command routine
+            { "Extension",          NULL,                       NULL,                       NULL,                       NULL,                       NULL,                                             NULL },
+            { "Calculator",         calculator_init,            calculator_destroy,         calculator_update,          calculator_reset,           NULL,                                             NULL },
+            { "Memory",             memory_init,                memory_destroy,             memory_update,              memory_reset,               NULL,                                             NULL },
+            { "DiskSpace",          disk_space_init,            disk_space_destroy,         disk_space_update,          disk_space_reset,           disk_space_string,                                NULL },
+            { "String",             string_source_init,         string_source_destroy,      string_source_update,       string_source_reset,        string_source_string,                             NULL },
+            { "Processor",          processor_init,             processor_destroy,          processor_update,           processor_reset,            NULL,                                             NULL },
+            { "Iterator",           iterator_init,              iterator_destroy,           iterator_update,            iterator_reset,             NULL,                                 iterator_command },
+            { "FolderInfo",         folderinfo_init,            folderinfo_destroy,         folderinfo_update,          folderinfo_reset,           NULL,                                             NULL },
+            { "WebGet",             webget_init,                webget_destroy,             webget_update,              webget_reset,               webget_string,                                    NULL },
 
-        { "TimedAction",        timed_action_init,          timed_action_destroy,       NULL,                       timed_action_reset,         NULL,                             timed_action_command },
-        { "Time",               time_init,                  time_destroy,               time_update,                time_reset,                 time_string,                                      NULL },
-        { "Script",             script_init,                script_destroy,             script_update,              script_reset,               script_string,                          script_command },
-        { "Network",            network_init,               network_destroy,            network_update,             network_reset,              NULL,                                             NULL },
-        { "Wifi",               wifi_init,                  wifi_destroy,               wifi_update,                wifi_reset,                 wifi_string,                                      NULL },
-        { "TextInput",          input_init,                 input_destroy,              input_update,               input_reset,                input_string,                            input_command },
-        { "FolderView",         folderview_init,            folderview_destroy,         folderview_update,          folderview_reset,           folderview_string,                  folderview_command },
-        //sources for internal use only
-        { "_SurfaceCollector_", surfaces_collector_init,    surfaces_collector_destroy, surfaces_collector_update,  surfaces_collector_reset,   surfaces_collector_string,  surfaces_collector_command },
-        { "_SurfaceInfo_",      surface_info_init,          surface_info_destroy,       surface_info_update,        surface_info_reset,         surface_info_string,                              NULL },
-        { "_SurfaceLister_",    surface_lister_init,        surface_lister_destroy,     surface_lister_update,      surface_lister_reset,       surface_lister_string,          surface_lister_command },
-        { "_DiagShow_",         diag_show_init,             diag_show_destroy,          diag_show_update,           diag_show_reset,            diag_show_string,                    diag_show_command }
+            { "TimedAction",        timed_action_init,          timed_action_destroy,       NULL,                       timed_action_reset,         NULL,                             timed_action_command },
+            { "Time",               time_init,                  time_destroy,               time_update,                time_reset,                 time_string,                                      NULL },
+            { "Script",             script_init,                script_destroy,             script_update,              script_reset,               script_string,                          script_command },
+            { "Network",            network_init,               network_destroy,            network_update,             network_reset,              NULL,                                             NULL },
+            { "Wifi",               wifi_init,                  wifi_destroy,               wifi_update,                wifi_reset,                 wifi_string,                                      NULL },
+            { "TextInput",          input_init,                 input_destroy,              input_update,               input_reset,                input_string,                            input_command },
+            { "FolderView",         folderview_init,            folderview_destroy,         folderview_update,          folderview_reset,           folderview_string,                  folderview_command },
+            //sources for internal use only
+            { "_SurfaceCollector_", surfaces_collector_init,    surfaces_collector_destroy, surfaces_collector_update,  surfaces_collector_reset,   surfaces_collector_string,  surfaces_collector_command },
+            { "_SurfaceInfo_",      surface_info_init,          surface_info_destroy,       surface_info_update,        surface_info_reset,         surface_info_string,                              NULL },
+            { "_SurfaceLister_",    surface_lister_init,        surface_lister_destroy,     surface_lister_update,      surface_lister_reset,       surface_lister_string,          surface_lister_command },
+            { "_DiagShow_",         diag_show_init,             diag_show_destroy,          diag_show_update,           diag_show_reset,            diag_show_string,                    diag_show_command }
 
     };
 
@@ -305,15 +305,15 @@ unsigned char  *source_call_str_rtn(source *s, unsigned char *rtn, unsigned char
 
     if(s->library)
     {
-         static char *rsr_rtn[6] =
-    {
-        "init",
-        "update",
-        "command",
-        "destroy",
-        "reset",
-        "string"
-    };
+        static char *rsr_rtn[6] =
+        {
+                "init",
+                "update",
+                "command",
+                "destroy",
+                "reset",
+                "string"
+        };
         char go = 1;
 
         for(unsigned char i = 0; i < sizeof(rsr_rtn) / sizeof(unsigned char*); i++)
@@ -475,6 +475,8 @@ source* source_by_name(surface_data* sd, unsigned char* sn, size_t len)
 void source_destroy(source** s)
 {
     source* ts = *s;
+    /*Remove source from chain*/
+    linked_list_remove(&ts->current);
     bind_unbind(ts->sd, ts);
     source_destroy_routines(ts); // call the source routines to perform internal cleanup
     action_destroy(ts);
@@ -491,8 +493,7 @@ void source_destroy(source** s)
     sfree((void**)&ts->change_act);
     skeleton_remove_section(&ts->cs); //remove the source section from the skeleton
 
-    /*Remove source from chain*/
-    linked_list_remove(&ts->current);
+
     sfree((void**)s);
 }
 

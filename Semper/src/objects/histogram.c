@@ -16,7 +16,7 @@
 #include <image/image_cache.h>
 #include <parameter.h>
 
-#warning "Code needs testing"
+
 
 void histogram_init(object* o)
 {

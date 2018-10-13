@@ -201,7 +201,7 @@ static unsigned char *xpander_call_source_string(source *s, unsigned char *sub)
                 start++;
             }
 
-            if(sti.buffer[end - 1] == ')')
+            if(sti.buffer[end - 1] == ')'&&(sti.buffer[end]!=','))
             {
                 end--;
                 execute = 1;

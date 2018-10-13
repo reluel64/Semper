@@ -470,7 +470,7 @@ size_t timed_action_fill_list(list_entry *head, string_tokenizer_info *sti, void
                 type = none;
             }
 
-            if(sti->buffer[end - 1] == ')')
+            if(sti->buffer[end - 1] == ')' && sti->buffer[end]!=',')
             {
                 end--;
                 finished = 1;

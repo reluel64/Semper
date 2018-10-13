@@ -20,22 +20,22 @@ extern uint32_t lowercase(uint32_t point);
 
 typedef struct
 {
-    unsigned char *ps;  // pair string
-    unsigned char *in;  // input string
-    //To-be-replaced
-    size_t tbr_start;
-    size_t tbr_end;
-    //To-replace-with
-    size_t rl_start;
-    size_t rl_end;
+        unsigned char *ps;  // pair string
+        unsigned char *in;  // input string
+        //To-be-replaced
+        size_t tbr_start;
+        size_t tbr_end;
+        //To-replace-with
+        size_t rl_start;
+        size_t rl_end;
 
 } replace_state;
 
 typedef struct
 {
-    size_t op;
-    size_t quotes;
-    unsigned char quote_type;
+        size_t op;
+        size_t quotes;
+        unsigned char quote_type;
 } replacer_tokenizer_status;
 
 
@@ -802,8 +802,8 @@ int string_tokenizer(string_tokenizer_info *sti)
 {
     string_tokenizer_status sts =
     {
-        .pos = 0,
-        .buf = sti->buffer
+            .pos = 0,
+            .buf = sti->buffer
     };
 
     if(sti->ovecoff == NULL)
@@ -1167,14 +1167,6 @@ static int string_util_replace_tokenizer_filter(string_tokenizer_status *pi, voi
         }
     }
 
-    if(rts->op && pi->buf[pi->pos] == ')')
-    {
-        if(--rts->op == 0)
-        {
-            return(0);
-        }
-    }
-
     if(pi->buf[pi->pos] == ';')
     {
         return (rts->op == 0);
@@ -1183,6 +1175,14 @@ static int string_util_replace_tokenizer_filter(string_tokenizer_status *pi, voi
     if(rts->op % 2 && pi->buf[pi->pos] == ',')
     {
         return (1);
+    }
+
+    if(rts->op && pi->buf[pi->pos] == ')')
+    {
+        if(--rts->op == 0)
+        {
+            return(0);
+        }
     }
 
     return (0);
@@ -1199,21 +1199,21 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
     replacer_tokenizer_status rts = { 0 };
     replace_state rs =
     {
-        .ps = rep_pair,
-        .in = in,
-        .tbr_start = 0,
-        .tbr_end = 0,
-        .rl_start = 0,
-        .rl_end = 0,
+            .ps = rep_pair,
+            .in = in,
+            .tbr_start = 0,
+            .tbr_end = 0,
+            .rl_start = 0,
+            .rl_end = 0,
     };
 
     string_tokenizer_info    sti =
     {
-        .buffer                  = rep_pair,
-        .filter_data             = &rts,
-        .string_tokenizer_filter = string_util_replace_tokenizer_filter,
-        .ovecoff                 = NULL,
-        .oveclen                 = 0
+            .buffer                  = rep_pair,
+            .filter_data             = &rts,
+            .string_tokenizer_filter = string_util_replace_tokenizer_filter,
+            .ovecoff                 = NULL,
+            .oveclen                 = 0
     };
 
     if(rep_pair == NULL || in == NULL)
@@ -1257,7 +1257,7 @@ unsigned char *replace(unsigned char* in, unsigned char* rep_pair, unsigned char
                 start++;
             }
 
-            if(rep_pair[end - 1] == ')')
+            if(rep_pair[end - 1] == ')' && sti.buffer[end]!=',')
             {
                 end--;
                 end_pair = 1;

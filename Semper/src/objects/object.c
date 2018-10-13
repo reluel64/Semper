@@ -678,6 +678,7 @@ void object_destroy(object** o)
     {
 
         object* to = *o;
+        linked_list_remove(&to->current);
         sfree((void**) &to->update_act);
         sfree((void**) &to->team);
         sfree((void**) &to->sx);
@@ -696,7 +697,7 @@ void object_destroy(object** o)
 
         mouse_destroy_actions(&to->ma);
         skeleton_remove_section(&to->os);
-        linked_list_remove(&to->current);
+
         sfree((void**) o);
     }
 }

@@ -75,11 +75,11 @@ static action* action_alloc(list_entry* head, size_t index)
 
 static void action_remove(action** a)
 {
+    linked_list_remove(&(*a)->current);
     sfree((void**) & (*a)->actstr);
     sfree((void**) & (*a)->cond_e);
     sfree((void**) & (*a)->cond_f);
     sfree((void**) & (*a)->cond_t);
-    linked_list_remove(&(*a)->current);
     sfree((void**)a);
 }
 

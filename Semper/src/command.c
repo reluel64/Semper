@@ -778,7 +778,7 @@ COMMAND_HANDLER(handler_load_surface)
     {
         ld_srf = surface_by_name(sd->cd, cp->pms[0]);
 
-        if(ld_srf->sp.variant != (var ? var : 1))
+        if(ld_srf && ld_srf->sp.variant != (var ? var : 1))
         {
             surface_change_variant(ld_srf, cp->pms[1]);
         }
@@ -1188,7 +1188,6 @@ static int command_parse_string_filter(string_tokenizer_status *pi, void* pv)
     return (0);
 }
 
-#warning "Need to revise routines based on string_tokenizer"
 int command(surface_data* sd, unsigned char **pa)
 {
     unsigned char push_params = 0;
@@ -1246,7 +1245,7 @@ int command(surface_data* sd, unsigned char **pa)
                 start++;
             }
 
-            if(sti.buffer[end - 1] == ')')
+            if(sti.buffer[end - 1] == ')' && (sti.buffer[end]!=','))
             {
                 end--;
                 execute = 1;

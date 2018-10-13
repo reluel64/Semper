@@ -29,6 +29,7 @@
 typedef struct
 {
     surface_data* sd;
+    control_data *cd;
     unsigned char* comm;
 } extension_command;
 extern int diag_log(unsigned char lvl, char *fmt, ...);
@@ -169,7 +170,7 @@ static int extension_command_handler(extension_command* ec)
     }
 
     surface_data *sd = NULL;
-    control_data *cd = ec->sd->cd;
+    control_data *cd = ec->cd;
     int command_exec = 0;
     list_enum_part(sd, &cd->surfaces, current)
     {
@@ -211,8 +212,9 @@ SEMPER_API void send_command_ex(void* ir, unsigned char* cmd, size_t timeout, ch
         surface_data* sd = s->sd;
         extension_command* ec = zmalloc(sizeof(extension_command));
         ec->sd = sd;
+        ec->cd=sd->cd;
         ec->comm = clone_string(cmd);
-        event_push(sd->cd->eq, (event_handler)extension_command_handler, (void*)ec, timeout, flags); //we will queue this event to be processed later
+        event_push(ec->cd->eq, (event_handler)extension_command_handler, (void*)ec, timeout, flags); //we will queue this event to be processed later
     }
 }
 
