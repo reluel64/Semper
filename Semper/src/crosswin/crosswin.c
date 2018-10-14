@@ -140,7 +140,7 @@ static int crosswin_restack(crosswin *c)
     crosswin_window *cw = NULL;
     crosswin_check_desktop(c);
 
-   event_push(c->eq,(event_handler)crosswin_restack,c,250,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
+    event_push(c->eq,(event_handler)crosswin_restack,c,250,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
 
     if(!(c->flags & (CROSSWIN_UPDATE_ZORDER)))
     {
@@ -157,12 +157,12 @@ static int crosswin_restack(crosswin *c)
     if(c->flags&CROSSWIN_SHOW_DESKTOP)
     {
         list_enum_part_backward(cw,&c->windows,current)
-                                                        {
+        {
             if(cw->zorder == crosswin_bottom)
             {
                 crosswin_restack_window(cw);
             }
-                                                        }
+        }
 
 
         list_enum_part_backward(cw,&c->windows,current)
@@ -232,8 +232,8 @@ crosswin_window* crosswin_init_window(crosswin* c)
 static int crosswin_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *len)
 {
     unused_parameter(c);
-       *len = 1;
-       *cm=realloc(*cm,sizeof(crosswin_monitor));
+    *len = 1;
+    *cm=realloc(*cm,sizeof(crosswin_monitor));
 
 #ifdef WIN32
 
@@ -331,55 +331,82 @@ void crosswin_set_position(crosswin_window* w, long x, long y)
     {
 
         crosswin* c = w->c;
+
+
+
         crosswin_monitor *cm = crosswin_get_monitor(c, w->mon);
         w->x = x;
         w->y = y;
-        long tx = cm->x + x;
-        long ty = cm->y + y;
+
 #warning "Faulty code"
         if(w->keep_on_screen)
         {
-            if(tx < cm->x)
+            if(w->x < 0)
                 w->x = 0;
 
-            else if(tx + w->w > cm->w)
-                w->x = max((cm->w ) - w->w,0);
+            else if(w->x + w->w > cm->w)
+                w->x = w->w>cm->w?0:cm->w-w->w;
 
-            if(ty < cm->y)
+            if(w->y < 0)
                 w->y = 0;
 
-            else if(ty + w->h > cm->h)
-                w->y = max((cm->h  ) - w->h,0);
+            else if(w->y + w->h > cm->h)
+                w->y =w->h>cm->h?0:cm->h-w->h;
         }
 
-        else if(w->detect_monitor && w->x!=0 && w->y!=0)
+        else if(w->detect_monitor && (w->x<0 || w->y<0 || w->x + w->w > cm->w || w->y +  w->h > cm->h ))
         {
+            crosswin_monitor *ncm = NULL;
+            size_t mx = w->mon;
+            size_t my = w->mon;
             for(size_t i = 1; i < c->mon_cnt; i++)
             {
-                crosswin_monitor *ncm = crosswin_get_monitor(w->c, i);
+                ncm= crosswin_get_monitor(w->c, i);
 
-                if(tx >= ncm->x && tx <= (ncm->x+ncm->w) && ty >= ncm->y && ty <= (ncm->y+ncm->h) )
+                /*Check what monitor are we going to use*/
+                if(ncm!=cm)
                 {
-                    /*Adjust the offsets*/
-                    if(w->mon!=i)
+                    if((w->x < 0 && ncm->x<cm->x)||(w->x >= cm->w && cm->x < ncm->x)) /* Check X offset*/
                     {
-                        w->mon=i;
+                        mx = i ;
+                    }
 
-                        if(w->x < 0)
-                            w->x = ncm->w;
-                        else if(w->x >= cm->w)
-                            w->x = 0;
-
-                        if(w->y < 0)
-                             w->y = ncm->h;
-                        else if(w->y>=cm->h)
-                            w->y=0;
-
-                        break;
+                    if((w->y < 0 && ncm->y<cm->y) ||(w->y >= cm->h && cm->y < ncm->y)) /* Check Y offset*/
+                    {
+                        my = i ;
                     }
                 }
             }
+
+            ncm = crosswin_get_monitor(w->c, mx);
+
+            if(w->x < 0 && ncm->x<cm->x )
+            {
+               w->x = ncm->w;
+            }
+            else if(w->x >= cm->w && cm->x < ncm->x)
+            {
+               w->x = 0;
+            }
+
+            ncm = crosswin_get_monitor(w->c, my);
+
+            if(w->y < 0 && ncm->y<cm->y)
+            {
+                w->y = ncm->h;
+            }
+            else if(w->y >= cm->h && cm->y < ncm->y)
+            {
+                w->y = 0;
+            }
+
+            /*Set the monitor*/
+            if(w->mon!=mx)
+                w->mon=mx;
+            else if(w->mon!=my)
+                w->mon=my;
         }
+
 
 #ifdef WIN32
         win32_set_position(w);
@@ -397,6 +424,11 @@ void crosswin_set_detect_monitor(crosswin_window *w,unsigned char option)
         w->detect_monitor=option;
         if(w->detect_monitor)
         {
+            crosswin_set_position(w,w->x,w->y);
+        }
+        else
+        {
+            w->mon=0;
             crosswin_set_position(w,w->x,w->y);
         }
     }

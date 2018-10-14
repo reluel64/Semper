@@ -24,14 +24,16 @@ static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, W
 
     switch(message)
     {
-#warning "Need to fix mouse wheel"
         case WM_MOUSEWHEEL:
-            md->x = GET_X_LPARAM(lpm)-w->x;
-            md->y = GET_Y_LPARAM(lpm)-w->y;
+        {
+            POINT pt ={GET_X_LPARAM(lpm),GET_Y_LPARAM(lpm)};
+            ScreenToClient(win,&pt);
+            md->x =pt.x;
+            md->y = pt.y;
             md->scroll_dir = GET_WHEEL_DELTA_WPARAM(wpm) > 0 ? 1 : -1;
             w->c->handle_mouse(w);
             return(0);
-
+        }
         case WM_LBUTTONDOWN:
             SetCapture(w->window);
             md->x = GET_X_LPARAM(lpm);
