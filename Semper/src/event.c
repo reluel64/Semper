@@ -8,6 +8,7 @@
 #include <mem.h>
 #include <event.h>
 #include <pthread.h>
+#include <time.h>
 #ifdef __linux__
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
@@ -246,10 +247,11 @@ int event_queue_empty(event_queue *eq)
 
 void event_process(event_queue* eq)
 {
+    size_t drift = 0;
+    event* e = NULL;
+    event* te = NULL;
     if(eq)
     {
-        event* e = NULL;
-        event* te = NULL;
         eq->to_sleep = -1;
         list_enum_part_backward_safe(e, te, &eq->events, current)
         {
@@ -266,20 +268,32 @@ void event_process(event_queue* eq)
 
             if(e->flags & EVENT_PUSH_TIMER)
             {
-                e->pos += eq->slept;
+                e->pos += eq->slept + drift;
 
                 if(e->time >= e->pos)
                 {
                     eq->to_sleep = min(e->time - e->pos, eq->to_sleep);
                 }
+                else
+                {
+                    eq->to_sleep = 0;
+                }
             }
 
             if((e->time <= e->pos) || !(e->flags & EVENT_PUSH_TIMER))
             {
-
                 if(e->handler)
                 {
+                    struct timespec t1 = {0};
+                    struct timespec t2 = {0};
+                    size_t call_duration = 0;
+
+                    clock_gettime(CLOCK_MONOTONIC, &t1);
                     e->handler(e->pv);
+                    clock_gettime(CLOCK_MONOTONIC, &t2);
+
+                    call_duration = (t2.tv_nsec - t1.tv_nsec) / 1000000 + (t2.tv_sec - t1.tv_sec) * 1000;
+                    drift+=call_duration;
                 }
 
                 pthread_mutex_lock(&eq->mutex);
@@ -287,11 +301,16 @@ void event_process(event_queue* eq)
                 event_remove_internal(e);
                 pthread_mutex_unlock(&eq->mutex);
             }
-
-
         }
         pthread_mutex_lock(&eq->mutex);
         eq->ce = NULL;
         pthread_mutex_unlock(&eq->mutex);
     }
+
+    if(eq->to_sleep >= drift && drift > 0)
+    {
+        eq->to_sleep-=drift;
+    }
+
+    eq->slept=0;
 }

@@ -174,7 +174,10 @@ static int crosswin_restack(crosswin *c)
         }
     }
 #endif
-    /*Do a normal restack if c->show_desktop == 0 or just restack windows that are not desktop or bottom*/
+    /*Do a normal restack if c->show_desktop == 0
+     * or just restack windows that are not
+     * desktop or bottom
+     * */
 
     list_enum_part(cw,&c->windows,current)
     {
@@ -324,6 +327,7 @@ crosswin_monitor *crosswin_get_monitor(crosswin *c, size_t index)
 }
 
 
+
 void crosswin_set_position(crosswin_window* w, long x, long y)
 {
 
@@ -331,13 +335,10 @@ void crosswin_set_position(crosswin_window* w, long x, long y)
     {
 
         crosswin* c = w->c;
-
-
-
         crosswin_monitor *cm = crosswin_get_monitor(c, w->mon);
         w->x = x;
         w->y = y;
-
+        w->detect_monitor=1;
 #warning "Faulty code"
         if(w->keep_on_screen)
         {
@@ -357,8 +358,10 @@ void crosswin_set_position(crosswin_window* w, long x, long y)
         else if(w->detect_monitor && (w->x<0 || w->y<0 || w->x + w->w > cm->w || w->y +  w->h > cm->h ))
         {
             crosswin_monitor *ncm = NULL;
+
             size_t mx = w->mon;
             size_t my = w->mon;
+
             for(size_t i = 1; i < c->mon_cnt; i++)
             {
                 ncm= crosswin_get_monitor(w->c, i);
@@ -377,34 +380,39 @@ void crosswin_set_position(crosswin_window* w, long x, long y)
                     }
                 }
             }
-
-            ncm = crosswin_get_monitor(w->c, mx);
-
-            if(w->x < 0 && ncm->x<cm->x )
+/*
+            if(mx==my)
             {
-               w->x = ncm->w;
-            }
-            else if(w->x >= cm->w && cm->x < ncm->x)
-            {
-               w->x = 0;
-            }
+                ncm = crosswin_get_monitor(w->c, mx);
 
-            ncm = crosswin_get_monitor(w->c, my);
+                if(w->x < 0 && ncm->x<cm->x )
+                {
+                    w->x = ncm->w;
+                }
+                else if(w->x >= cm->w && cm->x < ncm->x)
+                {
+                    w->x = 0;
+                }
 
-            if(w->y < 0 && ncm->y<cm->y)
-            {
-                w->y = ncm->h;
-            }
-            else if(w->y >= cm->h && cm->y < ncm->y)
-            {
-                w->y = 0;
-            }
+                ncm = crosswin_get_monitor(w->c, my);
 
-            /*Set the monitor*/
-            if(w->mon!=mx)
+                if(w->y < 0 && ncm->y<cm->y)
+                {
+                    w->y = ncm->h;
+                }
+                else if(w->y >= cm->h && cm->y < ncm->y)
+                {
+                    w->y = 0;
+                }
+
                 w->mon=mx;
-            else if(w->mon!=my)
-                w->mon=my;
+            }*/
+
+            printf("MX %d MY %d\n",w->x,w->y);
+            /*Set the monitor*/
+
+
+
         }
 
 
