@@ -1,7 +1,7 @@
 /*
-*Project 'Semper'
-*Written by Alexandru-Daniel Mărgărit
-*/
+ *Project 'Semper'
+ *Written by Alexandru-Daniel Mărgărit
+ */
 
 #include <semper.h>
 #include <stdlib.h>
@@ -45,29 +45,29 @@ extern void _cairo_mutex_initialize (void);
 
 typedef struct
 {
-    void* nf;
-    unsigned char* sn;
-    unsigned char* kv;
-    unsigned char* kn;
-    unsigned char sect_found;
-    unsigned char key_found;
-    unsigned char has_content;
-    size_t sect_off;
-    size_t sect_end_off;
-    size_t new_lines;
+        void* nf;
+        unsigned char* sn;
+        unsigned char* kv;
+        unsigned char* kn;
+        unsigned char sect_found;
+        unsigned char key_found;
+        unsigned char has_content;
+        size_t sect_off;
+        size_t sect_end_off;
+        size_t new_lines;
 
 } semper_write_key_data;
 
 typedef struct
 {
-    struct timespec t;
-    /* 1 - process the event loop
-     * 2 - process the message loop
-     */
-    unsigned char process_loop;
-    void *event_wait;
+        struct timespec t;
+        /* 1 - process the event loop
+         * 2 - process the message loop
+         */
+        unsigned char process_loop;
+        void *event_wait;
 #ifdef __linux__
-    void *dispfd;
+        void *dispfd;
 #endif
 } semper_event_wait_data;
 
@@ -568,29 +568,33 @@ static void semper_create_paths(control_data* cd)
     uniform_slashes(cd->app_dir);
     uniform_slashes(cd->ext_app_dir);
 
-    unsigned char *paths[] =
+    /*Create directories only if the app is per-user*/
+    if(portable)
     {
-        cd->root_dir,
-        cd->ext_dir,
-        cd->surface_dir,
-        cd->ext_app_dir
-    };
+        unsigned char *paths[] =
+        {
+                cd->root_dir,
+                cd->ext_dir,
+                cd->surface_dir,
+                cd->ext_app_dir
+        };
 
-    for(unsigned char i = 0; i < sizeof(paths) / sizeof(unsigned char*); i++)
-    {
+        for(unsigned char i = 0; i < sizeof(paths) / sizeof(unsigned char*); i++)
+        {
 #ifdef WIN32
-        unsigned short *tmp = utf8_to_ucs(paths[i]);
+            unsigned short *tmp = utf8_to_ucs(paths[i]);
 
-        if(_waccess(tmp, 0) != 0)
-            _wmkdir(tmp);
+            if(_waccess(tmp, 0) != 0)
+                _wmkdir(tmp);
 
-        sfree((void**)&tmp);
+            sfree((void**)&tmp);
 #elif __linux__
 
-        if(access(paths[i], 0) != 0)
-            mkdir(paths[i], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            if(access(paths[i], 0) != 0)
+                mkdir(paths[i], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
 #endif
+        }
     }
 }
 

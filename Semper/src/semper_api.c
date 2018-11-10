@@ -161,7 +161,7 @@ SEMPER_API int is_parent_candidate(void* pc, void* ip)
 
     return (0);
 }
-#warning "Need to review this routine"
+
 static int extension_command_handler(extension_command* ec)
 {
     if(!ec||!ec->sd)
@@ -174,7 +174,7 @@ static int extension_command_handler(extension_command* ec)
     int command_exec = 0;
     list_enum_part(sd, &cd->surfaces, current)
     {
-        if(ec->sd == sd)
+        if(ec->sd == sd) /*Validate*/
         {
             command(ec->sd, &ec->comm);
             command_exec = 1;
