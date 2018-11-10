@@ -338,7 +338,6 @@ void crosswin_set_position(crosswin_window* w, long x, long y)
         crosswin_monitor *cm = crosswin_get_monitor(c, w->mon);
         w->x = x;
         w->y = y;
-        w->detect_monitor=1;
 
         if(w->keep_on_screen)
         {
@@ -399,7 +398,8 @@ void crosswin_set_detect_monitor(crosswin_window *w,unsigned char option)
         }
         else
         {
-            w->mon=0;
+            if(w->mon >= w->c->mon_cnt)
+                w->mon=0;
             crosswin_set_position(w,w->x,w->y);
         }
     }

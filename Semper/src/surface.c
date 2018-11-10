@@ -96,9 +96,14 @@ void surface_reset(surface_data* sd)
     {
         long x = 0;
         long y = 0;
+        monitor = parameter_size_t(sd, "Monitor", 1, XPANDER_SURFACE_CONFIG);
+        detect_monitor = parameter_bool(sd, "DetectMonitor", 0, XPANDER_SURFACE_CONFIG);
         x = parameter_long_long(sd, "X", 0, XPANDER_SURFACE_CONFIG);
         y = parameter_long_long(sd, "Y", 0, XPANDER_SURFACE_CONFIG);
+        crosswin_set_monitor(sd->sw, monitor);
         crosswin_set_position(sd->sw, x, y);
+        crosswin_set_detect_monitor(sd->sw,detect_monitor);
+
     }
 
     /*Set parameters from Semper.ini*/
@@ -111,16 +116,13 @@ void surface_reset(surface_data* sd)
     sd->ro = parameter_byte(sd, "Opacity", 255, XPANDER_SURFACE_CONFIG);
     sd->order = (long)parameter_long_long(sd, "Order", 0, XPANDER_SURFACE_CONFIG);
     zorder = parameter_byte(sd, "ZOrder", crosswin_normal, XPANDER_SURFACE_CONFIG);
-    monitor = parameter_size_t(sd, "Monitor", 1, XPANDER_SURFACE_CONFIG);
-    detect_monitor = parameter_bool(sd, "DetectMonitor", 0, XPANDER_SURFACE_CONFIG);
 
-    crosswin_set_monitor(sd->sw, monitor);
     crosswin_set_keep_on_screen(sd->sw, keep_on_screen);
     crosswin_set_click_through(sd->sw, click_through);
     crosswin_set_draggable(sd->sw, draggable);
     crosswin_set_visible(sd->sw, !hidden);
     crosswin_set_zorder(sd->sw, zorder);
-    crosswin_set_detect_monitor(sd->sw,detect_monitor);
+
 
     /*Set parameters from [Semper]*/
     sd->srf_col = parameter_color(sd, "SurfaceColor", 0, XPANDER_SURFACE);
@@ -636,10 +638,10 @@ void surface_reload(surface_data* sd)
 
     if(sd)
     {
-            event_remove(sd->cd->eq, NULL, sd, EVENT_REMOVE_BY_DATA);
-            surface_destroy_structs(sd, 1);
-            surface_init(&sd->sp, sd->cd, &sd, SURFACE_INIT_CHECK);
-            surface_init_update(sd);
+        event_remove(sd->cd->eq, NULL, sd, EVENT_REMOVE_BY_DATA);
+        surface_destroy_structs(sd, 1);
+        surface_init(&sd->sp, sd->cd, &sd, SURFACE_INIT_CHECK);
+        surface_init_update(sd);
     }
 }
 
