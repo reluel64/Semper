@@ -213,7 +213,7 @@ void destroy(void **spv)
     if(pc->pcc->inst_cnt == 0)
     {
         semper_safe_flag_set(pc->pcc->kill,1);
-        pthread_cond_signal(pc->pcc->cond); /*wake the thread*/
+        pthread_cond_signal(&pc->pcc->cond); /*wake the thread*/
         pthread_join(pc->pcc->th,NULL);
         semper_safe_flag_destroy(&pc->pcc->kill);
 
