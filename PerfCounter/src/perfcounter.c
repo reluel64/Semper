@@ -35,9 +35,9 @@ typedef struct
 } perf_counter;
 
 
-static void *perf_counter_thread(void *pv);
-#define string_length(s) (((s) == NULL ? 0 : strlen((s))))
 
+#define string_length(s) (((s) == NULL ? 0 : strlen((s))))
+static void *perf_counter_thread(void *pv);
 static void* zmalloc(size_t bytes)
 {
     if(bytes == 0)
@@ -229,7 +229,7 @@ void destroy(void **spv)
 #endif
 
 
-void *perf_counter_thread(void *pv)
+static void *perf_counter_thread(void *pv)
 {
     perf_counter_common *pcc = pv;
     pthread_mutex_t mtx;

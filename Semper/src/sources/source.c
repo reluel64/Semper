@@ -34,6 +34,7 @@ Written by Alexandru-Daniel Mărgărit
 #include <sources/input.h>
 #include <sources/internal/_diag_show.h>
 #include <sources/folderview.h>
+#include <sources/ping.h>
 #include <parameter.h>
 #ifdef __linux__
 #include <dlfcn.h>
@@ -91,6 +92,7 @@ static size_t source_routines_table(unsigned char* s, source_table **st)
             { "Wifi",               wifi_init,                  wifi_destroy,               wifi_update,                wifi_reset,                 wifi_string,                                      NULL },
             { "TextInput",          input_init,                 input_destroy,              input_update,               input_reset,                input_string,                            input_command },
             { "FolderView",         folderview_init,            folderview_destroy,         folderview_update,          folderview_reset,           folderview_string,                  folderview_command },
+            { "Ping",               ping_init,                  ping_destroy,               ping_update,                ping_reset,                 NULL,                                             NULL },
             //sources for internal use only
             { "_SurfaceCollector_", surfaces_collector_init,    surfaces_collector_destroy, surfaces_collector_update,  surfaces_collector_reset,   surfaces_collector_string,  surfaces_collector_command },
             { "_SurfaceInfo_",      surface_info_init,          surface_info_destroy,       surface_info_update,        surface_info_reset,         surface_info_string,                              NULL },

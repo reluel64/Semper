@@ -450,7 +450,7 @@ static unsigned char semper_is_portable(unsigned char *app_dir, size_t len)
     sfree((void**)&ucs);
 #elif __linux__
 
-    if(access(semp_ini, 0) == 0)
+    if(access(surfaces, 0) == 0)
         portable = 1;
 
 #endif
