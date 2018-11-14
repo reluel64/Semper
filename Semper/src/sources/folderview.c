@@ -703,9 +703,6 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
 #elif __linux__
 
             DIR *dh = opendir(file);
-
-
-
             struct dirent *dat = (dh ? readdir(dh) : NULL);
 #endif
 

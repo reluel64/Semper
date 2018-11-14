@@ -153,31 +153,29 @@ static int crosswin_restack(crosswin *c)
 
     /*Special case for desktop and bottom windows*/
 #if defined (WIN32)
-
-    /*if(c->flags&CROSSWIN_SHOW_DESKTOP)*/
+    list_enum_part_backward(cw,&c->windows,current)
     {
-        list_enum_part_backward(cw,&c->windows,current)
-           {
-            if(cw->zorder == crosswin_bottom)
-            {
-                crosswin_restack_window(cw);
-            }
-            }
-
-
-        list_enum_part_backward(cw,&c->windows,current)
+        if(cw->zorder == crosswin_bottom)
         {
-            if(cw->zorder == crosswin_desktop)
-            {
-                crosswin_restack_window(cw);
-            }
+            crosswin_restack_window(cw);
         }
     }
+
+
+    list_enum_part_backward(cw,&c->windows,current)
+    {
+        if(cw->zorder == crosswin_desktop)
+        {
+            crosswin_restack_window(cw);
+        }
+    }
+
 #endif
-    /*Do a normal restack if c->show_desktop == 0
-     * or just restack windows that are not
-     * desktop or bottom
-     * */
+
+/*Do a normal restack if c->show_desktop == 0
+ * or just restack windows that are not
+ * desktop or bottom
+ * */
 
     list_enum_part(cw,&c->windows,current)
     {

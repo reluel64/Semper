@@ -474,7 +474,7 @@ static double processor_frequency(processor* p, unsigned char max)
         fclose(f);
     }
 
-    return(val / 1000);
+    return(val / 1000.0);
 #endif
 }
 

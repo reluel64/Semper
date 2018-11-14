@@ -3,6 +3,16 @@
  * Written by Alexandru-Daniel Mărgărit
  */
 
+
+/*
+ * The Ping source uses TCP SYN/ACK
+ * pinging method because the normal method
+ * using ICMP Echo requires raw sockets under Linux
+ * The issue is that creating a raw socket requires
+ * root access. Therefore instead of requiring root
+ * access we try to do a compromise and use TCP SYN/ACK
+ */
+
 #ifdef WIN32
 #include <Winsock2.h>
 #include <windows.h>
