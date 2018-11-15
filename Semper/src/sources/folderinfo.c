@@ -1,38 +1,44 @@
+#undef WIN32
 #include <sources/folderinfo.h>
 #include <semper_api.h>
 #include <string_util.h>
 #include <linked_list.h>
 #ifdef WIN32
 #include <windows.h>
+#elif __linux__
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/types.h>
 #endif
 #include <mem.h>
 #include <pthread.h>
 
 typedef struct _folderinfo
 {
-    struct _folderinfo* parent;
-    unsigned char* path;
-    void *working;
-    void *stop;
-    pthread_t th;
-    size_t folder_count;
-    size_t size;
-    size_t file_count;
+        struct _folderinfo* parent;
+        unsigned char* path;
+        void *working;
+        void *stop;
+        pthread_t th;
+        size_t folder_count;
+        size_t size;
+        size_t file_count;
 
-    size_t ofolder_count;
-    size_t osize;
-    size_t ofile_count;
+        size_t ofolder_count;
+        size_t osize;
+        size_t ofile_count;
 
-    unsigned char type;
-    unsigned char hiddenf;
-    unsigned char systemf;
-    unsigned char recurse;
+        unsigned char type;
+        unsigned char hiddenf;
+        unsigned char systemf;
+        unsigned char recurse;
 } folderinfo;
 
 typedef struct
 {
-    unsigned char *dir;
-    list_entry current;
+        unsigned char *dir;
+        list_entry current;
 } folderinfo_dir_list;
 
 
@@ -41,8 +47,25 @@ static size_t file_size(size_t low, size_t high)
 {
     return (low | (high << 32));
 }
-#endif
+#elif __linux__
+static int file_size(unsigned char *path,size_t *len)
+{
+    int fd = open(path,0,0);
+    int err = -1;
+    if(fd > 0)
+    {
+        *len = lseek(fd,0,SEEK_END);
+        if(*len != -1)
+        {
 
+            err = 0;
+        }
+        close(fd);
+    }
+
+    return(err);
+}
+#endif
 void folderinfo_init(void** spv, void* ip)
 {
     folderinfo* fi = NULL;
@@ -100,7 +123,7 @@ void folderinfo_reset(void* spv, void* ip)
     }
 }
 #ifdef WIN32
-static int folderinfo_collect(unsigned char* root, folderinfo* fi)
+static int folderinfo_collect_win32(unsigned char* root, folderinfo* fi)
 {
     unsigned char *file = root;
     list_entry qbase = {0};
@@ -224,7 +247,116 @@ static int folderinfo_collect(unsigned char* root, folderinfo* fi)
 
     return(0);
 }
+#elif __linux__
+static int folderinfo_collect_linux(unsigned char* root, folderinfo* fi)
+{
+    unsigned char *file = root;
+    list_entry qbase = {0};
+    list_entry_init(&qbase);
 
+    while(file)
+    {
+        struct dirent *dir_entry = NULL;
+        DIR *dir = NULL;
+        size_t fpsz = 0;
+        fpsz = string_length(file);
+
+        dir = opendir(file);
+
+        if(dir == NULL)
+            continue;
+
+        dir_entry = readdir(dir);
+
+        do
+        {
+          size_t flen = 0;
+            unsigned char can_free = 1;
+            if(safe_flag_get(fi->stop) || dir_entry == NULL)
+            {
+                break;
+            }
+
+            if(!strcasecmp(dir_entry->d_name, ".") || !strcasecmp(dir_entry->d_name, "..") ||
+                    (dir_entry->d_type!= DT_REG && dir_entry->d_type != DT_DIR))
+            {
+                continue;
+            }
+
+
+
+
+            size_t res_sz = string_length(dir_entry->d_name);
+            unsigned char* ndir = zmalloc(res_sz + fpsz + 2);
+            snprintf(ndir, res_sz + fpsz + 2, "%s/%s", file, dir_entry->d_name);
+
+
+            if(dir_entry->d_type == DT_REG)
+            {
+                if((fi->hiddenf && dir_entry->d_name[0] == '.') ||( dir_entry->d_name[0] != '.'))
+                {
+                    if(!file_size(ndir,&flen))
+                    {
+                        fi->file_count++;
+                        fi->size+=flen;
+                    }
+                }
+            }
+            else if(dir_entry->d_type == DT_DIR)
+            {
+                if((fi->hiddenf && dir_entry->d_name[0] == '.') ||( dir_entry->d_name[0] != '.'))
+                {
+                    fi->folder_count++;
+
+                    if(fi->recurse)
+                    {
+                        folderinfo_dir_list *fdl = zmalloc(sizeof(folderinfo_dir_list));
+                        list_entry_init(&fdl->current);
+                        linked_list_add(&fdl->current, &qbase);
+                        fdl->dir = ndir;
+                        uniform_slashes(ndir);
+                        can_free = 0;
+                    }
+                }
+            }
+
+            if(can_free)
+            {
+                sfree((void**)&ndir);
+            }
+
+        }
+        while(safe_flag_get(fi->stop) == 0 && (dir_entry = readdir(dir)));
+
+        if(dir)
+        {
+
+            closedir(dir);
+            dir = NULL;
+        }
+
+        if(root != file)
+        {
+            sfree((void**)&file);
+        }
+
+        if(linked_list_empty(&qbase) == 0)
+        {
+            folderinfo_dir_list *fdl = element_of(qbase.prev, fdl, current);
+            file = fdl->dir;
+            linked_list_remove(&fdl->current);
+            sfree((void**)&fdl);
+        }
+        else
+        {
+            file = NULL;
+            break;
+        }
+    }
+
+    return(0);
+}
+#endif
 static void* folderinfo_collect_thread(void* vfi)
 {
     folderinfo* fi = vfi;
@@ -232,16 +364,18 @@ static void* folderinfo_collect_thread(void* vfi)
     fi->file_count = 0;
     fi->folder_count = 0;
     fi->size = 0;
-
-    folderinfo_collect(fi->path, fi);
-
+#ifdef WIN32
+    folderinfo_collect_win32(fi->path, fi);
+#elif __linux__
+    folderinfo_collect_linux(fi->path,fi);
+#endif
     fi->ofile_count = fi->file_count;
     fi->ofolder_count = fi->folder_count;
     fi->osize = fi->size;
     safe_flag_set(fi->working,0);
     return(NULL);
 }
-#endif
+
 double folderinfo_update(void* spv)
 {
 
@@ -251,9 +385,9 @@ double folderinfo_update(void* spv)
     {
         int status = 0;
         safe_flag_set(fi->working, 1);
-#ifdef WIN32
+
         status = pthread_create(&fi->th, NULL, folderinfo_collect_thread, fi);
-#endif
+
 
         if(status)
         {

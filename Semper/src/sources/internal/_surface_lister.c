@@ -367,6 +367,7 @@ void surface_lister_destroy(void** spv)
     {
         surface_lister_file_list *slfl = NULL;
         surface_lister_file_list *tslfl = NULL;
+
         list_enum_part_safe(slfl, tslfl, &sl->file_list, current)
         {
             linked_list_remove(&slfl->current);
