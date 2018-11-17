@@ -752,50 +752,6 @@ int string_to_color_matrix(unsigned char* str, double* cm)
 }
 
 
-int uniform_slashes(unsigned char *str)
-{
-    if(str == NULL)
-    {
-        return (-1);
-    }
-
-    for(size_t i = 0; str[i]; i++)
-    {
-#ifdef WIN32
-
-        if(str[i] == '/')
-        {
-            str[i] = '\\';
-        }
-
-#elif __linux__
-
-        if(str[i] == '\\')
-        {
-            str[i] = '/';
-        }
-
-#endif
-
-        if((str[i] == '/' || str[i] == '\\') && (str[i + 1] == '\\' || str[i + 1] == '/'))
-        {
-            for(size_t cpos = i; str[cpos]; cpos++)
-            {
-                str[cpos] = str[cpos + 1];
-            }
-
-            if(i != 0)
-            {
-                i--;
-            }
-
-            continue;
-        }
-    }
-
-    return (0);
-}
-
 
 
 int string_tokenizer(string_tokenizer_info *sti)

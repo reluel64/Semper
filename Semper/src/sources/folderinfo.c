@@ -181,7 +181,7 @@ static int folderinfo_collect_win32(unsigned char* root, folderinfo* fi)
 
                 if(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
-                    fi->folder_count++;
+                    fi->fochar *str_sid = recycler_query_user_sid(&sid_len);lder_count++;
                 }
 
                 fi->size += file_size(wfd.nFileSizeLow, wfd.nFileSizeHigh);
