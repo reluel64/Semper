@@ -47,24 +47,7 @@ static size_t file_size(size_t low, size_t high)
 {
     return (low | (high << 32));
 }
-#elif __linux__
-static int file_size(unsigned char *path,size_t *len)
-{
-    int fd = open(path,0,0);
-    int err = -1;
-    if(fd > 0)
-    {
-        *len = lseek(fd,0,SEEK_END);
-        if(*len != -1)
-        {
 
-            err = 0;
-        }
-        close(fd);
-    }
-
-    return(err);
-}
 #endif
 void folderinfo_init(void** spv, void* ip)
 {
@@ -295,10 +278,11 @@ static int folderinfo_collect_linux(unsigned char* root, folderinfo* fi)
             {
                 if((fi->hiddenf && dir_entry->d_name[0] == '.') ||( dir_entry->d_name[0] != '.'))
                 {
-                    if(!file_size(ndir,&flen))
+                    struct stat st;
+                    if(!stat(ndir,&st))
                     {
                         fi->file_count++;
-                        fi->size+=flen;
+                        fi->size+=st.st_size;
                     }
                 }
             }

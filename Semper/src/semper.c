@@ -906,7 +906,7 @@ int semper_main(void)
     _cairo_mutex_initialize();
     sewd.event_wait = CreateEvent(NULL, 0, 0, NULL);
 #elif __linux__
-    sewd.event_wait = (void*)(size_t)eventfd(0x2712, EFD_NONBLOCK);
+    sewd.event_wait = (void*)(size_t)eventfd(0, EFD_NONBLOCK);
 #endif
 
 

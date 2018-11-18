@@ -7,27 +7,21 @@
 #include <string_util.h>
 #include <semper_api.h>
 #include <mem.h>
-
-void recycler_notifier_destroy_win32(recycler *r)
-{
-    for(size_t i = 0; i < r->mc; i++)
-    {
-        if(r->mh[i] && r->mh[i] != INVALID_HANDLE_VALUE)
-        {
-            FindCloseChangeNotification(r->mh[i]);
-        }
-    }
-
-    r->mc = 0;
-    sfree((void**)&r->mh);
-}
+#include <watcher.h>
+#include <semper.h>
+#include <surface.h>
+#include <sources/source.h>
+static unsigned char *recycler_query_user_sid(size_t *len);
 
 int recycler_notifier_setup_win32(recycler *r)
 {
+    source *s = r->ip;
+    surface_data *sd = s->sd;
+    control_data *cd = sd->cd;
     char buf[256] = {0};
     size_t sid_len = 0;
     char *str_sid = recycler_query_user_sid(&sid_len);
-
+    recycler_common *rc = recycler_get_common();
     if(str_sid == NULL)
         return(-1);
 
@@ -43,28 +37,17 @@ int recycler_notifier_setup_win32(recycler *r)
             continue;
         }
 
-        void *tmh = FindFirstChangeNotificationA(buf, 0, 0x1 | 0x2 | 0x4 | 0x8 | 0x10);
+        void *tmh = watcher_init(buf,cd->eq,(event_handler)recycler_event_proc,r);
 
         if(tmh != INVALID_HANDLE_VALUE && tmh != NULL)
         {
-            void *tmp = realloc(r->mh, sizeof(void*) * (r->mc + 1));
+            void *tmp = realloc(rc->mh, sizeof(void*) * (rc->mc + 1));
 
             if(tmp)
             {
-                r->mh = tmp;
-                r->mh[r->mc++] = tmh;
+                rc->mh = tmp;
+                rc->mh[rc->mc++] = tmh;
             }
-        }
-    }
-
-    if(r->mon_mode)
-    {
-        void *tmp = realloc(r->mh, sizeof(void*) * (r->mc + 1));
-
-        if(tmp)
-        {
-            r->mh = tmp;
-            r->mh[r->mc] = r->me;
         }
     }
 
@@ -72,28 +55,8 @@ int recycler_notifier_setup_win32(recycler *r)
     return(0);
 }
 
-int recycler_notifier_check_win32(recycler *r)
-{
-    if(r->mon_mode)
-    {
-        WaitForMultipleObjects(r->mc + 1, r->mh, 0, -1);
-    }
-    else
-    {
-        for(size_t i = 0; i < r->mc; i++)
-        {
-            if(r->mh[i] && r->mh[i] != INVALID_HANDLE_VALUE)
-            {
-                if(WaitForSingleObject(r->mh[i], 0) == 0)
-                    return(1);
-            }
-        }
-    }
 
-    return(0);
-}
-
-unsigned char *recycler_query_user_sid(size_t *len)
+static unsigned char *recycler_query_user_sid(size_t *len)
 {
     void *hTok = NULL;
     char *str_sid = NULL;
@@ -125,10 +88,10 @@ unsigned char *recycler_query_user_sid(size_t *len)
 
 /*In-house replacement for SHQueryRecycleBinW
  * That can be canceled at any time and can be customized*/
-int recycler_query_user_win32(recycler *r, double *val)
+int recycler_query_user_win32(recycler *r)
 {
     /*Get the user SID*/
-
+    recycler_common *rc = recycler_get_common();
     size_t sid_len = 0;
     size_t file_count = 0;
     size_t size = 0;
@@ -165,7 +128,7 @@ int recycler_query_user_win32(recycler *r, double *val)
             WIN32_FIND_DATAW wfd = { 0 };
             void* fh = NULL;
 
-            if(!semper_safe_flag_get(r->kill))
+            if(!semper_safe_flag_get(rc->kill))
             {
                 fpsz = string_length(file);
                 unsigned char* filtered = zmalloc(fpsz + 6);
@@ -174,6 +137,8 @@ int recycler_query_user_win32(recycler *r, double *val)
                     snprintf(filtered, fpsz + 6, "%s/$I*.*", file);
                 else
                     snprintf(filtered, fpsz + 6, "%s/*.*", file);
+
+                uniform_slashes(filtered);
 
                 unsigned short* filtered_uni = semper_utf8_to_ucs(filtered);
                 sfree((void**)&filtered);
@@ -184,7 +149,7 @@ int recycler_query_user_win32(recycler *r, double *val)
 
             do
             {
-                if(semper_safe_flag_get(r->kill) || fh == INVALID_HANDLE_VALUE)
+                if(semper_safe_flag_get(rc->kill) || fh == INVALID_HANDLE_VALUE)
                     break;
 
                 unsigned char* res = semper_ucs_to_utf8(wfd.cFileName, NULL, 0);
@@ -266,7 +231,7 @@ int recycler_query_user_win32(recycler *r, double *val)
                 sfree((void**)&res);
 
             }
-            while(!semper_safe_flag_get(r->kill) && FindNextFileW(fh, &wfd));
+            while(!semper_safe_flag_get(rc->kill) && FindNextFileW(fh, &wfd));
 
             if(fh != NULL && fh != INVALID_HANDLE_VALUE)
             {
@@ -297,21 +262,12 @@ int recycler_query_user_win32(recycler *r, double *val)
     LocalFree(str_sid);
     sfree((void**)&buf);
 
-    pthread_mutex_lock(&r->mtx);
-    r->can_empty = (file_count != 0);
+    pthread_mutex_lock(&rc->mtx);
 
-    switch(r->rq)
-    {
-        case recycler_query_items:
-            *val = (double)file_count;
-            break;
+    rc->count=file_count;
+    rc->size = size;
 
-        case recycler_query_size:
-            *val = (double)size;
-            break;
-    }
-
-    pthread_mutex_unlock(&r->mtx);
+    pthread_mutex_unlock(&rc->mtx);
     return(1);
 }
 #endif

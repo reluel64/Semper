@@ -1,37 +1,45 @@
 #include <sources/recycler/recycler.h>
-
-/*In-house replacement for SHQueryRecycleBinW
- * That can be canceled at any time and can be customized*/
+#include <dirent.h>
+#include <sys/stat.h>
+#include <mem.h>
+#include <string_util.h>
+#include <sources/source.h>
+#include <surface.h>
+#include <watcher.h>
 #ifdef __linux__
-int recycler_query_user_linux(recycler *r, double *val)
-{
-    /*Get the user SID*/
 
-    size_t sid_len = 0;
+
+int recycler_notifier_setup_linux(recycler *r)
+{
+    source *s = r->ip;
+    surface_data *sd = s->sd;
+    control_data *cd = sd->cd;
+    recycler_common *rc = recycler_get_common();
+
+    char rroot[] = "$HOME/.local/share/Trash/files";
+    unsigned char *buf = expand_env_var(rroot);
+
+    rc->mh = zmalloc(sizeof(void*));
+    rc->mc++;
+    rc->mh[0] = watcher_init(buf,cd->eq,recycler_event_proc,r);
+    sfree((void**)&buf);
+    return(0);
+}
+
+
+int recycler_query_user_linux(recycler *r)
+{
+    recycler_common *rc = recycler_get_common();
     size_t file_count = 0;
     size_t size = 0;
 
+    char rroot[] = "$HOME/.local/share/Trash/files";
+
+    unsigned char *buf = expand_env_var(rroot);
 
 
-    if(str_sid == NULL)
+    /*for(char ch = 'A'; ch <= 'Z'; ch++)*/
     {
-        diag_error("%s %d Failed to get user SID", __FUNCTION__, __LINE__);
-        return(-1);
-    }
-
-    char rroot[] = ":\\$Recycle.Bin\\";
-    unsigned char *buf = zmalloc(sizeof(rroot) + sid_len + 3);
-    snprintf(buf + 1, sizeof(rroot) + sid_len + 3, "%s%s", rroot, str_sid);
-
-    for(char ch = 'A'; ch <= 'Z'; ch++)
-    {
-        buf[0] = ch;
-        char root[] = {ch, ':', '\\', 0};
-
-        if(GetDriveTypeA(root) != 3)
-        {
-            continue;
-        }
 
         unsigned char *file = buf;
         list_entry qbase = {0};
@@ -39,117 +47,69 @@ int recycler_query_user_linux(recycler *r, double *val)
 
         while(file)
         {
-            size_t fpsz = 0;
-            WIN32_FIND_DATAW wfd = { 0 };
-            void* fh = NULL;
-
-            if(!semper_safe_flag_get(r->kill))
+            size_t fpsz = string_length(file);
+            struct dirent *dir = NULL;
+            DIR *dh = opendir(file);
+            char can_free = 1;
+            if(dh!=NULL)
             {
-                fpsz = string_length(file);
-                unsigned char* filtered = zmalloc(fpsz + 6);
-
-                if(file == buf)
-                    snprintf(filtered, fpsz + 6, "%s/$I*.*", file);
-                else
-                    snprintf(filtered, fpsz + 6, "%s/*.*", file);
-
-                unsigned short* filtered_uni = semper_utf8_to_ucs(filtered);
-                sfree((void**)&filtered);
-
-                fh = FindFirstFileExW(filtered_uni, FindExInfoBasic, &wfd, FindExSearchNameMatch, NULL, 2);
-                semper_free((void**)&filtered_uni);
+                dir = readdir(dh);
             }
 
             do
             {
-                if(semper_safe_flag_get(r->kill) || fh == INVALID_HANDLE_VALUE)
+                if(semper_safe_flag_get(rc->kill) || dir == NULL)
                     break;
 
-                unsigned char* res = semper_ucs_to_utf8(wfd.cFileName, NULL, 0);
 
-                if(!strcasecmp(res, ".") || !strcasecmp(res, ".."))
+                if(!strcasecmp(dir->d_name, ".") || !strcasecmp(dir->d_name, ".."))
                 {
-                    sfree((void**)&res);
+
                     continue;
                 }
 
-                if(file == buf)
+                size_t res_sz = string_length(dir->d_name);
+                unsigned char* ndir = zmalloc(res_sz + fpsz + 2);
+                snprintf(ndir, res_sz + fpsz + 2, "%s/%s", file, dir->d_name);
+                uniform_slashes(ndir);
+
+                if(dir->d_type == DT_DIR)
                 {
-                    char valid = 0;
-                    size_t res_len = string_length(res);
-                    unsigned char *s = zmalloc(res_len + fpsz + 6);
-                    snprintf(s, res_len + fpsz + 6, "%s\\%s", file, res);
-                    windows_slahses(s);
-                    s[fpsz + 2] = 'R';
-
-                    if(access(s, 0) == 0)
-                    {
-                        s[fpsz + 2] = 'I';
-                        FILE *f = fopen(s, "rb");
-
-                        if(f)
-                        {
-                            size_t sz = 0;
-                            fseek(f, 8, SEEK_SET);
-                            fread(&sz, sizeof(size_t), 1, f);
-                            fclose(f);
-                            size += sz;
-                            valid = 1;
-                        }
-                    }
-
-                    sfree((void**)&s);
-
-                    if(valid == 0)
-                    {
-                        diag_warn("%s %d Entry %s is not valid", __FUNCTION__, __LINE__, res);
-                        sfree((void**)&res);
-                        continue;
-                    }
-                }
-
-#if 0
-
-                if(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                {
-#if 0
-
                     if(r->rq == recycler_query_size)
                     {
-                        size_t res_sz = string_length(res);
-                        unsigned char* ndir = zmalloc(res_sz + fpsz + 2);
-                        snprintf(ndir, res_sz + fpsz + 2, "%s/%s", file, res);
                         recycler_dir_list *fdl = zmalloc(sizeof(recycler_dir_list));
                         list_entry_init(&fdl->current);
                         linked_list_add(&fdl->current, &qbase);
                         fdl->dir = ndir;
-                        uniform_slashes(ndir);
+                        can_free = 0;
                     }
-
-#endif
                 }
                 else
                 {
-
-                    size += file_size(wfd.nFileSizeLow, wfd.nFileSizeHigh);
+                    struct stat st;
+                    if(!stat(ndir,&st))
+                    {
+                        size += st.st_size;
+                    }
                 }
-
-#endif
 
                 if(file == buf) //we only count what is in root
                 {
                     file_count++;
                 }
 
-                sfree((void**)&res);
+                if(can_free)
+                {
+                    sfree((void**)&ndir);
+                }
 
             }
-            while(!semper_safe_flag_get(r->kill) && FindNextFileW(fh, &wfd));
+            while(!semper_safe_flag_get(rc->kill) && (dir =  readdir(dh)));
 
-            if(fh != NULL && fh != INVALID_HANDLE_VALUE)
+            if(dh != NULL )
             {
-                FindClose(fh);
-                fh = NULL;
+                closedir(dh);
+                dh = NULL;
             }
 
             if(buf != file)
@@ -172,24 +132,14 @@ int recycler_query_user_linux(recycler *r, double *val)
         }
     }
 
-    LocalFree(str_sid);
     sfree((void**)&buf);
 
-    pthread_mutex_lock(&r->mtx);
-    r->can_empty = (file_count != 0);
+    pthread_mutex_lock(&rc->mtx);
 
-    switch(r->rq)
-    {
-        case recycler_query_items:
-            *val = (double)file_count;
-            break;
+    rc->size = size;
+    rc->count = file_count;
 
-        case recycler_query_size:
-            *val = (double)size;
-            break;
-    }
-
-    pthread_mutex_unlock(&r->mtx);
+    pthread_mutex_unlock(&rc->mtx);
     return(1);
 }
 #endif

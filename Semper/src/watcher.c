@@ -22,21 +22,28 @@
 
 typedef struct
 {
-    void *base_fd;
-    int *wtch;
-    size_t wtch_c;
-    event_queue *eq; //the event queue of the watcher
-    event_queue *meq;  //the main event queue where the watcher will push the events
-    pthread_t th;
-    event_handler eh;
-    void *pveh;
-    void *kill;
-    void *wake_event;
+        void *base_fd;
+        int *wtch;
+        size_t wtch_c;
+        event_queue *eq; //the event queue of the watcher
+        event_queue *meq;  //the main event queue where the watcher will push the events
+        pthread_t th;
+        event_handler eh;
+        void *pveh;
+        void *kill;
+        void *wake_event;
+        unsigned char recursive;
 #ifdef __linux__
-    unsigned char *dir;
+        unsigned char *dir;
 #endif
 } watcher_data;
 
+
+typedef struct
+{
+        unsigned char *dir;
+        list_entry current;
+} watcher_dir_list;
 
 #ifdef __linux__
 static int watcher_fill_list(unsigned char *dir, watcher_data *wd)
@@ -46,47 +53,98 @@ static int watcher_fill_list(unsigned char *dir, watcher_data *wd)
         return (-1);
     }
 
-    size_t len = string_length(dir);
+    unsigned char *cdir = dir;
 
-    DIR* dh = opendir(dir);
-    struct dirent* fi = NULL;
+    list_entry qbase = {0};
+    list_entry_init(&qbase);
+    int fd = inotify_add_watch((int)(size_t)wd->base_fd, dir,IN_MOVED_TO|IN_MOVED_FROM|IN_CREATE|IN_DELETE|IN_MODIFY | IN_ONESHOT);
 
-    if(dh == NULL)
-        return (-1);
-
-    while((fi = readdir(dh)) != NULL)
+    if(fd > 0)
     {
-        if(!strcasecmp(fi->d_name, ".") || !strcasecmp(fi->d_name, ".."))
-            continue;
+        int *temp = realloc(wd->wtch, (wd->wtch_c + 1) * sizeof(int));
 
-        if(fi->d_type == DT_DIR)
+        if(temp)
         {
-            size_t flen = string_length(fi->d_name);
-            unsigned char *ch = zmalloc(flen + len + 2);
-            snprintf(ch, flen + len + 2, "%s/%s", dir, fi->d_name);
-            int fd = inotify_add_watch((int)(size_t)wd->base_fd, ch, IN_MODIFY | IN_ONESHOT);
-
-            if(fd > 0)
-            {
-                int *temp = realloc(wd->wtch, (wd->wtch_c + 1) * sizeof(int));
-
-                if(temp)
-                {
-                    wd->wtch = temp;
-                    wd->wtch[wd->wtch_c++] = fd;
-                }
-                else
-                {
-                    inotify_rm_watch((int)(size_t)wd->base_fd, fd);
-                }
-            }
-
-            sfree((void**)&ch);
+            wd->wtch = temp;
+            wd->wtch[wd->wtch_c++] = fd;
+        }
+        else
+        {
+            inotify_rm_watch((int)(size_t)wd->base_fd, fd);
         }
     }
 
-    closedir(dh);
 
+    while(cdir)
+    {
+        size_t len = string_length(cdir);
+
+        DIR* dh = opendir(cdir);
+        struct dirent* fi = NULL;
+
+        if(dh != NULL)
+            fi = readdir(dh);
+
+        do
+        {
+            if(fi==NULL)
+                break;
+            if(!strcasecmp(fi->d_name, ".") || !strcasecmp(fi->d_name, ".."))
+                continue;
+
+
+            if(fi->d_type == DT_DIR)
+            {
+                size_t flen = string_length(fi->d_name);
+                unsigned char *ch = zmalloc(flen + len + 2);
+                snprintf(ch, flen + len + 2, "%s/%s", cdir, fi->d_name);
+                int fd = inotify_add_watch((int)(size_t)wd->base_fd, ch,IN_ALL_EVENTS | IN_ONESHOT);
+
+                if(fd > 0)
+                {
+                    int *temp = realloc(wd->wtch, (wd->wtch_c + 1) * sizeof(int));
+
+                    if(temp)
+                    {
+                        wd->wtch = temp;
+                        wd->wtch[wd->wtch_c++] = fd;
+                    }
+                    else
+                    {
+                        inotify_rm_watch((int)(size_t)wd->base_fd, fd);
+                    }
+                }
+
+                watcher_dir_list *fdl = zmalloc(sizeof(watcher_dir_list));
+                list_entry_init(&fdl->current);
+                linked_list_add(&fdl->current, &qbase);
+                fdl->dir = ch;
+
+            }
+        }while((fi = readdir(dh)) != NULL);
+
+        if(dh)
+            closedir(dh);
+
+        if(cdir!= dir)
+        {
+            sfree((void**)&cdir);
+        }
+
+        if(linked_list_empty(&qbase) == 0)
+        {
+            watcher_dir_list *fdl = element_of(qbase.prev, fdl, current);
+            cdir = fdl->dir;
+            linked_list_remove(&fdl->current);
+            sfree((void**)&fdl);
+        }
+        else
+        {
+            cdir = NULL;
+            break;
+        }
+
+    }
     return (0);
 }
 #endif
@@ -148,7 +206,7 @@ static size_t watcher_event_wait(void *pv, size_t timeout)
     WaitForMultipleObjects(2, harr, 0, -1);
 #elif __linux__
 
- struct pollfd events[2];
+    struct pollfd events[2];
     memset(events,0,sizeof(events));
     events[0].fd=(int)(size_t)wd->base_fd;
     events[0].events = POLLIN;
@@ -158,10 +216,10 @@ static size_t watcher_event_wait(void *pv, size_t timeout)
     if(events[1].revents)
     {
         eventfd_t dummy;
-    eventfd_read((int)(size_t)wd->wake_event, &dummy); //consume the event
+        eventfd_read((int)(size_t)wd->wake_event, &dummy); //consume the event
     }
 
-    #endif
+#endif
     return(0);
 }
 
@@ -171,9 +229,10 @@ static void watcher_event_wake(void *pv)
 #ifdef WIN32
     SetEvent(wd->wake_event);
 #elif __linux__
-  eventfd_write((int)(size_t)wd->wake_event, 0x3010);
-  #endif
+    eventfd_write((int)(size_t)wd->wake_event, 0x3010);
+#endif
 }
+
 
 
 void  *watcher_init(unsigned char *dir, event_queue *meq, event_handler eh, void *pveh)
@@ -207,7 +266,7 @@ void  *watcher_init(unsigned char *dir, event_queue *meq, event_handler eh, void
 #ifdef WIN32
         wd->wake_event = CreateEvent(NULL, 0, 0, NULL);
 #elif __linux__
-        wd->wake_event = (void*)(size_t)eventfd(0x2712, EFD_NONBLOCK);
+        wd->wake_event = (void*)(size_t)eventfd(0, EFD_NONBLOCK);
 #endif
         pthread_create(&wd->th, NULL, watcher_thread, wd);
     }
@@ -242,6 +301,7 @@ int watcher_destroy(void **wd)
     wdd->wtch_c = 0;
     close((int)(size_t)wdd->base_fd);
     sfree((void**)&wdd->dir);
+
 #endif
     event_queue_destroy(&wdd->eq);
     sfree((void**)&wdd->wtch);

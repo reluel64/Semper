@@ -1,97 +1,80 @@
 /*
-* Recycler monitor source
-* Part of Project 'Semper'
-* Written by Alexandru-Daniel Mărgărit
-*/
+ * Recycler monitor source
+ * Part of Project 'Semper'
+ * Written by Alexandru-Daniel Mărgărit
+ */
 #ifdef WIN32
 #include <windows.h>
 #include <shellapi.h>
 #include <Sddl.h>
 #include <io.h>
 #endif
+
 #include <sources/recycler/recycler.h>
 #include <semper_api.h>
 #include <mem.h>
 #include <string_util.h>
 #include <time.h>
-
+#include <watcher.h>
+#include <linked_list.h>
 #define string_length(s) (((s) == NULL ? 0 : strlen((s))))
 #define RECYCLER_DIALOG_THREAD 0
 
 
-static size_t recycler_get_time(void);
+
 static void *recycler_query_thread(void *p);
-
-
-int uniform_slashes(unsigned char *str)
-{
-    if(str == NULL)
-    {
-        return (-1);
-    }
-
-    for(size_t i = 0; str[i]; i++)
-    {
-#ifdef WIN32
-
-        if(str[i] == '/')
-        {
-            str[i] = '\\';
-        }
-
-#elif __linux__
-
-        if(str[i] == '\\')
-        {
-            str[i] = '/';
-        }
-
-#endif
-
-        if((str[i] == '/' || str[i] == '\\') && (str[i + 1] == '\\' || str[i + 1] == '/'))
-        {
-            for(size_t cpos = i; str[cpos]; cpos++)
-            {
-                str[cpos] = str[cpos + 1];
-            }
-
-            if(i != 0)
-            {
-                i--;
-            }
-
-            continue;
-        }
-    }
-
-    return (0);
-}
-
+static void recycler_notifier_destroy(recycler *r);
 #if 0
 static size_t file_size(size_t low, size_t high)
 {
     return (low | (high << 32));
 }
 #endif
+
+
+recycler_common *recycler_get_common(void)
+{
+    static recycler_common rc ={0};
+    return(&rc);
+}
+
 void recycler_init(void **spv, void *ip)
 {
+
+    recycler_common *rc = recycler_get_common();
+
+    if(rc->inst_count == 0)
+    {
+        diag_info("Initializing Recycler Common");
+        pthread_mutexattr_t mutex_attr;
+        pthread_mutexattr_init(&mutex_attr);
+        pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
+        pthread_mutex_init(&rc->mtx, &mutex_attr);
+        pthread_mutexattr_destroy(&mutex_attr);
+        rc->kill = semper_safe_flag_init();
+        rc->tha = semper_safe_flag_init();
+        list_entry_init(&rc->children);
+    }
+
+    rc->inst_count++;
+
     diag_info("Initializing Recycler with context 0x%p", ip);
     recycler *r = zmalloc(sizeof(recycler));
+
+    list_entry_init(&r->current);
+    pthread_mutex_lock(&rc->mtx);
+    linked_list_add(&r->current, &rc->children);
+    pthread_mutex_unlock(&rc->mtx);
     r->ip = ip;
-    pthread_mutexattr_t mutex_attr;
-    pthread_mutexattr_init(&mutex_attr);
-    pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
-    pthread_mutex_init(&r->mtx, &mutex_attr);
-    pthread_mutexattr_destroy(&mutex_attr);
-    r->kill = semper_safe_flag_init();
-    r->tha = semper_safe_flag_init();
+    recycler_event_proc(r);
     *spv = r;
 }
 
 void recycler_reset(void *spv, void *ip)
 {
+    return;
     recycler *r = spv;
-    pthread_mutex_lock(&r->mtx);
+    recycler_common *rc = recycler_get_common();
     unsigned char *temp = param_string("Type", EXTENSION_XPAND_ALL, ip, "Items");
     r->rq = recycler_query_items;
 
@@ -99,86 +82,32 @@ void recycler_reset(void *spv, void *ip)
     {
         r->rq = recycler_query_size;
     }
-
+    pthread_mutex_lock(&rc->mtx);
     sfree((void**)&r->cq_cmd);
 
     r->cq_cmd = strdup(param_string("CompleteQuery", EXTENSION_XPAND_ALL, ip, NULL));
-
-    pthread_mutex_unlock(&r->mtx);
-
-    /*Check if there is a monitor running and if it is, try to stop it*/
-    char new_monitor = param_size_t("MonitorMode", ip, 0) != 0;
-
-    if(r->mon_mode > new_monitor && r->qth)
-    {
-        r->mon_mode = new_monitor;
-
-        if(r->me)
-        {
-#ifdef WIN32
-            SetEvent(r->me); /*wake the thread if it is in monitoring mode*/
-#endif
-        }
-
-        semper_safe_flag_set(r->kill, 1);
-        pthread_join(r->qth, NULL);
-        r->qth = 0;
-#ifdef WIN32
-        CloseHandle(r->me);
-#endif
-    }
-
-    if(r->mon_mode < new_monitor && r->me == NULL)
-    {
-        r->me = CreateEvent(NULL, 0, 0, NULL);
-        r->mon_mode = new_monitor;
-        semper_safe_flag_set(r->tha, 1);
-
-        if(pthread_create(&r->qth, NULL, recycler_query_thread, r) != 0)
-        {
-            semper_safe_flag_set(r->tha, 0);
-        }
-    }
+    pthread_mutex_unlock(&rc->mtx);
 }
 
 double recycler_update(void *spv)
 {
+
     recycler *r = spv;
+    recycler_common *rc = recycler_get_common();
     double lret = 0.0;
 
+    pthread_mutex_lock(&rc->mtx);
 
-    if(r->mon_mode == 0)
+    if(r->rq == recycler_query_size)
     {
-        if(r->mh == NULL || recycler_notifier_check_win32(r))
-        {
-#ifdef WIN32
-            recycler_notifier_destroy_win32(r);
-            recycler_notifier_setup_win32(r);
-#elif __linux__
-#warning "NO LINUX"
-#endif
-            r->cc++;
-        }
-
-        if(r->lc != r->cc && r->qth == 0)
-        {
-            r->lc = r->cc;
-            semper_safe_flag_set(r->tha, 1);
-
-            if(pthread_create(&r->qth, NULL, recycler_query_thread, r) != 0)
-            {
-                semper_safe_flag_set(r->tha, 0);
-            }
-        }
-
-        if(semper_safe_flag_get(r->tha) == 0 && r->qth)
-        {
-            pthread_join(r->qth, NULL);
-            r->qth = 0;
-        }
+        lret = (double)rc->size;
+    }
+    else
+    {
+        lret = (double)rc->count;
     }
 
-    lret = r->inf;
+    pthread_mutex_unlock(&rc->mtx);
 
     return(lret);
 }
@@ -195,11 +124,17 @@ static void *dialog_thread(void *p)
 
 void recycler_command(void *spv, unsigned char *cmd)
 {
+    recycler_common *rc = recycler_get_common();
     recycler *r = spv;
 
     if(cmd && spv)
     {
-        if(r->can_empty)
+
+        return;
+        pthread_mutex_lock(&rc->mtx);
+        char can_empty = rc->size!=0;
+        pthread_mutex_unlock(&rc->mtx);
+        if(can_empty)
         {
             if(!strcasecmp("Empty", cmd))
             {
@@ -243,112 +178,128 @@ void recycler_command(void *spv, unsigned char *cmd)
 void recycler_destroy(void **spv)
 {
     recycler *r = *spv;
-    semper_safe_flag_set(r->kill, 1);
+    recycler_common *rc = recycler_get_common();
+    return;
+    pthread_mutex_lock(&rc->mtx);
+    sfree((void**)&r->cq_cmd);
+    linked_list_remove(&r->current);
+    pthread_mutex_unlock(&rc->mtx);
 
-    if(r->me)
+    if(rc->inst_count>0)
+        rc->inst_count--;
+
+    if(rc->inst_count==0)
     {
-        SetEvent(r->me);
-        CloseHandle(r->me);
+
+
+        semper_safe_flag_set(rc->kill, 1);
+
+        if(rc->qth)
+            pthread_join(rc->qth, NULL);
+
+        for(size_t i= 0; i< rc->mc;i++)
+               {
+                   watcher_destroy(&rc->mh[i]);
+               }
+
+        sfree((void**)&rc->mh);
+        rc->mc = 0;
+        semper_safe_flag_destroy(&rc->tha);
+        semper_safe_flag_destroy(&rc->kill);
+        pthread_mutex_destroy(&rc->mtx);
     }
 
-    if(r->qth)
-        pthread_join(r->qth, NULL);
-
-    semper_safe_flag_destroy(&r->tha);
-    semper_safe_flag_destroy(&r->kill);
-    pthread_mutex_destroy(&r->mtx);
-    sfree((void**)&r->cq_cmd);
-#ifdef WIN32
-    recycler_notifier_destroy_win32(r);
-#elif __linux__
-#warning "NO LINUX"
-#endif
     sfree(spv);
 }
 
 static void *recycler_query_thread(void *p)
 {
-
-    char first = 0;
     recycler *r = p;
-    time_t start = recycler_get_time();
-    semper_safe_flag_set(r->tha, 2);
+    recycler_common *rc = recycler_get_common();
 
-    do
+    semper_safe_flag_set(rc->tha, 2);
+
+#ifdef WIN32
+    recycler_query_user_win32(r);
+#elif __linux__
+    recycler_query_user_linux(r);
+
+#endif
+
+
+    pthread_mutex_lock(&rc->mtx);
+    recycler *cr = NULL;
+    list_enum_part(cr,&rc->children,current)
     {
-        time_t diff = start;
-        double val = 0.0;
-
-        if(r->mon_mode)
-        {
-            if(first != 0)
-            {
-#ifdef WIN32
-                recycler_notifier_check_win32(r);
-#elif __linux__
-#warning "NO LINUX"
-#endif
-            }
-#ifdef WIN32
-            recycler_notifier_destroy_win32(r);
-            recycler_notifier_setup_win32(r);
-#elif __linux__
-#warning "NO LINUX"
-#endif
-
-
-        }
-#ifdef WIN32
-        recycler_query_user_win32(r, &val);
-#elif __linux__
-#warning "NO LINUX"
-#endif
-        if(r->mon_mode)
-            diff = recycler_get_time() - start;
-
-        /*In monitoring mode, without this condition (val!=r->inf), the monitoring thread might flood the main event queue
-         * which would lead to sluggish response of the application and/or undefined results from other
-         * sources that are time sensitive (CPU, Network, etc)
-         * This behaviour could occur when deleting huge amounts of small files or if
-         * ghost events (1) are reported.
-         *
-         * (1) the notifier detects a change but it does not exist on the disk
-         * */
-        if(val != r->inf)
-        {
-            pthread_mutex_lock(&r->mtx);
-
-            if(diff >= 1000 || !r->mon_mode)
-                send_command(r->ip, r->cq_cmd);
-            else if(r->mon_mode)
-                send_command_ex(r->ip, r->cq_cmd, 1000 - diff, 1);
-
-
-            r->inf = val;
-            pthread_mutex_unlock(&r->mtx);
-
-        }
-
-        if(first == 0)
-            first = 1;
+        send_command_ex(cr->ip, cr->cq_cmd,0, 1);
     }
-    while(r->mon_mode && !semper_safe_flag_get(r->kill));
 
-    semper_safe_flag_set(r->tha, 0);
-    semper_safe_flag_set(r->kill, 0);
+    pthread_mutex_unlock(&rc->mtx);
+
+
+
+    semper_safe_flag_set(rc->tha, 0);
+    semper_safe_flag_set(rc->kill, 0);
     return (NULL);
 }
 
-
-static size_t recycler_get_time(void)
+int recycler_event_proc(recycler *r)
 {
+
+    recycler_common *rc = recycler_get_common();
+
+    if(rc->inst_count == 0)
+    {
+        return(-1);
+    }
+
+    recycler_notifier_destroy(r);
 #ifdef WIN32
-    return(clock());
+
+    recycler_notifier_setup_win32(r);
 #elif __linux__
-    struct timespec t = {0};
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t);
-    return(t.tv_sec * 1000 + t.tv_nsec / 1000000);
+    recycler_notifier_setup_linux(r);
 #endif
+
+
+
+    if(semper_safe_flag_get(rc->tha))
+    {
+        semper_safe_flag_set(rc->kill,1);
+
+        if(rc->qth)
+        {
+            pthread_join(rc->qth,NULL);
+            rc->qth = 0;
+        }
+    }
+    semper_safe_flag_set(rc->kill,0);
+    semper_safe_flag_set(rc->tha,1);
+
+
+    if(pthread_create(&rc->qth, NULL, recycler_query_thread, r) != 0)
+    {
+        semper_safe_flag_set(rc->tha, 0);
+    }
+
+    return(0);
 }
 
+
+
+static void recycler_notifier_destroy(recycler *r)
+{
+    recycler_common *rc = recycler_get_common();
+
+    for(size_t i = 0; i < rc->mc; i++)
+    {
+        if(rc->mh[i])
+        {
+            watcher_destroy(&rc->mh[i]);
+        }
+    }
+
+    rc->mc = 0;
+    sfree((void**)&rc->mh);
+}
 
