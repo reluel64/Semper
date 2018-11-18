@@ -72,7 +72,6 @@ void recycler_init(void **spv, void *ip)
 
 void recycler_reset(void *spv, void *ip)
 {
-    return;
     recycler *r = spv;
     recycler_common *rc = recycler_get_common();
     unsigned char *temp = param_string("Type", EXTENSION_XPAND_ALL, ip, "Items");
@@ -82,6 +81,7 @@ void recycler_reset(void *spv, void *ip)
     {
         r->rq = recycler_query_size;
     }
+
     pthread_mutex_lock(&rc->mtx);
     sfree((void**)&r->cq_cmd);
 
@@ -130,7 +130,7 @@ void recycler_command(void *spv, unsigned char *cmd)
     if(cmd && spv)
     {
 
-        return;
+
         pthread_mutex_lock(&rc->mtx);
         char can_empty = rc->size!=0;
         pthread_mutex_unlock(&rc->mtx);
@@ -179,7 +179,7 @@ void recycler_destroy(void **spv)
 {
     recycler *r = *spv;
     recycler_common *rc = recycler_get_common();
-    return;
+
     pthread_mutex_lock(&rc->mtx);
     sfree((void**)&r->cq_cmd);
     linked_list_remove(&r->current);
