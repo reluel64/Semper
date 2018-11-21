@@ -122,7 +122,7 @@ void xlib_init_window(crosswin_window *w)
             CWEventMask                              |
             CWDontPropagate                          |
             CWOverrideRedirect                       |
-            CWCursor 							     ,
+            CWCursor                                 ,
             &attr
     );
 
@@ -133,6 +133,7 @@ void xlib_init_window(crosswin_window *w)
     Atom property;
     hints.flags = 2;
     hints.decorations = 0;
+    Atom time = 0;
     property = XInternAtom(w->c->display, "_MOTIF_WM_HINTS", 1);
     XChangeProperty(w->c->display, (Window)w->window, property, property, 32, PropModeReplace, (unsigned char *)&hints, 5);
 
@@ -144,6 +145,9 @@ void xlib_init_window(crosswin_window *w)
 
     type = XInternAtom(w->c->display,"_NET_WM_PID",1);
     XChangeProperty(w->c->display,  (Window)w->window, type, XA_CARDINAL, 32,PropModeReplace,  (unsigned char*) &pid, 1);
+
+    property =  XInternAtom(w->c->display, "_NET_WM_USER_TIME",1);
+    XChangeProperty(w->c->display,  (Window)w->window, property, XA_CARDINAL, 32,PropModeReplace,  (unsigned char*) &time, 1);
 }
 
 void xlib_set_dimmension(crosswin_window *w)
@@ -194,7 +198,7 @@ void  xlib_set_position(crosswin_window *w)
 
     XSendEvent(w->c->display,DefaultRootWindow(w->c->display),0,  StructureNotifyMask|SubstructureNotifyMask   |  SubstructureRedirectMask,&ev);
 
-    XSync(w->c->display,0);
+    //XSync(w->c->display,0);
 }
 
 void xlib_set_visible(crosswin_window *w)
@@ -289,7 +293,7 @@ void xlib_draw(crosswin_window* w)
 {
     xlib_render(w);
     xlib_set_mask(w);
-    XFlush(w->c->display);
+
 }
 
 int xlib_message_dispatch(crosswin *c)
@@ -348,14 +352,13 @@ int xlib_message_dispatch(crosswin *c)
             case EnterNotify:
             case MotionNotify:
             {
-
                 c->flags|=CROSSWIN_CHECK_ZORDER_FOR_FIX;
                 /*Get the latest MotionNotify*/
                 while(XCheckTypedWindowEvent(w->c->display,(Window)w->window,MotionNotify,&dev))
                 {
                     if(dev.xmotion.time>=ev.xmotion.time)
                     {
-                        ev=dev;
+                       ev=dev;
                     }
                 }
                 c->md.x = ev.xmotion.x;
@@ -371,7 +374,7 @@ int xlib_message_dispatch(crosswin *c)
                 c->md.x = ev.xbutton.x;
                 c->md.y = ev.xbutton.y;
                 c->md.state = mouse_button_state_unpressed;
-
+                c->flags|=CROSSWIN_CHECK_ZORDER_FOR_FIX;
                 switch(ev.xbutton.button)
                 {
                     case Button1:
@@ -403,11 +406,12 @@ int xlib_message_dispatch(crosswin *c)
 
             case ButtonPress:
             {
-               // XSetInputFocus(w->c->display, (Window)w->window, RevertToParent, 0);
+                // XSetInputFocus(w->c->display, (Window)w->window, RevertToParent, 0);
                 c->md.x = ev.xbutton.x;
                 c->md.y = ev.xbutton.y;
                 c->md.state = mouse_button_state_pressed;
                 c->flags|=CROSSWIN_CHECK_ZORDER_FOR_FIX;
+
                 switch(ev.xbutton.button)
                 {
                     case Button1:
@@ -446,6 +450,7 @@ int xlib_message_dispatch(crosswin *c)
             case ReparentNotify:
             case ConfigureNotify:
                 c->flags|=CROSSWIN_CHECK_ZORDER_FOR_FIX;
+
                 break;
 
         }
@@ -471,14 +476,27 @@ void xlib_destroy_window(crosswin_window **w)
 
 static void xlib_set_window_active(crosswin_window *w)
 {
+
     Atom active_win =  XInternAtom(w->c->display, "_NET_ACTIVE_WINDOW", 1);
+    Atom type = XInternAtom(w->c->display, "_NET_WM_USER_TIME", 1);
+    Atom ret=0;
+    int fmt_ret=0;
+    unsigned long item_ret=0;
+    unsigned long bret=0;
+    Atom tm=0;
     XEvent ev={0};
+
+    if(XGetWindowProperty(w->c->display,(Window)w->window,type,0,1,0,XA_CARDINAL,&ret,&fmt_ret,&item_ret,&bret,(unsigned char**)&tm))
+    {
+        return;
+    }
 
     ev.xclient.message_type  = active_win;
     ev.xclient.format = 32;
     ev.xclient.type=ClientMessage;
     ev.xclient.window = (Window)w->window;
     ev.xclient.send_event=1;
+    ev.xclient.data.l[1] = tm;
     XSendEvent(w->c->display,DefaultRootWindow(w->c->display),0,  StructureNotifyMask|SubstructureNotifyMask   ,&ev);
 
 }
@@ -628,8 +646,7 @@ void xlib_set_zpos(crosswin_window *w)
 
             break;
     }
-    XSync(w->c->display,0);
-    XFlush(w->c->display);
+
 }
 
 

@@ -84,8 +84,11 @@ void recycler_reset(void *spv, void *ip)
 
     pthread_mutex_lock(&rc->mtx);
     sfree((void**)&r->cq_cmd);
-
-    r->cq_cmd = strdup(param_string("CompleteQuery", EXTENSION_XPAND_ALL, ip, NULL));
+    temp = param_string("CompleteQuery", EXTENSION_XPAND_ALL, ip, NULL);
+    if(temp)
+    {
+        r->cq_cmd = strdup(temp);
+    }
     pthread_mutex_unlock(&rc->mtx);
 }
 
@@ -190,17 +193,15 @@ void recycler_destroy(void **spv)
 
     if(rc->inst_count==0)
     {
-
-
         semper_safe_flag_set(rc->kill, 1);
 
         if(rc->qth)
             pthread_join(rc->qth, NULL);
 
         for(size_t i= 0; i< rc->mc;i++)
-               {
-                   watcher_destroy(&rc->mh[i]);
-               }
+        {
+            watcher_destroy(&rc->mh[i]);
+        }
 
         sfree((void**)&rc->mh);
         rc->mc = 0;
@@ -267,12 +268,15 @@ int recycler_event_proc(recycler *r)
     {
         semper_safe_flag_set(rc->kill,1);
 
-        if(rc->qth)
-        {
-            pthread_join(rc->qth,NULL);
-            rc->qth = 0;
-        }
+
     }
+
+    if(rc->qth)
+    {
+        pthread_join(rc->qth,NULL);
+        rc->qth = 0;
+    }
+
     semper_safe_flag_set(rc->kill,0);
     semper_safe_flag_set(rc->tha,1);
 

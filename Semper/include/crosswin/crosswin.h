@@ -3,8 +3,6 @@
 #include <windows.h>
 #endif
 
-#include <stddef.h>
-#include <linked_list.h>
 #ifdef __linux__
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -14,8 +12,10 @@
 #include <cairo/cairo.h>
 #include <cairo/cairo-xlib.h>
 #endif
-
+#include <stddef.h>
+#include <linked_list.h>
 #include <event.h>
+
 #define CROSSWIN_UPDATE_MONITORS     (1<<0)
 #define CROSSWIN_UPDATE_ZORDER       (1<<1)
 #define CROSSWIN_SHOW_DESKTOP (1<<2)
@@ -111,6 +111,7 @@ typedef struct
     void *show_desktop_window;
 #endif
 #if defined(__linux__)
+
     void *display;
     void *disp_fd;
     XVisualInfo vinfo;

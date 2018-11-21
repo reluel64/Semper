@@ -276,7 +276,6 @@ static void *perf_counter_thread(void *pv)
         pthread_mutex_lock(&mtx);
         pthread_cond_timedwait(&pcc->cond, &mtx, &ts);
         pthread_mutex_unlock(&mtx);
-        pthread_mutex_destroy(&mtx);
 
 
     }
