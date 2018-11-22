@@ -175,6 +175,7 @@ int xlib_set_opacity(crosswin_window *w)
         cairo_paint(cr);
         cairo_surface_flush(w->xlib_surface);
         cairo_destroy(cr); //destroy the context
+        xlib_set_mask(w);
         XSync(w->c->display,0);
         XFlush(w->c->display);
     }
@@ -197,8 +198,6 @@ void  xlib_set_position(crosswin_window *w)
     ev.xclient.send_event=1;
 
     XSendEvent(w->c->display,DefaultRootWindow(w->c->display),0,  StructureNotifyMask|SubstructureNotifyMask   |  SubstructureRedirectMask,&ev);
-
-    //XSync(w->c->display,0);
 }
 
 void xlib_set_visible(crosswin_window *w)
@@ -259,6 +258,8 @@ static void xlib_render(crosswin_window *w)
 
         cairo_surface_flush(w->xlib_surface);
         cairo_destroy(cr); //destroy the context
+        XSync(w->c->display,0);
+        XFlush(w->c->display);
     }
 }
 
@@ -281,6 +282,8 @@ void xlib_set_mask(crosswin_window *w)
         cairo_surface_flush(w->xlib_bitmap);
         XShapeCombineMask(w->c->display,(Window) w->window, ShapeInput, 0, 0, w->pixmap, ShapeSet);
         cairo_destroy(cr);
+        XSync(w->c->display,0);
+        XFlush(w->c->display);
     }
 }
 
@@ -358,7 +361,7 @@ int xlib_message_dispatch(crosswin *c)
                 {
                     if(dev.xmotion.time>=ev.xmotion.time)
                     {
-                       ev=dev;
+                        ev=dev;
                     }
                 }
                 c->md.x = ev.xmotion.x;
@@ -406,7 +409,7 @@ int xlib_message_dispatch(crosswin *c)
 
             case ButtonPress:
             {
-                // XSetInputFocus(w->c->display, (Window)w->window, RevertToParent, 0);
+              //   XSetInputFocus(w->c->display, (Window)w->window, RevertToParent, 0);
                 c->md.x = ev.xbutton.x;
                 c->md.y = ev.xbutton.y;
                 c->md.state = mouse_button_state_pressed;
@@ -574,7 +577,7 @@ static int xlib_fixup_zpos(crosswin *c)
     {
 
         list_enum_part(cw,&c->windows,current)
-        {
+                {
             if((Window)cw->window == chld[i])
             {
                 Window *tmp = realloc(server,sizeof(Window)*(server_cnt+1));
@@ -586,7 +589,7 @@ static int xlib_fixup_zpos(crosswin *c)
                 }
                 break;
             }
-         }
+                }
     }
 
     XFree(chld);
