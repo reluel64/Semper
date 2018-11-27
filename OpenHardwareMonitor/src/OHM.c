@@ -4,7 +4,6 @@
 #include <tchar.h>
 #include <windows.h>
 #include <wbemidl.h>
-#include <pthread.h>
 #include <sys/time.h>
 typedef struct
 {
@@ -17,9 +16,9 @@ typedef struct
     ohm_data *data;
     size_t dlen;
     void *kill;
-    pthread_mutex_t mutex;
-    pthread_cond_t cond;
-    pthread_t qth;
+    semper_mtx_t mutex;
+    semper_cnd_t cond;
+    semper_thrd_t qth;
     size_t inst_cnt;
 } open_hardware_monitor;
 
@@ -42,13 +41,11 @@ void init(void **spv, void *ip)
     if(ohm_inst.inst_cnt == 0)
     {
         ohm_inst.kill = semper_safe_flag_init();
-        pthread_mutexattr_t mutex_attr;
-        pthread_mutexattr_init(&mutex_attr);
-        pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
-        pthread_mutex_init(&ohm_inst.mutex, &mutex_attr);
-        pthread_mutexattr_destroy(&mutex_attr);
-        pthread_cond_init(&ohm_inst.cond, NULL);
-        pthread_create(&ohm_inst.qth, NULL, ohm_query, &ohm_inst);
+
+        semper_mtx_init(&ohm_inst.mutex, 0);
+
+        semper_cnd_init(&ohm_inst.cond);
+        semper_thrd_create(&ohm_inst.qth, ohm_query, &ohm_inst);
     }
 
     ohm_inst.inst_cnt++;
@@ -88,7 +85,7 @@ double update(void *spv)
     if(ohm->type == NULL || ohm->name == NULL)
         return(0.0);
 
-    pthread_mutex_lock(&ohm->inst->mutex);
+    semper_mtx_lock(&ohm->inst->mutex);
 
     for(size_t i = 0; i < ohm->inst->dlen; i++)
     {
@@ -99,7 +96,7 @@ double update(void *spv)
         }
     }
 
-    pthread_mutex_unlock(&ohm->inst->mutex);
+    semper_mtx_unlock(&ohm->inst->mutex);
     return(v);
 }
 
@@ -116,14 +113,14 @@ void destroy(void **spv)
     if(ohm_inst->inst_cnt == 0)
     {
         semper_safe_flag_set(ohm_inst->kill, 1);
-        pthread_cond_signal(&ohm_inst->cond);
+        semper_cnd_signal(&ohm_inst->cond);
 
         if(ohm_inst->qth)
-            pthread_join(ohm_inst->qth, NULL);
+            semper_thrd_join(ohm_inst->qth, NULL);
 
-        pthread_cond_destroy(&ohm_inst->cond);
+        semper_cnd_destroy(&ohm_inst->cond);
         semper_safe_flag_destroy(&ohm_inst->kill);
-        pthread_mutex_destroy(&ohm_inst->mutex);
+        semper_mtx_destroy(&ohm_inst->mutex);
     }
 
     free(ohm->name);
@@ -135,7 +132,7 @@ void destroy(void **spv)
 
 static void * ohm_query(void *pv)
 {
-    pthread_mutex_t mtx;
+    semper_mtx_t mtx;
     open_hardware_monitor *ohm = pv;
     IEnumWbemClassObject *results  = NULL;
     IWbemServices        *services = NULL;
@@ -211,7 +208,7 @@ static void * ohm_query(void *pv)
 
         services->lpVtbl->Release(services);
 
-        pthread_mutex_lock(&ohm->mutex);
+        semper_mtx_lock(&ohm->mutex);
 
         if(ohm->data)
         {
@@ -227,7 +224,7 @@ static void * ohm_query(void *pv)
 
         ohm->data = od;
         ohm->dlen = len;
-        pthread_mutex_unlock(&ohm->mutex);
+        semper_mtx_unlock(&ohm->mutex);
         gettimeofday(&tv, NULL);
 
 
@@ -235,11 +232,11 @@ static void * ohm_query(void *pv)
         ts.tv_nsec = tv.tv_usec * 1000 + 1000 * 1000 * (1000 % 1000);
         ts.tv_sec += ts.tv_nsec / (1000 * 1000 * 1000);
         ts.tv_nsec %= (1000 * 1000 * 1000);
-        pthread_mutex_init(&mtx, NULL);
-        pthread_mutex_lock(&mtx);
-        pthread_cond_timedwait(&ohm->cond, &mtx, &ts);
-        pthread_mutex_unlock(&mtx);
-        pthread_mutex_destroy(&mtx);
+        semper_mtx_init(&mtx, 0);
+        semper_mtx_lock(&mtx);
+        semper_cnd_timedwait(&ohm->cond, &mtx, &ts);
+        semper_mtx_unlock(&mtx);
+        semper_mtx_destroy(&mtx);
     }
 
     locator->lpVtbl->Release(locator);
