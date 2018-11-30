@@ -1,10 +1,8 @@
 /*
- * Semper API
- * Part of Project "Semper"
- * Written by Alexandru-Daniel Mărgărit
- *
- * This file provides API that should be used in Extension development
- */
+* Semper API
+* Part of Project "Semper"
+* Written by Alexandru-Daniel Mărgărit
+*/
 
 #include <surface.h>
 #include <semper_api.h>
@@ -18,7 +16,6 @@
 #include <skeleton.h>
 #include <parameter.h>
 #include <diag.h>
-#include <pthread.h>
 #ifdef WIN32
 #ifdef SEMPER_API
 #undef SEMPER_API
@@ -31,9 +28,9 @@
 #endif
 typedef struct
 {
-        surface_data* sd;
-        control_data *cd;
-        unsigned char* comm;
+    surface_data* sd;
+    control_data *cd;
+    unsigned char* comm;
 } extension_command;
 extern int diag_log(unsigned char lvl, char *fmt, ...);
 
@@ -436,105 +433,3 @@ SEMPER_API void semper_free(void **p)
 {
     sfree(p);
 }
-
-/*
- * Threading
- */
-SEMPER_API int semper_thrd_create(semper_thrd_t *t, semper_thrd_start_t func, void *arg)
-{
-    return(pthread_create((pthread_t*)t,NULL,func,arg));
-}
-
-SEMPER_API int semper_thrd_equal(semper_thrd_t t1, semper_thrd_t t2)
-{
-    return(pthread_equal((pthread_t)t1, (pthread_t)t2));
-}
-
-SEMPER_API semper_thrd_t semper_thrd_current(void)
-{
-    return((semper_thrd_t)pthread_self());
-}
-
-SEMPER_API void semper_thrd_exit(void *res)
-{
-    pthread_exit(res);
-}
-
-SEMPER_API int semper_thrd_detach(semper_thrd_t t)
-{
-    return(pthread_detach((pthread_t)t));
-}
-
-SEMPER_API int semper_thrd_join(semper_thrd_t t, void **res)
-{
-    return(pthread_join((pthread_t)t,res));
-}
-
-/*
- * Synchronization
- */
-
-SEMPER_API int semper_mtx_init(semper_mtx_t *mtx,int type)
-{
-    int ret = 0;
-
-    pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
-    ret = pthread_mutex_init((pthread_mutex_t*)mtx, &attr);
-    pthread_mutexattr_destroy(&attr);
-
-    return(ret);
-}
-
-
-SEMPER_API int semper_mtx_lock(semper_mtx_t *mtx)
-{
-    return(pthread_mutex_lock(mtx));
-}
-
-SEMPER_API int semper_mtx_unlock(semper_mtx_t *mtx)
-{
-    return(pthread_mutex_unlock(mtx));
-}
-
-
-SEMPER_API void semper_mtx_destroy(semper_mtx_t *mtx)
-{
-    pthread_mutex_destroy(mtx);
-}
-
-/*
- * Signaling
- * */
-
-SEMPER_API int semper_cnd_init(semper_cnd_t *cnd)
-{
-    return(pthread_cond_init(cnd,NULL));
-}
-
-SEMPER_API int semper_cnd_signal(semper_cnd_t *cnd)
-{
-    return(pthread_cond_signal(cnd));
-}
-
-SEMPER_API int semper_cnd_broadcast(semper_cnd_t *cnd)
-{
-    return(pthread_cond_broadcast(cnd));
-}
-
-SEMPER_API int semper_cnd_wait(semper_cnd_t *cnd, semper_mtx_t *mtx)
-{
-    return(pthread_cond_wait(cnd,mtx));
-}
-
-SEMPER_API int semper_cnd_timedwait(semper_cnd_t *cnd, semper_mtx_t *mtx, struct timespec *tm)
-{
-    return(pthread_cond_timedwait(cnd,mtx,tm));
-}
-
-SEMPER_API void semper_cnd_destroy(semper_cnd_t *cnd)
-{
-    pthread_cond_destroy((pthread_cond_t*)cnd);
-}
-

@@ -9,13 +9,14 @@
 #include <pdhmsg.h>
 #include <time.h>
 #include <winperf.h>
+#include <pthread.h>
 #include <linked_list.h>
 #include <sys/time.h>
 typedef struct
 {
-        semper_mtx_t mutex;
-        semper_thrd_t th;
-        semper_cnd_t cond;
+        pthread_mutex_t mutex;
+        pthread_t th;
+        pthread_cond_t cond;
         list_entry counters;
         PDH_HQUERY query;
         size_t inst_cnt;
@@ -52,6 +53,7 @@ static void* zmalloc(size_t bytes)
     return (NULL);
 }
 
+
 void init(void **spv,void *ip)
 {
     static perf_counter_common pcc = {0};
@@ -59,14 +61,15 @@ void init(void **spv,void *ip)
     if(pcc.inst_cnt == 0)
     {
         pcc.kill = semper_safe_flag_init();
-
-        semper_mtx_init(&pcc.mutex,0);
-
-        semper_cnd_init(&pcc.cond);
+        pthread_mutexattr_t mutex_attr;
+        pthread_mutexattr_init(&mutex_attr);
+        pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
+        pthread_mutex_init(&pcc.mutex, &mutex_attr);
+        pthread_mutexattr_destroy(&mutex_attr);
+        pthread_cond_init(&pcc.cond, NULL);
         PdhOpenQueryW(NULL,0,&pcc.query);
         list_entry_init(&pcc.counters);
-        semper_thrd_create(&pcc.th, perf_counter_thread, &pcc);
-
+        pthread_create(&pcc.th, NULL, perf_counter_thread, &pcc);
     }
 
     pc =zmalloc(sizeof(perf_counter));
@@ -86,7 +89,7 @@ void reset(void *spv,void *ip)
     static unsigned char counter_path[PDH_MAX_COUNTER_PATH]= {0};
     unsigned char *ws=NULL;
 
-    semper_mtx_lock(&pc->pcc->mutex);
+    pthread_mutex_lock(&pc->pcc->mutex);
 
     if(pc->counter)
     {
@@ -101,7 +104,7 @@ void reset(void *spv,void *ip)
 
     linked_list_remove(&pc->current);
     list_entry_init(&pc->current);
-    semper_mtx_unlock(&pc->pcc->mutex);
+    pthread_mutex_unlock(&pc->pcc->mutex);
 
 
     ws=param_string("PerfInstance",0x3,ip,NULL);
@@ -155,7 +158,7 @@ void reset(void *spv,void *ip)
         }
 
         pc->counter=zmalloc(sizeof(PDH_HCOUNTER)*pc->cnt_cnt);
-        semper_mtx_lock(&pc->pcc->mutex);
+        pthread_mutex_lock(&pc->pcc->mutex);
         for(unsigned short *cb=pth2,index=0; index<sz; index++)
         {
             PdhAddCounterW(pc->pcc->query, cb+index, 0, &pc->counter[i++]);
@@ -167,7 +170,7 @@ void reset(void *spv,void *ip)
             }
         }
         linked_list_add(&pc->current,&pc->pcc->counters);
-        semper_mtx_unlock(&pc->pcc->mutex);
+        pthread_mutex_unlock(&pc->pcc->mutex);
         semper_free((void**)&pth);
         free(pth2);
     }
@@ -178,20 +181,17 @@ void reset(void *spv,void *ip)
 double update(void *spv)
 {
     perf_counter *pc=spv;
-    double v = 0.0;
 
-    semper_mtx_lock(&pc->pcc->mutex);
-    v=pc->v;
-    semper_mtx_unlock(&pc->pcc->mutex);
 
-    return(v);
+
+    return(pc->v);
 }
 
 void destroy(void **spv)
 {
     perf_counter *pc=*spv;
 
-    semper_mtx_lock(&pc->pcc->mutex);
+    pthread_mutex_lock(&pc->pcc->mutex);
 
     if(pc->counter)
     {
@@ -203,23 +203,23 @@ void destroy(void **spv)
         pc->counter=NULL;
     }
     linked_list_remove(&pc->current);
-    semper_mtx_unlock(&pc->pcc->mutex);
+    pthread_mutex_unlock(&pc->pcc->mutex);
 
 
     if(pc->pcc->inst_cnt > 0)
-        pc->pcc->inst_cnt--;
+        pc->pcc->inst_cnt --;
 
 
     if(pc->pcc->inst_cnt == 0)
     {
         semper_safe_flag_set(pc->pcc->kill,1);
-        semper_cnd_signal(&pc->pcc->cond); /*wake the thread*/
-        semper_thrd_join(pc->pcc->th,NULL);
+        pthread_cond_signal(&pc->pcc->cond); /*wake the thread*/
+        pthread_join(pc->pcc->th,NULL);
         semper_safe_flag_destroy(&pc->pcc->kill);
-        semper_mtx_destroy(&pc->pcc->mutex);
-        semper_cnd_destroy(&pc->pcc->cond);
-        PdhCloseQuery(pc->pcc->query);
 
+        pthread_mutex_destroy(&pc->pcc->mutex);
+        pthread_cond_destroy(&pc->pcc->cond);
+        PdhCloseQuery(pc->pcc->query);
     }
 
 
@@ -232,14 +232,14 @@ void destroy(void **spv)
 static void *perf_counter_thread(void *pv)
 {
     perf_counter_common *pcc = pv;
-    semper_mtx_t mtx;
-    semper_mtx_init(&mtx, 0);
+    pthread_mutex_t mtx;
+    pthread_mutex_init(&mtx,NULL);
     while(semper_safe_flag_get(pcc->kill) == 0)
     {
         struct timeval tv;
         struct timespec ts;
         perf_counter *pc = NULL;
-        semper_mtx_lock(&pcc->mutex);
+        pthread_mutex_lock(&pcc->mutex);
 
         PdhCollectQueryData(pcc->query);
         list_enum_part(pc,&pcc->counters,current)
@@ -264,7 +264,7 @@ static void *perf_counter_thread(void *pv)
         }
 
 
-        semper_mtx_unlock(&pcc->mutex);
+        pthread_mutex_unlock(&pcc->mutex);
         gettimeofday(&tv, NULL);
 
 
@@ -273,14 +273,13 @@ static void *perf_counter_thread(void *pv)
         ts.tv_sec += ts.tv_nsec / (1000 * 1000 * 1000);
         ts.tv_nsec %= (1000 * 1000 * 1000);
 
-        semper_mtx_lock(&mtx);
-        semper_cnd_timedwait(&pcc->cond, &mtx, &ts);
-        semper_mtx_unlock(&mtx);
+        pthread_mutex_lock(&mtx);
+        pthread_cond_timedwait(&pcc->cond, &mtx, &ts);
+        pthread_mutex_unlock(&mtx);
 
 
     }
-    semper_mtx_destroy(&mtx);
-
+    pthread_mutex_destroy(&mtx);
     return(NULL);
 }
 

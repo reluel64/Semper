@@ -1,17 +1,8 @@
 #pragma once
 #include <stddef.h>
-#include <sys/types.h>
 #ifndef unused_parameter
 #define unused_parameter(p) ((p)=(p))
 #endif
-
-#define EXTENSION_XPAND_SOURCES   0x2
-#define EXTENSION_XPAND_VARIABLES 0x1
-#define EXTENSION_XPAND_ALL       0x3
-#define EXTENSION_PATH_SEMPER     0x1
-#define EXTENSION_PATH_SURFACES   0x2
-#define EXTENSION_PATH_EXTENSIONS 0x3
-#define EXTENSION_PATH_SURFACE    0x4
 
 typedef struct
 {
@@ -29,12 +20,15 @@ typedef struct
     void *filter_data;                                                                    //user data for the filtering function
 } tokenize_string_info;
 
-
+#define EXTENSION_XPAND_SOURCES   0x2
+#define EXTENSION_XPAND_VARIABLES 0x1
+#define EXTENSION_XPAND_ALL       0x3
+#define EXTENSION_PATH_SEMPER     0x1
+#define EXTENSION_PATH_SURFACES   0x2
+#define EXTENSION_PATH_EXTENSIONS 0x3
+#define EXTENSION_PATH_SURFACE    0x4
 typedef int (*event_handler)(void*);
-typedef void* (semper_thrd_start_t) (void*);
-typedef void* semper_thrd_t;
-typedef void* semper_mtx_t;
-typedef void* semper_cnd_t;
+
 
 void*          semper_safe_flag_init(void);
 void*          get_surface(void* ip);
@@ -66,26 +60,6 @@ unsigned char *get_extension_name(void* ip);
 unsigned char  param_bool(unsigned char* pn, void* ip, unsigned char def);
 unsigned short *semper_utf8_to_ucs(unsigned char *s_in);
 unsigned char *semper_ucs_to_utf8(unsigned short *s_in,size_t *len,unsigned char be);
-
-
-int semper_thrd_create(semper_thrd_t *t, semper_thrd_start_t func, void *arg);
-int semper_thrd_equal(semper_thrd_t t1, semper_thrd_t t2);
-semper_thrd_t semper_thrd_current(void);
-void semper_thrd_exit(void *res);
-int semper_thrd_detach(semper_thrd_t t);
-int semper_thrd_join(semper_thrd_t t, void **res);
-int semper_mtx_init(semper_mtx_t *mtx,int type);
-int semper_mtx_lock(semper_mtx_t *mtx);
-int semper_mtx_unlock(semper_mtx_t *mtx);
-void semper_mtx_destroy(semper_mtx_t *mtx);
-int semper_cnd_init(semper_cnd_t *cnd);
-int semper_cnd_signal(semper_cnd_t *cnd);
-int semper_cnd_broadcast(semper_cnd_t *cnd);
-int semper_cnd_wait(semper_cnd_t *cnd, semper_mtx_t *mtx);
-int semper_cnd_timedwait(semper_cnd_t *cnd, semper_mtx_t *mtx, struct timespec *tm);
-void semper_cnd_destroy(semper_cnd_t *cnd);
-
-
 
 
 #ifndef diag_info
