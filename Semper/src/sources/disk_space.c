@@ -24,7 +24,7 @@ typedef struct _disk
     unsigned char* ret_str;
 } disk;
 
-
+#if 0
 #ifdef __linux__
 static unsigned char disk_space_check_removable(unsigned char *p)
 {
@@ -46,7 +46,7 @@ static unsigned char disk_space_check_removable(unsigned char *p)
     return(removable);
 }
 #endif
-
+#endif
 void disk_space_init(void** spv, void* ip)
 {
     unused_parameter(ip);

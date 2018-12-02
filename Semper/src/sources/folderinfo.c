@@ -253,7 +253,7 @@ static int folderinfo_collect_linux(unsigned char* root, folderinfo* fi)
 
         do
         {
-          size_t flen = 0;
+
             unsigned char can_free = 1;
             if(safe_flag_get(fi->stop) || dir_entry == NULL)
             {

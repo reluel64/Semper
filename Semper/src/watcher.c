@@ -19,7 +19,6 @@
 #include <dirent.h>
 #include <sys/eventfd.h>
 #endif
-
 typedef struct
 {
         void *base_fd;
@@ -57,11 +56,11 @@ static int watcher_fill_list(unsigned char *dir, watcher_data *wd)
 
     list_entry qbase = {0};
     list_entry_init(&qbase);
-    int fd = inotify_add_watch((int)(size_t)wd->base_fd, dir,IN_MOVED_TO|IN_MOVED_FROM|IN_CREATE|IN_DELETE|IN_MODIFY | IN_ONESHOT);
+    int fd = inotify_add_watch((int)(size_t)wd->base_fd, dir,IN_MODIFY |  IN_MOVE| IN_CREATE|IN_DELETE | IN_ONESHOT);
 
     if(fd > 0)
     {
-        int *temp = realloc(wd->wtch, (wd->wtch_c + 1) * sizeof(int));
+        int *temp = zmalloc(sizeof(int));
 
         if(temp)
         {
@@ -93,12 +92,12 @@ static int watcher_fill_list(unsigned char *dir, watcher_data *wd)
                 continue;
 
 
-            if(fi->d_type == DT_DIR)
+            if(fi->d_type == DT_DIR )
             {
                 size_t flen = string_length(fi->d_name);
                 unsigned char *ch = zmalloc(flen + len + 2);
                 snprintf(ch, flen + len + 2, "%s/%s", cdir, fi->d_name);
-                int fd = inotify_add_watch((int)(size_t)wd->base_fd, ch,IN_ALL_EVENTS | IN_ONESHOT);
+                int fd = inotify_add_watch((int)(size_t)wd->base_fd, ch,IN_MODIFY |  IN_MOVE| IN_CREATE|IN_DELETE| IN_ONESHOT);
 
                 if(fd > 0)
                 {
@@ -188,7 +187,7 @@ static void *watcher_thread(void *pv)
         if(safe_flag_get(wd->kill))
             break;
 
-        event_push(wd->meq, wd->eh, wd->pveh, 0, EVENT_PUSH_HIGH_PRIO);
+        event_push(wd->meq, wd->eh, wd->pveh, 0, EVENT_PUSH_TAIL);
         event_process(wd->eq);
 
     }
@@ -216,7 +215,7 @@ static size_t watcher_event_wait(void *pv, size_t timeout)
     if(events[1].revents)
     {
         eventfd_t dummy;
-        eventfd_read((int)(size_t)wd->wake_event, &dummy); //consume the event
+        int ret = eventfd_read((int)(size_t)wd->wake_event, &dummy); //consume the event
     }
 
 #endif
@@ -229,11 +228,9 @@ static void watcher_event_wake(void *pv)
 #ifdef WIN32
     SetEvent(wd->wake_event);
 #elif __linux__
-    eventfd_write((int)(size_t)wd->wake_event, 0x3010);
+   eventfd_write((int)(size_t)wd->wake_event, 0x3010);
 #endif
 }
-
-
 
 void  *watcher_init(unsigned char *dir, event_queue *meq, event_handler eh, void *pveh)
 {
@@ -266,16 +263,14 @@ void  *watcher_init(unsigned char *dir, event_queue *meq, event_handler eh, void
 #ifdef WIN32
         wd->wake_event = CreateEvent(NULL, 0, 0, NULL);
 #elif __linux__
+
+
+        wd->dir = clone_string(dir);
+        watcher_fill_list(wd->dir, wd);
         wd->wake_event = (void*)(size_t)eventfd(0, EFD_NONBLOCK);
 #endif
-        pthread_create(&wd->th, NULL, watcher_thread, wd);
+    pthread_create(&wd->th, NULL, watcher_thread, wd);
     }
-
-#ifdef __linux__
-    wd->dir = clone_string(dir);
-    watcher_fill_list(dir, wd);
-#endif
-
 
     return(wd);
 }

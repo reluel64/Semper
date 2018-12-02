@@ -181,6 +181,7 @@ static void *ping_calculate(void *spv)
     unsigned char ip_addr[64]={0};
     unsigned char link[256]= {0};
     unsigned int def_timeout=0;
+
     unsigned char *finish_act=NULL;
     unsigned char port[32] ={0};
     int sock_fd = 0;
@@ -233,7 +234,7 @@ static void *ping_calculate(void *spv)
     if((inet_ntop(AF_INET,addr,(char*)&ip_addr,64) == NULL) || getaddrinfo(ip_addr,port, &hint, &res))
     {
         pthread_mutex_lock(&p->mutex);
-        p->ping_val = -1;
+        p->ping_val = def_timeout;
         semper_safe_flag_set(p->th_active,0);
         free(finish_act);
         pthread_mutex_unlock(&p->mutex);

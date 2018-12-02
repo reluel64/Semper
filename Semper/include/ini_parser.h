@@ -1,3 +1,4 @@
+#pragma once
 #include <stddef.h>
 #define INI_PARSER_MAX_LINE 65535
 

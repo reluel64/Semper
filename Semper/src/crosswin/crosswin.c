@@ -137,6 +137,7 @@ static void crosswin_restack_window(crosswin_window *cw)
 
 static int crosswin_restack(crosswin *c)
 {
+
     crosswin_window *cw = NULL;
     crosswin_check_desktop(c);
 

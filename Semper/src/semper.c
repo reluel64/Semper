@@ -72,14 +72,6 @@ typedef struct
 } semper_event_wait_data;
 
 
-#ifdef __linux__
-static size_t semper_timestamp_get(void)
-{
-    struct timespec t = {0};
-    clock_gettime(CLOCK_MONOTONIC_RAW, &t);
-    return(t.tv_sec * 1000 + t.tv_nsec / 1000000);
-}
-#endif
 
 size_t tss()
 {

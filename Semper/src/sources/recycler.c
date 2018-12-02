@@ -51,8 +51,8 @@ void recycler_init(void **spv, void *ip)
         pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
         pthread_mutex_init(&rc->mtx, &mutex_attr);
         pthread_mutexattr_destroy(&mutex_attr);
-        rc->kill = semper_safe_flag_init();
-        rc->tha = semper_safe_flag_init();
+        rc->kill = safe_flag_init();
+        rc->tha = safe_flag_init();
         list_entry_init(&rc->children);
     }
 
@@ -72,6 +72,7 @@ void recycler_init(void **spv, void *ip)
 
 void recycler_reset(void *spv, void *ip)
 {
+
     recycler *r = spv;
     recycler_common *rc = recycler_get_common();
     unsigned char *temp = param_string("Type", EXTENSION_XPAND_ALL, ip, "Items");
@@ -94,7 +95,6 @@ void recycler_reset(void *spv, void *ip)
 
 double recycler_update(void *spv)
 {
-
     recycler *r = spv;
     recycler_common *rc = recycler_get_common();
     double lret = 0.0;
@@ -128,7 +128,7 @@ static void *dialog_thread(void *p)
 void recycler_command(void *spv, unsigned char *cmd)
 {
     recycler_common *rc = recycler_get_common();
-    recycler *r = spv;
+
 
     if(cmd && spv)
     {
@@ -193,7 +193,7 @@ void recycler_destroy(void **spv)
 
     if(rc->inst_count==0)
     {
-        semper_safe_flag_set(rc->kill, 1);
+        safe_flag_set(rc->kill, 1);
 
         if(rc->qth)
             pthread_join(rc->qth, NULL);
@@ -205,8 +205,8 @@ void recycler_destroy(void **spv)
 
         sfree((void**)&rc->mh);
         rc->mc = 0;
-        semper_safe_flag_destroy(&rc->tha);
-        semper_safe_flag_destroy(&rc->kill);
+        safe_flag_destroy(&rc->tha);
+        safe_flag_destroy(&rc->kill);
         pthread_mutex_destroy(&rc->mtx);
     }
 
@@ -218,7 +218,7 @@ static void *recycler_query_thread(void *p)
     recycler *r = p;
     recycler_common *rc = recycler_get_common();
 
-    semper_safe_flag_set(rc->tha, 2);
+    safe_flag_set(rc->tha, 2);
 
 #ifdef WIN32
     recycler_query_user_win32(r);
@@ -239,8 +239,8 @@ static void *recycler_query_thread(void *p)
 
 
 
-    semper_safe_flag_set(rc->tha, 0);
-    semper_safe_flag_set(rc->kill, 0);
+    safe_flag_set(rc->tha, 0);
+    safe_flag_set(rc->kill, 0);
     return (NULL);
 }
 
@@ -264,11 +264,9 @@ int recycler_event_proc(recycler *r)
 
 
 
-    if(semper_safe_flag_get(rc->tha))
+    if(safe_flag_get(rc->tha))
     {
-        semper_safe_flag_set(rc->kill,1);
-
-
+        safe_flag_set(rc->kill,1);
     }
 
     if(rc->qth)
@@ -277,13 +275,13 @@ int recycler_event_proc(recycler *r)
         rc->qth = 0;
     }
 
-    semper_safe_flag_set(rc->kill,0);
-    semper_safe_flag_set(rc->tha,1);
+    safe_flag_set(rc->kill,0);
+    safe_flag_set(rc->tha,1);
 
 
     if(pthread_create(&rc->qth, NULL, recycler_query_thread, r) != 0)
     {
-        semper_safe_flag_set(rc->tha, 0);
+        safe_flag_set(rc->tha, 0);
     }
 
     return(0);

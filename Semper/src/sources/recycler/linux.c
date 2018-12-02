@@ -21,7 +21,7 @@ int recycler_notifier_setup_linux(recycler *r)
 
     rc->mh = zmalloc(sizeof(void*));
     rc->mc++;
-    rc->mh[0] = watcher_init(buf,cd->eq,recycler_event_proc,r);
+    rc->mh[0] = watcher_init(buf,cd->eq,(event_handler)recycler_event_proc,r);
     sfree((void**)&buf);
     return(0);
 }
@@ -58,7 +58,7 @@ int recycler_query_user_linux(recycler *r)
 
             do
             {
-                if(semper_safe_flag_get(rc->kill) || dir == NULL)
+                if(safe_flag_get(rc->kill) || dir == NULL)
                     break;
 
 
@@ -104,7 +104,7 @@ int recycler_query_user_linux(recycler *r)
                 }
 
             }
-            while(!semper_safe_flag_get(rc->kill) && (dir =  readdir(dh)));
+            while(!safe_flag_get(rc->kill) && (dir =  readdir(dh)));
 
             if(dh != NULL )
             {

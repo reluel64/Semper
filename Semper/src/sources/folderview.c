@@ -712,9 +712,10 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
                 size_t size = 0;
 
                 unsigned char dir = 0;
+
+#ifdef WIN32
                 unsigned char hidden = 0;
                 unsigned char sys = 0;
-#ifdef WIN32
                 size = dword_qword(wfd.nFileSizeLow, wfd.nFileSizeHigh);
 
                 dir = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
@@ -877,7 +878,7 @@ typedef struct
     size_t csz;
 } png_writer;
 
-
+#ifdef WIN32
 static cairo_status_t folderview_writer(void *pv, const unsigned char *data, unsigned int length)
 {
     png_writer *pw = pv;
@@ -898,7 +899,7 @@ static cairo_status_t folderview_writer(void *pv, const unsigned char *data, uns
 
     return(CAIRO_STATUS_SUCCESS);
 }
-
+#endif
 static int folderview_create_icon(unsigned char *store_root, unsigned char *file_path, folderview_child *fc)
 {
 #ifdef WIN32
