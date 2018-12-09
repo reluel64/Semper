@@ -406,7 +406,12 @@ double input_update(void *spv)
 unsigned char *input_string(void *spv)
 {
     input_text *it = spv;
-    return(it->ret_str ? it->ret_str : (unsigned char*)"");
+    if(it->active)
+    {
+        if(it->ret_str)
+            return(it->ret_str);
+    }
+    return((unsigned char*)"");
 }
 
 void input_command(void *spv, unsigned char *comm)
@@ -430,6 +435,10 @@ void input_command(void *spv, unsigned char *comm)
 
                 if(input_get_command(it) > 0)
                     crosswin_set_kbd_handler(it->w, input_kbd_handler, spv);
+                if(it->ret_str == NULL)
+                {
+                    it->ret_str = zmalloc(3);
+                }
             }
             else if(it->active)
             {

@@ -291,7 +291,6 @@ static int object_tooltip_update(object *o)
     unsigned char tmp_cmd[64]={0};
     unsigned char *tmp_cmd_buf=tmp_cmd;
     static int i= 0;
-                      printf("Event %d\n",i++);
     if(o->ttip == NULL)
     {
         return(-1);
