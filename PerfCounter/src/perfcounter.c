@@ -38,6 +38,7 @@ typedef struct
 
 
 #define string_length(s) (((s) == NULL ? 0 : strlen((s))))
+
 static void *perf_counter_thread(void *pv);
 static void* zmalloc(size_t bytes)
 {

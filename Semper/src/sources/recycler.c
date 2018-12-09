@@ -142,7 +142,7 @@ void recycler_command(void *spv, unsigned char *cmd)
             if(!strcasecmp("Empty", cmd))
             {
 
-#if RECYCLER_DIALOG_THREAD
+#if RECYCLER_DIALOG_THREAD /*This is disabled as the event queue was redesigned and it no longer requires alertable states*/
                 /*Shitty workaround as the SHEmptyRecycleBin() will put the thread
                  * in a non-alertable state which will cause the event queue to stall while
                  * the dialog is up

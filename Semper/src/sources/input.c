@@ -241,7 +241,10 @@ static void input_exec_handler(input_text *it)
         it->ovec_pos = 0;
         it->active = 0;
         it->tsi.oveclen = 0;
-        it->ret_str[it->ret_str_len] = 0;
+        if(it->ret_str)
+        {
+            it->ret_str[it->ret_str_len] = 0;
+        }
         tokenize_string_free(&it->tsi);
         crosswin_set_kbd_handler(it->w, NULL, NULL);
     }
@@ -440,7 +443,10 @@ void input_command(void *spv, unsigned char *comm)
             it->ovec_pos = 0;
             it->tsi.oveclen = 0;
             crosswin_set_kbd_handler(it->w, NULL, NULL);
-            it->ret_str[it->ret_str_len] = 0;
+            if(it->ret_str)
+            {
+                it->ret_str[it->ret_str_len] = 0;
+            }
         }
     }
 }

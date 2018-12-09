@@ -8,26 +8,26 @@
 #include <sys/time.h>
 typedef struct
 {
-    unsigned char *name;
-    unsigned char *type;
-    double val;
+        unsigned char *name;
+        unsigned char *type;
+        double val;
 } ohm_data;
 typedef struct
 {
-    ohm_data *data;
-    size_t dlen;
-    void *kill;
-    pthread_mutex_t mutex;
-    pthread_cond_t cond;
-    pthread_t qth;
-    size_t inst_cnt;
+        ohm_data *data;
+        size_t dlen;
+        void *kill;
+        pthread_mutex_t mutex;
+        pthread_cond_t cond;
+        pthread_t qth;
+        size_t inst_cnt;
 } open_hardware_monitor;
 
 typedef struct
 {
-    open_hardware_monitor *inst;
-    unsigned char *name;
-    unsigned char *type;
+        open_hardware_monitor *inst;
+        unsigned char *name;
+        unsigned char *type;
 } open_hardware_monitor_inst;
 
 
@@ -140,9 +140,10 @@ static void * ohm_query(void *pv)
     IEnumWbemClassObject *results  = NULL;
     IWbemServices        *services = NULL;
     IWbemLocator         *locator = NULL;
+    HRESULT loc_hr = S_OK;
     CoInitializeEx(0, 0);
     CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
-    CoCreateInstance(&CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER, &IID_IWbemLocator, (LPVOID *) &locator);
+    loc_hr = CoCreateInstance(&CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER, &IID_IWbemLocator, (LPVOID *) &locator);
 
     while(semper_safe_flag_get(ohm->kill) == 0)
     {
@@ -150,66 +151,76 @@ static void * ohm_query(void *pv)
         struct timespec ts;
         size_t len = 0;
         ohm_data *od = NULL;
+        HRESULT hr = S_OK;
 
-        HRESULT hr = locator->lpVtbl->ConnectServer(locator,  L"ROOT\\OpenHardwareMonitor", NULL, NULL, NULL, 0, NULL, NULL, &services);
-
-        if(hr == S_OK)
+        if(loc_hr!=S_OK)
         {
-            hr = services->lpVtbl->ExecQuery(services, L"WQL", L"SELECT * FROM Sensor", WBEM_FLAG_BIDIRECTIONAL, NULL, &results);
+            loc_hr = CoCreateInstance(&CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER, &IID_IWbemLocator, (LPVOID *) &locator);
+        }
 
-            if(results != NULL)
+        if(loc_hr == S_OK)
+        {
+            hr = locator->lpVtbl->ConnectServer(locator,  L"ROOT\\OpenHardwareMonitor", NULL, NULL, NULL, 0, NULL, NULL, &services);
+
+            if(hr == S_OK)
             {
-                IWbemClassObject *result = NULL;
-                ULONG returnedCount = 0;
+                hr = services->lpVtbl->ExecQuery(services, L"WQL", L"SELECT * FROM Sensor", WBEM_FLAG_BIDIRECTIONAL, NULL, &results);
 
-
-                while((hr = results->lpVtbl->Next(results, WBEM_INFINITE, 1, &result, &returnedCount)) == S_OK)
+                if(hr == S_OK)
                 {
-                    VARIANT name = {0};
-                    hr = result->lpVtbl->Get(result, L"Name", 0, &name, 0, 0);
+                    IWbemClassObject *result = NULL;
+                    ULONG returnedCount = 0;
 
-                    if(hr == S_OK)
+
+                    while((hr = results->lpVtbl->Next(results, WBEM_INFINITE, 1, &result, &returnedCount)) == S_OK)
                     {
-                        VARIANT type = {0};
-                        hr = result->lpVtbl->Get(result, L"SensorType", 0, &type, 0, 0);
+                        VARIANT name = {0};
+                        hr = result->lpVtbl->Get(result, L"Name", 0, &name, 0, 0);
 
                         if(hr == S_OK)
                         {
-                            ohm_data *tod = NULL;
-                            tod = realloc(od, sizeof(ohm_data) * (len + 1));
-                            VARIANT val = {0};
+                            VARIANT type = {0};
+                            hr = result->lpVtbl->Get(result, L"SensorType", 0, &type, 0, 0);
 
-                            if(tod != NULL)
+                            if(hr == S_OK)
                             {
-                                char *s_name = semper_ucs_to_utf8(name.bstrVal, NULL, 0);
-                                char *s_type = semper_ucs_to_utf8(type.bstrVal, NULL, 0);
-                                tod[len].name = s_name;
-                                tod[len].type = s_type;
-                                hr = result->lpVtbl->Get(result, L"Value", 0, &val, 0, 0);
+                                ohm_data *tod = NULL;
+                                tod = realloc(od, sizeof(ohm_data) * (len + 1));
+                                VARIANT val = {0};
 
-                                if(hr == S_OK)
+                                if(tod != NULL)
                                 {
-                                    tod[len].val = (double)val.fltVal;
-                                    VariantClear(&val);
-                                }
+                                    char *s_name = semper_ucs_to_utf8(name.bstrVal, NULL, 0);
+                                    char *s_type = semper_ucs_to_utf8(type.bstrVal, NULL, 0);
+                                    tod[len].name = s_name;
+                                    tod[len].type = s_type;
+                                    hr = result->lpVtbl->Get(result, L"Value", 0, &val, 0, 0);
 
-                                od = tod;
-                                len++;
+                                    if(hr == S_OK)
+                                    {
+                                        tod[len].val = (double)val.fltVal;
+                                        VariantClear(&val);
+                                    }
+
+                                    od = tod;
+                                    len++;
+                                }
                             }
+
+                            VariantClear(&type);
                         }
 
-                        VariantClear(&type);
+                        VariantClear(&name);
+                        result->lpVtbl->Release(result);
                     }
 
-                    VariantClear(&name);
-                    result->lpVtbl->Release(result);
+                    results->lpVtbl->Release(results);
                 }
-            }
 
-            results->lpVtbl->Release(results);
+                services->lpVtbl->Release(services);
+            }
         }
 
-        services->lpVtbl->Release(services);
 
         pthread_mutex_lock(&ohm->mutex);
 
@@ -242,7 +253,11 @@ static void * ohm_query(void *pv)
         pthread_mutex_destroy(&mtx);
     }
 
-    locator->lpVtbl->Release(locator);
+    if(loc_hr == S_OK)
+    {
+        locator->lpVtbl->Release(locator);
+    }
+
     CoUninitialize();
 
     for(size_t i = 0; i < ohm->dlen; i++)

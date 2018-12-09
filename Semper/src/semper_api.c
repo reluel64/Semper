@@ -1,8 +1,8 @@
 /*
-* Semper API
-* Part of Project "Semper"
-* Written by Alexandru-Daniel Mărgărit
-*/
+ * Semper API
+ * Part of Project "Semper"
+ * Written by Alexandru-Daniel Mărgărit
+ */
 
 #include <surface.h>
 #include <semper_api.h>
@@ -28,9 +28,9 @@
 #endif
 typedef struct
 {
-    surface_data* sd;
-    control_data *cd;
-    unsigned char* comm;
+        surface_data* sd;
+        control_data *cd;
+        unsigned char* comm;
 } extension_command;
 extern int diag_log(unsigned char lvl, char *fmt, ...);
 
@@ -73,6 +73,36 @@ SEMPER_API int source_set_max(double val, void* ip, unsigned char force, unsigne
 
     return (0);
 }
+
+SEMPER_API char *xpand_variables(char *str, void *ip)
+{
+
+    source *s = ip;
+
+    if(!str || !s)
+    {
+        return (NULL);
+    }
+
+    xpander_request xr;
+    memset(&xr, 0, sizeof(xpander_request));
+    xr.req_type = XPANDER_SOURCE;
+    xr.requestor = ip;
+    xr.os = str;
+    sfree((void**)&s->ext_str);
+    if(xpander(&xr))
+    {
+        s->ext_str = xr.es;
+    }
+    else if(xr.os)
+    {
+        s->ext_str = clone_string(xr.os);
+    }
+
+    xr.os = NULL;
+    return (s->ext_str);
+}
+
 SEMPER_API int source_set_min(double val, void* ip, unsigned char force, unsigned char hold)
 {
     source* s = ip;
@@ -103,8 +133,10 @@ SEMPER_API unsigned char* param_string(unsigned char* pn, unsigned char flags, v
     }
 
     source* s = ip;
+
+    char *temp =  parameter_string(s, pn, def, (flags | XPANDER_REQUESTOR_SOURCE) & 0x13);
     sfree((void**)&s->ext_str);
-    s->ext_str = parameter_string(s, pn, def, (flags | XPANDER_REQUESTOR_SOURCE) & 0x13);
+    s->ext_str = temp;
     return (s->ext_str);
 }
 
@@ -207,7 +239,7 @@ SEMPER_API void send_command_ex(void* ir, unsigned char* cmd, size_t timeout, ch
     if(ir && cmd)
     {
         unsigned char flags = unique ? EVENT_REMOVE_BY_DATA_HANDLER : 0;
-        flags |= timeout > 0 ? EVENT_PUSH_TIMER : 0;
+        flags |= (timeout > 0 ? EVENT_PUSH_TIMER : 0);
         source* s = ir;
         surface_data* sd = s->sd;
         extension_command* ec = zmalloc(sizeof(extension_command));
@@ -286,27 +318,29 @@ SEMPER_API unsigned char *get_path(void *ip, unsigned char pth)
     source *s = ip;
     surface_data *sd = s->sd;
     control_data *cd = sd->cd;
-    sfree((void**)&s->ext_str);
+    char *temp = NULL;
 
     switch(pth)
     {
         default:
+            sfree((void**)&s->ext_str);
             return(NULL);
 
         case EXTENSION_PATH_SEMPER:
-            s->ext_str = clone_string(cd->root_dir);
+            temp = clone_string(cd->root_dir);
             break;
         case EXTENSION_PATH_EXTENSIONS:
-            s->ext_str = clone_string(cd->ext_dir);
+            temp = clone_string(cd->ext_dir);
             break;
         case EXTENSION_PATH_SURFACE:
-            s->ext_str = clone_string(sd->sp.surface_dir);
+           temp = clone_string(sd->sp.surface_dir);
             break;
         case EXTENSION_PATH_SURFACES:
-            s->ext_str = clone_string(cd->surface_dir);
+           temp = clone_string(cd->surface_dir);
             break;
     }
-
+    sfree((void**)&s->ext_str);
+    s->ext_str = temp;
     return(s->ext_str);
 
 }
@@ -353,11 +387,13 @@ SEMPER_API unsigned char *absolute_path(void *ip, unsigned char *rp, unsigned ch
 
     if(root)
     {
+        char *temp = NULL;
         size_t rpl = string_length(rp);
+        temp = zmalloc(rootl + rpl + 2); //null + /
+        snprintf(temp, rootl + rpl + 2, "%s/%s", root, rp);
+        uniform_slashes(temp);
         sfree((void**)&s->ext_str);
-        s->ext_str = zmalloc(rootl + rpl + 2); //null + /
-        snprintf(s->ext_str, rootl + rpl + 2, "%s/%s", root, rp);
-        uniform_slashes(s->ext_str);
+        s->ext_str = temp;
         return(s->ext_str);
     }
 

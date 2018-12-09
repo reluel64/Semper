@@ -156,7 +156,7 @@ unsigned char* parameter_string(void* req, unsigned char* npm, unsigned char* de
 
     if(xr.os == NULL)
     {
-        return (clone_string(def));
+       return(clone_string(def));
     }
 
     if(xpander(&xr))

@@ -293,7 +293,7 @@ void event_process(event_queue* eq)
                     clock_gettime(CLOCK_MONOTONIC, &t2);
 
                     call_duration = (t2.tv_nsec - t1.tv_nsec) / 1000000 + (t2.tv_sec - t1.tv_sec) * 1000;
-                    drift+=call_duration;
+                    drift += call_duration;
                 }
 
                 pthread_mutex_lock(&eq->mutex);
