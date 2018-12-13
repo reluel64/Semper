@@ -290,7 +290,7 @@ static int object_tooltip_update(object *o)
     static unsigned char *empty_title = "Parameter(Title,Disabled,1)";
     unsigned char tmp_cmd[64]={0};
     unsigned char *tmp_cmd_buf=tmp_cmd;
-    static int i= 0;
+
     if(o->ttip == NULL)
     {
         return(-1);
@@ -358,11 +358,12 @@ static int object_tooltip_update(object *o)
 
 
     /*The tooltip relies on the parent object to update its contents.
-     * Therefore, we need 3 fast update cycles to have everything nice
+     * Therefore, we need 3 fast update cycles to have everything nice.
      * Cycles:
      * 1) Update the Title and the Text with the parameters set above
      * 2) Update the background size
-     * 3) Update the reflect the new content*/
+     * 3) Update the reflect the new content
+     * */
 
     snprintf(tmp_cmd,sizeof(tmp_cmd),"Parameter(Background,BackColor,0x%08x)",o->ot.color);
     command(o->ttip,&tmp_cmd_buf);

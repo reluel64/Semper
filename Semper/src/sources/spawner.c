@@ -1,0 +1,359 @@
+#include <sources/source.h>
+#include <mem.h>
+#include <semper_api.h>
+#include <pthread.h>
+#include <string_util.h>
+#include <parameter.h>
+#include <xpander.h>
+typedef struct
+{
+        unsigned char *command;
+        unsigned char *std_in_command;
+        unsigned char *finish_command;
+        unsigned char *working_dir;
+        pthread_mutex_t mtx;
+        pthread_t thread;
+        int status;
+        void *th_active;
+        void *kill;
+        unsigned char *ret_str;
+        unsigned char *raw_str;
+        size_t raw_str_len;
+        size_t ph;
+        size_t th;
+
+}spawner_state;
+
+static void *spawner_worker(void *pv);
+static int spawner_kill_by_window(HWND window, LPARAM lpm);
+
+void spawner_init(void **spv,void *ip)
+{
+    unused_parameter(ip);
+    spawner_state *st =zmalloc(sizeof(spawner_state));
+    pthread_mutexattr_t mutex_attr;
+    pthread_mutexattr_init(&mutex_attr);
+    pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
+    pthread_mutex_init(&st->mtx, &mutex_attr);
+    pthread_mutexattr_destroy(&mutex_attr);
+    st->th_active =  safe_flag_init();
+    st->kill = safe_flag_init();
+    st->ph = -1;
+    st->th = -1;
+    *spv = st;
+}
+
+void spawner_reset(void *spv, void *ip)
+{
+    spawner_state *st = spv;
+    pthread_mutex_lock(&st->mtx);
+    sfree((void**)&st->command);
+    sfree((void**)&st->working_dir);
+    sfree((void**)&st->std_in_command);
+
+    st->command = parameter_string(ip,"Command",NULL,XPANDER_SOURCE);
+    st->working_dir = parameter_string(ip,"WorkingDir",NULL,XPANDER_SOURCE);
+    st->std_in_command = parameter_string(ip,"ConsoleCommand",NULL,XPANDER_SOURCE);
+
+    pthread_mutex_unlock(&st->mtx);
+}
+
+double spawner_update(void *spv)
+{
+    spawner_state *st = spv;
+
+    pthread_mutex_lock(&st->mtx);
+    double status =(double) st->status;
+    if(st->raw_str)
+    {
+        sfree((void**)&st->ret_str);
+        st->ret_str=zmalloc(st->raw_str_len+1);
+        memcpy(st->ret_str,st->raw_str,st->raw_str_len);
+    }
+    pthread_mutex_unlock(&st->mtx);
+
+    if(safe_flag_get(st->th_active) == 0 && st->thread)
+    {
+        sfree((void**)&st->raw_str);
+        st->raw_str_len=0;
+        pthread_join(st->thread,NULL);
+        st->thread = 0;
+    }
+
+    return(status);
+}
+
+unsigned char *spawner_string(void *spv)
+{
+    spawner_state *st = spv;
+    return(st->ret_str);
+}
+
+void spawner_command(void *spv, unsigned char *comm)
+{
+    spawner_state *st = spv;
+    if(comm)
+    {
+        if(!strcasecmp(comm,"Run") && !safe_flag_get(st->th_active))
+        {
+            if(safe_flag_get(st->th_active) == 0 && st->thread)
+            {
+                pthread_join(st->thread,NULL);
+                st->thread = 0;
+            }
+            sfree((void**)&st->raw_str);
+            st->raw_str_len=0;
+            safe_flag_set(st->th_active,1);
+
+            if(pthread_create(&st->thread,NULL,spawner_worker,st))
+            {
+                safe_flag_set(st->th_active,0);
+            }
+            else
+            {
+                while(safe_flag_get(st->th_active) != 2)
+                    sched_yield();
+            }
+        }
+        else if(!strcasecmp(comm,"Stop") && safe_flag_get(st->th_active) == 2 && st->ph >0)
+        {
+            EnumWindows(spawner_kill_by_window,GetProcessId((void*)st->ph));
+        }
+        else if(!strcasecmp(comm,"ForceStop")&&safe_flag_get(st->th_active) == 2 && st->ph >0)
+        {
+            TerminateProcess((void*)st->ph,0);
+            safe_flag_set(st->kill,1);
+            pthread_join(st->thread,NULL);
+            safe_flag_set(st->kill,0);
+        }
+    }
+}
+
+void spawner_destroy(void **spv)
+{
+    spawner_state *st = *spv;
+
+    safe_flag_set(st->kill,1);
+    if(st->thread)
+    {
+        pthread_join(st->thread,NULL);
+    }
+
+    sfree((void**)&st->raw_str);
+    sfree((void**)&st->ret_str);
+    sfree((void**)&st->command);
+    sfree((void**)&st->working_dir);
+    sfree((void**)&st->std_in_command);
+    safe_flag_destroy(&st->kill);
+    safe_flag_destroy(&st->th_active);
+    pthread_mutex_destroy(&st->mtx);
+    sfree(spv);
+
+}
+
+static int is_utf16(unsigned char *buf,size_t len)
+{
+    for(size_t i=0;i<len;i++)
+    {
+        if((i>0 && buf[i-1]!=0 && buf[i]==0))
+            return(1);
+    }
+    return(0);
+}
+
+#ifdef WIN32
+static int spawner_kill_by_window(HWND window, LPARAM lpm)
+{
+    DWORD pid = 0;
+    GetWindowThreadProcessId(window,&pid);
+
+    if(lpm == pid)
+    {
+        PostMessageA(window,WM_CLOSE,0,0);
+    }
+    return(TRUE);
+}
+#endif
+static void spawner_convert_and_append(unsigned char *raw, size_t raw_len, unsigned char **buf, size_t *buf_pos)
+{
+    unsigned char *utf8 = raw;
+    size_t bn = raw_len;
+    unsigned char *temp = NULL;
+
+    if(is_utf16(raw,raw_len))
+    {
+        utf8 = ucs_to_utf8((unsigned short*)raw,&bn,0);
+    }
+
+
+    temp = realloc(*buf,(*buf_pos) + bn + 3);
+
+    if(temp)
+    {
+        memcpy(temp+(*buf_pos),utf8,bn);
+        *buf=temp;
+        (*buf_pos)+=bn;
+        memset(&temp[*buf_pos],0,3);
+    }
+
+    if(utf8!=raw)
+    {
+        sfree((void**)&utf8);
+    }
+
+}
+
+static void *spawner_worker(void *pv)
+{
+    spawner_state *st = pv;
+    void *app_std_in = NULL;
+    void *app_std_out = NULL;
+    void *app_std_err = NULL;
+    void *std_in = NULL;
+    void *std_out = NULL;
+    void *std_err = NULL;
+    unsigned char *raw_str = NULL;
+    size_t raw_len = 0;
+    safe_flag_set(st->th_active,2);
+#ifdef WIN32
+
+    STARTUPINFOW si = {0};
+    PROCESS_INFORMATION pi = {0};
+    SECURITY_ATTRIBUTES saAttr;
+    saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    saAttr.bInheritHandle = TRUE;
+    saAttr.lpSecurityDescriptor = NULL;
+
+    if(!CreatePipe(&std_out, &app_std_out, &saAttr, 1024)) //from application to Semper
+    {
+        safe_flag_set(st->th_active,0);
+        return(NULL);
+    }
+    if(!CreatePipe(&app_std_in, &std_in, &saAttr,1024)) //to application from Semper
+    {
+        CloseHandle(std_out);
+        CloseHandle(app_std_out);
+        safe_flag_set(st->th_active,0);
+        return(NULL);
+    }
+
+    if(!CreatePipe(&std_err, &app_std_err, &saAttr, 1024)) //from application to Semper
+    {
+        CloseHandle(std_in);
+        CloseHandle(app_std_out);
+        CloseHandle(app_std_in);
+        CloseHandle(std_out);
+        safe_flag_set(st->th_active,0);
+        return(NULL);
+    }
+
+    si.hStdError = app_std_err;
+    si.hStdInput = app_std_in;
+    si.hStdOutput = app_std_out;
+    si.wShowWindow=SW_SHOW;
+    si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+    si.cb = sizeof(STARTUPINFOW);
+    pthread_mutex_lock(&st->mtx);
+    unsigned short *cmd = utf8_to_ucs(st->command);
+    unsigned short *wd  = utf8_to_ucs(st->working_dir);
+    unsigned short *std_in_cmd = utf8_to_ucs(st->std_in_command);
+    pthread_mutex_unlock(&st->mtx);
+
+    if(CreateProcessW(NULL,cmd,NULL,NULL,1,0,NULL,wd,&si,&pi))
+    {
+        void *harr[3] = {std_out,std_err,pi.hProcess};
+
+        pthread_mutex_lock(&st->mtx);
+        st->ph =(size_t) pi.hProcess;
+        st->th =(size_t) pi.hThread;
+        pthread_mutex_unlock(&st->mtx);
+
+        DWORD written = 0;
+        if(std_in_cmd)
+        {
+            WriteFile(std_in,std_in_cmd,wcslen(std_in_cmd)*2,&written,NULL);
+        }
+
+        while(safe_flag_get(st->kill) == 0)
+        {
+
+
+            WaitForMultipleObjects(3, harr, 0, -1);
+
+            if(WaitForSingleObject(pi.hProcess,1)==0)
+            {
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+                break;
+            }
+
+            if(!WaitForSingleObject(std_out,1))
+            {
+                DWORD buf_sz = 0;
+
+                if(PeekNamedPipe(std_out,NULL,0,NULL,&buf_sz,NULL) && buf_sz)
+                {
+                    unsigned char *buf = zmalloc(buf_sz+3);
+
+                    if(buf)
+                    {
+                        DWORD readed = 0;
+                        ReadFile(std_out,buf ,buf_sz,&readed,NULL);
+                        spawner_convert_and_append(buf,buf_sz,&raw_str,&raw_len);
+                    }
+                    sfree((void**)&buf);
+                }
+            }
+
+            if(!WaitForSingleObject(std_err,1))
+            {
+                DWORD buf_sz = 0;
+                if(PeekNamedPipe(std_err,NULL,0,NULL,&buf_sz,NULL) && buf_sz)
+                {
+                    unsigned char *buf = zmalloc(buf_sz+3);
+
+                    if(buf)
+                    {
+                        DWORD readed = 0;
+                        ReadFile(std_err,buf ,buf_sz,&readed,NULL);
+
+                        spawner_convert_and_append(buf,buf_sz,&raw_str,&raw_len);
+
+                    }
+                    sfree((void**)&buf);
+                }
+            }
+
+
+
+        }
+    }
+
+    CloseHandle(std_in);
+    CloseHandle(app_std_out);
+    CloseHandle(app_std_in);
+    CloseHandle(std_out);
+    CloseHandle(app_std_err);
+    CloseHandle(std_err);
+
+
+
+#endif
+    pthread_mutex_lock(&st->mtx);
+    st->ph = -1;
+    st->th = -1;
+    pthread_mutex_unlock(&st->mtx);
+    sfree((void**)&wd);
+    sfree((void**)&cmd);
+    sfree((void**)&std_in_cmd);
+    pthread_mutex_lock(&st->mtx);
+    sfree((void**)&st->raw_str);
+    st->raw_str = raw_str;
+    st->raw_str_len = raw_len;
+    pthread_mutex_unlock(&st->mtx);
+    safe_flag_set(st->th_active,0);
+    return(NULL);
+}
+
+
+

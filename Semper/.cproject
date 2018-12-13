@@ -88,6 +88,7 @@
 								<option defaultValue="true" id="gnu.cpp.link.option.shared.1153640678" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" useByScannerDiscovery="false" value="false" valueType="boolean"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.1425418018" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" value="Iphlpapi"/>
+									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="curl"/>
 									<listOptionValue builtIn="false" value="cairo"/>
 									<listOptionValue builtIn="false" value="cairo-gobject"/>
@@ -214,7 +215,7 @@
 									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\glib-2.0"/>
 									<listOptionValue builtIn="false" value="D:\mxe\usr\x86_64-w64-mingw32.static\include\..\lib\glib-2.0\include"/>
 								</option>
-								<option id="gnu.c.compiler.option.misc.other.1495477204" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wno-pointer-sign -Wl,--exclude-all-symbols" valueType="string"/>
+								<option id="gnu.c.compiler.option.misc.other.1495477204" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Wno-pointer-sign -Wpointer-compare -Wl,--version-script=${workspace_loc:/${ProjName}/export.version}" valueType="string"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.108041976" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__USE_MINGW_ANSI_STDIO=1"/>
 									<listOptionValue builtIn="false" value="WIN32"/>
@@ -246,6 +247,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1546229878" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.link.option.libs.178504873" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" value="Iphlpapi"/>
+									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="curl"/>
 									<listOptionValue builtIn="false" value="cairo"/>
 									<listOptionValue builtIn="false" value="cairo-gobject"/>
