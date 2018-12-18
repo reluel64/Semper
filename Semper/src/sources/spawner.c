@@ -8,7 +8,6 @@
 typedef struct
 {
         unsigned char *command;
-        unsigned char *std_in_command;
         unsigned char *finish_command;
         unsigned char *working_dir;
         pthread_mutex_t mtx;
@@ -49,11 +48,26 @@ void spawner_reset(void *spv, void *ip)
     pthread_mutex_lock(&st->mtx);
     sfree((void**)&st->command);
     sfree((void**)&st->working_dir);
-    sfree((void**)&st->std_in_command);
 
-    st->command = parameter_string(ip,"Command",NULL,XPANDER_SOURCE);
+    unsigned char *app=  parameter_string(ip,"Application",NULL,XPANDER_SOURCE);
+    unsigned char *param = parameter_string(ip,"Parameter",NULL,XPANDER_SOURCE);
+
+    if(app == NULL)
+    {
+        app = expand_env_var("%COMSPEC% /u /c");
+    }
+    else
+    {
+        uniform_slashes(app);
+    }
+    size_t len = string_length(app) + string_length(param)+2;
+    st->command = zmalloc(string_length(app) + string_length(param)+2);
+
+    snprintf(st->command,len,"%s %s",app,param);
+
     st->working_dir = parameter_string(ip,"WorkingDir",NULL,XPANDER_SOURCE);
-    st->std_in_command = parameter_string(ip,"ConsoleCommand",NULL,XPANDER_SOURCE);
+    sfree((void**)&app);
+    sfree((void**)&param);
 
     pthread_mutex_unlock(&st->mtx);
 }
@@ -117,14 +131,18 @@ void spawner_command(void *spv, unsigned char *comm)
         }
         else if(!strcasecmp(comm,"Stop") && safe_flag_get(st->th_active) == 2 && st->ph >0)
         {
+#ifdef WIN32
             EnumWindows(spawner_kill_by_window,GetProcessId((void*)st->ph));
+#endif
         }
         else if(!strcasecmp(comm,"ForceStop")&&safe_flag_get(st->th_active) == 2 && st->ph >0)
         {
+#ifdef WIN32
             TerminateProcess((void*)st->ph,0);
             safe_flag_set(st->kill,1);
             pthread_join(st->thread,NULL);
             safe_flag_set(st->kill,0);
+#endif
         }
     }
 }
@@ -143,7 +161,7 @@ void spawner_destroy(void **spv)
     sfree((void**)&st->ret_str);
     sfree((void**)&st->command);
     sfree((void**)&st->working_dir);
-    sfree((void**)&st->std_in_command);
+
     safe_flag_destroy(&st->kill);
     safe_flag_destroy(&st->th_active);
     pthread_mutex_destroy(&st->mtx);
@@ -173,7 +191,8 @@ static int spawner_kill_by_window(HWND window, LPARAM lpm)
     }
     return(TRUE);
 }
-#endif
+
+
 static void spawner_convert_and_append(unsigned char *raw, size_t raw_len, unsigned char **buf, size_t *buf_pos)
 {
     unsigned char *utf8 = raw;
@@ -202,6 +221,8 @@ static void spawner_convert_and_append(unsigned char *raw, size_t raw_len, unsig
     }
 
 }
+#endif
+
 
 static void *spawner_worker(void *pv)
 {
@@ -215,6 +236,11 @@ static void *spawner_worker(void *pv)
     unsigned char *raw_str = NULL;
     size_t raw_len = 0;
     safe_flag_set(st->th_active,2);
+#ifdef WIN32
+    unsigned short *cmd = utf8_to_ucs(st->command);
+    unsigned short *wd  = utf8_to_ucs(st->working_dir);
+#endif
+#undef WIN32
 #ifdef WIN32
 
     STARTUPINFOW si = {0};
@@ -254,9 +280,8 @@ static void *spawner_worker(void *pv)
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.cb = sizeof(STARTUPINFOW);
     pthread_mutex_lock(&st->mtx);
-    unsigned short *cmd = utf8_to_ucs(st->command);
-    unsigned short *wd  = utf8_to_ucs(st->working_dir);
-    unsigned short *std_in_cmd = utf8_to_ucs(st->std_in_command);
+
+
     pthread_mutex_unlock(&st->mtx);
 
     if(CreateProcessW(NULL,cmd,NULL,NULL,1,0,NULL,wd,&si,&pi))
@@ -269,25 +294,24 @@ static void *spawner_worker(void *pv)
         pthread_mutex_unlock(&st->mtx);
 
         DWORD written = 0;
-        if(std_in_cmd)
-        {
-            WriteFile(std_in,std_in_cmd,wcslen(std_in_cmd)*2,&written,NULL);
-        }
+
+        WriteFile(std_in,cmd,wcslen(cmd)*2,&written,NULL);
+
 
         while(safe_flag_get(st->kill) == 0)
         {
-
-
             WaitForMultipleObjects(3, harr, 0, -1);
 
-            if(WaitForSingleObject(pi.hProcess,1)==0)
+            if(WaitForSingleObject(pi.hProcess,100)==0)
             {
+
                 CloseHandle(pi.hProcess);
                 CloseHandle(pi.hThread);
+                pi.hProcess = NULL;
                 break;
             }
 
-            if(!WaitForSingleObject(std_out,1))
+            if(!WaitForSingleObject(std_out,0))
             {
                 DWORD buf_sz = 0;
 
@@ -305,7 +329,7 @@ static void *spawner_worker(void *pv)
                 }
             }
 
-            if(!WaitForSingleObject(std_err,1))
+            if(!WaitForSingleObject(std_err,0))
             {
                 DWORD buf_sz = 0;
                 if(PeekNamedPipe(std_err,NULL,0,NULL,&buf_sz,NULL) && buf_sz)
@@ -323,9 +347,6 @@ static void *spawner_worker(void *pv)
                     sfree((void**)&buf);
                 }
             }
-
-
-
         }
     }
 
@@ -336,20 +357,24 @@ static void *spawner_worker(void *pv)
     CloseHandle(app_std_err);
     CloseHandle(std_err);
 
-
-
+    if(pi.hProcess)
+    {
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    }
 #endif
-    pthread_mutex_lock(&st->mtx);
-    st->ph = -1;
-    st->th = -1;
-    pthread_mutex_unlock(&st->mtx);
+
     sfree((void**)&wd);
     sfree((void**)&cmd);
-    sfree((void**)&std_in_cmd);
     pthread_mutex_lock(&st->mtx);
     sfree((void**)&st->raw_str);
+    raw_str=zmalloc(100*1024*1024);
+    memset(raw_str,'A',100*1024*1024-1);
+    raw_len = 100*1024*1024-1;
     st->raw_str = raw_str;
     st->raw_str_len = raw_len;
+    st->ph = -1;
+    st->th = -1;
     pthread_mutex_unlock(&st->mtx);
     safe_flag_set(st->th_active,0);
     return(NULL);

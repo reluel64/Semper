@@ -1103,7 +1103,7 @@ int surface_update(surface_data* sd)
 
     if(sd->uf != (size_t) - 1)
     {
-        // re-schedule the update by removing any potential duplicates and push a new timed event
+        // re-schedule the update by removing any potential duplicates and pushing a new timed event
         event_push(sd->cd->eq, (event_handler)surface_update, (void*)sd, sd->uf, EVENT_PUSH_TIMER | EVENT_REMOVE_BY_DATA_HANDLER);
     }
 

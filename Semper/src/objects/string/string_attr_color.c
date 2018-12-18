@@ -182,10 +182,9 @@ int string_attr_color_handler(PangoAttribute *pa, void *pv)
         cairo_translate(cr, 1, 0);
     }
 
-
     size_t start = pa->start_index;
     size_t end = ((pa->end_index == -1) ? so->bind_string_len : pa->end_index);
-
+/*This method is not efficient*/
     for(size_t i = pa->start_index; i <= end; i++)
     {
         PangoRectangle pr = {0};

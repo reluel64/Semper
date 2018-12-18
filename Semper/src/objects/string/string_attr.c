@@ -2,7 +2,7 @@
 String object attributes
 Part of Project "Semper"
 Wrriten by Alexandru-Daniel Mărgărit
-*/
+ */
 #define PCRE_STATIC
 #include <objects/string/string_attr.h>
 #include <pango/pango.h>
@@ -19,21 +19,21 @@ Wrriten by Alexandru-Daniel Mărgărit
 
 struct _PangoAttrList
 {
-    guint ref_count;
-    GSList *attributes;
-    GSList *attributes_tail;
+        guint ref_count;
+        GSList *attributes;
+        GSList *attributes_tail;
 };
 typedef struct
 {
-    size_t op;
-    size_t quotes;
-    unsigned char quote_type;
+        size_t op;
+        size_t quotes;
+        unsigned char quote_type;
 } string_parser_status;
 
 typedef struct
 {
-    size_t start;
-    size_t end;
+        size_t start;
+        size_t end;
 } string_attr_filter_range;
 
 
@@ -58,16 +58,8 @@ typedef enum
 } string_format_type;
 
 
-extern PangoAttribute *string_attr_font(unsigned char *font_name, size_t start, size_t end);
-extern PangoAttribute *string_attr_size(double size, size_t start, size_t end);
-extern PangoAttribute *string_attr_strike(unsigned char strike, size_t start, size_t end);
-extern PangoAttribute *string_attr_style(PangoStyle style, size_t start, size_t end);
-extern PangoAttribute *string_attr_underline(PangoUnderline underline, size_t start, size_t end);
-extern PangoAttribute *string_attr_weight(PangoWeight weight, size_t start, size_t end);
-extern PangoAttribute *string_attr_stretch(PangoStretch stretch, size_t start, size_t end);
-extern PangoAttribute *string_attr_rise(int rise, size_t start, size_t end);
+
 extern PangoAttribute *string_attr_case(unsigned char case_type, size_t start, size_t end);
-extern PangoAttribute *string_attr_spacing(int spacing, size_t start, size_t end);
 extern PangoAttribute *string_attr_color(unsigned char cl_type, string_attributes *sa, size_t start, size_t end);
 extern int             string_attr_case_handler(PangoAttribute *pa, void *pv);
 
@@ -105,8 +97,8 @@ static int string_parse_filter(string_tokenizer_status *pi, void* pv)
         return (1);
 
     if(sps->op && pi->buf[pi->pos] == ')')
-           if(--sps->op == 0)
-               return(0);
+        if(--sps->op == 0)
+            return(0);
 
     return (0);
 }
@@ -369,7 +361,8 @@ static int string_attr_fill_user(object *o, string_format_type *fmt_type, string
             if(len)
             {
                 sa->font_name = zmalloc(len + 1);
-                strncpy(sa->font_name, str, len);
+                strncpy(sa->font_name, str+start, len);
+                printf("FONT %s\n",sa->font_name);
             }
 
             *fmt_type = type_invalid;
@@ -520,7 +513,7 @@ static int string_fill_text_format(object *o)
         if(eval == NULL)
             break;
 
-        if(strncasecmp("TextFormat", eval, 9))
+        if(strncasecmp("TextFormat", eval, 10))
             continue;
 
         unsigned char *val = parameter_string(o, eval, NULL, XPANDER_OBJECT);
@@ -530,11 +523,11 @@ static int string_fill_text_format(object *o)
 
         string_tokenizer_info    sti =
         {
-            .buffer                  = val, //store the string address here
-            .filter_data             = &spa,
-            .string_tokenizer_filter = string_parse_filter,
-            .ovecoff                 = NULL,
-            .oveclen                 = 0
+                .buffer                  = val, //store the string address here
+                .filter_data             = &spa,
+                .string_tokenizer_filter = string_parse_filter,
+                .ovecoff                 = NULL,
+                .oveclen                 = 0
         };
 
 
@@ -689,69 +682,96 @@ int string_attr_update(string_object *so)
 
             if(sa->font_name)
             {
-                pa = string_attr_font(sa->font_name, start, end);
+                pa = pango_attr_family_new(sa->font_name);
+                pa->start_index=start;
+                pa->end_index=end;
                 pango_attr_list_change(so->attr_list, pa);
             }
 
             if(sa->strikethrough)
             {
-                pa = string_attr_strike(sa->strikethrough, start, end);
+                pa = pango_attr_strikethrough_new(sa->strikethrough);
+                pa->start_index=start;
+                pa->end_index=end;
                 pango_attr_list_change(so->attr_list, pa);
+
             }
 
             if(sa->underline)
             {
-                pa = string_attr_underline(sa->underline_style, start, end);
+                pa = pango_attr_underline_new(sa->underline_style);
+                pa->start_index=start;
+                pa->end_index=end;
                 pango_attr_list_change(so->attr_list, pa);
+
             }
 
             if(sa->stretch)
             {
-                pa = string_attr_stretch(sa->stretch, start, end);
+                pa = pango_attr_stretch_new (sa->stretch);
+                pa->start_index=start;
+                pa->end_index=end;
                 pango_attr_list_change(so->attr_list, pa);
             }
 
             if(sa->font_size != 0.0)
             {
-                pa = string_attr_size(sa->font_size, start, end);
+                pa = pango_attr_size_new((unsigned int)sa->font_size * PANGO_SCALE);
+                pa->start_index=start;
+                pa->end_index=end;
                 pango_attr_list_change(so->attr_list, pa);
+
             }
 
             if(sa->weight)
             {
-                pa = string_attr_weight(sa->weight, start, end);
+                pa = pango_attr_weight_new(sa->weight);
+                pa->start_index=start;
+                pa->end_index=end;
                 pango_attr_list_change(so->attr_list, pa);
             }
 
             if(sa->style)
             {
-                pa = string_attr_style(sa->style, start, end);
+                pa = pango_attr_style_new(sa->style);
+                pa->start_index=start;
+                pa->end_index=end;
                 pango_attr_list_change(so->attr_list, pa);
             }
 
             if(sa->rise)
             {
-                pa = string_attr_rise(sa->rise, start, end);
+                pa = pango_attr_rise_new(sa->rise);
+                pa->start_index=start;
+                pa->end_index=end;
                 pango_attr_list_change(so->attr_list, pa);
             }
 
             if(sa->str_case)
             {
                 pa = string_attr_case(sa->str_case, start, end);
+                pa->start_index=start;
+                pa->end_index=end;
                 pango_attr_list_change(so->attr_list, pa);
             }
 
             if(sa->has_spacing)
             {
-                pa = string_attr_spacing(sa->spacing, start, end);
+                pa = pango_attr_letter_spacing_new(sa->spacing);
+                pa->start_index=start;
+                pa->end_index=end;
                 pango_attr_list_change(so->attr_list, pa);
             }
 
             if(sa->font_outline || sa->font_shadow || sa->gradient_len >= 2 || sa->font_color)
             {
                 pa = string_attr_color(color_type, sa, start, end);
+                pa->start_index=start;
+                pa->end_index=end;
                 pango_attr_list_change(so->attr_list, pa);
             }
+
+
         }
 
         if(ctx == NULL)

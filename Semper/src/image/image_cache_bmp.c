@@ -176,7 +176,7 @@ int image_cache_decode_bmp(FILE *fh, image_cache_decoded* icd)
                 {
                     unsigned char px = 0;
                     fread(&px, sizeof(px), 1, fh);
-                    *((unsigned int*)icd->image_px + h * bih.biWidth + w)   =  color_table[(px & 0x80) >> 7] | 0xff000000;
+                    *((unsigned int*)icd->image_px + h * bih.biWidth + w)     =  color_table[(px & 0x80) >> 7] | 0xff000000;
                     *((unsigned int*)icd->image_px + h * bih.biWidth + w + 1) =  color_table[(px & 0x40) >> 6] | 0xff000000;
                     *((unsigned int*)icd->image_px + h * bih.biWidth + w + 2) =  color_table[(px & 0x20) >> 5] | 0xff000000;
                     *((unsigned int*)icd->image_px + h * bih.biWidth + w + 3) =  color_table[(px & 0x10) >> 4] | 0xff000000;
