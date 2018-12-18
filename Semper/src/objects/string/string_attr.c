@@ -17,25 +17,12 @@ Wrriten by Alexandru-Daniel Mărgărit
 #include <parameter.h>
 #include <mem.h>
 
-struct _PangoAttrList
-{
-        guint ref_count;
-        GSList *attributes;
-        GSList *attributes_tail;
-};
 typedef struct
 {
         size_t op;
         size_t quotes;
         unsigned char quote_type;
 } string_parser_status;
-
-typedef struct
-{
-        size_t start;
-        size_t end;
-} string_attr_filter_range;
-
 
 typedef enum
 {
