@@ -146,29 +146,22 @@ int string_update(object* o)
         string_attr_update(so);
     }
 
-    if(o->w < 0)
-    {
-        pango_layout_set_width(so->layout, -1);
-    }
 
-    if(o->h < 0)
-    {
-        pango_layout_set_height(so->layout, -1);
-    }
+    pango_layout_set_width(so->layout, -1);
+    pango_layout_set_height(so->layout, -1);
+
 
     pango_layout_set_text(so->layout, so->bind_string, -1);
 
     if(o->w >= 0)
     {
-        pango_layout_set_width(so->layout, (o->w - so->layout_x) << 10);
+        pango_layout_set_width(so->layout, (o->w) << 10);
     }
 
     if(o->h >= 0)
     {
-        pango_layout_set_height(so->layout, (o->h - so->layout_y) << 10);
+        pango_layout_set_height(so->layout, (o->h) << 10);
     }
-
-
 
     if(so->iter)
     {
@@ -179,24 +172,22 @@ int string_update(object* o)
 
     /*get the layout size*/
 
-    pango_layout_iter_get_layout_extents(so->iter, NULL, &pr);
+    pango_layout_iter_get_layout_extents(so->iter, NULL,&pr);
 
     w =  (pr.width  >> 10);
     h =  (pr.height >> 10);
+    so->layout_x = (long)(pr.x >> 10);
+    so->layout_y = (long)(pr.y >> 10);
 
     if(o->w < 0)
     {
-        o->auto_w = (w != 0 ? w  +  so->layout_x : 0);
+        o->auto_w = (w != 0 ? w + so->layout_x : 0);
     }
 
     if(o->h < 0)
     {
-        o->auto_h = (h != 0 ? h + so->layout_y : 0);
+        o->auto_h = (h != 0 ? h + so->layout_y  : 0);
     }
-
-    so->layout_x = (long)(pr.x >> 10);
-    so->layout_y = (long)(pr.y >> 10);
-
 
     return (0);
 }
@@ -206,16 +197,9 @@ int string_render(object* o, cairo_t* cr)
     string_object* so = o->pv;
     double clipw = (double)(o->w < 0 ? o->auto_w : o->w);
     double cliph = (double)(o->h < 0 ? o->auto_h : o->h);
-    cairo_translate(cr, (double)so->layout_x, (double)so->layout_y);
+
     cairo_rectangle(cr, 0.0, 0.0, clipw, cliph);
     cairo_clip(cr);
-
-    PangoLayoutIter *iter = so->iter;
-    int line_no = 0;
-
-
-    //  cairo_set_color(cr,0xffffff00);
-    //  pango_cairo_show_layout(cr,so->layout);
 
     for(unsigned char i = ATTR_COLOR_SHADOW; i <= ATTR_COLOR_OUTLINE ; i++)
     {
@@ -229,7 +213,7 @@ int string_render(object* o, cairo_t* cr)
     }
 
     so->was_outlined = 0;
-    cairo_translate(cr, -(double)so->layout_x, -(double)so->layout_y);
+
     return (0);
 }
 

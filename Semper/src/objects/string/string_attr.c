@@ -672,7 +672,7 @@ int string_attr_update(string_object *so)
             PangoAttribute *pa = NULL;
             size_t start = ovec[2 * i];
             size_t end = ovec[2 * i + 1];
-            unsigned char color_type = 0;
+
 
             if(sa->font_name)
             {

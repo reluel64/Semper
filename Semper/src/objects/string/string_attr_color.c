@@ -34,8 +34,8 @@ static void string_attr_color_destroy(PangoAttribute *pa1)
 
 static int string_attr_color_compare(const PangoAttribute *pa1, const PangoAttribute *pa2)
 {
-    StringAttrColor *attr1 = pa1;
-    StringAttrColor *attr2 = pa2;
+    StringAttrColor *attr1 =(StringAttrColor*) pa1;
+    StringAttrColor *attr2 =(StringAttrColor*) pa2;
     unused_parameter(pa1);
     unused_parameter(pa2);
     /*
