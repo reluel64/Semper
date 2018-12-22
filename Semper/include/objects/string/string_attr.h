@@ -5,18 +5,13 @@
 
 #define STRING_ATTR_CASE     0x1000000 /*value taken from the pango source code*/
 
-#define STRING_ATTR_GRADIENT 0x1000001
-#define STRING_ATTR_OUTLINE  0x1000002
-#define STRING_ATTR_COLOR    0x1000003
-#define STRING_ATTR_SHADOW    0x1000004
-
 #define STRING_CASE_NORMAL 0x1
 #define STRING_CASE_LOWER  0x2
 #define STRING_CASE_UPPER  0x3
 
-#define ATTR_COLOR_SHADOW   (1<<0)
-#define ATTR_COLOR_BASE     (1<<1)
-#define ATTR_COLOR_OUTLINE  (1<<2)
+#define ATTR_COLOR_SHADOW   ((1<<0) | (0x1000000))
+#define ATTR_COLOR_BASE     ((1<<1) | (0x1000000))
+#define ATTR_COLOR_OUTLINE  ((1<<2) | (0x1000000))
 
 typedef struct
 {

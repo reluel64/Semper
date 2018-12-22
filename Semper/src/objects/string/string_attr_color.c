@@ -56,7 +56,7 @@ PangoAttribute *string_attr_color(string_attributes *sa)
 {
     static PangoAttrClass cls =
     {
-            .type = STRING_ATTR_COLOR,
+            .type = ATTR_COLOR_BASE,
             .copy = string_attr_color_copy,
             .destroy = string_attr_color_destroy,
             .equal = string_attr_color_compare
@@ -72,7 +72,7 @@ PangoAttribute *string_attr_shadow( string_attributes *sa)
 {
     static PangoAttrClass cls =
     {
-            .type = STRING_ATTR_SHADOW,
+            .type = ATTR_COLOR_SHADOW,
             .copy = string_attr_color_copy,
             .destroy = string_attr_color_destroy,
             .equal = string_attr_color_compare
@@ -89,7 +89,7 @@ PangoAttribute *string_attr_outline(string_attributes *sa)
 {
     static PangoAttrClass cls =
     {
-            .type = STRING_ATTR_OUTLINE,
+            .type = ATTR_COLOR_OUTLINE,
             .copy = string_attr_color_copy,
             .destroy = string_attr_color_destroy,
             .equal = string_attr_color_compare
@@ -106,7 +106,7 @@ int string_attr_color_handler(PangoAttribute *pa, void *pv)
 {
     void **pm = (void**)pv;
 
-    if((pa->klass->type < STRING_ATTR_GRADIENT || pa->klass->type >STRING_ATTR_SHADOW)  || ((StringAttrColor*)pa)->sa == NULL)
+    if(pa->klass->type  !=  (PangoAttrType)pm[2]  || ((StringAttrColor*)pa)->sa == NULL)
     {
         return(0);
     }
@@ -119,31 +119,25 @@ int string_attr_color_handler(PangoAttribute *pa, void *pv)
     double offx = 0.0;
     double offy = 0.0;
 
-    if((pa->klass->type == STRING_ATTR_SHADOW  && pm[2] != (void*)ATTR_COLOR_SHADOW)||
-       (pa->klass->type == STRING_ATTR_OUTLINE && pm[2] != (void*)ATTR_COLOR_OUTLINE))
-    {
-        return(0);
-    }
+
     cairo_save(cr);
 
-    if(pa->klass->type == STRING_ATTR_SHADOW)
+    if(pa->klass->type == ATTR_COLOR_SHADOW)
     {
         offx = sa->shadow_x;
         offy = sa->shadow_y;
     }
-
 
     do
     {
         cairo_save(cr);
 
         cairo_pattern_t *pattern = NULL;
-        PangoLayoutLine *line = NULL;
         PangoRectangle lpr={0};
         cairo_rectangle_t gradient_dim={0};
         int baseline = 0;
         char full_line = 0;
-        line = pango_layout_iter_get_line_readonly(iter);
+        PangoLayoutLine *line = pango_layout_iter_get_line_readonly(iter);
 
         if(line == NULL)
             continue;
@@ -160,11 +154,11 @@ int string_attr_color_handler(PangoAttribute *pa, void *pv)
 
 
         /* Go unrestricted*/
-        if(pm[2] ==(void*)ATTR_COLOR_SHADOW)
+        if(pa->klass->type == ATTR_COLOR_SHADOW)
         {
             cairo_set_color(cr,sa->shadow_color);
         }
-        else if(pm[2]== (void*)ATTR_COLOR_OUTLINE)
+        else if(pa->klass->type == ATTR_COLOR_OUTLINE)
         {
             cairo_set_color(cr,sa->outline_color);
         }
@@ -207,7 +201,7 @@ int string_attr_color_handler(PangoAttribute *pa, void *pv)
 
             cairo_clip(cr);
 
-            if(sa->gradient_len>=2 && pm[2] != (void*)ATTR_COLOR_SHADOW)
+            if(sa->gradient_len>=2 && pa->klass->type != ATTR_COLOR_SHADOW)
             {
                 cairo_clip_extents (cr,&gradient_dim.x,&gradient_dim.y,&gradient_dim.width,&gradient_dim.height);
             }
@@ -215,7 +209,7 @@ int string_attr_color_handler(PangoAttribute *pa, void *pv)
             pango_layout_iter_free(ch_iter);
         }
 
-        if(sa->gradient_len >= 2 && pm[2] !=(void*)ATTR_COLOR_SHADOW)
+        if(sa->gradient_len >= 2 && pa->klass->type != ATTR_COLOR_SHADOW)
         {
             pattern = cairo_pattern_create_linear(gradient_dim.x,
                     gradient_dim.y + gradient_dim.height / 2.0,
@@ -248,7 +242,7 @@ int string_attr_color_handler(PangoAttribute *pa, void *pv)
         cairo_move_to (cr,(double)(lpr.x>>10)+offx,(double)(baseline>>10)+offy);
         pango_cairo_layout_line_path (cr,line);
 
-        if(pa->klass->type==STRING_ATTR_OUTLINE)
+        if(pa->klass->type==ATTR_COLOR_OUTLINE)
             cairo_stroke(cr);
         else
             cairo_fill(cr);

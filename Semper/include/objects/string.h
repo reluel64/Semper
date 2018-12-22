@@ -13,7 +13,6 @@ int string_render(object* o, cairo_t* cr);
 
 typedef struct
 {
-    unsigned char was_outlined;
     unsigned char align;
     unsigned char ellipsize;
     unsigned char decimals;

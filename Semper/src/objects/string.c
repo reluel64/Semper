@@ -201,7 +201,7 @@ int string_render(object* o, cairo_t* cr)
     cairo_rectangle(cr, 0.0, 0.0, clipw, cliph);
     cairo_clip(cr);
 
-    for(unsigned char i = ATTR_COLOR_SHADOW; i <= ATTR_COLOR_OUTLINE ; i++)
+    for(unsigned int i = ATTR_COLOR_SHADOW; i <= ATTR_COLOR_OUTLINE ; i++)
     {
         void **pm[] =
         {
@@ -211,8 +211,6 @@ int string_render(object* o, cairo_t* cr)
         };
         pango_attr_list_filter(so->attr_list, string_attr_color_handler, (void*)pm);
     }
-
-    so->was_outlined = 0;
 
     return (0);
 }
