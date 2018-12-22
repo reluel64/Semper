@@ -47,7 +47,9 @@ typedef enum
 
 
 extern PangoAttribute *string_attr_case(unsigned char case_type, size_t start, size_t end);
-extern PangoAttribute *string_attr_color(unsigned char cl_type, string_attributes *sa, size_t start, size_t end);
+extern PangoAttribute *string_attr_color(string_attributes *sa);
+extern PangoAttribute *string_attr_shadow(string_attributes *sa);
+extern PangoAttribute *string_attr_outline(string_attributes *sa);
 extern int             string_attr_case_handler(PangoAttribute *pa, void *pv);
 
 static int string_parse_filter(string_tokenizer_status *pi, void* pv)
@@ -460,8 +462,11 @@ static int string_attr_fill_user(object *o, string_format_type *fmt_type, string
                 {
                     sa->gradient_ang = (int)sz;
                 }
+                else
+                {
+                    *fmt_type = type_invalid;
+                }
 
-                *fmt_type = type_invalid;
             }
             else
             {
@@ -472,8 +477,10 @@ static int string_attr_fill_user(object *o, string_format_type *fmt_type, string
                     sa->gradient = temp;
                     sa->gradient[sa->gradient_len++] = string_to_color(pm);
                 }
-
-                *fmt_type = type_invalid;
+                else
+                {
+                    *fmt_type = type_invalid;
+                }
             }
 
             break;
@@ -750,15 +757,30 @@ int string_attr_update(string_object *so)
                 pango_attr_list_change(so->attr_list, pa);
             }
 
-            if(sa->font_outline || sa->font_shadow || sa->gradient_len >= 2 || sa->font_color)
+            /*Color stuff*/
+            if(sa->font_outline)
             {
-                pa = string_attr_color(color_type, sa, start, end);
+                pa = string_attr_outline(sa);
                 pa->start_index=start;
                 pa->end_index=end;
                 pango_attr_list_change(so->attr_list, pa);
             }
 
+            if(sa->font_shadow)
+            {
+                pa = string_attr_shadow(sa);
+                pa->start_index=start;
+                pa->end_index=end;
+                pango_attr_list_change(so->attr_list, pa);
+            }
 
+            if(sa->gradient_len >= 2 || sa->font_color)
+            {
+                pa = string_attr_color( sa);
+                pa->start_index=start;
+                pa->end_index=end;
+                pango_attr_list_change(so->attr_list, pa);
+            }
         }
 
         if(ctx == NULL)

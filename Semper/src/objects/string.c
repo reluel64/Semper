@@ -2,7 +2,7 @@
 String object
 Part of Project "Semper"
 Wrriten by Alexandru-Daniel Mărgărit
-*/
+ */
 #define PCRE_STATIC
 #include <objects/string.h>
 #include <mem.h>
@@ -28,6 +28,7 @@ void string_init(object* o)
         string_object* so = o->pv;
         so->context = pango_context_new();
         so->layout = pango_layout_new(so->context);
+
         list_entry_init(&so->attr);
     }
 }
@@ -103,7 +104,7 @@ int string_update(object* o)
 {
     string_bind sb = { 0 };
     string_object* so = o->pv;
-
+    PangoRectangle pr ={0};
     long w = 0;
     long h = 0;
 
@@ -157,33 +158,44 @@ int string_update(object* o)
 
     pango_layout_set_text(so->layout, so->bind_string, -1);
 
-    /*get the layout size*/
-    if(o->w < 0 || o->h < 0)
+    if(o->w >= 0)
     {
-        pango_layout_get_size(so->layout, (int*)&w, (int*)&h);
-        w >>= 10;
-        h >>= 10;
+        pango_layout_set_width(so->layout, (o->w - so->layout_x) << 10);
     }
+
+    if(o->h >= 0)
+    {
+        pango_layout_set_height(so->layout, (o->h - so->layout_y) << 10);
+    }
+
+
+
+    if(so->iter)
+    {
+        pango_layout_iter_free(so->iter);
+    }
+
+    so->iter = pango_layout_get_iter(so->layout);
+
+    /*get the layout size*/
+
+    pango_layout_iter_get_layout_extents(so->iter, NULL, &pr);
+
+    w =  (pr.width  >> 10);
+    h =  (pr.height >> 10);
 
     if(o->w < 0)
     {
-        pango_layout_set_width(so->layout, w << 10);
-        o->auto_w = (w != 0 ? w + PADDING_W : 0);
-    }
-    else
-    {
-        pango_layout_set_width(so->layout, (o->w - PADDING_W) << 10);
+        o->auto_w = (w != 0 ? w  +  so->layout_x : 0);
     }
 
     if(o->h < 0)
     {
-        pango_layout_set_height(so->layout, h << 10);
-        o->auto_h = (h != 0 ? h + PADDING_H : 0);
+        o->auto_h = (h != 0 ? h + so->layout_y : 0);
     }
-    else
-    {
-        pango_layout_set_height(so->layout, (o->h - PADDING_H) << 10);
-    }
+
+    so->layout_x = (long)(pr.x >> 10);
+    so->layout_y = (long)(pr.y >> 10);
 
 
     return (0);
@@ -194,23 +206,30 @@ int string_render(object* o, cairo_t* cr)
     string_object* so = o->pv;
     double clipw = (double)(o->w < 0 ? o->auto_w : o->w);
     double cliph = (double)(o->h < 0 ? o->auto_h : o->h);
-    cairo_translate(cr, PADDING_W / 2.0, PADDING_H / 2.0);
+    cairo_translate(cr, (double)so->layout_x, (double)so->layout_y);
     cairo_rectangle(cr, 0.0, 0.0, clipw, cliph);
     cairo_clip(cr);
 
-    for(unsigned char i = 2; i; i--)
+    PangoLayoutIter *iter = so->iter;
+    int line_no = 0;
+
+
+    //  cairo_set_color(cr,0xffffff00);
+    //  pango_cairo_show_layout(cr,so->layout);
+
+    for(unsigned char i = ATTR_COLOR_SHADOW; i <= ATTR_COLOR_OUTLINE ; i++)
     {
         void **pm[] =
         {
-            (void*)so,
-            (void*)cr,
-            (void*)(size_t)(i - 1)
+                (void*)so,
+                (void*)cr,
+                (void*)(size_t)i
         };
         pango_attr_list_filter(so->attr_list, string_attr_color_handler, (void*)pm);
     }
 
     so->was_outlined = 0;
-    cairo_translate(cr, -PADDING_W / 2.0, -PADDING_H / 2.0);
+    cairo_translate(cr, -(double)so->layout_x, -(double)so->layout_y);
     return (0);
 }
 
@@ -224,6 +243,11 @@ void string_destroy(object* o)
         g_object_unref(so->layout);
         g_object_unref(so->context);
         pango_font_description_free(so->font_desc);
+
+        if(so->iter)
+        {
+            pango_layout_iter_free(so->iter);
+        }
 
         if(so->bind_string != so->string)
         {

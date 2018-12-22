@@ -22,9 +22,10 @@ typedef struct
     unsigned char* bind_string;
     double scale;
     unsigned int scaling;
-
+    long layout_x;
+    long layout_y;
     /*Pango stuff*/
-
+    void *iter;
     void* context;
     void* layout;
     void* font_map;

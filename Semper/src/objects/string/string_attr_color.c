@@ -2,7 +2,7 @@
 String object color attribute
 Part of Project "Semper"
 Wrriten by Alexandru-Daniel Mărgărit
-*/
+ */
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 #include <mem.h>
@@ -14,9 +14,8 @@ Wrriten by Alexandru-Daniel Mărgărit
 
 typedef struct
 {
-    PangoAttribute attr;
-    string_attributes *sa;
-    unsigned char type;
+        PangoAttribute attr;
+        string_attributes *sa;
 } StringAttrColor;
 
 static PangoAttribute *string_attr_color_copy(const PangoAttribute *pa)
@@ -29,125 +28,77 @@ static PangoAttribute *string_attr_color_copy(const PangoAttribute *pa)
 
 static void string_attr_color_destroy(PangoAttribute *pa1)
 {
+
     sfree((void**)&pa1);
 }
 
 static int string_attr_color_compare(const PangoAttribute *pa1, const PangoAttribute *pa2)
 {
+    StringAttrColor *attr1 = pa1;
+    StringAttrColor *attr2 = pa2;
     unused_parameter(pa1);
     unused_parameter(pa2);
-    return(0);
+    /*
+    if(attr1->sa->font_color == 0x800094ff)
+    {
+        printf("0x%x\n",attr1->sa->font_color);
+    }
+
+    if(attr2->sa->font_color == 0x800094ff)
+       {
+           printf("0x%x\n",attr2->sa->font_color);
+       }*/
+
+    return(attr1->sa == attr2->sa);
 }
 
-PangoAttribute *string_attr_color(unsigned char cl_type, string_attributes *sa, size_t start, size_t end)
+PangoAttribute *string_attr_color(string_attributes *sa)
 {
     static PangoAttrClass cls =
     {
-        .type = STRING_ATTR_COLOR,
-        .copy = string_attr_color_copy,
-        .destroy = string_attr_color_destroy,
-        .equal = string_attr_color_compare
+            .type = STRING_ATTR_COLOR,
+            .copy = string_attr_color_copy,
+            .destroy = string_attr_color_destroy,
+            .equal = string_attr_color_compare
     };
 
     StringAttrColor *attr = zmalloc(sizeof(StringAttrColor));
     attr->attr.klass = &cls;
-    attr->attr.start_index = start;
-    attr->attr.end_index = end;
     attr->sa = sa;
-    attr->type = cl_type;
     return(&attr->attr);
 }
 
-static int string_attr_color_draw(string_object *so, string_attributes *sa, PangoRectangle *pr, cairo_t *cr, unsigned char shadow)
+PangoAttribute *string_attr_shadow( string_attributes *sa)
 {
-    if(sa->font_shadow)
+    static PangoAttrClass cls =
     {
-        cairo_save(cr);
+            .type = STRING_ATTR_SHADOW,
+            .copy = string_attr_color_copy,
+            .destroy = string_attr_color_destroy,
+            .equal = string_attr_color_compare
+    };
 
-        cairo_translate(cr, sa->shadow_x, sa->shadow_y);
-        cairo_rectangle(cr, pr->x, pr->y, pr->width, pr->height);
-        cairo_clip(cr);
+    StringAttrColor *attr = zmalloc(sizeof(StringAttrColor));
+    attr->attr.klass = &cls;
+    attr->sa = sa;
+    return(&attr->attr);
+}
 
-        cairo_set_color(cr, sa->shadow_color);
-        pango_cairo_show_layout(cr, so->layout);
-        cairo_reset_clip(cr);
-        cairo_restore(cr);
-    }
 
-    if(shadow)
+PangoAttribute *string_attr_outline(string_attributes *sa)
+{
+    static PangoAttrClass cls =
     {
-        return(0);
-    }
+            .type = STRING_ATTR_OUTLINE,
+            .copy = string_attr_color_copy,
+            .destroy = string_attr_color_destroy,
+            .equal = string_attr_color_compare
+    };
 
-    cairo_save(cr);
-    cairo_rectangle(cr, pr->x, pr->y, pr->width, pr->height);
-    cairo_clip(cr);
-
-    if(sa->gradient_len < 2)
-    {
-        cairo_set_color(cr, sa->font_color);
-        pango_cairo_show_layout(cr, so->layout);
-    }
-    else
-    {
-        cairo_pattern_t* background = cairo_pattern_create_linear((double)pr->x,
-                                      (double)pr->y + (double)pr->height / 2.0,
-                                      (double)(pr->x + pr->width),
-                                      (double)pr->y + (double)pr->height / 2.0);
-        cairo_matrix_t m = { 0 };
-
-        cairo_matrix_init_translate(&m, (double)pr->x, (double)pr->y);
-
-        cairo_matrix_translate(&m, (double)pr->width / 2.0, (double)pr->height / 2.0);
-        cairo_matrix_rotate(&m, DEG2RAD(sa->gradient_ang));
-        cairo_matrix_translate(&m, -((double)pr->width) / 2.0, -((double)pr->height) / 2.0);
-        cairo_matrix_translate(&m, -(double)pr->x, -(double)pr->y);
-
-        cairo_pattern_set_matrix(background, &m);
-        cairo_set_source(cr, background);
-
-        for(size_t i = 0; i < sa->gradient_len; i++)
-        {
-            unsigned char *color = (unsigned char*)&sa->gradient[i];
-            double red = (double)color[2] / 255.0;
-            double green = (double)color[1] / 255.0;
-            double blue = (double)color[0] / 255.0;
-            double alpha = (double)color[3] / 255.0;
-            double pos = (double)(i == 0 ? i : i + 1) / (double)sa->gradient_len;
-            cairo_pattern_add_color_stop_rgba(background, (double)pos, red, green, blue, alpha);
-        }
-
-        pango_cairo_show_layout(cr, so->layout);
-        cairo_pattern_destroy(background);
-    }
-
-    if(sa->font_outline)
-    {
-        cairo_reset_clip(cr);
-
-        if(so->was_outlined == 0)
-        {
-            cairo_rectangle(cr, pr->x - 1, pr->y, pr->width - 1, pr->height);
-        }
-        else
-        {
-            cairo_rectangle(cr, pr->x - 1, pr->y, pr->width + 2, pr->height);
-        }
-
-        so->was_outlined = 1;
-        cairo_clip(cr);
-        cairo_set_line_width(cr, 1.0);
-        cairo_set_color(cr, sa->outline_color);
-        pango_cairo_layout_path(cr, so->layout);
-        cairo_stroke(cr);
-    }
-    else
-    {
-        so->was_outlined = 0;
-    }
-
-    cairo_restore(cr);
-    return(0);
+    StringAttrColor *attr = zmalloc(sizeof(StringAttrColor));
+    attr->attr.klass = &cls;
+    attr->sa = sa;
+    return(&attr->attr);
 }
 
 
@@ -155,107 +106,162 @@ int string_attr_color_handler(PangoAttribute *pa, void *pv)
 {
     void **pm = (void**)pv;
 
-    if(pa->klass->type != STRING_ATTR_COLOR || ((StringAttrColor*)pa)->sa == NULL)
+    if((pa->klass->type < STRING_ATTR_GRADIENT || pa->klass->type >STRING_ATTR_SHADOW)  || ((StringAttrColor*)pa)->sa == NULL)
     {
         return(0);
     }
 
-    string_object *so = pm[0];
-    cairo_t *cr = pm[1];
+    string_object *so = (string_object*)pm[0];
+    cairo_t *cr = (cairo_t*)pm[1];
     string_attributes *sa = ((StringAttrColor*)pa)->sa;
+    PangoLayoutIter *iter = pango_layout_iter_copy(so->iter);
 
-    long px = 0;
-    long py = 0;
-    long pw = 0;
-    long ph = 0;
-    long oy = 0;
-    long ox = 0;
-    unsigned char yh = 0;
+    double offx = 0.0;
+    double offy = 0.0;
 
-    if(sa->font_shadow == 0 && pm[2])
+    if((pa->klass->type == STRING_ATTR_SHADOW  && pm[2] != (void*)ATTR_COLOR_SHADOW)||
+       (pa->klass->type == STRING_ATTR_OUTLINE && pm[2] != (void*)ATTR_COLOR_OUTLINE))
     {
         return(0);
     }
+    cairo_save(cr);
 
-    if(pa->start_index == 0 && so->bind_string[0] != ' ' && sa->font_outline)
+    if(pa->klass->type == STRING_ATTR_SHADOW)
     {
-        cairo_translate(cr, 1, 0);
+        offx = sa->shadow_x;
+        offy = sa->shadow_y;
     }
 
-    size_t start = pa->start_index;
-    size_t end = ((pa->end_index == -1) ? so->bind_string_len : pa->end_index);
-/*This method is not efficient*/
-    for(size_t i = pa->start_index; i <= end; i++)
+
+    do
     {
-        PangoRectangle pr = {0};
+        cairo_save(cr);
 
-        if(((i + 1 == end) || (i == pa->start_index)) && i < end && so->bind_string[i] == ' ')
-        {
-            start++;
+        cairo_pattern_t *pattern = NULL;
+        PangoLayoutLine *line = NULL;
+        PangoRectangle lpr={0};
+        cairo_rectangle_t gradient_dim={0};
+        int baseline = 0;
+        char full_line = 0;
+        line = pango_layout_iter_get_line_readonly(iter);
+
+        if(line == NULL)
             continue;
-        }
 
-        pango_layout_index_to_pos(so->layout, i, &pr);
+        if(line->length + line->start_index < pa->start_index)
+            continue;
 
-        yh = 0;
-        pr.x >>= 10;
-        pr.y >>= 10;
-        pr.width >>= 10;
-        pr.height >>= 10;
-
-        if(i == start)
+        if(line->start_index > pa->end_index)
         {
-            px = pr.x;
-            py = pr.y;
-            oy = pr.y;
+            break;
+        }
+        pango_layout_iter_get_line_extents(iter,NULL,&lpr);
+        baseline = pango_layout_iter_get_baseline(iter);
+
+
+        /* Go unrestricted*/
+        if(pm[2] ==(void*)ATTR_COLOR_SHADOW)
+        {
+            cairo_set_color(cr,sa->shadow_color);
+        }
+        else if(pm[2]== (void*)ATTR_COLOR_OUTLINE)
+        {
+            cairo_set_color(cr,sa->outline_color);
         }
         else
         {
-            if(ox == pr.x)
+            cairo_set_color(cr,sa->font_color);
+        }
+
+        full_line = (line->start_index >= pa->start_index && ((pa->end_index >= line->start_index + line->length)));
+
+        if(sa->gradient_len>=2 && pm[2] != (void*)ATTR_COLOR_SHADOW)
+        {
+            gradient_dim.height = (double)(lpr.height >> 10);
+            gradient_dim.width = (double)(lpr.width >> 10);
+            gradient_dim.x = (double)(lpr.x >> 10);
+            gradient_dim.y = (double)((lpr.y) >> 10);
+        }
+
+        if(!full_line)
+        {
+            PangoLayoutIter *ch_iter = pango_layout_iter_copy(iter);
+
+            do
             {
-                continue;
+                PangoRectangle rpr = {0};
+                size_t index = pango_layout_iter_get_index(ch_iter);
+
+                if(index < pa->start_index||index < line->start_index)
+                    continue;
+
+                if(index >= pa->end_index || index > line->start_index + line->length)
+                {
+                    break;
+                }
+
+                pango_layout_iter_get_char_extents (ch_iter,&rpr);
+                cairo_rectangle(cr,(double)(rpr.x>>10)+offx,(double)(rpr.y>>10)+offy,(double)(rpr.width>>10),(double)(rpr.height>>10));
+
+            }while(pango_layout_iter_next_char (ch_iter));
+
+            cairo_clip(cr);
+
+            if(sa->gradient_len>=2 && pm[2] != (void*)ATTR_COLOR_SHADOW)
+            {
+                cairo_clip_extents (cr,&gradient_dim.x,&gradient_dim.y,&gradient_dim.width,&gradient_dim.height);
             }
 
-            ox = pr.x;
+            pango_layout_iter_free(ch_iter);
+        }
 
-            if(oy != pr.y)
+        if(sa->gradient_len >= 2 && pm[2] !=(void*)ATTR_COLOR_SHADOW)
+        {
+            pattern = cairo_pattern_create_linear(gradient_dim.x,
+                    gradient_dim.y + gradient_dim.height / 2.0,
+                    gradient_dim.x + gradient_dim.width,
+                    gradient_dim.y + gradient_dim.height / 2.0);
+            cairo_matrix_t m = { 0 };
+
+            cairo_matrix_init_translate(&m,gradient_dim.x, gradient_dim.y);
+
+            cairo_matrix_translate(&m, gradient_dim.width/ 2.0, gradient_dim.height / 2.0);
+            cairo_matrix_rotate(&m, DEG2RAD(sa->gradient_ang));
+            cairo_matrix_translate(&m, - gradient_dim.width / 2.0, - gradient_dim.height / 2.0);
+            cairo_matrix_translate(&m, -gradient_dim.x, -gradient_dim.y);
+
+            cairo_pattern_set_matrix(pattern, &m);
+            cairo_set_source(cr, pattern);
+
+            for(size_t i = 0; i < sa->gradient_len; i++)
             {
-                PangoRectangle prv =
-                {
-                    .x = px,
-                    .y = py,
-                    .width = pw,
-                    .height = ph
-                };
-
-                string_attr_color_draw(so, sa, &prv, cr, (unsigned char)(size_t)(pm[2]));
-
-                //  if(i+1<end)
-                yh = 1;
-                pw = 0;
-                ph = 0;
-                oy = pr.y;
-                px = pr.x;
-                py = pr.y;
+                unsigned char *color = (unsigned char*)&sa->gradient[i];
+                double red = (double)color[2] / 255.0;
+                double green = (double)color[1] / 255.0;
+                double blue = (double)color[0] / 255.0;
+                double alpha = (double)color[3] / 255.0;
+                double pos = (double)(i == 0 ? i : i + 1) / (double)sa->gradient_len;
+                cairo_pattern_add_color_stop_rgba(pattern, (double)pos, red, green, blue, alpha);
             }
         }
 
-        pw = max((pr.width + pr.x) - px, pw);
-        ph = max(pr.height, ph);
-    }
+        cairo_move_to (cr,(double)(lpr.x>>10)+offx,(double)(baseline>>10)+offy);
+        pango_cairo_layout_line_path (cr,line);
 
-    if(yh == 0)
-    {
-        PangoRectangle pr =
+        if(pa->klass->type==STRING_ATTR_OUTLINE)
+            cairo_stroke(cr);
+        else
+            cairo_fill(cr);
+
+        if(pattern)
         {
-            .x = px,
-            .y = py,
-            .width = pw,
-            .height = ph
-        };
+            cairo_pattern_destroy(pattern);
+        }
+        cairo_restore(cr);
 
-        string_attr_color_draw(so, sa, &pr, cr, (unsigned char)(size_t)(pm[2]));
-    }
+    }while(pango_layout_iter_next_line(iter));
 
+    pango_layout_iter_free(iter);
+    cairo_restore(cr);
     return(0);
 }

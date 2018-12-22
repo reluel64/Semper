@@ -369,8 +369,8 @@ static void *spawner_worker(void *pv)
     pthread_mutex_lock(&st->mtx);
     sfree((void**)&st->raw_str);
     raw_str=zmalloc(100*1024*1024);
-    memset(raw_str,'A',100*1024*1024-1);
-    raw_len = 100*1024*1024-1;
+    memset(raw_str,'A',50*1024*1024-1);
+    raw_len = 50*1024*1024-1;
     st->raw_str = raw_str;
     st->raw_str_len = raw_len;
     st->ph = -1;

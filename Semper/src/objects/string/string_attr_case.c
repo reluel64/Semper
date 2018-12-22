@@ -24,9 +24,9 @@ static void string_attr_case_destroy(PangoAttribute *pa1)
 
 static int string_attr_case_compare(const PangoAttribute *pa1, const PangoAttribute *pa2)
 {
-    unused_parameter(pa1);
-    unused_parameter(pa2);
-    return(0);
+    PangoAttrInt *pai1 = (PangoAttrInt*) pa1;
+    PangoAttrInt *pai2 = (PangoAttrInt*) pa2;
+    return(pai1->value==pai2->value);
 }
 
 PangoAttribute *string_attr_case(unsigned char case_type, size_t start, size_t end)
