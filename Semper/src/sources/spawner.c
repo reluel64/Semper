@@ -24,8 +24,9 @@ typedef struct
 }spawner_state;
 
 static void *spawner_worker(void *pv);
+#ifdef WIN32
 static int spawner_kill_by_window(HWND window, LPARAM lpm);
-
+#endif
 void spawner_init(void **spv,void *ip)
 {
     unused_parameter(ip);
@@ -239,6 +240,9 @@ static void *spawner_worker(void *pv)
 #ifdef WIN32
     unsigned short *cmd = utf8_to_ucs(st->command);
     unsigned short *wd  = utf8_to_ucs(st->working_dir);
+#elif __linux__
+    unsigned char *cmd = clone_string(st->command);
+    unsigned char *wd  = clone_string(st->working_dir);
 #endif
 #undef WIN32
 #ifdef WIN32
