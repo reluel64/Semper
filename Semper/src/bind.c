@@ -530,9 +530,9 @@ int bind_update_numeric(object* o, bind_numeric* bn)
         return (-1);
     }
 
-    bn->max = 1;
-    bn->min = 0;
-    bn->val = 0;
+    bn->max = 1.0;
+    bn->min = 0.0;
+    bn->val = 0.0;
 
     binding* b = NULL;
 

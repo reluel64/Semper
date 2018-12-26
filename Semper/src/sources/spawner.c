@@ -1,3 +1,8 @@
+/*
+ * Process spawning source
+ * Part of project 'Semper'
+ * Written by Alexandru-Daniel Mărgărit
+ */
 #include <sources/source.h>
 #include <mem.h>
 #include <semper_api.h>
@@ -5,9 +10,18 @@
 #include <string_util.h>
 #include <parameter.h>
 #include <xpander.h>
+
+#ifdef __linux__
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <spawn.h>
+#include <fcntl.h>
+#endif
+
 typedef struct
 {
-        unsigned char *command;
+        unsigned char *app;
+        unsigned char *param;
         unsigned char *finish_command;
         unsigned char *working_dir;
         pthread_mutex_t mtx;
@@ -47,28 +61,38 @@ void spawner_reset(void *spv, void *ip)
 {
     spawner_state *st = spv;
     pthread_mutex_lock(&st->mtx);
-    sfree((void**)&st->command);
+    sfree((void**)&st->app);
+    sfree((void**)&st->param);
     sfree((void**)&st->working_dir);
 
-    unsigned char *app=  parameter_string(ip,"Application",NULL,XPANDER_SOURCE);
-    unsigned char *param = parameter_string(ip,"Parameter",NULL,XPANDER_SOURCE);
+    st->app   = parameter_string(ip,"Application",NULL,XPANDER_SOURCE);
+    st->param = parameter_string(ip,"Parameter",NULL,XPANDER_SOURCE);
 
-    if(app == NULL)
+    if(st->app == NULL)
     {
-        app = expand_env_var("%COMSPEC% /u /c");
+#ifdef WIN32
+        unsigned char *temp = expand_env_var("%COMSPEC%");
+        size_t len = 0;
+        uniform_slashes(temp);
+        len = string_length(temp) +  string_length ("/u /c");
+        st->app = zmalloc(len + 2);
+        snprintf(st->app,len + 2,"%s /u /c",temp);
+#elif __linux__
+        unsigned char *temp = expand_env_var("$SHELL");
+        size_t len = 0;
+        uniform_slashes(temp);
+        len = string_length(temp) +  string_length ("-c");
+        st->app = zmalloc(len + 2);
+        snprintf(st->app,len + 2,"%s -c",temp);
+#endif
+        sfree((void**)&temp);
     }
     else
     {
-        uniform_slashes(app);
+        uniform_slashes(st->app);
     }
-    size_t len = string_length(app) + string_length(param)+2;
-    st->command = zmalloc(string_length(app) + string_length(param)+2);
-
-    snprintf(st->command,len,"%s %s",app,param);
 
     st->working_dir = parameter_string(ip,"WorkingDir",NULL,XPANDER_SOURCE);
-    sfree((void**)&app);
-    sfree((void**)&param);
 
     pthread_mutex_unlock(&st->mtx);
 }
@@ -161,7 +185,8 @@ void spawner_destroy(void **spv)
 
     sfree((void**)&st->raw_str);
     sfree((void**)&st->ret_str);
-    sfree((void**)&st->command);
+    sfree((void**)&st->app);
+    sfree((void**)&st->param);
     sfree((void**)&st->working_dir);
 
     safe_flag_destroy(&st->kill);
@@ -238,15 +263,26 @@ static void *spawner_worker(void *pv)
     unsigned char *raw_str = NULL;
     size_t raw_len = 0;
     safe_flag_set(st->th_active,2);
-#ifdef WIN32
-    unsigned short *cmd = utf8_to_ucs(st->command);
-    unsigned short *wd  = utf8_to_ucs(st->working_dir);
-#elif __linux__
-    unsigned char *cmd = clone_string(st->command);
-    unsigned char *wd  = clone_string(st->working_dir);
-#endif
 
+    /*Save locally some stuff*/
+    pthread_mutex_lock(&st->mtx);
 #ifdef WIN32
+    unsigned char *command = NULL;
+    size_t len = string_length(st->app) + string_length(st->param)+2;
+    command = zmalloc(string_length(st->app) + string_length(st->param)+2);
+    snprintf(command,len,"%s %s",st->app,st->param);
+    unsigned short *cmd = utf8_to_ucs(command);
+    unsigned short *wd  = utf8_to_ucs(st->working_dir);
+    sfree((void**)&command);
+#elif __linux__
+    unsigned char *cmd = clone_string(st->app);
+    unsigned char *param  = clone_string(st->param);
+    unsigned char *wd  = clone_string(st->working_dir);
+    char **environ;
+#endif
+    pthread_mutex_unlock(&st->mtx);
+
+#if defined(WIN32)
 
     STARTUPINFOW si = {0};
     PROCESS_INFORMATION pi = {0};
@@ -284,10 +320,7 @@ static void *spawner_worker(void *pv)
     si.wShowWindow=SW_SHOW;
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.cb = sizeof(STARTUPINFOW);
-    pthread_mutex_lock(&st->mtx);
 
-
-    pthread_mutex_unlock(&st->mtx);
 
     if(CreateProcessW(NULL,cmd,NULL,NULL,1,0,NULL,wd,&si,&pi))
     {
@@ -367,12 +400,29 @@ static void *spawner_worker(void *pv)
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
     }
+#else
+#if defined(__linux__)
+    char *argv[]={"/bin/ls","-lha","/mnt/F0F0492EF048FBFA",NULL};
+    pid_t pid = -1;
+    posix_spawn_file_actions_t file_act;
+    posix_spawnattr_t attr;
+    int fd = open("/home/alex/temp",O_RDWR|O_CREAT,0777);
+    posix_spawn_file_actions_init(&file_act);
+    posix_spawn_file_actions_adddup2(&file_act,fd,1);
+    posix_spawnattr_init(&attr);
+    int ret = posix_spawn(&pid,"/bin/ls",&file_act,&attr,argv,environ);
+
 #endif
+#endif
+
 
     sfree((void**)&wd);
     sfree((void**)&cmd);
+#ifdef __linux__
+    sfree((void**)&param);
+#endif
+
     pthread_mutex_lock(&st->mtx);
-    raw_len = 50*1024*1024-1;
     st->raw_str = raw_str;
     st->raw_str_len = raw_len;
     st->ph = -1;
