@@ -62,7 +62,6 @@ void safe_flag_destroy(void **psf)
     }
 }
 
-
 void* zmalloc(size_t bytes)
 {
     return (bytes ? calloc(bytes, ALLOC_FACTOR) : NULL);

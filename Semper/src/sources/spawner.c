@@ -136,7 +136,7 @@ void spawner_command(void *spv, unsigned char *comm)
             EnumWindows(spawner_kill_by_window,GetProcessId((void*)st->ph));
 #endif
         }
-        else if(!strcasecmp(comm,"ForceStop")&&safe_flag_get(st->th_active) == 2 && st->ph >0)
+        else if(!strcasecmp(comm,"ForceStop") && safe_flag_get(st->th_active) == 2 && st->ph >0)
         {
 #ifdef WIN32
             TerminateProcess((void*)st->ph,0);
@@ -153,6 +153,7 @@ void spawner_destroy(void **spv)
     spawner_state *st = *spv;
 
     safe_flag_set(st->kill,1);
+
     if(st->thread)
     {
         pthread_join(st->thread,NULL);
@@ -244,7 +245,7 @@ static void *spawner_worker(void *pv)
     unsigned char *cmd = clone_string(st->command);
     unsigned char *wd  = clone_string(st->working_dir);
 #endif
-#undef WIN32
+
 #ifdef WIN32
 
     STARTUPINFOW si = {0};
@@ -371,9 +372,6 @@ static void *spawner_worker(void *pv)
     sfree((void**)&wd);
     sfree((void**)&cmd);
     pthread_mutex_lock(&st->mtx);
-    sfree((void**)&st->raw_str);
-    raw_str=zmalloc(100*1024*1024);
-    memset(raw_str,'A',50*1024*1024-1);
     raw_len = 50*1024*1024-1;
     st->raw_str = raw_str;
     st->raw_str_len = raw_len;

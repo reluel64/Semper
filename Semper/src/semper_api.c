@@ -242,7 +242,7 @@ SEMPER_API void send_command_ex(void* ir, unsigned char* cmd, size_t timeout, ch
         flags |= (timeout > 0 ? EVENT_PUSH_TIMER : 0);
         source* s = ir;
         surface_data* sd = s->sd;
-        extension_command* ec = zmalloc(sizeof(extension_command));
+        extension_command *ec = zmalloc(sizeof(extension_command));
         ec->sd = sd;
         ec->cd=sd->cd;
         ec->comm = clone_string(cmd);
@@ -254,8 +254,6 @@ SEMPER_API void send_command(void* ir, unsigned char* cmd)
 {
     send_command_ex(ir, cmd, 0, 0);
 }
-
-
 
 SEMPER_API int has_parent(unsigned char* str)
 {
