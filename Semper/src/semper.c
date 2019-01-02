@@ -42,7 +42,6 @@ extern void _cairo_mutex_initialize (void);
 #endif
 #endif
 
-
 typedef struct
 {
         void* nf;

@@ -64,8 +64,10 @@ static int input_parse_string_filter(tokenize_string_status *pi, void* pv)
     input_tokenizer_status* its = pv;
 
     if(pi->reset)
+    {
         memset(its, 0, sizeof(input_tokenizer_status));
-
+        return(0);
+    }
 
     if(its->quote_type == 0 && (pi->buf[pi->pos] == '"' || pi->buf[pi->pos] == '\''))
         its->quote_type = pi->buf[pi->pos];
