@@ -11,6 +11,12 @@ static int team_filter(string_tokenizer_status *sts, void* pv)
 {
     size_t *quotes = pv;
 
+    if(sts->reset)
+    {
+        *quotes = 0;
+        return(0);
+    }
+
     if(sts->buf[sts->pos] == '"' || sts->buf[sts->pos] == '\'')
     {
         (*quotes)++;

@@ -478,6 +478,13 @@ static int xpander_src_token_filter(string_tokenizer_status *sts, void *pv)
 {
     size_t *sym = pv;
 
+    if(sts->reset)
+    {
+        *sym = 0;
+        return(0);
+    }
+
+
     if(sts->buf[sts->pos] == '[')
     {
         if((*sym) == 0)

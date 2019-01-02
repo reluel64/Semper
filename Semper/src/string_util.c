@@ -530,14 +530,11 @@ static char *string_util_xpand_linux_env(unsigned char *str)
 
         for(size_t i = 0; i < sti.oveclen / 2; i++)
         {
-            char bbb[256] = {0};
             size_t start = sti.ovecoff[i * 2];
             size_t end = sti.ovecoff[i * 2 + 1];
 
             if(end == start)
                 continue;
-
-            strncpy(bbb, sti.buffer + start, end - start);
 
 
             if(sti.buffer[start] == '$')
@@ -570,8 +567,6 @@ static char *string_util_xpand_linux_env(unsigned char *str)
                     res[len] = 0;
                 }
 
-
-                fflush(NULL);
                 sfree((void**)&vname);
             }
             else

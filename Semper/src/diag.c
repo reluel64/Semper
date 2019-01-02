@@ -23,6 +23,12 @@
 #else
 #define SEMPER_API
 #endif
+
+
+/*TODO
+ * Make diag_log push data in a buffer which will be written by a different thread
+ *
+ */
 diag_status *diag_get_struct(void)
 {
     static diag_status sts = {0};

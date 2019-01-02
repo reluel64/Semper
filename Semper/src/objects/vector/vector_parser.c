@@ -8,7 +8,7 @@
 #include <parameter.h>
 #include <objects/vector/vector_clipper_glue.h>
 #define PARAMS_LENGTH 10
-
+#define M_PI        3.14159265358979323846
 
 
 extern void vector_arc_path(cairo_t *cr, double sx, double sy, double rx, double ry, double angle, unsigned char sweep, unsigned char large, double ex, double ey);
