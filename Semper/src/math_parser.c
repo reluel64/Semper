@@ -425,7 +425,7 @@ static int math_parser_gen_queue(unsigned char *f, list_entry *out_queue, math_p
         unsigned char *n = NULL;
         double v = 0.0;
 
-#ifdef ALLOW_BASE_2
+#if defined(ALLOW_BASE_2)
         v = (double)strtoll(f + i, (char**)&n, 2);
 
         if(toupper(n[0]) != 'B')
@@ -671,7 +671,7 @@ static int math_parser_gen_queue(unsigned char *f, list_entry *out_queue, math_p
             math_push_queue(out_queue, tbl, 0.0);
         }
 
-#ifdef DEBUG
+#if defined(DEBUG)
         output_queue *oq = NULL;
 
         diag_verb("%s --------------Out stack--------------", __FUNCTION__);

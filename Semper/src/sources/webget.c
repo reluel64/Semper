@@ -4,10 +4,10 @@
  * Written by Alexandru-Daniel Mărgărit
  */
 #define CURL_STATICLIB
-#ifdef WIN32
+#if defined(WIN32)
 #include <winsock2.h>
 #include <wchar.h>
-#elif __linux__
+#elif defined(__linux__)
 #include <sys/stat.h>
 #endif
 #include <semper_api.h>
@@ -258,14 +258,14 @@ static FILE *webget_create_file(unsigned char *fp)
     if(fp == NULL)
         return(NULL);
 
-#ifdef WIN32
+#if defined(WIN32)
     unsigned short *uc = utf8_to_ucs(fp);
 
     if(uc)
         fd = _wfopen(uc, L"wb");
 
     sfree((void**)&uc);
-#elif __linux__
+#elif defined(__linux__)
     fd = fopen(fp, "wb");
 #endif
     return(fd);
@@ -278,7 +278,7 @@ static int webget_rename_file(unsigned char *on, unsigned char *nn)
     if(on == NULL || nn == NULL)
         return(-1);
 
-#ifdef WIN32
+#if defined(WIN32)
     unsigned short *ucon = utf8_to_ucs(on);
     unsigned short *ucnn = utf8_to_ucs(nn);
 
@@ -287,7 +287,7 @@ static int webget_rename_file(unsigned char *on, unsigned char *nn)
 
     sfree((void**)&ucon);
     sfree((void**)&ucnn);
-#elif __linux__
+#elif defined(__linux__)
     rename(on, nn);
 #endif
     return(0);
@@ -298,14 +298,14 @@ static int webget_remove_file(unsigned char *fp)
     if(fp == NULL)
         return(-1);
 
-#ifdef WIN32
+#if defined(WIN32)
     unsigned short *uc = utf8_to_ucs(fp);
 
     if(uc)
         _wremove(uc);
 
     sfree((void**)&uc);
-#elif __linux__
+#elif defined(__linux__)
     remove(fp);
 #endif
     return(0);
@@ -318,14 +318,14 @@ static int webget_mkdir(unsigned char *fp)
     if(fp == NULL)
         return(-1);
 
-#ifdef WIN32
+#if defined(WIN32)
     unsigned short *uc = utf8_to_ucs(fp);
 
     if(uc)
         ret = _wmkdir(uc);
 
     sfree((void**)&uc);
-#elif __linux__
+#elif defined(__linux__)
     ret = mkdir(fp, 640);
 #endif
     return(ret);

@@ -280,12 +280,12 @@ int image_cache_decode_svg(FILE *f, image_cache_decoded *icd)
 }
 #endif
 # if 1
-#warning "Check fseeko usage"
+
 int image_cache_decode_svg(FILE *f, image_cache_decoded *icd)
 {
     int ret = 0;
     fseeko(f, 0, SEEK_END);
-    size_t buf_sz = ftello64(f);
+    size_t buf_sz = ftello(f);
     fseeko(f, 0, SEEK_SET);
 
     unsigned char *buf = zmalloc(buf_sz + 1);

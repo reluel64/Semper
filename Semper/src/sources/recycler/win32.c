@@ -1,4 +1,4 @@
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
 #include <shellapi.h>
 #include <Sddl.h>

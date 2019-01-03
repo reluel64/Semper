@@ -3,9 +3,9 @@
 #include <semper_api.h>
 #include <string_util.h>
 #include <linked_list.h>
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
-#elif __linux__
+#elif defined(__linux__)
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -42,7 +42,7 @@ typedef struct
 } folderinfo_dir_list;
 
 
-#ifdef WIN32
+#if defined(WIN32)
 static size_t file_size(size_t low, size_t high)
 {
     return (low | (high << 32));
@@ -105,7 +105,7 @@ void folderinfo_reset(void* spv, void* ip)
         fi->type = 2;
     }
 }
-#ifdef WIN32
+#if defined(WIN32)
 static int folderinfo_collect_win32(unsigned char* root, folderinfo* fi)
 {
     unsigned char *file = root;
@@ -230,7 +230,7 @@ static int folderinfo_collect_win32(unsigned char* root, folderinfo* fi)
 
     return(0);
 }
-#elif __linux__
+#elif defined(__linux__)
 static int folderinfo_collect_linux(unsigned char* root, folderinfo* fi)
 {
     unsigned char *file = root;
@@ -348,9 +348,9 @@ static void* folderinfo_collect_thread(void* vfi)
     fi->file_count = 0;
     fi->folder_count = 0;
     fi->size = 0;
-#ifdef WIN32
+#if defined( WIN32)
     folderinfo_collect_win32(fi->path, fi);
-#elif __linux__
+#elif defined(__linux__)
     folderinfo_collect_linux(fi->path,fi);
 #endif
     fi->ofile_count = fi->file_count;

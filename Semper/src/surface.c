@@ -319,7 +319,7 @@ static unsigned char* surface_variant_file(unsigned char* sd, size_t variant)
     }
 
     unsigned char* ret = NULL;
-#ifdef WIN32
+#if defined(WIN32)
     size_t sdl = string_length(sd);
 
 
@@ -360,7 +360,7 @@ static unsigned char* surface_variant_file(unsigned char* sd, size_t variant)
 
     ret = ucs_to_utf8(fd.cFileName, NULL, 0);
 
-#elif __linux__
+#elif defined(__linux__)
 
     DIR* dh = opendir(sd);
     struct dirent* fi = NULL;

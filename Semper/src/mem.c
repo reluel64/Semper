@@ -81,11 +81,11 @@ int put_file_in_memory(unsigned char* file, void** out, size_t* sz)
     FILE* f = NULL;
     unsigned char *gf = clone_string(file);
     uniform_slashes(gf);
-#ifdef WIN32
+#if defined(WIN32)
     wchar_t* fp = utf8_to_ucs(gf);
     f = _wfopen(fp, L"rb");
     sfree((void**)&fp);
-#elif __linux__
+#elif defined(__linux__)
     f = fopen(gf, "rb");
 #endif
     sfree((void**)&gf);
@@ -93,9 +93,9 @@ int put_file_in_memory(unsigned char* file, void** out, size_t* sz)
     if(f)
     {
         fseek(f, 0, SEEK_END);
-#ifdef WIN32
+#if defined(WIN32)
         *sz = _ftelli64(f);
-#else
+#elif defined(__linux__)
         *sz = ftello(f);
 #endif
         fseek(f, 0, SEEK_SET);

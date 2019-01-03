@@ -49,13 +49,13 @@ typedef struct
 
 int recycler_event_proc(recycler *r);
 recycler_common *recycler_get_common(void);
-#ifdef WIN32
+#if defined(WIN32)
 int recycler_notifier_check_win32(recycler *r);
 int recycler_query_user_win32(recycler *r);
 int recycler_notifier_setup_win32(recycler *r);
 
 
-#elif __linux__
+#elif defined(__linux__)
 int recycler_query_user_linux(recycler *r);
 int recycler_notifier_setup_linux(recycler *r);
 #endif

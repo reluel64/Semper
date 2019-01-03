@@ -39,13 +39,12 @@ Written by Alexandru-Daniel Mărgărit
 #include <sources/spawner.h>
 #include <parameter.h>
 
-#ifdef __linux__
+#if defined(__linux__)
 #include <dlfcn.h>
-#endif
-
-#ifdef WIN32
+#elif defined(WIN32)
 #include <windows.h>
 #endif
+
 typedef unsigned char *(*src_str_rtn)(void *ip, unsigned char **pms, size_t pms_len);
 typedef struct
 {
@@ -253,11 +252,11 @@ static void* source_load_lib(unsigned char* path)
 {
     void* lib = NULL;
     uniform_slashes(path);
-#ifdef WIN32
+#if defined(WIN32)
     wchar_t* wp = utf8_to_ucs(path);
     lib = LoadLibraryW(wp);
     sfree((void**)&wp);
-#elif __linux__
+#elif defined(__linux__)
     unsigned char *temp_path = path;
 
     if(is_file_type(path, "so") == 0)
@@ -288,9 +287,9 @@ static void* source_load_lib(unsigned char* path)
 static void* source_get_proc(void* lib, unsigned char* proc)
 {
     void* rtn = NULL;
-#ifdef WIN32
+#if defined(WIN32)
     rtn = GetProcAddress(lib, proc);
-#elif __linux__
+#elif defined(__linux__)
     rtn = dlsym(lib, proc);
 #endif
     return (rtn);
@@ -298,9 +297,9 @@ static void* source_get_proc(void* lib, unsigned char* proc)
 
 static void source_unload_lib(void* lib)
 {
-#ifdef WIN32
+#if defined(WIN32)
     FreeLibrary(lib);
-#elif __linux__
+#elif defined(__linux__)
     dlclose(lib);
 #endif
 }

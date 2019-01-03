@@ -2,7 +2,7 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  */
-#ifdef WIN32
+#if defined(WIN32)
 #include <pdh.h>
 #include <stdio.h>
 #include <wchar.h>

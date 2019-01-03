@@ -13,14 +13,14 @@
  * access we try to do a compromise and use TCP SYN/ACK
  */
 
-#ifdef WIN32
+#if defined(WIN32)
 #include <Winsock2.h>
 #include <windows.h>
 
 #include <Iphlpapi.h>
 #include <Icmpapi.h>
 #include <Ws2tcpip.h>
-#elif __linux__
+#elif defined(__linux__)
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -55,7 +55,7 @@ typedef struct
 } ping;
 
 
-#ifdef WIN32
+#if defined(WIN32)
 PCSTR WSAAPI inet_ntop(
         INT        Family,
         const VOID *pAddr,
@@ -68,7 +68,7 @@ static void *ping_calculate(void *spv);
 
 void ping_init(void** spv, void* ip)
 {
-#ifdef WIN32
+#if defined(WIN32)
     WSADATA wsaData= {0};
     WSAStartup(0x0101, &wsaData);
 #endif
@@ -147,9 +147,9 @@ void ping_destroy(void** spv)
     ping* p = *spv;
     pthread_mutex_lock(&p->mutex);
     if(p->sock>=0)
-#ifdef WIN32
+#if defined(WIN32)
         shutdown(p->sock,SD_BOTH); /*this should wake up the thread*/
-#elif __linux__
+#elif defined(__linux__)
     shutdown(p->sock,SHUT_RDWR); /*this should wake up the thread*/
 #endif
     pthread_mutex_unlock(&p->mutex);
@@ -166,7 +166,7 @@ void ping_destroy(void** spv)
     free(p->exec);
     free(*spv);
     *spv = NULL;
-#ifdef WIN32
+#if defined(WIN32)
     WSACleanup();
 #endif
 }
@@ -265,10 +265,10 @@ static void *ping_calculate(void *spv)
     setsockopt (sock_fd, SOL_SOCKET, SO_RCVTIMEO, (char *)&end, sizeof(end));
     setsockopt (sock_fd, SOL_SOCKET, SO_SNDTIMEO, (char *)&end, sizeof(end));
 #if 0
-#ifdef WIN32
+#if defined(WIN32)
     unsigned long nblocking = 1;
     ioctlsocket(sock_fd, FIONBIO, &nblocking);
-#elif __linux__
+#elif defined(__linux__)
     int flags = fcntl(sock_fd, F_GETFL, 0);
     flags |=O_NONBLOCK;
     fcntl(sock_fd, F_SETFL, flags);
@@ -309,10 +309,10 @@ static void *ping_calculate(void *spv)
     free(finish_act);
     semper_safe_flag_set(p->th_active, 0);
     freeaddrinfo(res);
-#ifdef WIN32
+#if defined(WIN32)
     shutdown(p->sock,SD_BOTH); /*this should wake up the thread*/
     closesocket(sock_fd);
-#elif __linux__
+#elif defined(__linux__)
     shutdown(p->sock,SHUT_RDWR); /*this should wake up the thread*/
     close(sock_fd);
 #endif

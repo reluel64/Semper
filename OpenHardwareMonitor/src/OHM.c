@@ -1,4 +1,4 @@
-#ifdef WIN32
+#if defined(WIN32)
 #define _WIN32_DCOM
 #include <stdio.h>
 #include <tchar.h>

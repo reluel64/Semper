@@ -295,7 +295,7 @@ static void input_populate_list(input_text *it)
 static int input_kbd_handler(unsigned int key_code, void *pv)
 {
     input_text *it = pv;
-#ifdef DEBUG
+#if defined(DEBUG)
     printf("KeyCode %d\n", key_code);
 #endif
 

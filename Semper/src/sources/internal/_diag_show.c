@@ -1,5 +1,5 @@
 /*
- * Disgnostic messages revealer
+ * Diagnostic messages revealer
  * Part of Project 'Semper'
  * Writen by Alexandru-Daniel Mărgărit
  */

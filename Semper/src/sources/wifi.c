@@ -7,7 +7,7 @@
 #include <string_util.h>
 #include <semper_api.h>
 
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
 #include <wlanapi.h>
 #endif
@@ -32,7 +32,7 @@ typedef struct
     void *wifi_handle;
 } wifi_data;
 
-#ifdef WIN32
+#if defined(WIN32)
 
 
 typedef enum _IDOT11_PHY_TYPE
@@ -152,7 +152,7 @@ void wifi_init(void **spv, void*ip)
     unused_parameter(ip);
 
     wifi_data *wd = zmalloc(sizeof(wifi_data));
-#ifdef WIN32
+#if defined(WIN32)
     unsigned long nver = 0;
     WlanOpenHandle(2, NULL, &nver, &wd->wifi_handle);
 #endif
@@ -214,7 +214,7 @@ double wifi_update(void *spv)
     wifi_data *wd = spv;
 
     sfree((void**)&wd->str_val);
-#ifdef WIN32
+#if defined(WIN32)
     unsigned long nver = 0;
 
     if(wd->wifi_handle == NULL && WlanOpenHandle(2, NULL, &nver, &wd->wifi_handle) != ERROR_SUCCESS)
@@ -366,7 +366,7 @@ void wifi_destroy(void **spv)
 {
     wifi_data *wd = *spv;
     sfree((void**)&wd->str_val);
-#ifdef WIN32
+#if defined(WIN32)
 
     if(wd->wifi_handle)
     {

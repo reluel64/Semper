@@ -1,5 +1,5 @@
 #pragma once
-#ifdef WIN32
+#if defined(WIN32)
 #define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #endif

@@ -1,4 +1,4 @@
-#ifdef __linux__
+#if defined(__linux__)
 #include <crosswin/crosswin.h>
 #include <crosswin/xlib.h>
 #include <string.h>
@@ -22,7 +22,6 @@ typedef struct Hints
 
 static void xlib_render(crosswin_window *w);
 void xlib_set_zpos(crosswin_window *w);
-
 static int xlib_fixup_zpos(crosswin *c);
 
 void xlib_init_display(crosswin *c)

@@ -6,7 +6,7 @@
 #include <surface.h>
 #include <mem.h>
 #include <string_util.h>
-#ifdef __linux__
+#if  defined(__linux__)
 #include <semaphore.h>
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -15,7 +15,7 @@
 typedef struct
 {
     char buf[32 * 1024];
-#ifdef __linux__
+#if defined(__linux__)
   sem_t sem_wake;
     sem_t sem_write;
     size_t timestamp; //we will use this under Linux to avoid a nasty limitation
@@ -32,7 +32,7 @@ typedef struct
 
 typedef struct
 {
-    #ifdef WIN32
+    #if defined(WIN32)
     void *sem_wake;
     void *sem_write;
     #endif
@@ -48,9 +48,9 @@ typedef struct
 static size_t semper_listener_wait_fcn(void *pv, size_t timeout)
 {
     semper_listener_data *sld = pv;
-    #ifdef WIN32
+    #if defined( WIN32)
     WaitForSingleObject(sld->sem_wake, -1);
-    #elif __linux__
+    #elif defined(__linux__)
     sem_wait(&sld->ld->sem_wake);
     #endif
     return(0);
@@ -59,9 +59,9 @@ static size_t semper_listener_wait_fcn(void *pv, size_t timeout)
 static void semper_listener_wake_fcn(void *pv)
 {
     semper_listener_data *sld = pv;
-#ifdef WIN32
+#if defined(WIN32)
     ReleaseSemaphore(sld->sem_wake, 1, NULL);
-#elif __linux__
+#elif defined(__linux__)
       sem_post(&sld->ld->sem_wake);
 #endif
 }
@@ -89,9 +89,9 @@ static int semper_listener_prepare(void *pv)
     memcpy(slcd->cmd, sld->ld->buf, 32 * 1024);
     memset(sld->ld->buf, 0, 32 * 1024);
     event_push(sld->meq, (event_handler)semper_listener_callback, (void*)slcd, 0, 0); //we will queue this event to be processed later
-#ifdef WIN32
+#if defined(WIN32)
     ReleaseSemaphore(sld->sem_write, 1, NULL);
-#elif __linux__
+#elif defined(__linux__)
      sem_post(&sld->ld->sem_write);
 #endif
     return(0);
@@ -121,12 +121,12 @@ void *semper_listener_init(control_data *cd)
 {
 
     semper_listener_data *sld = zmalloc(sizeof(semper_listener_data));
-#ifdef WIN32
+#if defined(WIN32)
     sld->mmap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(listener_data), "Local\\SemperCommandListener");
     sld->sem_wake = CreateSemaphoreA(NULL, 0, 1, "Local\\SemperCommandListenerWake");
     sld->sem_write = CreateSemaphoreA(NULL, 1, 1, "Local\\SemperCommandListenerWrite");
     sld->ld = (listener_data*) MapViewOfFile(sld->mmap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(listener_data));
-#elif __linux__
+#elif defined(__linux__)
     unsigned char *usr=expand_env_var("$LOGNAME");
     unsigned char buf[280] = {0};
     snprintf(buf, 280, "/SemperCommandListener_%s", usr);
@@ -169,12 +169,12 @@ void semper_listener_destroy(void **p)
     safe_flag_set(sld->kill, 1);
     event_wake(sld->eq);
     pthread_join(sld->th, NULL);
-#ifdef WIN32
+#if defined(WIN32)
     CloseHandle(sld->sem_wake);
     CloseHandle(sld->sem_write);
     UnmapViewOfFile(sld->ld);
     CloseHandle(sld->mmap);
-#elif __linux__
+#elif defined(__linux__)
     shm_unlink(buf);
     sem_destroy(&sld->ld->sem_wake);
     sem_destroy(&sld->ld->sem_write);
@@ -190,7 +190,7 @@ void semper_listener_destroy(void **p)
 
 int semper_listener_writer(unsigned char *comm, size_t len)
 {
-#ifdef WIN32
+#if defined(WIN32)
     void *pp = OpenFileMapping(FILE_MAP_WRITE, 0, "Local\\SemperCommandListener");
     void *sem_wake = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, 0, "Local\\SemperCommandListenerWake");
     void *sem_write = OpenSemaphoreA(SEMAPHORE_ALL_ACCESS, 0, "Local\\SemperCommandListenerWrite");
@@ -212,7 +212,7 @@ int semper_listener_writer(unsigned char *comm, size_t len)
 
     ReleaseSemaphore(sem_wake, 1, NULL);
 
-#elif __linux__
+#elif defined(__linux__)
     unsigned char *usr=expand_env_var("$LOGNAME");
     unsigned char buf[280] = {0};
     snprintf(buf, 280, "/SemperCommandListener_%s", usr);

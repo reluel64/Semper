@@ -4,11 +4,6 @@ Part of Project 'Semper'
 Written by Alexandru-Daniel Mărgărit
 */
 #include <surface.h>
-#ifdef WIN32
-#include <windows.h>
-#include <commctrl.h>
-#endif
-
 #include <bind.h>
 #include <objects/bar.h>
 #include <mem.h>

@@ -233,7 +233,7 @@ int ini_parser_parse_file(unsigned char* fn, ini_handler ih, void* pv)
     FILE* fh = NULL;
     int ret = -1;
 
-#ifdef WIN32
+#if defined(WIN32)
     unsigned short* ufn = utf8_to_ucs(fn);
     fh = _wfopen(ufn, L"rb");
     if(fh)
@@ -241,7 +241,7 @@ int ini_parser_parse_file(unsigned char* fn, ini_handler ih, void* pv)
     fwide(fh, -1);
     }
     sfree((void**)&ufn);
-#else
+#elif defined(__linux__)
     fh = fopen(fn, "rb");
 #endif
 

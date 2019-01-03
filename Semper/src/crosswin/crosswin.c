@@ -10,9 +10,9 @@
 
 #include <crosswin/crosswin.h>
 #include <time.h>
-#ifdef WIN32
+#if defined(WIN32)
 #include <crosswin/win32.h>
-#elif __linux__
+#elif defined(__linux__)
 #include <crosswin/xlib.h>
 #endif
 #include <semper.h>
@@ -27,9 +27,9 @@ void crosswin_init(crosswin* c)
 {
     list_entry_init(&c->windows);
     c->handle_mouse = crosswin_mouse_handle;
-#ifdef WIN32
+#if defined(WIN32)
     win32_init_class(c);
-#elif __linux__
+#elif defined(__linux__)
     xlib_init_display(c);
 #endif
 
@@ -68,9 +68,9 @@ int crosswin_update(crosswin* c)
 
 static void crosswin_check_desktop(crosswin *c)
 {
-#ifdef WIN32
+#if defined(WIN32)
     win32_check_desktop(c);
-#elif __linux__
+#elif defined(__linux__)
     xlib_check_desktop(c);
 #endif
 }
@@ -209,10 +209,10 @@ void crosswin_monitor_origin(crosswin *c, crosswin_window *cw, long *x, long *y)
 }
 void crosswin_message_dispatch(crosswin *c)
 {
-#ifdef WIN32
+#if defined(WIN32)
     win32_message_dispatch(c);
 
-#elif __linux__
+#elif defined(__linux__)
     xlib_message_dispatch(c);
 #endif
 }
@@ -223,9 +223,9 @@ crosswin_window* crosswin_init_window(crosswin* c)
     list_entry_init(&w->current);
     linked_list_add_last(&w->current, &c->windows);
     w->c = c;
-#ifdef WIN32
+#if defined(WIN32)
     win32_init_window(w);
-#elif __linux__
+#elif defined(__linux__)
     xlib_init_window(w);
 #endif
     return (w);
@@ -237,10 +237,10 @@ static int crosswin_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *len
     *len = 1;
     *cm=realloc(*cm,sizeof(crosswin_monitor));
 
-#ifdef WIN32
+#if defined(WIN32)
 
     win32_get_monitors(cm, len);
-#elif __linux__
+#elif defined(__linux__)
     xlib_get_monitors(c, cm, len);
 #endif
 
@@ -279,9 +279,9 @@ void crosswin_set_click_through(crosswin_window* w, unsigned char state)
     if(w)
     {
         w->click_through = state;
-#ifdef WIN32
+#if defined(WIN32)
         win32_click_through(w);
-#elif __linux__
+#elif defined(__linux__)
         xlib_click_through(w);
 #endif
     }
@@ -301,9 +301,9 @@ void crosswin_draw(crosswin_window* w)
     {
         crosswin_set_position(w, w->x, w->y);
 
-#ifdef WIN32
+#if defined(WIN32)
         win32_draw(w);
-#elif __linux__
+#elif defined(__linux__)
         xlib_draw(w);
 #endif
     }
@@ -377,9 +377,9 @@ void crosswin_set_position(crosswin_window* w, long x, long y)
         }
 
 
-#ifdef WIN32
+#if defined(WIN32)
         win32_set_position(w);
-#elif __linux__
+#elif defined(__linux__)
         xlib_set_position(w);
 #endif
 
@@ -444,9 +444,9 @@ void crosswin_set_opacity(crosswin_window* w, unsigned char opacity)
     if(w && w->opacity != opacity)
     {
         w->opacity = opacity;
-#ifdef WIN32
+#if defined(WIN32)
         win32_set_opacity(w);
-#elif __linux__
+#elif defined(__linux__)
         xlib_set_opacity(w);
 #endif
 
@@ -468,7 +468,7 @@ void crosswin_set_size(crosswin_window* w, long width, long height)
         w->w = labs(width);
         w->h = labs(height);
 
-#ifdef __linux__
+#if defined(__linux__)
         xlib_set_dimmension(w);
 #endif
     }
@@ -497,7 +497,7 @@ void crosswin_set_kbd_handler(crosswin_window *w, int(*kbd_func)(unsigned  int k
     {
         w->kbd_func = kbd_func;
         w->kb_data = kb_data;
-#ifdef __linux__
+#if defined(__linux__)
         w->kbd_func ? xlib_create_input_context(w) : xlib_destroy_input_context(w);
 #endif
     }
@@ -508,9 +508,9 @@ void crosswin_set_visible(crosswin_window* w,unsigned char visible)
     if(w&&w->visible!=visible)
     {
         w->visible = visible;
-#ifdef WIN32
+#if defined(WIN32)
         win32_set_visible(w);
-#elif __linux__
+#elif defined(__linux__)
         xlib_set_visible(w);
 #endif
     }
@@ -531,9 +531,9 @@ void crosswin_destroy(crosswin_window** w)
     {
         crosswin *c = (*w)->c;
         linked_list_remove(&(*w)->current);
-#ifdef WIN32
+#if defined(WIN32)
         win32_destroy_window(w);
-#elif __linux__
+#elif defined(__linux__)
         xlib_destroy_window(w);
 #endif
 
@@ -579,9 +579,9 @@ void crosswin_get_keep_on_screen(crosswin_window* w, unsigned char *keep_on_scre
 static void crosswin_update_zorder(crosswin_window *cw)
 {
 
-#ifdef WIN32
+#if defined(WIN32)
     win32_set_zpos(cw);
-#elif __linux__
+#elif defined(__linux__)
     xlib_set_zpos(cw);
 #endif
 
@@ -610,9 +610,9 @@ void crosswin_get_zorder(crosswin_window* w, unsigned char *zorder)
 
 static size_t crosswin_get_time(void)
 {
-#ifdef WIN32
+#if defined(WIN32)
     return(clock());
-#elif __linux__
+#elif defined(__linux__)
     struct timespec t = {0};
     clock_gettime(CLOCK_MONOTONIC_RAW, &t);
     return(t.tv_sec * 1000 + t.tv_nsec / 1000000);

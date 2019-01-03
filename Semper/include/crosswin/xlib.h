@@ -1,6 +1,6 @@
 #pragma once
 #include <crosswin/crosswin.h>
-#ifdef __linux__
+#if defined(__linux__)
 int  xlib_message_dispatch(crosswin *c);
 int  xlib_set_opacity(crosswin_window *w);
 int  xlib_destroy_input_context(crosswin_window *w);

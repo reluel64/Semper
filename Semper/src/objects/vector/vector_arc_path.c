@@ -2,7 +2,9 @@
 #include <objects/vector.h>
 
 /*Adapted from librsvg*/
-
+#ifndef M_PI
+# define M_PI       3.14159265358979323846  /* pi */
+#endif
 
 
 static void vector_arc_path_segment(cairo_t *cr,  double xc, double yc, double th0, double th1, double rx, double ry, double angle)

@@ -6,10 +6,6 @@
 
 #include <surface.h>
 #include <objects/image.h>
-#ifdef WIN32
-#include <windows.h>
-#include <commctrl.h>
-#endif
 #include <string.h>
 #include <image/image_cache.h>
 #include <mem.h>

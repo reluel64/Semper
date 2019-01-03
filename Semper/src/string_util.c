@@ -480,7 +480,7 @@ unsigned char* ucs32_to_utf8(unsigned int* s_in, size_t* bn, unsigned char be)
 }
 
 
-#ifdef __linux__
+#if defined(__linux__)
 static int variable_tokenizer(string_tokenizer_status *sti, void *pv)
 {
     int *fl = (int*)pv;
@@ -607,7 +607,7 @@ unsigned char* expand_env_var(unsigned char* path)
 {
 
     unsigned char* ret = NULL;
-#ifdef WIN32
+#if defined(WIN32)
     size_t mem_n = 0;
     wchar_t* unip = utf8_to_ucs(path);
 
@@ -617,7 +617,7 @@ unsigned char* expand_env_var(unsigned char* path)
     ret = ucs_to_utf8(expanded_var, NULL, 0);
     sfree((void**)&expanded_var);
     sfree((void**)&unip);
-#elif __linux__
+#elif defined(__linux__)
     ret = string_util_xpand_linux_env(path);
 #endif
     return (ret);
@@ -756,14 +756,14 @@ int uniform_slashes(unsigned char *str)
 
     for(size_t i = 0; str[i]; i++)
     {
-#ifdef WIN32
+#if defined(WIN32)
 
         if(str[i] == '/')
         {
             str[i] = '\\';
         }
 
-#elif __linux__
+#elif defined(__linux__)
 
         if(str[i] == '\\')
         {

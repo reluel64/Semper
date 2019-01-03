@@ -11,14 +11,14 @@
 #include <mem.h>
 #include <pthread.h>
 
-#ifdef WIN32
+#if defined(WIN32)
 #include <initguid.h>
 #include <cairo/cairo-win32.h>
 #include <windows.h>
 #include <commctrl.h>
 #include <shellapi.h>
 #include <CommonControls.h>
-#elif __linux__
+#elif defined(__linux__)
 #include <dirent.h>
 #endif
 
@@ -134,7 +134,7 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
 static void* folderview_collect_thread(void* vfi);
 static void folderview_item_child_sync(folderview_parent *fp, unsigned char flag);
 
-#ifdef WIN32
+#if defined(WIN32)
 static size_t dword_qword(size_t low, size_t high)
 {
     return (low | (high << 31));
@@ -474,7 +474,7 @@ void folderview_command(void* spv, unsigned char* command)
                 else
                 {
 
-#ifdef WIN32
+#if defined(WIN32)
                     wchar_t *s = utf8_to_ucs(fc->item->file_path);
                     wchar_t *d = utf8_to_ucs(fp->path);
 
@@ -687,7 +687,7 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
         {
 
             size_t fpsz = string_length(file);
-#ifdef WIN32
+#if defined(WIN32)
             unsigned char* filtered = zmalloc(fpsz + 6);
             snprintf(filtered, fpsz + 6, "%s/*.*", file);
 
@@ -700,7 +700,7 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
             sfree((void**)&filtered_uni);
 
 
-#elif __linux__
+#elif defined(__linux__)
 
             DIR *dh = opendir(file);
             struct dirent *dat = (dh ? readdir(dh) : NULL);
@@ -713,7 +713,7 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
 
                 unsigned char dir = 0;
 
-#ifdef WIN32
+#if defined(WIN32)
                 unsigned char hidden = 0;
                 unsigned char sys = 0;
                 size = dword_qword(wfd.nFileSizeLow, wfd.nFileSizeHigh);
@@ -721,14 +721,14 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
                 dir = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
                 hidden = (wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
                 sys = (wfd.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) != 0;
-#elif __linux__
+#elif defined(__linux__)
 
                 if(dat == NULL)
                     break;
 
                 dir = (dat->d_type == DT_DIR);
 #endif
-#ifdef WIN32
+#if defined(WIN32)
 
                 if(safe_flag_get(f->stop) || fh == INVALID_HANDLE_VALUE)
                 {
@@ -737,14 +737,14 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
 
 #endif
                 unsigned char* temp = NULL;
-#ifdef WIN32
+#if defined(WIN32)
 
                 if((dir == 1 && f->show_folders == 0) || (dir == 0 && f->show_files == 0) || (sys && f->sys == 0) || (hidden && f->hidden == 0))
                     continue;
 
 
                 temp = ucs_to_utf8(wfd.cFileName, NULL, 0);
-#elif __linux__
+#elif defined(__linux__)
 
                 temp = clone_string(dat->d_name);
 #endif
@@ -791,7 +791,7 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
 
                     uniform_slashes(fi->file_path);
                     fi->dir = dir;
-#ifdef WIN32
+#if defined(WIN32)
                     fi->access_date = dword_qword(wfd.ftLastAccessTime.dwHighDateTime, wfd.ftLastAccessTime.dwHighDateTime);
                     fi->mod_date = dword_qword(wfd.ftLastWriteTime.dwHighDateTime, wfd.ftLastWriteTime.dwHighDateTime);
                     fi->creat_date = fi->dir ? dword_qword(wfd.ftLastWriteTime.dwHighDateTime, wfd.ftLastWriteTime.dwHighDateTime) :
@@ -831,20 +831,20 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
                 }
             }
 
-#ifdef WIN32
+#if defined(WIN32)
 
             while(safe_flag_get(f->stop) == 0 && FindNextFileW(fh, &wfd));
 
-#elif __linux__
+#elif defined(__linux__)
 
             while(safe_flag_get(f->stop) == 0 && (dat = readdir(dh)) != NULL);
 
 #endif
 
-#ifdef WIN32
+#if defined(WIN32)
             (fh != NULL && fh != INVALID_HANDLE_VALUE) ? FindClose(fh) : 0;
             fh = NULL;
-#elif __linux__
+#elif defined(__linux__)
             dh ? closedir(dh) : 0;
 #endif
         }
@@ -878,7 +878,8 @@ typedef struct
     size_t csz;
 } png_writer;
 
-#ifdef WIN32
+
+#if defined(WIN32)
 static cairo_status_t folderview_writer(void *pv, const unsigned char *data, unsigned int length)
 {
     png_writer *pw = pv;
@@ -900,9 +901,10 @@ static cairo_status_t folderview_writer(void *pv, const unsigned char *data, uns
     return(CAIRO_STATUS_SUCCESS);
 }
 #endif
+
 static int folderview_create_icon(unsigned char *store_root, unsigned char *file_path, folderview_child *fc)
 {
-#ifdef WIN32
+#if defined(WIN32)
     unsigned short *s = utf8_to_ucs(file_path);
     IImageList* ico_list = NULL;
     SHFILEINFOW sh = {0};
@@ -1020,7 +1022,7 @@ static void folderview_item_child_sync(folderview_parent *fp, unsigned char flag
 
         if(flag & SYNC_ICONS)
         {
-#ifdef WIN32
+#if defined(WIN32)
             CoInitializeEx(NULL, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
 #endif
             list_enum_part(fc, &fp->children, current)
@@ -1030,7 +1032,7 @@ static void folderview_item_child_sync(folderview_parent *fp, unsigned char flag
                     folderview_create_icon(fp->icon_root, fc->item->file_path, fc);
                 }
             }
-#ifdef WIN32
+#if defined(WIN32)
             CoUninitialize();
 #endif
         }

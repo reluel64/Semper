@@ -9,7 +9,7 @@
 #include <event.h>
 #include <pthread.h>
 #include <time.h>
-#ifdef __linux__
+#if defined(__linux__)
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
 #include <sys/inotify.h>

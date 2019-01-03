@@ -600,7 +600,7 @@ COMMAND_HANDLER(handler_execute)
 {
     unused_parameter(sd);
     int ret = 0;
-#ifdef WIN32
+#if defined(WIN32)
     wchar_t* s = utf8_to_ucs(cp->pms[0]);
 
     if(s)

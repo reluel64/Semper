@@ -16,8 +16,8 @@
 #include <skeleton.h>
 #include <parameter.h>
 #include <diag.h>
-#ifdef WIN32
-#ifdef SEMPER_API
+#if defined(WIN32)
+#if defined(SEMPER_API)
 #undef SEMPER_API
 #define SEMPER_API __attribute__((dllexport))
 #else

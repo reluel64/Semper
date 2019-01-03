@@ -6,7 +6,7 @@
 #include <parameter.h>
 #include <xpander.h>
 
-#ifdef __linux__
+#if defined(__linux__)
 #define __USE_GNU
 #include <unistd.h>
 #include <fcntl.h>
@@ -18,9 +18,9 @@
 
 typedef struct
 {
-#ifdef WIN32
+#if defined(WIN32)
         unsigned char *command;
-#elif __linux__
+#elif defined(__linux__)
         unsigned char *bin_path;
         unsigned char *params;
 #endif
@@ -40,9 +40,11 @@ typedef struct
 }spawner_state;
 
 static void *spawner_worker(void *pv);
-static unsigned char **spawner_param_to_argv(unsigned char *str);
-#ifdef WIN32
+
+#if defined(WIN32)
 static int spawner_kill_by_window(HWND window, LPARAM lpm);
+#elif defined(__linux__)
+static unsigned char **spawner_param_to_argv(unsigned char *str);
 #endif
 
 
@@ -83,9 +85,9 @@ void spawner_reset(void *spv, void *ip)
 {
     spawner_state *st = spv;
     pthread_mutex_lock(&st->mtx);
-#ifdef WIN32
+#if defined(WIN32)
     sfree((void**)&st->command);
-#elif __linux__
+#elif defined(__linux__)
     sfree((void**)&st->params);
     sfree((void**)&st->bin_path);
 #endif
@@ -97,9 +99,9 @@ void spawner_reset(void *spv, void *ip)
 
     if(app == NULL)
     {
-#ifdef WIN32
+#if defined(WIN32)
         app = expand_env_var("%COMSPEC% /u /c"); //no need to call uniform_slashes
-#elif __linux__
+#elif defined(__linux__)
         app = expand_env_var("$SHELL");
         size_t pm_len = string_length(param);
         unsigned char *tmp = zmalloc(pm_len+4);
@@ -112,14 +114,14 @@ void spawner_reset(void *spv, void *ip)
     {
         uniform_slashes(app);
     }
-#ifdef WIN32
+#if defined(WIN32)
     size_t len = string_length(app) + string_length(param)+2;
     st->command = zmalloc(string_length(app) + string_length(param)+2);
     snprintf(st->command,len,"%s %s",app,param);
     sfree((void**)&app);
     sfree((void**)&param);
 
-#elif __linux__
+#elif defined(__linux__)
     st->bin_path = app;
     st->params = param;
 #endif
@@ -189,9 +191,9 @@ void spawner_command(void *spv, unsigned char *comm)
         }
         else if(!strcasecmp(comm,"Stop") && safe_flag_get(st->th_active) == 2 && st->ph >0)
         {
-#ifdef WIN32
+#if defined(WIN32)
             EnumWindows(spawner_kill_by_window,GetProcessId((void*)st->ph));
-#elif __linux__
+#elif defined(__linux__)
             pthread_mutex_lock(&st->mtx);
             pid_t pid = st->ph;
             pthread_mutex_unlock(&st->mtx);
@@ -200,12 +202,13 @@ void spawner_command(void *spv, unsigned char *comm)
         }
         else if(!strcasecmp(comm,"ForceStop") && safe_flag_get(st->th_active) == 2 && st->ph >0)
         {
-#ifdef WIN32
+#if defined(WIN32)
             TerminateProcess((void*)st->ph,0);
             safe_flag_set(st->kill,1);
             pthread_join(st->thread,NULL);
             safe_flag_set(st->kill,0);
-#elif __linux__
+
+#elif defined(__linux__)
             pthread_mutex_lock(&st->mtx);
             pid_t pid = st->ph;
             pthread_mutex_unlock(&st->mtx);
@@ -234,9 +237,9 @@ void spawner_destroy(void **spv)
 
     sfree((void**)&st->working_dir);
 
-#ifdef WIN32
+#if defined(WIN32)
     sfree((void**)&st->command);
-#elif __linux__
+#elif defined(__linux__)
     sfree((void**)&st->params);
     sfree((void**)&st->bin_path);
 #endif
@@ -259,7 +262,7 @@ static int is_utf16(unsigned char *buf,size_t len)
     return(0);
 }
 
-#ifdef WIN32
+#if defined(WIN32)
 static int spawner_kill_by_window(HWND window, LPARAM lpm)
 {
     DWORD pid = 0;
@@ -307,14 +310,14 @@ static void spawner_convert_and_append(unsigned char *raw, size_t raw_len, unsig
 static void *spawner_worker(void *pv)
 {
     spawner_state *st = pv;
-#ifdef WIN32
+#if defined(WIN32)
     void *app_std_in = NULL;
     void *app_std_out = NULL;
     void *app_std_err = NULL;
     void *std_in = NULL;
     void *std_out = NULL;
     void *std_err = NULL;
-#elif __linux__
+#elif defined(__linux__)
     int app_std_in = -1;
     int app_std_out = -1;
     int app_std_err = -1;
@@ -327,7 +330,7 @@ static void *spawner_worker(void *pv)
     size_t raw_len = 0;
     safe_flag_set(st->th_active,2);
 
-#ifdef WIN32
+#if defined(WIN32)
 
     STARTUPINFOW si = {0};
     PROCESS_INFORMATION pi = {0};
@@ -450,7 +453,7 @@ static void *spawner_worker(void *pv)
     }
 
 
-#elif __linux__
+#elif defined(__linux__)
 
     int temp_p[2];
     pid_t pid = -1;
@@ -575,9 +578,9 @@ static void *spawner_worker(void *pv)
     close(std_err);
 #endif
 
-#ifdef WIN32
+#if defined(WIN32)
     sfree((void**)&cmd);
-#elif __linux__
+#elif defined(__linux__)
     sfree((void**)&params);
     sfree((void**)&bin);
 
@@ -603,7 +606,7 @@ static void *spawner_worker(void *pv)
 
 
 
-
+#if defined(__linux__)
 static int spawner_filter(string_tokenizer_status *sts, void* pv)
 {
     size_t *tokens = pv;
@@ -702,4 +705,4 @@ static unsigned char **spawner_param_to_argv(unsigned char *str)
 
     return(res);
 }
-
+#endif

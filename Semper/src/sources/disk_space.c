@@ -7,9 +7,9 @@
 #include <mem.h>
 #include <semper_api.h>
 #include <string_util.h>
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
-#elif __linux__
+#elif defined(__linux__)
 #include <sys/statfs.h>
 #endif
 
@@ -25,7 +25,7 @@ typedef struct _disk
 } disk;
 
 #if 0
-#ifdef __linux__
+#if defined(__linux__)
 static unsigned char disk_space_check_removable(unsigned char *p)
 {
     unsigned char removable = 0;
@@ -64,7 +64,7 @@ void disk_space_reset(void* spv, void* ip)
     d->label = param_bool("Label", ip, 0);
 
 
-#ifdef WIN32
+#if defined(WIN32)
 
     if(d->total_bytes == NULL)
     {
@@ -80,7 +80,7 @@ void disk_space_reset(void* spv, void* ip)
     GetDiskFreeSpaceExW(buf, NULL, d->total_bytes, NULL);
     sfree((void**)&buf);
     source_set_max((double)((ULARGE_INTEGER*)d->total_bytes)->QuadPart, ip, 1, 0);
-#elif __linux__
+#elif defined(__linux__)
     struct statfs s = {0};
 
     if(d->total_bytes == NULL)
@@ -109,7 +109,7 @@ double disk_space_update(void* spv)
     disk* d = spv;
 
 
-#ifdef WIN32
+#if defined(WIN32)
 
     if(d->type == 0)
     {
@@ -136,7 +136,7 @@ double disk_space_update(void* spv)
         return (ret);
     }
 
-#elif __linux__
+#elif defined(__linux__)
 
     if(d->type == 0)
     {
@@ -172,7 +172,7 @@ double disk_space_update(void* spv)
 unsigned char* disk_space_string(void* spv)
 {
     disk* d = spv;
-#ifdef WIN32
+#if defined(WIN32)
     static unsigned char* types[] =
     {
         "Unknown",
@@ -187,9 +187,9 @@ unsigned char* disk_space_string(void* spv)
     if(d->type && d->label == 0)
     {
 
-#ifdef WIN32
+#if defined(WIN32)
         return (types[GetDriveType(d->name)]);
-#elif __linux__
+#elif defined(__linux__)
 #if 0
         unsigned char removable = disk_space_check_removable(d->name);
          (removable==0)?return(types[3]):0;
@@ -206,7 +206,7 @@ unsigned char* disk_space_string(void* spv)
         unsigned short buf[256];
         unsigned short* buf2 = utf8_to_ucs(d->name);
         memset(buf, 0, sizeof(buf));
-#ifdef WIN32
+#if defined(WIN32)
         GetVolumeInformationW(buf2, buf, 255, NULL, NULL, NULL, NULL, 0);
 #endif
         d->ret_str = ucs_to_utf8(buf, NULL, 0);

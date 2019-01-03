@@ -21,7 +21,8 @@
 #include <pango/pangocairo.h>
 #include <semper_listener.h>
 #include <font_config.h>
-#ifdef __linux__
+
+#if defined(__linux__)
 #include <sys/inotify.h>
 #include <sys/eventfd.h>
 #include <unistd.h>
@@ -32,14 +33,12 @@
 #include <limits.h>
 #include <dirent.h>
 #include <sys/stat.h>
-#else
-#if defined(WIN32)
+#elif defined(WIN32)
 #include <windows.h>
 #include <winbase.h>
 #include <wchar.h>
 WINBASEAPI WINBOOL WINAPI QueryFullProcessImageNameW(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
 extern void _cairo_mutex_initialize (void);
-#endif
 #endif
 
 typedef struct
@@ -65,7 +64,7 @@ typedef struct
          */
         unsigned char process_loop;
         void *event_wait;
-#ifdef __linux__
+#if defined(__linux__)
         void *dispfd;
 #endif
 } semper_event_wait_data;
@@ -74,11 +73,11 @@ typedef struct
 
 size_t tss()
 {
-#ifdef WIN32
+#if defined(WIN32)
     LARGE_INTEGER li;
     QueryPerformanceCounter(&li);
     return(li.QuadPart);
-#elif __linux__
+#elif defined(__linux__)
     return(0);
 #endif
 }
@@ -137,7 +136,7 @@ int semper_get_file_timestamp(unsigned char *file, semper_timestamp *st)
     }
 
     int res = 0;
-#ifdef WIN32
+#if defined(WIN32)
     wchar_t* uni = utf8_to_ucs(file);
 
     if(uni == NULL)
@@ -172,7 +171,9 @@ int semper_get_file_timestamp(unsigned char *file, semper_timestamp *st)
     }
 
     sfree((void**)&uni);
-#elif __linux__
+
+#elif defined(__linux__)
+
     struct stat sts = {0};
 
     if(stat(file, &sts) == 0)
@@ -399,11 +400,11 @@ int semper_save_configuration(control_data* cd)
 
     /*write down the new configuration*/
 
-#ifdef WIN32
+#if defined(WIN32)
     unsigned short *ucs = utf8_to_ucs(cd->cf);
     cfg = _wfopen(ucs, L"wb");
     sfree((void**)&ucs);
-#elif __linux__
+#elif defined(__linux__)
     cfg = fopen(cd->cf, "wb");
 #endif
 
@@ -431,7 +432,7 @@ static unsigned char semper_is_portable(unsigned char *app_dir, size_t len)
     unsigned char *surfaces = zmalloc(len + srf_len + 1);
     snprintf(surfaces, srf_len + len + 1, "%s/Surfaces", app_dir);
     uniform_slashes(surfaces);
-#ifdef WIN32
+#if defined(WIN32)
 
     unsigned short *ucs = utf8_to_ucs(surfaces);
 
@@ -439,7 +440,7 @@ static unsigned char semper_is_portable(unsigned char *app_dir, size_t len)
         portable = 1;
 
     sfree((void**)&ucs);
-#elif __linux__
+#elif defined(__linux__)
 
     if(access(surfaces, 0) == 0)
         portable = 1;
@@ -454,7 +455,7 @@ static void semper_create_paths(control_data* cd)
 {
     unsigned char* buf = NULL;
     unsigned char portable = 0;;
-#ifdef WIN32
+#if defined(WIN32)
 
     wchar_t* pth = zmalloc(4096 * 2);
     unsigned long mod_p_sz = 4095;
@@ -476,7 +477,7 @@ static void semper_create_paths(control_data* cd)
     buf = ucs_to_utf8(pth, NULL, 0);
     sfree((void**)&pth);
 
-#elif __linux__
+#elif defined(__linux__)
 
     buf = zmalloc(4096);
     readlink("/proc/self/exe", buf, 4095);
@@ -513,9 +514,9 @@ static void semper_create_paths(control_data* cd)
     else
     {
         /*Is located in the user directory*/
-#ifdef WIN32
+#if defined(WIN32)
         cd->root_dir = expand_env_var("%userprofile%/Semper");
-#elif __linux__
+#elif defined(__linux__)
 
         cd->root_dir = expand_env_var("$HOME/Semper");
 #endif
@@ -572,14 +573,14 @@ static void semper_create_paths(control_data* cd)
 
         for(unsigned char i = 0; i < sizeof(paths) / sizeof(unsigned char*); i++)
         {
-#ifdef WIN32
+#if defined (WIN32)
             unsigned short *tmp = utf8_to_ucs(paths[i]);
 
             if(_waccess(tmp, 0) != 0)
                 _wmkdir(tmp);
 
             sfree((void**)&tmp);
-#elif __linux__
+#elif defined(__linux__)
 
             if(access(paths[i], 0) != 0)
                 mkdir(paths[i], S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -589,7 +590,7 @@ static void semper_create_paths(control_data* cd)
     }
 }
 
-#ifdef WIN32
+#if defined(WIN32)
 static int semper_font_cache_fix(unsigned char *path)
 {
     if(path == NULL)
@@ -718,7 +719,7 @@ static void  semper_init_fonts(control_data *cd)
 static int semper_single_instance(control_data *cd)
 {
     int ret = 1;
-#ifdef WIN32
+#if defined(WIN32)
     void *pp = OpenFileMapping(FILE_MAP_WRITE, 0, "Local\\SemperCommandListener");
 
     if(pp)
@@ -727,7 +728,7 @@ static int semper_single_instance(control_data *cd)
         CloseHandle(pp);
     }
 
-#elif __linux__
+#elif defined(__linux__)
     //  int rr= shm_unlink("/SemperCommandListener");
     unsigned char usr[256] = {0};
     unsigned char buf[280] = {0};
@@ -778,7 +779,7 @@ static int semper_watcher_callback(void *pv)
 {
     surface_data* sd = NULL;
     control_data *cd = pv;
-#ifdef WIN32
+#if defined(WIN32)
     semper_init_fonts(cd);
 #endif
     list_enum_part(sd, &cd->surfaces, current)
@@ -820,6 +821,7 @@ static size_t semper_main_wait_fcn(void *pv, size_t timeout)
     }
 
     sewd->process_loop = 0;
+
 #if defined (WIN32)
     unsigned int status = 0;
     status = MsgWaitForMultipleObjectsEx(1, &sewd->event_wait, timeout, QS_ALLEVENTS, MWMO_INPUTAVAILABLE|MWMO_ALERTABLE);
@@ -833,8 +835,8 @@ static size_t semper_main_wait_fcn(void *pv, size_t timeout)
         sewd->process_loop |= 2;
     }
 
-#else
-#if defined(__linux__)
+
+#elif defined(__linux__)
     struct pollfd events[2];
     memset(events, 0, sizeof(events));
     events[0].fd = (int)(size_t)sewd->event_wait;
@@ -853,7 +855,7 @@ static size_t semper_main_wait_fcn(void *pv, size_t timeout)
         sewd->process_loop |= 2;
 
 #endif
-#endif
+
     clock_gettime(CLOCK_MONOTONIC, &t2);
 
     ms = (t2.tv_nsec - sewd->t.tv_nsec) / 1000000 + (t2.tv_sec - sewd->t.tv_sec) * 1000;
@@ -869,12 +871,45 @@ static size_t semper_main_wait_fcn(void *pv, size_t timeout)
 static void semper_main_wake_fcn(void *pv)
 {
     semper_event_wait_data *sewd = pv;
-#ifdef  WIN32
+#if defined(WIN32)
     SetEvent(sewd->event_wait);
-#elif __linux__
+#elif defined(__linux__)
     eventfd_write((int)(size_t)sewd->event_wait, 0x3010);
 #endif
 }
+
+#if defined(__linux__)
+static void semper_kill_handler(int sig, siginfo_t *inf,void *rv)
+{
+    static control_data *cd = NULL;
+
+    if(sig == SIGTERM)
+    {
+        if(cd == NULL)
+            cd = inf->si_ptr;
+        else
+            safe_flag_set(cd->quit_flag,1);
+    }
+}
+
+static void semper_install_kill_handler(control_data *cd)
+{
+    struct sigaction act;
+    union sigval value;
+    memset(&act,0,sizeof(struct sigaction));
+    memset(&value,0,sizeof(union sigval));
+    value.sival_ptr=cd;
+    act.sa_sigaction = semper_kill_handler;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGTERM,&act,NULL);
+   // signal(SIGTERM,semper_kill_handler);
+    sigqueue(getpid(),SIGTERM,value);
+}
+
+
+#endif
+
+
 
 int semper_main(void)
 {
@@ -893,10 +928,11 @@ int semper_main(void)
 
 #endif
 
-#ifdef WIN32
+#if defined(WIN32)
     _cairo_mutex_initialize();
     sewd.event_wait = CreateEvent(NULL, 0, 0, NULL);
-#elif __linux__
+#elif defined(__linux__)
+    semper_install_kill_handler(cd);
     sewd.event_wait = (void*)(size_t)eventfd(0, EFD_NONBLOCK);
 #endif
 
@@ -906,7 +942,7 @@ int semper_main(void)
     list_entry_init(&cd->shead);
     list_entry_init(&cd->surfaces);
 
-#ifdef __linux__
+#if defined(__linux__)
     sewd.dispfd = cd->c.disp_fd;
 #endif
 
@@ -918,11 +954,11 @@ int semper_main(void)
 
     semper_load_configuration(cd);
 
-#ifdef WIN32
+#if defined(WIN32)
     diag_info("Initializing font cache...this takes time on some machines");
     semper_init_fonts(cd);
     diag_info("Fonts initialized");
-#elif __linux__
+#elif defined(__linux__)
 
 
 #endif
@@ -979,9 +1015,13 @@ int semper_main(void)
 
 #endif
 
-#ifdef WIN32
+
+#if defined(WIN32)
+
 int wmain(int argc, wchar_t *argv[])
-#elif __linux__
+
+#elif defined(__linux__)
+
 int main(int argc, char *argv[])
 
 #endif
@@ -992,12 +1032,12 @@ int main(int argc, char *argv[])
 
     for(size_t i = 1; i < argc; i++)
     {
-#ifdef WIN32
+#if defined(WIN32)
         size_t bn = 0;
         unsigned char *cmd = ucs_to_utf8(argv[i], &bn, 0);
         semper_listener_writer(cmd, string_length(cmd));
         sfree((void**)&cmd);
-#elif __linux__
+#elif defined(__linux__)
         semper_listener_writer(argv[i], string_length(argv[i]));
 #endif
 

@@ -3,7 +3,7 @@
 * Part of Project 'Semper'
 * Written by Alexandru-Daniel Mărgărit
 */
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
 #endif
 #include <image/image_cache.h>
@@ -401,11 +401,11 @@ static inline FILE *image_cache_open_image(unsigned char *f)
     FILE* fh = NULL;
     unsigned char *gf = clone_string(f);
     uniform_slashes(gf);
-#ifdef WIN32
+#if defined(WIN32)
     wchar_t* fp = utf8_to_ucs(gf);
     fh = _wfopen(fp, L"rb");
     sfree((void**)&fp);
-#elif __linux__
+#elif defined(__linux__)
     fh = fopen(gf, "rb");
 #endif
     sfree((void**)&gf);

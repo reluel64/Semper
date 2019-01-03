@@ -3,7 +3,7 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  * */
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
 /*
  * TODO: This source should be enhanced to

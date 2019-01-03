@@ -1,9 +1,9 @@
 #pragma once
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
 #endif
 
-#ifdef __linux__
+#if defined(__linux__)
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -109,8 +109,7 @@ typedef struct
     void *cd;
 #if defined(WIN32)
     void *show_desktop_window;
-#endif
-#if defined(__linux__)
+#elif defined(__linux__)
 
     void *display;
     void *disp_fd;

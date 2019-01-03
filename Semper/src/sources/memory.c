@@ -9,9 +9,9 @@
 #include <mem.h>
 #include <string_util.h>
 #include <strings.h>
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
-#elif __linux__
+#elif defined(__linux__)
 #include <sys/sysinfo.h>
 #include <ctype.h>
 #endif
@@ -21,7 +21,7 @@ void memory_init(void** spv, void* ip)
     unused_parameter(ip);
     *spv = zmalloc(sizeof(unsigned char));
 }
-#ifdef __linux__
+#if defined(__linux__)
 
 static size_t memory_get_linux(char *field)
 {
@@ -68,7 +68,7 @@ void memory_reset(void* spv, void* ip)
 {
     unsigned char* type = spv;
     unsigned char* mode = param_string("Memory", EXTENSION_XPAND_SOURCES | EXTENSION_XPAND_VARIABLES, ip, "Physical");
-#ifdef WIN32
+#if defined(WIN32)
     MEMORYSTATUSEX ms = { 0 };
     ms.dwLength = sizeof(MEMORYSTATUSEX);
 
@@ -80,23 +80,23 @@ void memory_reset(void* spv, void* ip)
     {
         if(strcasecmp(mode, "Physical") == 0)
         {
-#ifdef WIN32
+#if defined(WIN32)
             source_set_max((double)ms.ullTotalPhys, ip, 1, 1);
-#elif __linux__
+#elif defined(__linux__)
             source_set_max((double)memory_get_linux("MemTotal:"), ip, 1, 1);
 #endif
             *type = 0;
         }
         else if(strcasecmp(mode, "Virtual") == 0)
         {
-#ifdef WIN32
+#if defined(WIN32)
             source_set_max((double)ms.ullTotalVirtual, ip, 1, 1);
 #endif
             *type = 1;
         }
         else if(strcasecmp(mode, "Pagefile") == 0)
         {
-#ifdef WIN32
+#if defined(WIN32)
             source_set_max((double)ms.ullTotalPageFile, ip, 1, 1);
 #endif
             *type = 2;
@@ -110,7 +110,7 @@ void memory_reset(void* spv, void* ip)
 double memory_update(void* spv)
 {
     unsigned char* type = spv;
-#ifdef WIN32
+#if defined(WIN32)
     MEMORYSTATUSEX ms = { 0 };
     ms.dwLength = sizeof(MEMORYSTATUSEX);
     GlobalMemoryStatusEx(&ms);
@@ -127,7 +127,7 @@ double memory_update(void* spv)
             return ((*type & 0x4) ? (double)ms.ullTotalPageFile : (double)(ms.ullTotalPageFile - ms.ullAvailPageFile));
     }
 
-#elif __linux__
+#elif defined(__linux__)
     size_t total = memory_get_linux("MemTotal:");
     size_t free = memory_get_linux("MemFree:") + memory_get_linux("Cached:") + memory_get_linux("Buffers:");
 

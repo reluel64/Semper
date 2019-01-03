@@ -2,7 +2,7 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  */
-#ifdef WIN32
+#if defined(WIN32)
 #include <stdlib.h>
 #include <windows.h>
 #define MAX_LEN 32

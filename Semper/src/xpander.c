@@ -13,7 +13,7 @@
 #include <objects/object.h>
 #include <sources/source.h>
 #include <bind.h>
-#ifdef __linux__
+#if defined(__linux__)
 #include <ctype.h>
 #endif
 
@@ -632,9 +632,9 @@ int xpander(xpander_request *xr)
         { "SurfaceH",                                    &sh,     xpander_convert_long },
         { "SurfaceName",              sd->sp.surface_rel_dir,                     NULL },
 
-#ifdef WIN32
+#if defined(WIN32)
         { "OS",                               "Windows",                          NULL }
-#elif __linux__
+#elif defined(__linux__)
         { "OS",                               "Linux",                            NULL }
 #endif
     };

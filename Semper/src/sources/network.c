@@ -9,7 +9,7 @@
 #include <string_util.h>
 #include <semper_api.h>
 
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
 #include <Ntddndis.h>
 #include <Iphlpapi.h>
@@ -78,7 +78,7 @@ typedef struct _MIB_IF_TABLE2
 DWORD WINAPI GetIfTable2(_Out_ PMIB_IF_TABLE2 *Table);
 VOID WINAPI FreeMibTable(_In_ PVOID Memory);
 
-#elif __linux__
+#elif defined(__linux__)
 #include <dirent.h>
 #endif
 
@@ -135,7 +135,7 @@ void network_reset(void *spv, void *ip)
     p = param_string("Interface", EXTENSION_XPAND_ALL, ip, "0");
     n-> if_index = strtoul(p, &t, 10);
 
-#ifdef WIN32
+#if defined(WIN32)
 
     if(p == (unsigned char*)t)
     {
@@ -203,7 +203,7 @@ void network_destroy(void **spv)
 static size_t network_get_bytes(network *n)
 {
     size_t c_bytes = 0;
-#ifdef WIN32
+#if defined(WIN32)
     MIB_IF_TABLE2 *tbl = NULL;
 
 
@@ -289,7 +289,7 @@ static size_t network_get_bytes(network *n)
     }
 
     FreeMibTable(tbl);
-#elif __linux
+#elif defined(__linux__)
     DIR *dh = opendir("/sys/class/net");
     struct dirent *dir = NULL;
     unsigned char buf[512] = {0};
@@ -358,7 +358,8 @@ static size_t network_interface_index(unsigned char *iname)
         return(0);
     }
 
-#ifdef WIN32
+#if defined(WIN32)
+
     MIB_IF_TABLE2 *tbl = NULL;
     unsigned short *uc = utf8_to_ucs(iname);
 
@@ -379,7 +380,9 @@ static size_t network_interface_index(unsigned char *iname)
 
     FreeMibTable(tbl);
     sfree((void**)&uc);
-#elif __linux__
+
+#elif defined(__linux__)
+
     unsigned char buf[256] = {0};
     snprintf(buf, 256, "/sys/class/net/%s/ifindex", iname);
     FILE *f = fopen(buf, "r");

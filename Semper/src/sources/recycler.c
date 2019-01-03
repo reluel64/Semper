@@ -3,7 +3,7 @@
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  */
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
 #include <shellapi.h>
 #include <Sddl.h>
@@ -156,7 +156,7 @@ void recycler_command(void *spv, unsigned char *cmd)
                 pthread_create(&dummy, &th_att, dialog_thread, spv);
                 pthread_attr_destroy(&th_att);
 #else
-#ifdef WIN32
+#if defined(WIN32)
                 SHEmptyRecycleBin(NULL, NULL, 0);
 #endif
 #endif
@@ -164,14 +164,14 @@ void recycler_command(void *spv, unsigned char *cmd)
 
             else if(!strcasecmp("EmptySilent", cmd))
             {
-#ifdef WIN32
+#if defined(WIN32)
                 SHEmptyRecycleBin(NULL, NULL, SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND);
 #endif
             }
         }
         else if(!strcasecmp("Open", cmd))
         {
-#ifdef WIN32
+#if defined(WIN32)
             ShellExecuteW(NULL, L"open", L"explorer.exe", L"/N,::{645FF040-5081-101B-9F08-00AA002F954E}", NULL, SW_SHOW);
 #endif
         }
@@ -220,9 +220,9 @@ static void *recycler_query_thread(void *p)
 
     safe_flag_set(rc->tha, 2);
 
-#ifdef WIN32
+#if defined(WIN32)
     recycler_query_user_win32(r);
-#elif __linux__
+#elif defined(__linux__)
     recycler_query_user_linux(r);
 
 #endif
@@ -255,10 +255,10 @@ int recycler_event_proc(recycler *r)
     }
 
     recycler_notifier_destroy(r);
-#ifdef WIN32
+#if defined(WIN32)
 
     recycler_notifier_setup_win32(r);
-#elif __linux__
+#elif defined(__linux__)
     recycler_notifier_setup_linux(r);
 #endif
 
@@ -286,8 +286,6 @@ int recycler_event_proc(recycler *r)
 
     return(0);
 }
-
-
 
 static void recycler_notifier_destroy(recycler *r)
 {

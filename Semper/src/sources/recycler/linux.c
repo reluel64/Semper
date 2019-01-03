@@ -6,7 +6,7 @@
 #include <sources/source.h>
 #include <surface.h>
 #include <watcher.h>
-#ifdef __linux__
+#if defined(__linux__)
 
 
 int recycler_notifier_setup_linux(recycler *r)

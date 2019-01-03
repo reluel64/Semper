@@ -7,7 +7,7 @@
 #include <mem.h>
 #include <semper_api.h>
 #include <string_util.h>
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
 #include <ntsecapi.h>
 
@@ -45,7 +45,7 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     LARGE_INTEGER Reserved6[6];
 } SYSTEM_PROCESS_INFORMATION;
 
-#elif __linux__
+#elif defined(__linux__)
 #include <dirent.h>
 #endif
 
@@ -67,10 +67,11 @@ typedef struct _processor
     size_t usage_cpu_no;
     size_t idle_time_old;
     size_t system_time_old;
-#ifdef __linux__
+
+#if defined( __linux__)
     size_t freq_cpu_no;
-#endif
-#ifdef WIN32
+
+#elif defined(WIN32)
 
     HMODULE ntdll;
     HMODULE PowrProf;
@@ -80,14 +81,13 @@ typedef struct _processor
     /*Freq*/
     PROCESSOR_POWER_INFORMATION* ppi;
     size_t ppi_sz;
-
 #endif
 
 } processor;
 
 static double processor_frequency(processor* p, unsigned char max);
 
-#ifdef __linux__
+#if defined(__linux__)
 
 static size_t processor_core_count(void)
 {
@@ -161,7 +161,7 @@ void processor_init(void** spv, void* ip)
 {
     unused_parameter(ip);
     processor* p = zmalloc(sizeof(processor));
-#ifdef WIN32
+#if defined(WIN32)
     p->ntdll = LoadLibraryW(L"ntdll.dll");
     p->NtQuerySystemInformation = GetProcAddress(p->ntdll, "NtQuerySystemInformation");
     p->NtQueryInformationProcess = GetProcAddress(p->ntdll, "NtQueryInformationProcess");
@@ -170,7 +170,8 @@ void processor_init(void** spv, void* ip)
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     p->core_count = si.dwNumberOfProcessors;
-#elif __linux__
+
+#elif defined(__linux__)
     p->core_count = processor_core_count();
 #endif
 
@@ -190,7 +191,7 @@ void processor_reset(void* spv, void* ip)
         {
             p->inf_type = processor_usage_t;
             source_set_max(100.0, ip, 1, 1);
-#ifdef WIN32
+#if defined(WIN32)
             p->usage_cpu_no = param_size_t("CoreUsage", ip, 0);
 #endif
         }
@@ -205,14 +206,14 @@ void processor_reset(void* spv, void* ip)
         else if(!strcasecmp(inf_type, "Frequency"))
         {
             p->inf_type = processor_freq_t;
-#ifdef WIN32
+#if defined(WIN32)
 
             sfree((void**)&p->ppi);
             p->ppi = zmalloc(sizeof(PROCESSOR_POWER_INFORMATION) * p->core_count);
             p->ppi_sz = sizeof(PROCESSOR_POWER_INFORMATION) * p->core_count;
             p->CallNtPowerInformation(11, NULL, 0, p->ppi, p->ppi_sz);
             source_set_max(processor_frequency(p, 1), ip, 1, 0);
-#elif __linux__
+#elif defined(__linux__)
             p->freq_cpu_no = 0;
             source_set_max(processor_frequency_linux(p, 1), ip, 1, 1);
             p->freq_cpu_no = param_size_t("CoreIndexFrequency", ip, 0);
@@ -228,7 +229,7 @@ void processor_reset(void* spv, void* ip)
 }
 
 
-#ifdef WIN32
+#if defined(WIN32)
 static inline double processor_usage_calculate_win32(void* spv, size_t idle, size_t system)
 {
     double usage = 0.0;
@@ -251,7 +252,7 @@ static double processor_usage(processor* p)
 {
     double ret = 0.0;
 
-#ifdef WIN32
+#if defined(WIN32)
     size_t attempt = 64;
     size_t buf_sz = sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) * p->core_count;
     size_t out_buf = 0;
@@ -298,7 +299,8 @@ static double processor_usage(processor* p)
     }
 
     sfree((void**)&sppi);
-#elif __linux__
+
+#elif defined(__linux__)
     size_t used_cpu = 0;
     size_t idle_cpu = 0;
     size_t usage_cpu_no = p->usage_cpu_no;
@@ -353,7 +355,7 @@ static size_t processor_process_count(processor *p)
 {
 
     size_t processes = 0;
-#ifdef WIN32
+#if defined(WIN32)
     processes = 1; //count the idle process (Windows only)
     size_t buf_sz = sizeof(SYSTEM_PROCESS_INFORMATION);
     size_t buf_sz_out = 0;
@@ -405,7 +407,7 @@ static size_t processor_process_count(processor *p)
 
     sfree((void**)&spi);
 
-#elif __linux__
+#elif defined(__linux__)
     DIR *dh = opendir("/proc");
     struct dirent *ent = NULL;
 
@@ -438,7 +440,7 @@ static size_t processor_process_count(processor *p)
 
 static double processor_frequency(processor* p, unsigned char max)
 {
-#ifdef WIN32
+#if defined(WIN32)
     double val = 0.0;
 
     p->CallNtPowerInformation(11, NULL, 0, p->ppi, p->ppi_sz);
@@ -462,7 +464,7 @@ static double processor_frequency(processor* p, unsigned char max)
     }
 
     return (val);
-#elif __linux__
+#elif defined(__linux__)
     unsigned char buf[256] = {0};
     snprintf(buf, 256, "/sys/devices/system/cpu/cpu%lu/cpufreq/%s", p->freq_cpu_no, max ? "scaling_max_freq" : "scaling_cur_freq");
     FILE *f = fopen(buf, "r");
@@ -508,7 +510,7 @@ void processor_destroy(void** spv)
 {
     processor* p = *spv;
     sfree((void**)&p->process_name);
-#ifdef WIN32
+#if defined(WIN32)
     sfree((void**)&p->ppi);
     FreeLibrary(p->ntdll);
 #endif

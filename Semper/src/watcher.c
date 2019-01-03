@@ -10,9 +10,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <event.h>
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
-#elif __linux__
+#elif defined(__linux__)
 #include <poll.h>
 #include <unistd.h>
 #include <sys/inotify.h>
@@ -32,7 +32,7 @@ typedef struct
         void *kill;
         void *wake_event;
         unsigned char recursive;
-#ifdef __linux__
+#if defined( __linux__)
         unsigned char *dir;
 #endif
 } watcher_data;
@@ -44,7 +44,7 @@ typedef struct
         list_entry current;
 } watcher_dir_list;
 
-#ifdef __linux__
+#if defined( __linux__)
 static int watcher_fill_list(unsigned char *dir, watcher_data *wd)
 {
     if(dir == NULL || wd == NULL)
@@ -151,9 +151,9 @@ static int watcher_fill_list(unsigned char *dir, watcher_data *wd)
 static void watcher_next(void *wt)
 {
     watcher_data *wd = wt;
-#ifdef WIN32
+#if defined(WIN32)
     FindNextChangeNotification(wd->base_fd);
-#elif __linux__
+#elif defined(__linux__)
     size_t len = sizeof(struct inotify_event) + NAME_MAX + 1;
     unsigned char buf[sizeof(struct inotify_event) + NAME_MAX + 1] = {0};
 
@@ -200,10 +200,10 @@ static void *watcher_thread(void *pv)
 static size_t watcher_event_wait(void *pv, size_t timeout)
 {
     watcher_data *wd = pv;
-#ifdef WIN32
+#if defined(WIN32)
     void *harr[2] = { wd->base_fd, wd->wake_event};
     WaitForMultipleObjects(2, harr, 0, -1);
-#elif __linux__
+#elif defined( __linux__)
 
     struct pollfd events[2];
     memset(events,0,sizeof(events));
@@ -215,7 +215,7 @@ static size_t watcher_event_wait(void *pv, size_t timeout)
     if(events[1].revents)
     {
         eventfd_t dummy;
-        int ret = eventfd_read((int)(size_t)wd->wake_event, &dummy); //consume the event
+        eventfd_read((int)(size_t)wd->wake_event, &dummy); //consume the event
     }
 
 #endif
@@ -225,9 +225,9 @@ static size_t watcher_event_wait(void *pv, size_t timeout)
 static void watcher_event_wake(void *pv)
 {
     watcher_data *wd = pv;
-#ifdef WIN32
+#if defined(WIN32)
     SetEvent(wd->wake_event);
-#elif __linux__
+#elif defined(__linux__)
    eventfd_write((int)(size_t)wd->wake_event, 0x3010);
 #endif
 }
@@ -235,13 +235,13 @@ static void watcher_event_wake(void *pv)
 void  *watcher_init(unsigned char *dir, event_queue *meq, event_handler eh, void *pveh)
 {
     void *base_fd = NULL;
-#ifdef WIN32
+#if defined(WIN32)
 
     unsigned short *uni = utf8_to_ucs(dir);
     base_fd = FindFirstChangeNotificationW(uni, 1, 0x1 | 0x2 | 0x8 | 0x10);
     sfree((void**)&uni);
 
-#elif __linux__
+#elif defined(__linux__)
     base_fd = (void*)(size_t)inotify_init1(IN_NONBLOCK);
 #endif
 
@@ -260,9 +260,9 @@ void  *watcher_init(unsigned char *dir, event_queue *meq, event_handler eh, void
         wd->eh = eh;
         wd->pveh = pveh;
         wd->meq = meq;
-#ifdef WIN32
+#if defined(WIN32)
         wd->wake_event = CreateEvent(NULL, 0, 0, NULL);
-#elif __linux__
+#elif defined(__linux__)
 
 
         wd->dir = clone_string(dir);
@@ -282,10 +282,10 @@ int watcher_destroy(void **wd)
     event_wake(wdd->eq);
     pthread_join(wdd->th, NULL);
     safe_flag_destroy(&wdd->kill);
-#ifdef WIN32
+#if defined(WIN32)
     FindCloseChangeNotification(wdd->base_fd);
     CloseHandle(wdd->wake_event);
-#elif __linux__
+#elif defined(__linux__)
 
     for(size_t i = 0; i < wdd->wtch_c; i++)
     {

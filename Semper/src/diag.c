@@ -13,8 +13,8 @@
 #include <stdarg.h>
 #define DIAG_MEM_ENTRY_LENGTH 65535
 
-#ifdef WIN32
-#ifdef SEMPER_API
+#if defined(WIN32)
+#if defined(SEMPER_API)
 #undef SEMPER_API
 #define SEMPER_API __attribute__((dllexport))
 #else
@@ -98,11 +98,11 @@ static void diag_open_file(diag_status *ds)
     if(ds->fh == NULL && ds->fp)
     {
 #ifndef DEBUG
-#ifdef WIN32
+#if defined(WIN32)
         unsigned short *uc = utf8_to_ucs(ds->fp);
         ds->fh = _wfopen(uc, L"a+");
         sfree((void**)&uc);
-#elif __linux__
+#elif defined(__linux__)
         ds->fh = fopen(ds->fp, "a+");
 #endif
 #else

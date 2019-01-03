@@ -13,7 +13,7 @@
 #include <semper_api.h>
 #include <semper.h>
 #include <linked_list.h>
-#ifdef __linux__
+#if defined(__linux__)
 #include <dirent.h>
 #endif
 
@@ -57,7 +57,7 @@ static int surface_lister_collect(surface_lister* sl)
         sfree((void**)&slfl->display_name);
         sfree((void**)&slfl);
     }
-#ifdef WIN32
+#if defined(WIN32)
     size_t fpsz = string_length(sl->path);
     unsigned char* filtered = zmalloc(fpsz + 6);
     strcpy(filtered, sl->path);
@@ -74,7 +74,7 @@ static int surface_lister_collect(surface_lister* sl)
     if(fh == INVALID_HANDLE_VALUE)
         return (-1);
 
-#elif __linux__
+#elif defined(__linux__)
 
     DIR *dh = opendir(sl->path);
 
@@ -98,9 +98,9 @@ static int surface_lister_collect(surface_lister* sl)
 
         unsigned char* temp = NULL;
 
-#ifdef WIN32
+#if defined(WIN32)
         temp = ucs_to_utf8(wfd.cFileName, NULL, 0);
-#elif __linux__
+#elif defined(__linux__)
 
         temp = clone_string(dat->d_name);
 #endif
@@ -126,27 +126,27 @@ static int surface_lister_collect(surface_lister* sl)
         list_entry_init(&slfl->current);
         linked_list_add(&slfl->current, &sl->file_list);
         slfl->display_name = temp;
-#ifdef WIN32
+#if defined(WIN32)
         slfl->dir = (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
-#elif __linux__
+#elif defined(__linux__)
         slfl->dir = (dat->d_type == DT_DIR);
 #endif
 
     }
 
-#ifdef WIN32
+#if defined(WIN32)
 
     while(FindNextFileW(fh, &wfd));
 
-#elif __linux__
+#elif defined(__linux__)
 
     while((dat = readdir(dh)) != NULL);
 
 #endif
 
-#ifdef WIN32
+#if defined(WIN32)
     FindClose(fh);
-#elif __linux__
+#elif defined(__linux__)
     closedir(dh);
 #endif
     return (0);
