@@ -136,7 +136,7 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
     e->pv = pv;
 
     pthread_mutex_lock(&eq->mutex);
-
+#if 0
     if(eq->ce && flags == 0)
     {
         if(eq->ce->handler == handler && eq->ce->pv == pv) //defer the event until the next cycle to avoid a busyloop
@@ -144,7 +144,7 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
             flags |= EVENT_PUSH_TAIL;
         }
     }
-
+#endif
     if(flags & EVENT_PUSH_HIGH_PRIO)
     {
         flags &= ~EVENT_PUSH_TIMER;

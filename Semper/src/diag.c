@@ -28,7 +28,7 @@
 static void *diag_log_thread(void *pv);
 static size_t diag_wait(void *pv, size_t time);
 static void diag_wake(void *pv);
-#undef DEBUG
+
 diag_status *diag_get_struct(void)
 {
     static diag_status sts = {0};
@@ -246,19 +246,11 @@ static void *diag_log_thread(void *pv)
 {
     diag_status *ds = pv;
 
-#if 0
-    for(size_t i = 0;i<300000;i++)
-    {
-        diag_warn("Test %d",i);
-    }
-#endif
     while(1)
     {
-
         event_wait(ds->eq);
         event_process(ds->eq);
     }
-
 
     return(NULL);
 }
@@ -268,7 +260,7 @@ static void diag_message_push(unsigned char *msg)
 
     diag_status *ds = diag_get_struct();
     pthread_mutex_lock(&ds->mutex);
-#if 1
+
     if(ds->mem_log_elem < ds->max_mem_log)
     {
         diag_mem_log *l = zmalloc(sizeof(diag_mem_log));
@@ -291,7 +283,7 @@ static void diag_message_push(unsigned char *msg)
             linked_list_add(&l->current, &ds->mem_log);
         }
     }
-#endif
+
     if(ds->ltf)
     {
         diag_log_write_to_file(msg, string_length(msg));

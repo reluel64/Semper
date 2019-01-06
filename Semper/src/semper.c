@@ -910,7 +910,6 @@ static void semper_install_kill_handler(control_data *cd)
 #endif
 
 
-
 int semper_main(void)
 {
     semper_event_wait_data sewd = {0};
