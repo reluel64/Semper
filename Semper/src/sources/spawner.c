@@ -252,16 +252,6 @@ void spawner_destroy(void **spv)
 
 }
 
-static int is_utf16(unsigned char *buf,size_t len)
-{
-    for(size_t i=0;i<len;i++)
-    {
-        if((i>0 && buf[i-1]!=0 && buf[i]==0))
-            return(1);
-    }
-    return(0);
-}
-
 #if defined(WIN32)
 static int spawner_kill_by_window(HWND window, LPARAM lpm)
 {
@@ -276,6 +266,15 @@ static int spawner_kill_by_window(HWND window, LPARAM lpm)
 }
 #endif
 
+static int is_utf16(unsigned char *buf,size_t len)
+{
+    for(size_t i=0;i<len;i++)
+    {
+        if((i>0 && buf[i-1]!=0 && buf[i]==0))
+            return(1);
+    }
+    return(0);
+}
 
 static void spawner_convert_and_append(unsigned char *raw, size_t raw_len, unsigned char **buf, size_t *buf_pos)
 {

@@ -124,6 +124,17 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
         event_remove(eq, handler, pv, flags);
     }
 
+    event* e = zmalloc(sizeof(event));
+
+    if(e == NULL)
+    {
+        return(-1);
+    }
+
+    list_entry_init(&e->current);
+    e->handler = handler;
+    e->pv = pv;
+
     pthread_mutex_lock(&eq->mutex);
 
     if(eq->ce && flags == 0)
@@ -133,18 +144,6 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
             flags |= EVENT_PUSH_TAIL;
         }
     }
-
-    pthread_mutex_unlock(&eq->mutex);
-
-    event* e = zmalloc(sizeof(event));
-    list_entry_init(&e->current);
-
-    e->handler = handler;
-    e->pv = pv;
-
-
-
-    pthread_mutex_lock(&eq->mutex);
 
     if(flags & EVENT_PUSH_HIGH_PRIO)
     {
@@ -258,7 +257,7 @@ void event_process(event_queue* eq)
             pthread_mutex_lock(&eq->mutex);
             eq->ce = e;
             pthread_mutex_unlock(&eq->mutex);
-            
+
             if(!(e->flags & EVENT_TIMER_INIT) && (e->flags & EVENT_PUSH_TIMER))
             {
                 e->flags |= EVENT_TIMER_INIT;

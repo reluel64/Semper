@@ -147,8 +147,4 @@ static inline int gpuz_gather_data(GPUZ_SH_MEM *data)
     }
     return(ret);
 }
-
-
-
-
 #endif

@@ -6,7 +6,8 @@
 
 #include <semper.h>
 #include <diag.h>
-
+#include <pthread.h>
+#include <pthread_time.h>
 #include <linked_list.h>
 #include <string_util.h>
 #include <mem.h>
@@ -24,11 +25,10 @@
 #define SEMPER_API
 #endif
 
-
-/*TODO
- * Make diag_log push data in a buffer which will be written by a different thread
- *
- */
+static void *diag_log_thread(void *pv);
+static size_t diag_wait(void *pv, size_t time);
+static void diag_wake(void *pv);
+#undef DEBUG
 diag_status *diag_get_struct(void)
 {
     static diag_status sts = {0};
@@ -64,7 +64,7 @@ int diag_init(control_data *cd)
 
 #else
     ds->ltf = 1;
-    ds->level = 0x0;
+    ds->level = 0xff;
 #endif
 
     if((k = skeleton_get_key(cd->smp, "LogMaxEntries")) != NULL)
@@ -77,8 +77,18 @@ int diag_init(control_data *cd)
     pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
     pthread_mutex_init(&ds->mutex, &mutex_attr);
     pthread_mutexattr_destroy(&mutex_attr);
+
+#if defined(WIN32)
+    ds->event_wait = CreateEvent(NULL, 0, 0, NULL);
+#elif defined(__linux__)
+    ds->event_wait = (void*)(size_t)eventfd(0, EFD_NONBLOCK);
+#endif
+    ds->eq = event_queue_init(diag_wait,diag_wake,ds);
+    pthread_create(&ds->th,NULL,diag_log_thread,ds);
+
     return(0);
 }
+
 
 #if 0
 int diag_print(void)
@@ -101,6 +111,7 @@ static void diag_open_file(diag_status *ds)
 #if defined(WIN32)
         unsigned short *uc = utf8_to_ucs(ds->fp);
         ds->fh = _wfopen(uc, L"a+");
+        setbuf(ds->fh, NULL);
         sfree((void**)&uc);
 #elif defined(__linux__)
         ds->fh = fopen(ds->fp, "a+");
@@ -190,12 +201,103 @@ static int diag_log_write_to_file(unsigned char *buf, size_t buf_len)
         fwrite(buf, 1, buf_len, ds->fh);
         fputc('\n', ds->fh);
         fflush(ds->fh);
+
         return(0);
     }
-
     return(-1);
 }
 
+
+static void diag_wake(void *pv)
+{
+    diag_status *ds = pv;
+#if defined(WIN32)
+    SetEvent(ds->event_wait);
+#elif defined(__linux__)
+    eventfd_write((int)(size_t)ds->event_wait, 0x3010);
+#endif
+}
+
+static size_t diag_wait(void *pv, size_t time)
+{
+    diag_status *ds = pv;
+
+#if defined (WIN32)
+    WaitForSingleObject(ds->event_wait, -1);
+
+
+#elif defined(__linux__)
+    struct pollfd events[1];
+    memset(events, 0, sizeof(events));
+    events[0].fd = (int)(size_t)sewd->event_wait;
+    events[0].events = POLLIN;
+    poll(events, 1, timeout);
+
+    if(events[0].revents)
+    {
+        eventfd_t dummy;
+        eventfd_read((int)(size_t)sewd->event_wait, &dummy); //consume the event
+    }
+#endif
+    return(-1);
+}
+
+static void *diag_log_thread(void *pv)
+{
+    diag_status *ds = pv;
+
+#if 0
+    for(size_t i = 0;i<300000;i++)
+    {
+        diag_warn("Test %d",i);
+    }
+#endif
+    while(1)
+    {
+
+        event_wait(ds->eq);
+        event_process(ds->eq);
+    }
+
+
+    return(NULL);
+}
+
+static void diag_message_push(unsigned char *msg)
+{
+
+    diag_status *ds = diag_get_struct();
+    pthread_mutex_lock(&ds->mutex);
+#if 1
+    if(ds->mem_log_elem < ds->max_mem_log)
+    {
+        diag_mem_log *l = zmalloc(sizeof(diag_mem_log));
+        l->log_buf = msg;
+        list_entry_init(&l->current);
+        linked_list_add(&l->current, &ds->mem_log);
+        ds->mem_log_elem++;
+    }
+    else
+    {
+        if(linked_list_empty(&ds->mem_log) == 0)
+        {
+            diag_mem_log *l = element_of(ds->mem_log.prev, l, current);
+            linked_list_remove(&l->current);
+            sfree((void**)&l->log_buf);
+            sfree((void**)&l);
+            l = zmalloc(sizeof(diag_mem_log));
+            l->log_buf = msg;
+            list_entry_init(&l->current);
+            linked_list_add(&l->current, &ds->mem_log);
+        }
+    }
+#endif
+    if(ds->ltf)
+    {
+        diag_log_write_to_file(msg, string_length(msg));
+    }
+    pthread_mutex_unlock(&ds->mutex);
+}
 
 SEMPER_API int diag_log(unsigned char lvl, char *fmt, ...)
 {
@@ -219,55 +321,31 @@ SEMPER_API int diag_log(unsigned char lvl, char *fmt, ...)
 
     int r = 0;
     size_t buf_start = 0;
-    pthread_mutex_lock(&ds->mutex);
-    static unsigned char buf[DIAG_MEM_ENTRY_LENGTH] = {0};
 
-    struct timespec t2 = {0};
-    clock_gettime(CLOCK_MONOTONIC, &t2);
-    buf_start = snprintf(buf, DIAG_MEM_ENTRY_LENGTH, "[%.8llu.%.4lu] ",
-                         t2.tv_sec - ds->t1.tv_sec,
-                         (t2.tv_nsec > ds->t1.tv_nsec ? t2.tv_nsec - ds->t1.tv_nsec : 0) / 1000000);
+    unsigned char *buf = zmalloc(DIAG_MEM_ENTRY_LENGTH);
 
 
-    va_list ifmt;
-    va_start(ifmt, fmt);
-    r = vsnprintf(buf + buf_start, DIAG_MEM_ENTRY_LENGTH - buf_start, fmt, ifmt);
-    va_end(ifmt);
-
-    if(r < 0)
+    if(buf)
     {
-        pthread_mutex_unlock(&ds->mutex);
-        return(-1);
-    }
+        struct timespec t2 = {0};
+        clock_gettime(CLOCK_MONOTONIC, &t2);
+        buf_start = snprintf(buf, DIAG_MEM_ENTRY_LENGTH, "[%.8llu.%.4lu] ",
+                t2.tv_sec - ds->t1.tv_sec,
+                (t2.tv_nsec > ds->t1.tv_nsec ? t2.tv_nsec - ds->t1.tv_nsec : 0) / 1000000);
 
-    if(ds->mem_log_elem < ds->max_mem_log)
-    {
-        diag_mem_log *l = zmalloc(sizeof(diag_mem_log));
-        l->log_buf = clone_string(buf);
-        list_entry_init(&l->current);
-        linked_list_add(&l->current, &ds->mem_log);
-        ds->mem_log_elem++;
-    }
-    else
-    {
-        if(linked_list_empty(&ds->mem_log) == 0)
+        va_list ifmt;
+        va_start(ifmt, fmt);
+        r = vsnprintf(buf + buf_start, DIAG_MEM_ENTRY_LENGTH - buf_start, fmt, ifmt);
+        va_end(ifmt);
+
+        if(r < 0)
         {
-            diag_mem_log *l = element_of(ds->mem_log.prev, l, current);
-            linked_list_remove(&l->current);
-            sfree((void**)&l->log_buf);
-            sfree((void**)&l);
-            l = zmalloc(sizeof(diag_mem_log));
-            l->log_buf = clone_string(buf);
-            list_entry_init(&l->current);
-            linked_list_add(&l->current, &ds->mem_log);
+            sfree((void**)&buf);
+            return(-1);
         }
+        event_push(ds->eq,(event_handler)diag_message_push,buf,0,0);
+
     }
 
-    if(ds->ltf)
-    {
-        diag_log_write_to_file(buf, r + buf_start);
-    }
-
-    pthread_mutex_unlock(&ds->mutex);
     return(0);
 }

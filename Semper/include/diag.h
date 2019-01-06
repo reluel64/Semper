@@ -1,7 +1,7 @@
 #pragma once
 #include <pthread.h>
 #include <stdio.h>
-
+#include <event.h>
 typedef struct
 {
     unsigned char *log_buf;
@@ -20,9 +20,13 @@ typedef struct
     size_t max_mem_log; //maximum entries in the ring
     size_t mem_log_elem; //count of entries in the buffer
     pthread_mutex_t mutex; /*multi-threading mutex*/
+    pthread_t th;
+    event_queue *eq;
     struct timespec t1;
-
+    void *event_wait;
 } diag_status;
+
+
 
 int diag_log(unsigned char lvl, char *fmt, ...);
 

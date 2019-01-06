@@ -936,7 +936,6 @@ int semper_main(void)
     sewd.event_wait = (void*)(size_t)eventfd(0, EFD_NONBLOCK);
 #endif
 
-
     cd->quit_flag = safe_flag_init();
     crosswin_init(&cd->c);
     list_entry_init(&cd->shead);
@@ -951,7 +950,6 @@ int semper_main(void)
     cd->listener = semper_listener_init(cd);
     cd->c.eq=cd->eq;
     cd->c.cd = cd;
-
     semper_load_configuration(cd);
 
 #if defined(WIN32)
@@ -969,7 +967,7 @@ int semper_main(void)
         surface_builtin_init(cd, catalog);
     }
 
-    while(safe_flag_get(cd->quit_flag) == 0) //nothing fancy, just the main event loop
+    while(safe_flag_get(cd->quit_flag) == 0) /*nothing fancy, just the main event loop*/
     {
         event_wait(cd->eq);                /* wait for an event to occur */
 
