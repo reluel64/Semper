@@ -5,8 +5,7 @@
 #define EVENT_REMOVE_BY_HANDLER     (1<<2)
 #define EVENT_PUSH_TIMER            (1<<3)
 #define EVENT_NO_WAKE               (1<<4)
-#define EVENT_PUSH_HIGH_PRIO        (1<<5)
-#define EVENT_TIMER_INIT            (1<<6)
+#define EVENT_TIMER_INIT            (1<<5)
 #define EVENT_REMOVE_BY_DATA_HANDLER (EVENT_REMOVE_BY_DATA|EVENT_REMOVE_BY_HANDLER)
 
 typedef struct _event_queue event_queue;
@@ -32,7 +31,6 @@ typedef struct _event_queue
     list_entry events;
     size_t to_sleep;
     size_t slept;
-    event *ce; //current event
     void *pvwfcn;
 } event_queue;
 

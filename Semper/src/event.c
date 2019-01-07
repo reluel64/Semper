@@ -136,30 +136,8 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
     e->pv = pv;
 
     pthread_mutex_lock(&eq->mutex);
-#if 0
-    if(eq->ce && flags == 0)
-    {
-        if(eq->ce->handler == handler && eq->ce->pv == pv) //defer the event until the next cycle to avoid a busyloop
-        {
-            flags |= EVENT_PUSH_TAIL;
-        }
-    }
-#endif
-    if(flags & EVENT_PUSH_HIGH_PRIO)
-    {
-        flags &= ~EVENT_PUSH_TIMER;
 
-        if(eq->ce)
-        {
-            _linked_list_add(eq->ce->current.prev, &e->current, &eq->ce->current);
-        }
-        else
-        {
-            linked_list_add(&e->current, &eq->events);
-        }
-
-    }
-    else if(flags & EVENT_PUSH_TAIL)
+    if(flags & EVENT_PUSH_TAIL)
     {
         linked_list_add_last(&e->current, &eq->events);
     }
@@ -176,7 +154,7 @@ int event_push(event_queue* eq, event_handler handler, void* pv, size_t timeout,
 
     e->flags = flags;
 
-    if(!(flags & EVENT_NO_WAKE) || (flags & EVENT_PUSH_HIGH_PRIO))
+    if(!(flags & EVENT_NO_WAKE))
     {
         if(eq->wkfcn)
         {
@@ -254,10 +232,6 @@ void event_process(event_queue* eq)
         eq->to_sleep = -1;
         list_enum_part_backward_safe(e, te, &eq->events, current)
         {
-            pthread_mutex_lock(&eq->mutex);
-            eq->ce = e;
-            pthread_mutex_unlock(&eq->mutex);
-
             if(!(e->flags & EVENT_TIMER_INIT) && (e->flags & EVENT_PUSH_TIMER))
             {
                 e->flags |= EVENT_TIMER_INIT;
@@ -296,14 +270,11 @@ void event_process(event_queue* eq)
                 }
 
                 pthread_mutex_lock(&eq->mutex);
-                eq->ce = NULL;
+
                 event_remove_internal(e);
                 pthread_mutex_unlock(&eq->mutex);
             }
         }
-        pthread_mutex_lock(&eq->mutex);
-        eq->ce = NULL;
-        pthread_mutex_unlock(&eq->mutex);
     }
 
     if(eq->to_sleep >= drift && drift > 0)
