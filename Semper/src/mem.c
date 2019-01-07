@@ -7,7 +7,7 @@
 #include <mem.h>
 #include <stdio.h>
 #include <string_util.h>
-
+#include <pthread.h>
 typedef struct
 {
     pthread_mutex_t mtx;
@@ -19,7 +19,7 @@ void *safe_flag_init(void)
     safe_flag *sf = zmalloc(sizeof(safe_flag));
     pthread_mutexattr_t mutex_attr;
     pthread_mutexattr_init(&mutex_attr);
-    pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
+    pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
     pthread_mutex_init(&sf->mtx, &mutex_attr);
     pthread_mutexattr_destroy(&mutex_attr);
     return(sf);

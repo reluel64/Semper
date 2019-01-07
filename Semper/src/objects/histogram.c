@@ -1,8 +1,8 @@
 /*
-*Histogram object
-*Part of Project 'Semper'
-*Written by Alexandru-Daniel Mărgărit
-*/
+ *Histogram object
+ *Part of Project 'Semper'
+ *Written by Alexandru-Daniel Mărgărit
+ */
 #include <surface.h>
 #include <string.h>
 #include <bind.h>
@@ -75,12 +75,12 @@ void histogram_reset(object* o)
             sfree((void**)&hv);
             i--;
         }
-         ho->v_count=ho->max_hist;
+        ho->v_count=ho->max_hist;
     }
 #if 0
     image_cache_unref_image(sd->cd->ich, &ho->h1ia,0);
-     image_cache_unref_image(sd->cd->ich, &ho->h2ia,0);
-     image_cache_unref_image(sd->cd->ich, &ho->hcia,0);
+    image_cache_unref_image(sd->cd->ich, &ho->h2ia,0);
+    image_cache_unref_image(sd->cd->ich, &ho->hcia,0);
 #endif
     sfree((void**)&ho->h1ia.path);
     sfree((void**)&ho->h2ia.path);
