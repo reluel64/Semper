@@ -230,12 +230,16 @@ void event_process(event_queue* eq)
     if(eq)
     {
         eq->to_sleep = -1;
+        pthread_mutex_lock(&eq->mutex);
         list_enum_part_backward_safe(e, te, &eq->events, current)
         {
+            pthread_mutex_unlock(&eq->mutex);
+
             if(!(e->flags & EVENT_TIMER_INIT) && (e->flags & EVENT_PUSH_TIMER))
             {
                 e->flags |= EVENT_TIMER_INIT;
                 eq->to_sleep = min(e->time, eq->to_sleep);
+                pthread_mutex_lock(&eq->mutex);
                 continue;
             }
 
@@ -268,11 +272,8 @@ void event_process(event_queue* eq)
                     call_duration = (t2.tv_nsec - t1.tv_nsec) / 1000000 + (t2.tv_sec - t1.tv_sec) * 1000;
                     drift += call_duration;
                 }
-
                 pthread_mutex_lock(&eq->mutex);
-
                 event_remove_internal(e);
-                pthread_mutex_unlock(&eq->mutex);
             }
         }
     }
@@ -283,4 +284,5 @@ void event_process(event_queue* eq)
     }
 
     eq->slept=0;
+    pthread_mutex_unlock(&eq->mutex);
 }
