@@ -1,4 +1,7 @@
-/* External command listener
+/*
+ * External command listener
+ * Part of Project 'Semper'
+ * Written by Alexandru-Daniel Mărgărit
 */
 
 #include <semper.h>

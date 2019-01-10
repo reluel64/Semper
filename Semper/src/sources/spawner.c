@@ -36,7 +36,7 @@ typedef struct
         size_t raw_str_len;
         size_t ph;
         size_t th;
-
+        void *ip;
 }spawner_state;
 
 static void *spawner_worker(void *pv);
@@ -47,27 +47,9 @@ static int spawner_kill_by_window(HWND window, LPARAM lpm);
 static unsigned char **spawner_param_to_argv(unsigned char *str);
 #endif
 
-
-/* TODO:
- *    char *argv[]={"/bin/ls","-lha","/mnt/F0F0492EF048FBFA",NULL};
-    pid_t pid = -1;
-    posix_spawn_file_actions_t file_act;
-    posix_spawnattr_t attr;
-    int fd = open("/home/alex/temp",O_RDWR|O_CREAT,0777);
-    posix_spawn_file_actions_init(&file_act);
-    posix_spawn_file_actions_adddup2(&file_act,fd,1);
-    posix_spawnattr_init(&attr);
-    int ret = posix_spawn(&pid,"/bin/ls",&file_act,&attr,argv,environ);
- *
- */
-
-
 void spawner_init(void **spv,void *ip)
 {
 
-
-
-    unused_parameter(ip);
     spawner_state *st =zmalloc(sizeof(spawner_state));
     pthread_mutexattr_t mutex_attr;
     pthread_mutexattr_init(&mutex_attr);
@@ -78,6 +60,7 @@ void spawner_init(void **spv,void *ip)
     st->kill = safe_flag_init();
     st->ph = -1;
     st->th = -1;
+    st->ip = ip;
     *spv = st;
 }
 

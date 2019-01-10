@@ -1,6 +1,6 @@
 /*
  * Surface lister
- * Derrived from file_lister.c
+ * Derived from folderview.c
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
  */
