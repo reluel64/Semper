@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;BuildSDK/build.mk&apos; to &apos;build.make&apos;" description="Rename resource &apos;build.mk&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="build.mk" name="build.make" stamp="1538311144569" updateReferences="true"/>
+</session>

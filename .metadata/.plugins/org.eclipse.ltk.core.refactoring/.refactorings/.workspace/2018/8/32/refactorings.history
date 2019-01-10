@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete resource &apos;Semper/include/test.conf&apos;" deleteContents="false" description="Delete resource &apos;Semper/include/test.conf&apos;" element1="/Semper/include/test.conf" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1533829962263"/>
+</session>

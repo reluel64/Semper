@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="InformationPopup">
+		<item value="179" key="org.eclipse.oomph.ui.PropertiesViewer$InformationPopupDialogDIALOG_HEIGHT"/>
+		<item value="380" key="org.eclipse.oomph.ui.PropertiesViewer$InformationPopupDialogDIALOG_WIDTH"/>
+		<item value="1098" key="org.eclipse.oomph.ui.PropertiesViewer$InformationPopupDialogDIALOG_X_ORIGIN"/>
+		<item value="409" key="org.eclipse.oomph.ui.PropertiesViewer$InformationPopupDialogDIALOG_Y_ORIGIN"/>
+	</section>
+</section>

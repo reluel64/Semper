@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;Semper/export.txt&apos; to &apos;export.version&apos;" description="Rename resource &apos;export.txt&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="export.txt" name="export.version" stamp="1543276011914" updateReferences="true"/>
+</session>

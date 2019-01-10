@@ -1,0 +1,4 @@
+#Thu Jul 26 17:49:33 EEST 2018
+__DEFAULT__=false
+org.eclipse.help.ui.localSearch.master=true
+expression=variables

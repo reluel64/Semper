@@ -1,0 +1,812 @@
+/*
+ * This aims to be a super slim layer for Project 'Semper'
+ * The purpose of this component is to bring an abstraction
+ * layer for window creation on Windows and Linux.
+ * Note: This is a work in progress so features will be added when they'll be needed
+ *
+ * Part of Project 'Semper'
+ * Written by Alexandru-Daniel Mărgărit
+ * */
+
+#include <crosswin/crosswin.h>
+#include <time.h>
+#ifdef WIN32
+#include <crosswin/win32.h>
+#elif __linux__
+#include <crosswin/xlib.h>
+#endif
+#include <semper.h>
+#include <mem.h>
+#include <surface.h>
+static int crosswin_restack(crosswin *c);
+static int crosswin_mouse_handle(crosswin_window *cw);
+static void crosswin_update_zorder(crosswin_window *cw);
+crosswin_monitor *crosswin_get_monitor(crosswin *c, size_t index);
+static int crosswin_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *len);
+void crosswin_init(crosswin* c)
+{
+    list_entry_init(&c->windows);
+    c->handle_mouse = crosswin_mouse_handle;
+#ifdef WIN32
+    win32_init_class(c);
+#elif __linux__
+    xlib_init_display(c);
+#endif
+
+    c->flags = CROSSWIN_UPDATE_MONITORS;
+    crosswin_update(c);
+    c->flags = CROSSWIN_UPDATE_ZORDER|CROSSWIN_FIX_ZORDER; /*assume we are wrong right from the start :-)*/
+}
+
+
+int crosswin_update(crosswin* c)
+{
+    unsigned char up_status = c->flags;
+    crosswin_monitor *lcm = NULL;
+    size_t mon_cnt = 0;
+
+    if(up_status & CROSSWIN_UPDATE_MONITORS)
+    {
+        crosswin_get_monitors(c, &lcm, &mon_cnt);
+
+        if(mon_cnt != c->mon_cnt || memcmp(lcm,c->pm,sizeof(crosswin_monitor)*mon_cnt))
+        {
+            sfree((void**)&c->pm);
+            c->mon_cnt = mon_cnt;
+            c->pm=lcm;
+        }
+    }
+
+    if(up_status&(CROSSWIN_UPDATE_ZORDER|CROSSWIN_CHECK_ZORDER_FOR_FIX))
+    {
+        crosswin_restack(c);
+    }
+
+    return(up_status);
+}
+
+
+static void crosswin_check_desktop(crosswin *c)
+{
+#ifdef WIN32
+    win32_check_desktop(c);
+#elif __linux__
+    xlib_check_desktop(c);
+#endif
+}
+
+static int crosswin_sort_callback(list_entry *le1, list_entry *le2, void *pv)
+{
+    crosswin_window *cw1 = element_of(le1, cw1, current);
+    crosswin_window *cw2 = element_of(le2, cw2, current);
+    crosswin_window *focus = pv;
+
+    if((cw1->zorder == cw2->zorder))
+    {
+        if((cw1 == focus))
+        {
+            return(1);
+        }
+        else if((cw2 == focus))
+        {
+            return(-1);
+        }
+    }
+
+    if(cw1->zorder < cw2->zorder)
+        return(-1);
+    else if(cw1->zorder > cw2->zorder)
+        return(1);
+    else
+        return(0);
+}
+
+
+static void crosswin_restack_window(crosswin_window *cw)
+{
+    crosswin *c = cw->c;
+    unsigned char normal_in_focus = ((cw->zorder == crosswin_normal) && (cw == (crosswin_window*)c->top_win_id));
+    crosswin_position op = cw->zorder;
+
+
+    /*Raise the window*/
+    if((c->flags&CROSSWIN_SHOW_DESKTOP)||normal_in_focus)
+    {
+        cw->zorder = crosswin_top;
+        crosswin_update_zorder(cw);
+
+        if((c->flags&CROSSWIN_SHOW_DESKTOP) && (op == crosswin_bottom || op == crosswin_desktop))
+        {
+            cw->zorder = crosswin_normal;
+        }
+        else
+        {
+            cw->zorder = op;
+        }
+    }
+
+    /* restore its position or the dummy position
+     * (in case of desktop or bottom)
+     * */
+
+    crosswin_update_zorder(cw);
+    cw->zorder = op;
+
+}
+
+
+static int crosswin_restack(crosswin *c)
+{
+    crosswin_window *cw = NULL;
+    crosswin_check_desktop(c);
+
+    event_push(c->eq,(event_handler)crosswin_restack,c,250,EVENT_PUSH_TIMER|EVENT_REMOVE_BY_DATA_HANDLER);
+
+    if(!(c->flags & (CROSSWIN_UPDATE_ZORDER)))
+    {
+        c->top_win_id = 0;
+        return(-1);
+    }
+
+    /*Sort out the windows*/
+    merge_sort(&c->windows, crosswin_sort_callback, (void*)c->top_win_id);
+
+    /*Special case for desktop and bottom windows*/
+#if defined (WIN32)
+
+    if(c->flags&CROSSWIN_SHOW_DESKTOP)
+    {
+        list_enum_part_backward(cw,&c->windows,current)
+                {
+            if(cw->zorder == crosswin_bottom)
+            {
+                crosswin_restack_window(cw);
+            }
+                }
+
+
+        list_enum_part_backward(cw,&c->windows,current)
+        {
+            if(cw->zorder == crosswin_desktop)
+            {
+                crosswin_restack_window(cw);
+            }
+        }
+    }
+#endif
+    /*Do a normal restack if c->show_desktop == 0
+     * or just restack windows that are not
+     * desktop or bottom
+     * */
+
+    list_enum_part(cw,&c->windows,current)
+    {
+#if defined (WIN32)
+        if((c->flags&CROSSWIN_SHOW_DESKTOP)||(cw->zorder >= crosswin_normal))
+#endif
+            crosswin_restack_window(cw);
+    }
+
+    c->top_win_id = 0;
+    c->flags&=~CROSSWIN_UPDATE_ZORDER;
+
+    return(0);
+}
+
+
+void crosswin_monitor_resolution(crosswin* c, crosswin_window *cw, long* w, long* h)
+{
+    crosswin_monitor *cm = crosswin_get_monitor(c, cw->mon);
+    *w = cm->w;
+    *h = cm->h;
+}
+
+void crosswin_monitor_origin(crosswin *c, crosswin_window *cw, long *x, long *y)
+{
+    crosswin_monitor *cm = crosswin_get_monitor(c, cw->mon);
+    *x = cm->x;
+    *y = cm->y;
+
+}
+void crosswin_message_dispatch(crosswin *c)
+{
+#ifdef WIN32
+    win32_message_dispatch(c);
+
+#elif __linux__
+    xlib_message_dispatch(c);
+#endif
+}
+
+crosswin_window* crosswin_init_window(crosswin* c)
+{
+    crosswin_window* w = zmalloc(sizeof(crosswin_window));
+    list_entry_init(&w->current);
+    linked_list_add_last(&w->current, &c->windows);
+    w->c = c;
+#ifdef WIN32
+    win32_init_window(w);
+#elif __linux__
+    xlib_init_window(w);
+#endif
+    return (w);
+}
+
+static int crosswin_get_monitors(crosswin *c, crosswin_monitor **cm, size_t *len)
+{
+    unused_parameter(c);
+    *len = 1;
+    *cm=realloc(*cm,sizeof(crosswin_monitor));
+
+#ifdef WIN32
+
+    win32_get_monitors(cm, len);
+#elif __linux__
+    xlib_get_monitors(c, cm, len);
+#endif
+
+
+    /*Let's calculate the virtual screen*/
+    memset(*cm,0,sizeof(crosswin_monitor));
+    for(size_t i=1;i<(*len);i++)
+    {
+        (*cm)[0].x=min((*cm)[i].x,(*cm)[0].x);
+        (*cm)[0].y=min((*cm)[i].y,(*cm)[0].y);
+        (*cm)[0].w=max((*cm)[i].w+(*cm)[i].x,(*cm)[0].w);
+        (*cm)[0].h=max((*cm)[i].h+(*cm)[i].y,(*cm)[0].h);
+    }
+
+    (*cm)[0].w=(*cm)[0].w-(*cm)[0].x;
+    (*cm)[0].h=(*cm)[0].h-(*cm)[0].y;
+
+
+    return(0);
+}
+
+
+void crosswin_set_window_data(crosswin_window* w, void* pv)
+{
+    if(w)
+        w->user_data = pv;
+}
+
+void* crosswin_get_window_data(crosswin_window* w)
+{
+    return (w ? w->user_data : NULL);
+}
+
+void crosswin_set_click_through(crosswin_window* w, unsigned char state)
+{
+    if(w)
+    {
+        w->click_through = state;
+#ifdef WIN32
+        win32_click_through(w);
+#elif __linux__
+        xlib_click_through(w);
+#endif
+    }
+}
+
+void crosswin_get_click_through(crosswin_window* w, unsigned char *state)
+{
+    if(w && state)
+    {
+        *state = w->click_through;
+    }
+}
+
+void crosswin_draw(crosswin_window* w)
+{
+    if(w&&w->visible)
+    {
+        crosswin_set_position(w, w->x, w->y);
+
+#ifdef WIN32
+        win32_draw(w);
+#elif __linux__
+        xlib_draw(w);
+#endif
+    }
+}
+
+void crosswin_set_render(crosswin_window* w, void (*render)(crosswin_window* pv, void* cr))
+{
+    if(w)
+    {
+        w->render_func = render;
+    }
+}
+
+crosswin_monitor *crosswin_get_monitor(crosswin *c, size_t index)
+{
+    if(c->mon_cnt <= index)
+        return(c->pm);
+    else
+        return(c->pm + index);
+}
+
+
+
+void crosswin_set_position(crosswin_window* w, long x, long y)
+{
+
+    if(w)
+    {
+
+        crosswin* c = w->c;
+        crosswin_monitor *cm = crosswin_get_monitor(c, w->mon);
+        w->x = x;
+        w->y = y;
+        w->detect_monitor=1;
+#warning "Faulty code"
+        if(w->keep_on_screen)
+        {
+            if(w->x < 0)
+                w->x = 0;
+
+            else if(w->x + w->w > cm->w)
+                w->x = w->w>cm->w?0:cm->w-w->w;
+
+            if(w->y < 0)
+                w->y = 0;
+
+            else if(w->y + w->h > cm->h)
+                w->y =w->h>cm->h?0:cm->h-w->h;
+        }
+
+        else if(w->detect_monitor && (w->x<0 || w->y<0 || w->x + w->w > cm->w || w->y +  w->h > cm->h ))
+        {
+            crosswin_monitor *ncm = NULL;
+
+            size_t mx = w->mon;
+            size_t my = w->mon;
+
+            for(size_t i = 1; i < c->mon_cnt; i++)
+            {
+                ncm= crosswin_get_monitor(w->c, i);
+                int check_x = (w->x < 0 && ncm->x<cm->x )||(w->x >= cm->w && cm->x < ncm->x);
+                int check_y = (w->y < 0 && ncm->y<=cm->y) ||(w->y >= cm->h && cm->y < ncm->y);
+                /*Check what monitor are we going to use*/
+                if(ncm!=cm && (check_x && check_y))
+                {
+
+                    if(check_x)) /* Check X offset*/
+                    {
+                        mx = i ;
+                    }
+
+                    if(check_y) /* Check Y offset*/
+                    {
+                        my = i ;
+                    }
+
+                    if(mx == my)
+                    {
+                        break;
+                    }
+
+                }
+            }
+
+            if(mx != w->mon && my == w->mon)
+            {
+                printf("Case 1\n");
+            }
+            else if(mx == w->mon && my != w->mon)
+            {
+                printf("Case 2\n");
+            }
+            else if(mx == my && mx != w->mon)
+            {
+                printf("Case 3");
+            }
+            else
+            {
+                printf("Undefined\n");
+            }
+
+            if(mx!=w->mon)
+            {
+                ncm = crosswin_get_monitor(w->c,mx);
+            }
+            if(my!=w->mon)
+            {
+
+            }
+            /*
+            if(mx==my)
+            {
+                ncm = crosswin_get_monitor(w->c, mx);
+
+                if(w->x < 0 && ncm->x<cm->x )
+                {
+                    w->x = ncm->w;
+                }
+                else if(w->x >= cm->w && cm->x < ncm->x)
+                {
+                    w->x = 0;
+                }
+
+                ncm = crosswin_get_monitor(w->c, my);
+
+                if(w->y < 0 && ncm->y<cm->y)
+                {
+                    w->y = ncm->h;
+                }
+                else if(w->y >= cm->h && cm->y < ncm->y)
+                {
+                    w->y = 0;
+                }
+
+                w->mon=mx;
+            }*/
+
+            printf("MX %d MY %d\n",mx,my);
+            /*Set the monitor*/
+
+
+
+        }
+
+
+#ifdef WIN32
+        win32_set_position(w);
+#elif __linux__
+        xlib_set_position(w);
+#endif
+
+    }
+}
+
+void crosswin_set_detect_monitor(crosswin_window *w,unsigned char option)
+{
+    if(w)
+    {
+        w->detect_monitor=option;
+        if(w->detect_monitor)
+        {
+            crosswin_set_position(w,w->x,w->y);
+        }
+        else
+        {
+            w->mon=0;
+            crosswin_set_position(w,w->x,w->y);
+        }
+    }
+}
+
+void crosswin_get_detect_monitor(crosswin_window *w,unsigned char *option)
+{
+    if(w)
+    {
+        *option=w->detect_monitor;
+    }
+}
+
+void crosswin_get_position(crosswin_window* w, long* x, long* y, size_t *monitor)
+{
+    if(w)
+    {
+        if(x)
+            *x = w->x;
+
+        if(y)
+            *y = w->y;
+
+        if(monitor)
+            *monitor = w->mon;
+    }
+}
+
+void crosswin_get_size(crosswin_window* cw, long* w, long* h)
+{
+    if(cw)
+    {
+        if(w)
+            *w = cw->w;
+
+        if(h)
+            *h = cw->h;
+    }
+}
+
+void crosswin_set_opacity(crosswin_window* w, unsigned char opacity)
+{
+    if(w && w->opacity != opacity)
+    {
+        w->opacity = opacity;
+#ifdef WIN32
+        win32_set_opacity(w);
+#elif __linux__
+        xlib_set_opacity(w);
+#endif
+
+    }
+}
+
+void crosswin_get_opacity(crosswin_window* w, unsigned char *opacity)
+{
+    if(w && opacity)
+    {
+        *opacity = w->opacity;
+    }
+}
+
+void crosswin_set_size(crosswin_window* w, long width, long height)
+{
+    if(w && (w->w != width || w->h != height))
+    {
+        w->w = labs(width);
+        w->h = labs(height);
+
+#ifdef __linux__
+        xlib_set_dimmension(w);
+#endif
+    }
+}
+
+void crosswin_set_monitor(crosswin_window *w, size_t mon)
+{
+    if(w)
+    {
+        w->mon = mon;
+        crosswin_set_position(w,w->x,w->y);
+    }
+}
+
+void crosswin_set_mouse_handler(crosswin_window* w, int (*mouse_handler)(crosswin_window* w, mouse_status* ms))
+{
+    if(w)
+    {
+        w->mouse_func = mouse_handler;
+    }
+}
+
+void crosswin_set_kbd_handler(crosswin_window *w, int(*kbd_func)(unsigned  int key_code, void *p), void *kb_data)
+{
+    if(w)
+    {
+        w->kbd_func = kbd_func;
+        w->kb_data = kb_data;
+#ifdef __linux__
+        w->kbd_func ? xlib_create_input_context(w) : xlib_destroy_input_context(w);
+#endif
+    }
+}
+
+void crosswin_set_visible(crosswin_window* w,unsigned char visible)
+{
+    if(w&&w->visible!=visible)
+    {
+        w->visible = visible;
+#ifdef WIN32
+        win32_set_visible(w);
+#elif __linux__
+        xlib_set_visible(w);
+#endif
+    }
+}
+
+void crosswin_get_visible(crosswin_window* w,unsigned char *visible)
+{
+    if(w&&visible)
+    {
+        *visible = w->visible;
+    }
+}
+
+
+void crosswin_destroy(crosswin_window** w)
+{
+    if(w && *w)
+    {
+        crosswin *c = (*w)->c;
+        linked_list_remove(&(*w)->current);
+#ifdef WIN32
+        win32_destroy_window(w);
+#elif __linux__
+        xlib_destroy_window(w);
+#endif
+
+        cairo_surface_destroy((*w)->offscreen_buffer);
+        if((*w)==(crosswin_window*)c->top_win_id)
+        {
+            c->top_win_id = 0;
+        }
+        free(*w);
+        *w = NULL;
+    }
+}
+
+void crosswin_set_draggable(crosswin_window* w, unsigned char draggable)
+{
+    if(w)
+        w->draggable = draggable;
+}
+
+void crosswin_get_draggable(crosswin_window* w, unsigned char *draggable)
+{
+    if(w&&draggable)
+        *draggable = w->draggable;
+}
+
+void crosswin_set_keep_on_screen(crosswin_window* w, unsigned char keep_on_screen)
+{
+    if(w)
+    {
+        w->keep_on_screen = keep_on_screen;
+        crosswin_set_position(w, w->x, w->y);
+    }
+}
+
+void crosswin_get_keep_on_screen(crosswin_window* w, unsigned char *keep_on_screen)
+{
+    if(w && keep_on_screen)
+    {
+        *keep_on_screen  = w->keep_on_screen;
+    }
+}
+
+static void crosswin_update_zorder(crosswin_window *cw)
+{
+
+#ifdef WIN32
+    win32_set_zpos(cw);
+#elif __linux__
+    xlib_set_zpos(cw);
+#endif
+
+}
+
+void crosswin_set_zorder(crosswin_window* w, unsigned char zorder)
+{
+    if(w)
+    {
+        if(w->zorder != zorder)
+        {
+            w->zorder = zorder;
+            w->c->flags|=CROSSWIN_UPDATE_ZORDER; /*We are restacking stuff*/
+            crosswin_update_zorder(w);
+        }
+    }
+}
+
+void crosswin_get_zorder(crosswin_window* w, unsigned char *zorder)
+{
+    if(w && zorder)
+    {
+        *zorder = w->zorder;
+    }
+}
+
+static size_t crosswin_get_time(void)
+{
+#ifdef WIN32
+    return(clock());
+#elif __linux__
+    struct timespec t = {0};
+    clock_gettime(CLOCK_MONOTONIC_RAW, &t);
+    return(t.tv_sec * 1000 + t.tv_nsec / 1000000);
+#endif
+}
+
+static int crosswin_mouse_handle(crosswin_window *cw)
+{
+    crosswin *c = cw->c;
+    mouse_data *md = &c->md;
+    mouse_status ms = {0};
+    long lx = md->cposx;
+    long ly = md->cposy;
+    md->cposx = md->root_x;
+    md->cposy = md->root_y;
+
+    if(md->state == mouse_button_state_unpressed && md->drag)
+    {
+        md->drag = 0;
+        return(0);
+    }
+
+    if(!md->ctrl && md->drag == 0)
+    {
+        unsigned char was_double = 0;
+        long delta = 0;
+
+        if(md->button != mouse_button_none)
+        {
+            if(md->state == mouse_button_state_pressed)
+            {
+                c->top_win_id=(size_t)cw;
+                size_t current_press = crosswin_get_time();
+
+                if(md->button == md->obtn)
+                    delta = labs(current_press - md->last_press);
+                else
+                    md->obtn = md->button;
+
+                md->last_press = current_press;
+            }
+        }
+
+        /*Pass the status*/
+        ms.hover = md->hover;
+        ms.x = md->x;
+        ms.y = md->y;
+
+        /*Validate the command by checking if the coordinates have changed*/
+        if(lx == md->cposx && ly == md->cposy)
+        {
+            ms.state = md->state;
+            ms.button = md->button;
+            ms.scroll_dir = md->scroll_dir;
+
+            /*Was double click? if yes, the handle it*/
+            if(delta >= 100 && delta <= 500)
+            {
+                md->last_press = 0;
+                ms.state = mouse_button_state_2x;
+                cw->mouse_func(cw, &ms);
+                was_double = !!ms.handled;
+
+                if(was_double == 0)
+                    ms.state = mouse_button_state_pressed;
+            }
+        }
+
+        if(was_double == 0)
+        {
+            mouse_button_state lmbs = md->state;
+            mouse_button lmb = md->button;
+
+            if(ms.hover == mouse_unhover)
+            {
+                ms.button = mouse_button_none;
+                ms.state = mouse_button_state_none;
+            }
+
+            md->button = mouse_button_none;
+            md->state = mouse_button_state_none;
+            cw->mouse_func(cw, &ms);
+            md->button = lmb;
+            md->state = lmbs;
+        }
+
+        md->scroll_dir = 0;
+
+        if(!!ms.handled)
+        {
+            md->button = mouse_button_none;
+            md->state = mouse_button_state_none;
+            md->last_press = 0;
+        }
+    }
+    else
+    {
+        md->last_press = 0;
+    }
+
+    if(md->hover == mouse_unhover)
+    {
+        return(0);
+    }
+
+    /*left mouse was not handled so if the user will move the pointer while clicking,
+     * then we'll move the window. Obvious, isn't it?
+     * */
+    if(md->button == mouse_button_left &&
+            !ms.handled &&
+            cw->draggable &&
+            md->state == mouse_button_state_pressed)
+    {
+        long x = cw->x + (md->root_x - lx);
+        long y = cw->y + (md->root_y  - ly);
+
+        if(cw->x != x || cw->y != y)
+        {
+            md->drag = 1;
+            crosswin_set_position(cw, x, y);
+        }
+    }
+
+    return(0);
+}

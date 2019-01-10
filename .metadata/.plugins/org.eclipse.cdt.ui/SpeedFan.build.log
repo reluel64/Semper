@@ -1,0 +1,7 @@
+21:00:57 **** Rebuild of configuration Debug for project SpeedFan ****
+Info: Internal Builder is used for build
+gcc "-includeD:\\Semper_Eclipse\\Semper\\include\\semper_api.h" -O0 -g3 -Wall -c -fmessage-length=0 -Wno-pointer-sign -fPIC -o "src\\speedfan.o" "..\\src\\speedfan.c" 
+gcc -static "-LD:\\Semper_Eclipse\\Semper/Debug" -shared -o SpeedFan.dll "src\\speedfan.o" -lsemper 
+
+21:00:58 Build Finished. 0 errors, 0 warnings. (took 920ms)
+

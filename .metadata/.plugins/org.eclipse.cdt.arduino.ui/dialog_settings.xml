@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="ArduinoTerminalSettingsPage">
+		<item value="8" key="cdtserial.byteSize"/>
+		<item value="Arduino" key="arduino.board"/>
+		<item value="9600" key="cdtserial.baudRate"/>
+		<item value="COM3" key="cdtserial.portName"/>
+		<item value="None" key="cdtserial.parity"/>
+		<item value="1" key="cdtserial.stopBits"/>
+	</section>
+</section>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="LaunchTerminalSettingsDialog">
+		<item value="Arduino Serial Monitor" key="terminalLabel"/>
+		<section name="SettingsPanelControl">
+			<section name="Serial Terminal">
+				<list key="hosts">
+				</list>
+			</section>
+			<section name="Arduino Serial Monitor">
+				<list key="hosts">
+				</list>
+			</section>
+		</section>
+	</section>
+</section>

@@ -1,0 +1,9 @@
+00:29:43 **** Rebuild of configuration Debug_Linux for project Registry ****
+Info: Internal Builder is used for build
+gcc -include/run/media/alex/Data/Semper_Eclipse/Semper/include/semper_api.h -O0 -g3 -Wall -c -fmessage-length=0 -o src/registry.o ../src/registry.c 
+gcc -L/run/media/alex/Data/Semper_Eclipse/Semper/Debug_Linux -shared -o libRegistry.dll src/registry.o -lsemper 
+/bin/ld: cannot find -lsemper
+collect2: error: ld returned 1 exit status
+
+00:29:44 Build Failed. 1 errors, 0 warnings. (took 187ms)
+

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;Semper/include/font_config.xml&apos; to &apos;font_config.cxml&apos;" description="Rename resource &apos;font_config.xml&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="include/font_config.xml" name="font_config.cxml" stamp="1532763075507" updateReferences="true"/>
+</session>

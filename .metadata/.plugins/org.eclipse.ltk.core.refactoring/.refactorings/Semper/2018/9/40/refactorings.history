@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;Semper/makefile&apos; to &apos;makefile.mk&apos;" description="Rename resource &apos;makefile&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="makefile" name="makefile.mk" stamp="1538313862531" updateReferences="true"/>
+</session>

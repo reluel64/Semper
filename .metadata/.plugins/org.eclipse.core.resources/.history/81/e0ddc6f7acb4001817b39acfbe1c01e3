@@ -1,0 +1,390 @@
+#ifdef WIN32
+#include <stdio.h>
+#include <windows.h>
+#include <cairo/cairo.h>
+#include <cairo/cairo-win32.h>
+#include <windowsx.h>
+#include <crosswin/crosswin.h>
+#include <semper.h>
+#include <surface.h>
+#include <event.h>
+#include <dwmapi.h>
+#include <mem.h>
+
+static LRESULT CALLBACK win32_message_callback(HWND win, unsigned int message, WPARAM wpm, LPARAM lpm)
+{
+    crosswin_window* w = (crosswin_window*)GetWindowLongPtrA(win, GWLP_USERDATA);
+
+    if(w == NULL)
+        return (DefWindowProc(win, message, wpm, lpm));
+
+    crosswin *c = w->c;
+    mouse_data *md = &c->md;
+    surface_data *sd = w->user_data;
+
+    switch(message)
+    {
+        case WM_MOUSEWHEEL:
+            md->x = GET_X_LPARAM(lpm);
+            md->y = GET_Y_LPARAM(lpm);
+            md->scroll_dir = GET_WHEEL_DELTA_WPARAM(wpm) > 0 ? 1 : -1;
+            w->c->handle_mouse(w);
+            return(0);
+
+        case WM_LBUTTONDOWN:
+            SetCapture(w->window);
+            md->x = GET_X_LPARAM(lpm);
+            md->y = GET_Y_LPARAM(lpm);
+            md->button = mouse_button_left ;
+            md->state = mouse_button_state_pressed;
+            w->c->handle_mouse(w);
+            return(0);
+
+        case WM_LBUTTONUP:
+            ReleaseCapture();
+            md->x = GET_X_LPARAM(lpm);
+            md->y = GET_Y_LPARAM(lpm);
+            md->button = mouse_button_left;
+            md->state = mouse_button_state_unpressed;
+            w->c->handle_mouse(w);
+            return(0);
+
+        case WM_RBUTTONDOWN:
+            md->x = GET_X_LPARAM(lpm);
+            md->y = GET_Y_LPARAM(lpm);
+            md->button = mouse_button_right;
+            md->state = mouse_button_state_pressed;
+            w->c->handle_mouse(w);
+            return(0);
+
+        case WM_RBUTTONUP:
+            md->x = GET_X_LPARAM(lpm);
+            md->y = GET_Y_LPARAM(lpm);
+            md->button = mouse_button_right;
+            md->state = mouse_button_state_unpressed;
+            w->c->handle_mouse(w);
+            return(0);
+
+        case WM_MBUTTONDOWN:
+            md->x = GET_X_LPARAM(lpm);
+            md->y = GET_Y_LPARAM(lpm);
+            md->button = mouse_button_middle;
+            md->state = mouse_button_state_pressed;
+            w->c->handle_mouse(w);
+            return(0);
+
+        case WM_MBUTTONUP:
+            md->x = GET_X_LPARAM(lpm);
+            md->y = GET_Y_LPARAM(lpm);
+            md->button = mouse_button_middle;
+            md->state = mouse_button_state_unpressed;
+            w->c->handle_mouse(w);
+            return(0);
+
+        case WM_MOUSELEAVE:
+            md->x = GET_X_LPARAM(lpm);
+            md->y = GET_Y_LPARAM(lpm);
+            md->hover = mouse_unhover;
+            w->c->handle_mouse(w);
+            return(0);
+
+        case WM_KEYDOWN:
+        {
+            if(lpm & 1000000)
+            {
+                return(1);
+            }
+
+            return(0);
+        }
+        case WM_WINDOWPOSCHANGING:
+        {
+            WINDOWPOS *wp=(WINDOWPOS*)lpm;
+            wp->flags|=SWP_NOZORDER|SWP_NOOWNERZORDER;
+            c->update |=CROSSWIN_UPDATE_ZORDER;
+            return(0);
+        }
+        case WM_CHAR:
+        case WM_UNICHAR:
+        case WM_SYSCHAR:
+        {
+            if(w->kbd_func && wpm != UNICODE_NOCHAR)
+            {
+                w->kbd_func(wpm, w->kb_data);
+            }
+
+            return(0);
+        }
+        case WM_MOUSEMOVE:
+        {
+            TRACKMOUSEEVENT ev = { 0 };
+            md->x = GET_X_LPARAM(lpm);
+            md->y = GET_Y_LPARAM(lpm);
+            POINT p = { md->x, md->y};
+            md->hover = mouse_hover;
+
+            ev.dwFlags = 0x2;
+            ev.cbSize = sizeof(TRACKMOUSEEVENT);
+            ev.hwndTrack = win;
+            ev.dwHoverTime = 1;
+            TrackMouseEvent(&ev);
+
+            MapWindowPoints(win, NULL, &p, 1);
+            md->ctrl = !!(wpm & MK_CONTROL);
+            md->root_x = p.x;
+            md->root_y = p.y;
+            w->c->handle_mouse(w);
+            return (0);
+        }
+
+        case WM_CLOSE:
+        {
+            event_push(c->eq, (event_handler)surface_destroy, (void*)sd, 0, EVENT_REMOVE_BY_DATA);
+            return(0);
+        }
+
+        case WM_DISPLAYCHANGE:
+        {
+            c->update |= CROSSWIN_UPDATE_MONITORS;
+            event_wake(c->eq);
+            break;
+        }
+    }
+
+    return (DefWindowProc(win, message, wpm, lpm));
+}
+
+static int win32_event_proc_enum_win(HWND win,LPARAM lpm)
+{
+    DWORD pid=0;
+
+    GetWindowThreadProcessId(win,&pid);
+
+    if(pid == GetCurrentProcessId ())
+    {
+        unsigned char cname[255] = {0};
+        GetClassNameA(win,cname,254);
+
+        if(!strncasecmp("SemperSurface",cname,sizeof("SemperSurface")-1))
+        {
+            crosswin_window* w = (crosswin_window*)GetWindowLongPtrA(win, GWLP_USERDATA);
+
+            if(w)
+            {
+                crosswin **pc = (crosswin**)lpm;
+                (*pc) = w->c;
+                return(0);
+            }
+        }
+    }
+
+    return(1);
+}
+
+static void win32_event_proc(HWINEVENTHOOK evh, long unsigned int evt,HWND win,long obj,long child,long unsigned int thid,long unsigned int evtime)
+{
+    crosswin *c = NULL;
+    EnumWindows(win32_event_proc_enum_win,(LPARAM)&c);
+
+    printf("%p\n",win);
+    if(c)
+    {
+        c->update|=CROSSWIN_UPDATE_ZORDER;
+    }
+}
+
+void win32_check_desktop(crosswin *c)
+{
+    DWORD pid_fg = 0;
+    DWORD pid_worker = 0;
+    void *fg_window = GetForegroundWindow();
+    c->update &= ~CROSSWIN_UPDATE_SHOW_DESKTOP;
+
+
+    HWND worker = FindWindowExA(fg_window,NULL,"SHELLDLL_DefView",NULL);
+    GetWindowThreadProcessId(worker,&pid_worker);
+    GetWindowThreadProcessId(fg_window,&pid_fg);
+
+    if(pid_worker == pid_fg && worker && IsWindowVisible(worker))
+    {
+        c->update |= CROSSWIN_UPDATE_SHOW_DESKTOP|CROSSWIN_UPDATE_ZORDER;
+    }
+}
+
+void win32_init_class(void)
+{
+
+    WNDCLASSEXA wclass = { 0 };
+    memset(&wclass, 0, sizeof(WNDCLASSEXA));
+    wclass.style = (CS_DBLCLKS & 0) | CS_NOCLOSE | CS_OWNDC;
+    wclass.lpfnWndProc = win32_message_callback;
+    wclass.lpszClassName = "SemperSurface";
+    wclass.hCursor = LoadImageA(NULL, MAKEINTRESOURCE(32512), IMAGE_CURSOR, 0, 0, LR_SHARED);
+    wclass.cbSize = sizeof(WNDCLASSEXW);
+    RegisterClassExA(&wclass);
+    /*SetWinEventHook(EVENT_SYSTEM_FOREGROUND ,EVENT_SYSTEM_FOREGROUND,NULL,win32_event_proc,0,0,WINEVENT_SKIPOWNPROCESS|WINEVENT_OUTOFCONTEXT);*/
+}
+
+void win32_init_window(crosswin_window* w)
+{
+    size_t no_peek = 1;
+    w->window = CreateWindowExA(WS_EX_TOOLWINDOW | WS_EX_LAYERED, "SemperSurface", "Surface", WS_POPUP, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
+    SetWindowLongPtrA(w->window, GWLP_USERDATA, (LONG_PTR)w);
+    DwmSetWindowAttribute(w->window, DWMWA_EXCLUDED_FROM_PEEK, &no_peek, sizeof(no_peek));
+}
+
+void win32_click_through(crosswin_window* w, unsigned char state)
+{
+    unsigned int cstatus = GetWindowLongPtrA(w->window, GWL_EXSTYLE);
+    cstatus = state ? cstatus | WS_EX_TRANSPARENT : cstatus & ~WS_EX_TRANSPARENT;
+    SetWindowLongPtrA(w->window, GWL_EXSTYLE, cstatus);
+}
+
+void win32_message_dispatch(crosswin *c)
+{
+    MSG msg = { 0 };
+
+    while(PeekMessageW(&msg, NULL, 0, 0, 1))
+    {
+        if(msg.message==WM_QUIT)
+        {
+            control_data *cd = c->cd;
+            safe_flag_set(cd->quit_flag,1);
+            event_wake(cd->eq);
+        }
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
+}
+
+static int win32_get_monitors_callback(HMONITOR mon, HDC dcmon, LPRECT prect, LPARAM pv)
+{
+    if(prect == NULL)
+        return(1);
+
+    void **data = (void**)pv;
+    size_t *cnt = (size_t*)data[1];
+    crosswin_monitor **cm = (crosswin_monitor**)data[0];
+
+    crosswin_monitor *tcm = realloc(*cm, ((*cnt) + 1) * sizeof(crosswin_monitor));
+
+    if(tcm)
+    {
+        *cm = tcm;
+
+        tcm[*cnt].x = prect->left;
+        tcm[*cnt].y = prect->top;
+        tcm[*cnt].h = prect->bottom - prect->top;
+        tcm[*cnt].w = prect->right - prect->left;
+        tcm[*cnt].index = (*cnt);
+        (*cnt)++;
+    }
+
+    return(1);
+
+}
+
+int win32_get_monitors(crosswin_monitor **cm, size_t *cnt)
+{
+    *cnt = 0;
+    void *data[2] = {cm, cnt};
+    return(EnumDisplayMonitors(NULL, NULL, win32_get_monitors_callback, (LPARAM)data) == 1 ? 0 : -1);
+}
+
+void win32_draw(crosswin_window* w)
+{
+    static POINT pt = { 0, 0 };
+    SIZE sz = { w->w, w->h };
+
+    BLENDFUNCTION bf =
+    {
+            .AlphaFormat = AC_SRC_ALPHA,
+            .BlendFlags = 0,
+            .BlendOp = AC_SRC_OVER,
+            .SourceConstantAlpha = w->opacity
+    };
+
+
+    if(w->offscreen_buffer == NULL || (w->offw != (size_t)w->w || w->offh != (size_t)w->h))
+    {
+        if(w->offscreen_buffer)
+        {
+            cairo_surface_destroy(w->offscreen_buffer);
+            w->offscreen_buffer = NULL;
+        }
+
+        w->offscreen_buffer = cairo_win32_surface_create_with_dib(CAIRO_FORMAT_ARGB32, w->w, w->h); // create a surface to render on
+        w->offw = (size_t)w->w;
+        w->offh = (size_t)w->h;
+    }
+
+    cairo_t* cr =  cairo_create(w->offscreen_buffer); // create a cairo context to gain access to surface rendering routine
+    HDC dc = cairo_win32_surface_get_dc(w->offscreen_buffer); // get the device context that will be used by UpdateLayeredWindow
+
+    w->render_func ? w->render_func(w, cr) : 0;
+
+    UpdateLayeredWindow(w->window, NULL, NULL, &sz, dc, &pt, 0, &bf, ULW_ALPHA);
+
+    /*Everything has been drawn so we will free up the resources*/
+
+    cairo_destroy(cr); // destroy the context
+}
+
+void win32_set_position(crosswin_window* w)
+{
+    POINT ptd = { w->x, w->y };
+    UpdateLayeredWindow(w->window, NULL, &ptd, NULL, NULL, NULL, 0, NULL, 0);
+}
+
+void win32_set_opacity(crosswin_window* w)
+{
+    BLENDFUNCTION bf =
+    {
+            .AlphaFormat = AC_SRC_ALPHA,
+            .BlendFlags = 0,
+            .BlendOp = AC_SRC_OVER,
+            .SourceConstantAlpha = w->opacity
+    };
+    UpdateLayeredWindow(w->window, NULL, NULL, NULL, NULL, NULL, 0, &bf, ULW_ALPHA);
+}
+
+void win32_set_visible(crosswin_window* w)
+{
+    SetWindowPos(w->window, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | (w->visible? SWP_SHOWWINDOW:SWP_HIDEWINDOW) | SWP_NOACTIVATE);
+}
+
+void win32_destroy_window(crosswin_window** w)
+{
+    SetWindowLongPtrA((*w)->window, GWLP_USERDATA, 0);
+    DestroyWindow((*w)->window);
+}
+
+void win32_set_zpos(crosswin_window *w)
+{
+static int i=0;
+void *fg_window = GetForegroundWindow();
+HWND worker  = FindWindowExA(fg_window,NULL,"SHELLDLL_DefView",NULL);
+    switch(w->zorder)
+    {
+        case crosswin_desktop_sh:
+        case crosswin_bottom_sh:
+            printf("Hello %d\n",i++);
+            SetWindowPos(w->window,HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOMOVE | SWP_NOSENDCHANGING);
+            break;
+        case crosswin_desktop:
+        case crosswin_bottom:
+            SetWindowPos(w->window,HWND_BOTTOM,    0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOMOVE | SWP_NOSENDCHANGING);
+            break;
+        case crosswin_normal:
+            SetWindowPos(w->window,HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOMOVE | SWP_NOSENDCHANGING);
+            break;
+        case crosswin_top:
+        case crosswin_topmost:
+            SetWindowPos(w->window, HWND_TOPMOST,  0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOMOVE | SWP_NOSENDCHANGING);
+            break;
+        default:
+            break; /*make the compiler happy :-) */
+    }
+}
+
+#endif

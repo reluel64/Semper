@@ -1,0 +1,7 @@
+17:03:16 **** Rebuild of configuration Release for project Ping ****
+Info: Internal Builder is used for build
+gcc "-includeD:\\Semper_Eclipse\\Semper\\include\\semper_api.h" -O2 -Wall -c -fmessage-length=0 -Wno-pointer-sign -fPIC -o "src\\ping.o" "..\\src\\ping.c" 
+gcc -s -static "-LD:\\Semper_Eclipse\\Semper\\Release" -shared -o Ping.dll "src\\ping.o" -lsemper -lws2_32 -lIphlpapi -lpthread 
+
+17:03:17 Build Finished. 0 errors, 0 warnings. (took 1s.229ms)
+

@@ -1,0 +1,7 @@
+21:20:10 **** Rebuild of configuration Debug for project Recycler ****
+Info: Internal Builder is used for build
+gcc "-ID:\\Semper_Eclipse\\Recycler\\include" "-includeD:\\Semper_Eclipse\\Semper\\include\\semper_api.h" -O0 -g3 -Wall -c -fmessage-length=0 -Wno-pointer-sign -fPIC -o "src\\recycler.o" "..\\src\\recycler.c" 
+gcc "-LD:\\Semper_Eclipse\\Semper\\Debug" -static -shared -o Recycler.dll "src\\recycler.o" -lsemper -lpthread 
+
+21:20:11 Build Finished. 0 errors, 0 warnings. (took 1s.567ms)
+

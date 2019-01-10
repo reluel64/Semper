@@ -1,0 +1,4 @@
+TerminalPrefBufferLines=10000000
+TerminalPrefInvertColors=true
+eclipse.preferences.version=1
+overriddenByCSS=,TerminalPrefInvertColors,

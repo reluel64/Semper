@@ -1,0 +1,15 @@
+﻿[Surface]
+UpdateFrequency=100
+SurfaceColor=255;0;0;255
+AutoSize=1
+[CPU]
+;Source=Recycler
+
+[Text]
+Source=CPU
+Object=String
+
+Text=HelloWorld %0
+FontSize=200
+SelfScaling=1
+Decimals=2

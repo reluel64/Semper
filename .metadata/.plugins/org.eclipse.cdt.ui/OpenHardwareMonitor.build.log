@@ -1,0 +1,7 @@
+21:00:55 **** Rebuild of configuration Debug for project OpenHardwareMonitor ****
+Info: Internal Builder is used for build
+gcc "-includeD:\\Semper_Eclipse\\Semper\\include\\semper_api.h" -O0 -g3 -Wall -c -fmessage-length=0 -Wno-pointer-sign -o "src\\OHM.o" "..\\src\\OHM.c" 
+gcc -static "-LD:\\Semper_Eclipse\\Semper\\Debug" -shared -o OpenHardwareMonitor.dll "src\\OHM.o" -lsemper -lpthread -lwbemuuid -lole32 -lOleAut32 
+
+21:00:56 Build Finished. 0 errors, 0 warnings. (took 1s.321ms)
+

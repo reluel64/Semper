@@ -1,0 +1,7 @@
+connectionTypeId=org.eclipse.remote.JSch
+connections/org.eclipse.cdt.arduino.core.connectionType/Arduino/arduinoBoardName=uno
+connections/org.eclipse.cdt.arduino.core.connectionType/Arduino/arduinoPackageName=arduino
+connections/org.eclipse.cdt.arduino.core.connectionType/Arduino/arduinoPlatformName=avr
+connections/org.eclipse.cdt.arduino.core.connectionType/Arduino/arduinoPortName=COM3
+connections/org.eclipse.cdt.arduino.core.connectionType/Arduino/programmer=avrisp
+eclipse.preferences.version=1

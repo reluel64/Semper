@@ -1,0 +1,5 @@
+1542925586558	Delete resource 'Semper/Debug/Extensions/PerfCounter.dll'
+1542927177205	Delete resource 'ThreadLeak/Debug/ThreadLeak.dll'
+1542931211546	Delete resource 'Semper/Debug/Extensions/ThreadLeak.dll'
+1543000964827	Delete resource 'ThreadLeak/tinycthread.c'
+1543000966103	Delete resource 'ThreadLeak/tinycthread.h'
