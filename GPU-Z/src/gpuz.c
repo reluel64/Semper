@@ -5,11 +5,7 @@
  * */
 #if defined(WIN32)
 #include <windows.h>
-/*
- * TODO: This source should be enhanced to
- * use only one shared memory instance
- * to gather information for the other sources
- */
+
 #define string_length(s) ((s==NULL?0:strlen(s)))
 
 /*

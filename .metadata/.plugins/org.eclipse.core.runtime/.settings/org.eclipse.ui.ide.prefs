@@ -7,6 +7,6 @@ REFRESH_WORKSPACE_ON_STARTUP=true
 SAVE_ALL_BEFORE_BUILD=true
 TASKS_FILTERS_MIGRATE=true
 eclipse.preferences.version=1
-platformState=1539207552391
+platformState=1546371654342
 quickStart=false
 tipsAndTricks=true

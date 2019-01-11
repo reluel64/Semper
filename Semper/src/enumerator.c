@@ -4,10 +4,13 @@
  * Written by Alexandru-Daniel Mărgărit
  */
 
-/* The purpose of the enumerator is to be able to get the all the keys of the current section
- *and from the ancestors.
- * Think of it as a combination of skeleton_first_key/skeleton_next_key with the ability to obtain the keys from
- *ancestors.
+/* The purpose of the enumerator is to be
+ * able to get the all the keys of the current
+ * section and from the ancestors.
+ * Think of it as a combination of
+ * skeleton_first_key/skeleton_next_key with
+ * the ability to obtain the keys from
+ * ancestors.
  */
 
 #include <skeleton.h>

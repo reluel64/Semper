@@ -1006,19 +1006,12 @@ int semper_main(void)
     return (0);
 }
 
-#undef offsetof
-#undef element_of
-#if 1
-
-#endif
-
-
 #if defined(WIN32)
 
 int wmain(int argc, wchar_t *argv[])
 
 #elif defined(__linux__)
-
+#
 int main(int argc, char *argv[])
 
 #endif
@@ -1042,3 +1035,4 @@ int main(int argc, char *argv[])
 
     return(0);
 }
+

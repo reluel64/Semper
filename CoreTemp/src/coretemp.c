@@ -5,7 +5,7 @@
  * */
 #if defined(WIN32)
 #include <windows.h>
-
+#include <stdint.h>
 
 /*
  * TODO: This source should be enhanced to

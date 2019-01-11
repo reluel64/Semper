@@ -7,7 +7,12 @@
 #include <semper.h>
 #include <diag.h>
 #include <pthread.h>
+#if defined(WIN32)
 #include <pthread_time.h>
+#elif defined(__linux__)
+#include <sys/eventfd.h>
+#include <poll.h>
+#endif
 #include <linked_list.h>
 #include <string_util.h>
 #include <mem.h>
@@ -229,14 +234,14 @@ static size_t diag_wait(void *pv, size_t time)
 #elif defined(__linux__)
     struct pollfd events[1];
     memset(events, 0, sizeof(events));
-    events[0].fd = (int)(size_t)sewd->event_wait;
+    events[0].fd = (int)(size_t)ds->event_wait;
     events[0].events = POLLIN;
-    poll(events, 1, timeout);
+    poll(events, 1, -1);
 
     if(events[0].revents)
     {
         eventfd_t dummy;
-        eventfd_read((int)(size_t)sewd->event_wait, &dummy); //consume the event
+        eventfd_read((int)(size_t)ds->event_wait, &dummy); //consume the event
     }
 #endif
     return(-1);
