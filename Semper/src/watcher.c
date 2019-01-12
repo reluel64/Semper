@@ -277,7 +277,12 @@ void  *watcher_init(unsigned char *dir, event_queue *meq, event_handler eh, void
 
 int watcher_destroy(void **wd)
 {
+
     watcher_data *wdd = *wd;
+
+    if(wdd == NULL)
+        return(0);
+
     safe_flag_set(wdd->kill, 1);
     event_wake(wdd->eq);
     pthread_join(wdd->th, NULL);

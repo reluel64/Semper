@@ -331,10 +331,10 @@ SEMPER_API unsigned char *get_path(void *ip, unsigned char pth)
             temp = clone_string(cd->ext_dir);
             break;
         case EXTENSION_PATH_SURFACE:
-           temp = clone_string(sd->sp.surface_dir);
+            temp = clone_string(sd->sp.surface_dir);
             break;
         case EXTENSION_PATH_SURFACES:
-           temp = clone_string(cd->surface_dir);
+            temp = clone_string(cd->surface_dir);
             break;
     }
     sfree((void**)&s->ext_str);
@@ -433,6 +433,24 @@ SEMPER_API int semper_event_push(void *ip, event_handler handler, void* pv, size
     }
 
     return(event_push(cd->eq, handler, pv, timeout, flags));
+}
+
+SEMPER_API void *semper_get_event_queue(void *ip)
+{
+    source *s = ip;
+    control_data *cd = NULL;
+
+    if(s && s->sd)
+    {
+        cd = ((surface_data*)s->sd)->cd;
+        return(cd->eq);
+    }
+
+    if(cd == NULL)
+    {
+        return(NULL);
+    }
+    return(NULL);
 }
 
 SEMPER_API void semper_safe_flag_destroy(void **psf)

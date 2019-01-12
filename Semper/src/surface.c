@@ -1040,7 +1040,6 @@ int surface_update(surface_data* sd)
     }
 
     /*************UPDATE SOURCES************/
-
     list_enum_part_safe(s, ts, &sd->sources, current)
     {
         if(s->die)
@@ -1080,9 +1079,7 @@ int surface_update(surface_data* sd)
     }
 
     /*Draw*/
-
     crosswin_draw(sd->sw);
-
 
     /*Handle commands*/
     if(sd->update_act_lock == 0)

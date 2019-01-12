@@ -55,6 +55,7 @@ int diag_init(control_data *cd)
     ds->fp = zmalloc(cd->root_dir_length + 20);
     snprintf(ds->fp, cd->root_dir_length + 20, "%s/Semper.log", cd->root_dir);
     clock_gettime(CLOCK_MONOTONIC, &ds->t1);
+    uniform_slashes(ds->fp);
 #ifndef DEBUG
 
     if((k = skeleton_get_key(cd->smp, "LogLevel")) != NULL)
@@ -69,7 +70,7 @@ int diag_init(control_data *cd)
 
 #else
     ds->ltf = 1;
-    ds->level = 0xff;
+    ds->level = 0x0;
 #endif
 
     if((k = skeleton_get_key(cd->smp, "LogMaxEntries")) != NULL)

@@ -35,6 +35,7 @@ void*          get_surface(void* ip);
 void*          get_extension_by_name(unsigned char* name, void* ip);
 void*          get_private_data(void* ip);
 void*          get_parent(unsigned char* str, void* ip);
+void*          semper_get_event_queue(void *ip);
 void           tokenize_string_free(tokenize_string_info *tsi);
 void           send_command(void* ir, unsigned char* command);
 void           send_command_ex(void* ir, unsigned char* cmd, size_t timeout, char unique);
@@ -53,6 +54,7 @@ int            is_parent_candidate(void* pc, void* ip);
 int            diag_log(unsigned char lvl, char *fmt, ...);
 int            semper_event_remove(void *ip, event_handler eh, void* pv, unsigned char flags);
 int            semper_event_push(void *ip, event_handler handler, void* pv, size_t timeout, unsigned char flags);
+
 unsigned char *get_path(void *ip, unsigned char pth);
 unsigned char *absolute_path(void *ip, unsigned char *rp, unsigned char pth);
 unsigned char *param_string(unsigned char* pn, unsigned char flags, void* ip, unsigned char* def);
