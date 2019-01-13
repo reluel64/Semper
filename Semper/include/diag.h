@@ -24,6 +24,7 @@ typedef struct
     event_queue *eq;
     struct timespec t1;
     void *event_wait;
+    void *kill;
 } diag_status;
 
 

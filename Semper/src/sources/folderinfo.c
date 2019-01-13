@@ -1,8 +1,8 @@
-#undef WIN32
 #include <sources/folderinfo.h>
 #include <semper_api.h>
 #include <string_util.h>
 #include <linked_list.h>
+#include <watcher.h>
 #if defined(WIN32)
 #include <windows.h>
 #elif defined(__linux__)
@@ -33,6 +33,10 @@ typedef struct _folderinfo
         unsigned char hiddenf;
         unsigned char systemf;
         unsigned char recurse;
+        unsigned char update;
+        void *watcher;
+        void *eq;
+
 } folderinfo;
 
 typedef struct
@@ -40,15 +44,9 @@ typedef struct
         unsigned char *dir;
         list_entry current;
 } folderinfo_dir_list;
+static void* folderinfo_collect_thread(void* vfi);
+static void folderinfo_watcher_handler(void *pv);
 
-
-#if defined(WIN32)
-static size_t file_size(size_t low, size_t high)
-{
-    return (low | (high << 32));
-}
-
-#endif
 void folderinfo_init(void** spv, void* ip)
 {
     folderinfo* fi = NULL;
@@ -57,6 +55,7 @@ void folderinfo_init(void** spv, void* ip)
 
     fi->working = safe_flag_init();
     fi->stop = safe_flag_init();
+    fi->eq = semper_get_event_queue(ip);
     unused_parameter(ip);
     *spv = fi;
 }
@@ -66,7 +65,7 @@ void folderinfo_reset(void* spv, void* ip)
     folderinfo* fi = spv;
     sfree((void**)&fi->path);
     fi->parent = NULL;
-
+    watcher_destroy(&fi->watcher);
     if(fi->th)
     {
         safe_flag_set(fi->stop, 1);
@@ -80,7 +79,11 @@ void folderinfo_reset(void* spv, void* ip)
     void* parent = get_parent(tmp, ip);
 
     if(parent == NULL)
+    {
+        uniform_slashes(tmp);
         fi->path = clone_string(tmp);
+        fi->watcher = watcher_init(fi->path,fi->eq,(event_handler)folderinfo_watcher_handler,fi);
+    }
     else
     {
         fi->parent = get_private_data(parent);
@@ -104,8 +107,90 @@ void folderinfo_reset(void* spv, void* ip)
     {
         fi->type = 2;
     }
+    fi->update = 1;
 }
+
+double folderinfo_update(void* spv)
+{
+
+    folderinfo* fi = spv;
+
+    if(safe_flag_get(fi->working) == 0 && fi->parent == NULL && fi->th == 0 && fi->update)
+    {
+
+        fi->update= 0;
+
+
+
+        int status = 0;
+        safe_flag_set(fi->working, 1);
+
+        status = pthread_create(&fi->th, NULL, folderinfo_collect_thread, fi);
+
+
+        if(status)
+        {
+            safe_flag_set(fi->working, 0);
+            diag_crit("%s %d Failed to start folderinfo_collect_thread. Status %x", __FUNCTION__, __LINE__, status);
+        }
+
+    }
+
+    if(safe_flag_get(fi->working) == 0 && fi->th)
+    {
+        pthread_join(fi->th, NULL);
+        fi->th = 0;
+    }
+
+    if(fi->parent)
+    {
+        fi->ofile_count = fi->parent->ofile_count;
+        fi->ofolder_count = fi->parent->ofolder_count;
+        fi->osize = fi->parent->osize;
+    }
+
+    switch(fi->type)
+    {
+        case 0:
+            return ((double)fi->ofile_count);
+
+        case 1:
+            return ((double)fi->ofolder_count);
+
+        case 2:
+            return ((double)fi->osize);
+    }
+
+    return (0.0);
+}
+
+void folderinfo_destroy(void** spv)
+{
+    folderinfo* fi = *spv;
+    safe_flag_set(fi->stop, 1);
+
+    watcher_destroy(&fi->watcher);
+    event_remove(fi->eq,NULL,fi,EVENT_REMOVE_BY_DATA);
+    if(fi->th != 0)
+    {
+        pthread_join(fi->th, NULL);
+    }
+
+    safe_flag_destroy(&fi->stop);
+    safe_flag_destroy(&fi->working);
+    sfree((void**)&fi->path);
+    sfree(spv);
+}
+
+
+
 #if defined(WIN32)
+static size_t file_size(size_t low, size_t high)
+{
+    return (low | (high << 32));
+}
+
+
 static int folderinfo_collect_win32(unsigned char* root, folderinfo* fi)
 {
     unsigned char *file = root;
@@ -122,7 +207,7 @@ static int folderinfo_collect_win32(unsigned char* root, folderinfo* fi)
         {
             fpsz = string_length(file);
             unsigned char* filtered = zmalloc(fpsz + 6);
-            snprintf(filtered, fpsz + 6, "%s/*.*", file);
+            snprintf(filtered, fpsz + 6, "%s\\*.*", file);
 
             unsigned short* filtered_uni = utf8_to_ucs(filtered);
             sfree((void**)&filtered);
@@ -164,7 +249,7 @@ static int folderinfo_collect_win32(unsigned char* root, folderinfo* fi)
 
                 if(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
-                    fi->fochar *str_sid = recycler_query_user_sid(&sid_len);lder_count++;
+                   fi->folder_count++;
                 }
 
                 fi->size += file_size(wfd.nFileSizeLow, wfd.nFileSizeHigh);
@@ -360,67 +445,14 @@ static void* folderinfo_collect_thread(void* vfi)
     return(NULL);
 }
 
-double folderinfo_update(void* spv)
+
+static void folderinfo_watcher_handler(void *pv)
 {
+    static int i=0;
 
-    folderinfo* fi = spv;
+    folderinfo *fi = pv;
+    fi->update = 1;
+    printf("Signal %d\n",i++);
 
-    if(safe_flag_get(fi->working) == 0 && fi->parent == NULL && fi->th == 0)
-    {
-        int status = 0;
-        safe_flag_set(fi->working, 1);
-
-        status = pthread_create(&fi->th, NULL, folderinfo_collect_thread, fi);
-
-
-        if(status)
-        {
-            safe_flag_set(fi->working, 0);
-            diag_crit("%s %d Failed to start folderinfo_collect_thread. Status %x", __FUNCTION__, __LINE__, status);
-        }
-    }
-
-    if(safe_flag_get(fi->working) == 0 && fi->th)
-    {
-        pthread_join(fi->th, NULL);
-        fi->th = 0;
-    }
-
-    if(fi->parent)
-    {
-        fi->ofile_count = fi->parent->ofile_count;
-        fi->ofolder_count = fi->parent->ofolder_count;
-        fi->osize = fi->parent->osize;
-    }
-
-    switch(fi->type)
-    {
-        case 0:
-            return ((double)fi->ofile_count);
-
-        case 1:
-            return ((double)fi->ofolder_count);
-
-        case 2:
-            return ((double)fi->osize);
-    }
-
-    return (0.0);
 }
 
-void folderinfo_destroy(void** spv)
-{
-    folderinfo* fi = *spv;
-    safe_flag_set(fi->stop, 1);
-
-
-    if(fi->th != 0)
-    {
-        pthread_join(fi->th, NULL);
-    }
-
-    safe_flag_destroy(&fi->stop);
-    safe_flag_destroy(&fi->working);
-    sfree((void**)&fi->path);
-    sfree(spv);
-}

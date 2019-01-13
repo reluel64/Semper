@@ -83,7 +83,7 @@ int diag_init(control_data *cd)
     pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
     pthread_mutex_init(&ds->mutex, &mutex_attr);
     pthread_mutexattr_destroy(&mutex_attr);
-
+    ds->kill = safe_flag_init();
 #if defined(WIN32)
     ds->event_wait = CreateEvent(NULL, 0, 0, NULL);
 #elif defined(__linux__)
@@ -176,10 +176,17 @@ static void diag_close_file(diag_status *ds)
     }
 }
 
-void diag_end(diag_status *ds)
+void diag_end()
 {
-    ds->cd = NULL;
+    diag_status *ds = diag_get_struct();
+
+
+    safe_flag_set(ds->kill,1);  /*Signal the thread that we will kill it*/
+    event_wake(ds->eq);         /*Wake up the thread*/
+    pthread_join(ds->th,NULL); /*Wait for the thread to flush*/
+    safe_flag_destroy(&ds->kill);
     pthread_mutex_lock(&ds->mutex);
+    ds->cd = NULL;
     diag_mem_log *tdml = NULL;
     diag_mem_log *dml = NULL;
     ds->init = 0;
@@ -252,7 +259,7 @@ static void *diag_log_thread(void *pv)
 {
     diag_status *ds = pv;
 
-    while(1)
+    while(!safe_flag_get(ds->kill))
     {
         event_wait(ds->eq);
         event_process(ds->eq);
@@ -306,16 +313,15 @@ SEMPER_API int diag_log(unsigned char lvl, char *fmt, ...)
     {
         return(-5); //not set
     }
-
-    if(ds->cd == NULL)
+    else if(ds->cd == NULL)
     {
         return(-2); /*log not activated*/
     }
-
-    if(ds->init == 0)
+    else if(ds->init == 0)
     {
         return(-3); //it looks like the library was not initialized
     }
+
 
     int r = 0;
     size_t buf_start = 0;

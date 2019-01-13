@@ -918,7 +918,7 @@ int semper_main(void)
     surface_data *tsd = NULL;
     semper_create_paths(cd);
 
-#ifndef DEBUG
+#if !defined(DEBUG)
 
     if(semper_single_instance(cd) == 0)
     {
@@ -966,6 +966,7 @@ int semper_main(void)
         surface_builtin_init(cd, catalog);
     }
 
+    /**********MAIN LOOP***********/
     while(safe_flag_get(cd->quit_flag) == 0) /*nothing fancy, just the main event loop*/
     {
         event_wait(cd->eq);                /* wait for an event to occur */
@@ -1002,18 +1003,15 @@ int semper_main(void)
     }
 
     semper_save_configuration(cd);
+    diag_end();
     safe_flag_destroy(&cd->quit_flag);
     return (0);
 }
 
 #if defined(WIN32)
-
 int wmain(int argc, wchar_t *argv[])
-
 #elif defined(__linux__)
-#
 int main(int argc, char *argv[])
-
 #endif
 {
 
