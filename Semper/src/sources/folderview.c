@@ -690,7 +690,7 @@ static int folderview_collect(unsigned char *root, folderview_parent *f, folderv
 #if defined(WIN32)
             unsigned char* filtered = zmalloc(fpsz + 6);
             snprintf(filtered, fpsz + 6, "%s/*.*", file);
-
+            uniform_slashes(filtered);
             unsigned short* filtered_uni = utf8_to_ucs(filtered);
             sfree((void**)&filtered);
 

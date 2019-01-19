@@ -484,6 +484,12 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.debug.42106611.499852003.581044560" name="test-mime.c" rcbsApplicability="disable" resourcePath="xdg/xdgmime/src/test-mime.c" toolsToInvoke="cdt.managedbuild.tool.gnu.c.compiler.base.1284079524.1221965380">
+						<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.1284079524.1221965380" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base.1284079524"/>
+					</fileInfo>
+					<sourceEntries>
+						<entry excluding="xdg/xdgmime/src/test-mime.c|xdg/xdgmime/src/test-mime-data.c|xdg/xdgmime/src/print-mime-data.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+					</sourceEntries>
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>

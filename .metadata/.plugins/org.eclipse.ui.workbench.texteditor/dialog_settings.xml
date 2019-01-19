@@ -2,20 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="" key="selection"/>
+		<item value="strupr" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="strupr"/>
+			<item value="empty_mtx"/>
+			<item value="icon_list"/>
+			<item value="icon"/>
+			<item value="HAVE_MMAP"/>
+			<item value="skeleton"/>
 			<item value="update= 0"/>
 			<item value="diag_end"/>
-			<item value="CLOCK_"/>
-			<item value="null_evt"/>
-			<item value="clone"/>
-			<item value="diag_close_file"/>
-			<item value="diag_log_write_to_file"/>
-			<item value="spawner_param_to_argv"/>
 		</list>
 		<list key="replacehistory">
 			<item value="c-&gt;flags"/>

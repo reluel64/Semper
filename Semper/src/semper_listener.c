@@ -2,7 +2,7 @@
  * External command listener
  * Part of Project 'Semper'
  * Written by Alexandru-Daniel Mărgărit
-*/
+ */
 
 #include <semper.h>
 #include <event.h>
@@ -17,45 +17,45 @@
 #endif
 typedef struct
 {
-    char buf[32 * 1024];
+        char buf[32 * 1024];
 #if defined(__linux__)
-  sem_t sem_wake;
-    sem_t sem_write;
-    size_t timestamp; //we will use this under Linux to avoid a nasty limitation
+        sem_t sem_wake;
+        sem_t sem_write;
+        size_t timestamp; //we will use this under Linux to avoid a nasty limitation
 #endif
 } listener_data;
 
 typedef struct
 {
-    surface_data *sd;
-    unsigned char *cmd;
+        surface_data *sd;
+        unsigned char *cmd;
 } semper_listener_callback_data;
 
 
 
 typedef struct
 {
-    #if defined(WIN32)
-    void *sem_wake;
-    void *sem_write;
-    #endif
-    void *mmap;
-    listener_data *ld;
-    event_queue *eq;
-    event_queue *meq;
-    pthread_t th;
-    surface_data *dummy;
-    void *kill;
+#if defined(WIN32)
+        void *sem_wake;
+        void *sem_write;
+#endif
+        void *mmap;
+        listener_data *ld;
+        event_queue *eq;
+        event_queue *meq;
+        pthread_t th;
+        surface_data *dummy;
+        void *kill;
 } semper_listener_data;
 
 static size_t semper_listener_wait_fcn(void *pv, size_t timeout)
 {
     semper_listener_data *sld = pv;
-    #if defined( WIN32)
+#if defined( WIN32)
     WaitForSingleObject(sld->sem_wake, -1);
-    #elif defined(__linux__)
+#elif defined(__linux__)
     sem_wait(&sld->ld->sem_wake);
-    #endif
+#endif
     return(0);
 }
 
@@ -65,7 +65,7 @@ static void semper_listener_wake_fcn(void *pv)
 #if defined(WIN32)
     ReleaseSemaphore(sld->sem_wake, 1, NULL);
 #elif defined(__linux__)
-      sem_post(&sld->ld->sem_wake);
+    sem_post(&sld->ld->sem_wake);
 #endif
 }
 
@@ -95,7 +95,7 @@ static int semper_listener_prepare(void *pv)
 #if defined(WIN32)
     ReleaseSemaphore(sld->sem_write, 1, NULL);
 #elif defined(__linux__)
-     sem_post(&sld->ld->sem_write);
+    sem_post(&sld->ld->sem_write);
 #endif
     return(0);
 }
@@ -165,7 +165,7 @@ void *semper_listener_init(control_data *cd)
 void semper_listener_destroy(void **p)
 {
     semper_listener_data *sld = *p;
-     unsigned char *usr=expand_env_var("$LOGNAME");
+    unsigned char *usr=expand_env_var("$LOGNAME");
     unsigned char buf[280] = {0};
     snprintf(buf, 280, "/SemperCommandListener_%s", usr);
     sfree((void**)&usr);
@@ -223,15 +223,15 @@ int semper_listener_writer(unsigned char *comm, size_t len)
     int mem_fd = shm_open(buf, O_RDWR, 0777);
 
 
-   if(mem_fd >= 0)
+    if(mem_fd >= 0)
     {
         listener_data *p = mmap(NULL, sizeof(listener_data), PROT_READ | PROT_WRITE, MAP_SHARED, mem_fd, 0);
         if(p)
         {
-        sem_wait(&p->sem_write);
-        memcpy(p->buf, comm, min(len,32 * 1024));
-        sem_post(&p->sem_wake);
-        munmap(p, sizeof(listener_data));
+            sem_wait(&p->sem_write);
+            memcpy(p->buf, comm, min(len,32 * 1024));
+            sem_post(&p->sem_wake);
+            munmap(p, sizeof(listener_data));
         }
 
         close(mem_fd);

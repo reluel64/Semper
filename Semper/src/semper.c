@@ -902,13 +902,11 @@ static void semper_install_kill_handler(control_data *cd)
     act.sa_sigaction = semper_kill_handler;
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGTERM,&act,NULL);
-   // signal(SIGTERM,semper_kill_handler);
     sigqueue(getpid(),SIGTERM,value);
 }
 
 
 #endif
-
 
 int semper_main(void)
 {

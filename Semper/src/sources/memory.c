@@ -91,6 +91,8 @@ void memory_reset(void* spv, void* ip)
         {
 #if defined(WIN32)
             source_set_max((double)ms.ullTotalVirtual, ip, 1, 1);
+#elif defined(__linux__)
+            source_set_max((double)memory_get_linux("SwapTotal:"), ip, 1, 1);
 #endif
             *type = 1;
         }
@@ -98,6 +100,10 @@ void memory_reset(void* spv, void* ip)
         {
 #if defined(WIN32)
             source_set_max((double)ms.ullTotalPageFile, ip, 1, 1);
+#elif defined(__linux__)
+            source_set_max((double) (memory_get_linux("MemTotal:") +
+                                    memory_get_linux("SwapTotal:")),
+                                    ip, 1, 1);
 #endif
             *type = 2;
         }
@@ -128,19 +134,35 @@ double memory_update(void* spv)
     }
 
 #elif defined(__linux__)
-    size_t total = memory_get_linux("MemTotal:");
-    size_t free = memory_get_linux("MemFree:") + memory_get_linux("Cached:") + memory_get_linux("Buffers:");
 
+    size_t total = 0;
+    size_t free = 0;
     switch(*type & 0xfb)
     {
         case 0:
-            return (((*type & 0x4) ? (double)total : (double)(total - free)));
-            //case 1:
-            //return (*type & 0x4 ? (double)ms.ullTotalVirtual : (double)(ms.ullTotalVirtual - ms.ullAvailVirtual));
-            // case 2:
-            //return (*type & 0x4 ? (double)inf.totalswap : (double)(inf.totalswap - inf.freeswap));
-    }
+            total = memory_get_linux("MemTotal:");
+            free =  memory_get_linux("MemFree:") +
+                    memory_get_linux("Cached:") +
+                    memory_get_linux("Buffers:");
+            break;
+        case 1:
+            total = memory_get_linux("MemTotal:") +
+            memory_get_linux("SwapTotal:");
 
+            free =  memory_get_linux("MemFree:") +
+                    memory_get_linux("Cached:") +
+                    memory_get_linux("Buffers:") +
+                    memory_get_linux("SwapFree:") +
+                    memory_get_linux("SwapCached:");
+            break;
+        case 2:
+            total = memory_get_linux("SwapTotal:");
+            free = memory_get_linux("SwapFree:") +
+                    memory_get_linux("SwapCached:");
+            break;
+
+    }
+    return (((*type & 0x4) ? (double)total : (double)(total - free)));
 #endif
     return (0.0);
 }

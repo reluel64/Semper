@@ -448,11 +448,7 @@ static void* folderinfo_collect_thread(void* vfi)
 
 static void folderinfo_watcher_handler(void *pv)
 {
-    static int i=0;
-
     folderinfo *fi = pv;
     fi->update = 1;
-    printf("Signal %d\n",i++);
-
 }
 
