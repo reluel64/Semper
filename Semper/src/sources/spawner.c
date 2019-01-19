@@ -26,6 +26,7 @@ typedef struct
 #endif
         unsigned char *finish_command;
         unsigned char *working_dir;
+        unsigned char *file_out;
         pthread_mutex_t mtx;
         pthread_t thread;
         int status;
@@ -70,6 +71,7 @@ void spawner_reset(void *spv, void *ip)
     pthread_mutex_lock(&st->mtx);
 #if defined(WIN32)
     sfree((void**)&st->command);
+    sfree((void**)&st->file_out);
 #elif defined(__linux__)
     sfree((void**)&st->params);
     sfree((void**)&st->bin_path);
@@ -110,7 +112,7 @@ void spawner_reset(void *spv, void *ip)
 #endif
 
     st->working_dir = parameter_string(ip,"WorkingDir",NULL,XPANDER_SOURCE);
-
+    st->file_out = clone_string(parameter_string(ip,"OutputFile",NULL,XPANDER_SOURCE));
 
     pthread_mutex_unlock(&st->mtx);
 }
@@ -288,6 +290,28 @@ static void spawner_convert_and_append(unsigned char *raw, size_t raw_len, unsig
 
 }
 
+static void spawner_write_to_file(unsigned char *path, void *buf, size_t buf_len)
+{
+    FILE *fp = NULL;
+    unsigned char bom[3] = {0xEF,0xBB,0xBF};
+#if defined(WIN32)
+    unsigned short *upath =utf8_to_ucs(path);
+    if(upath)
+    {
+        fp = _wfopen(upath,L"wb");
+        sfree((void**)&upath);
+    }
+#elif defined(__linux__)
+    fp = fopen(path,"wb");
+#endif
+
+    if(fp)
+    {
+        fwrite(bom, 1, sizeof(bom), fp);
+        fwrite(buf, 1, buf_len, fp);
+        fclose(fp);
+    }
+}
 
 static void *spawner_worker(void *pv)
 {
@@ -321,12 +345,12 @@ static void *spawner_worker(void *pv)
     saAttr.bInheritHandle = TRUE;
     saAttr.lpSecurityDescriptor = NULL;
 
-    if(!CreatePipe(&std_out, &app_std_out, &saAttr, 1024)) //from application to Semper
+    if(!CreatePipe(&std_out, &app_std_out, &saAttr, 0x100000)) //from application to Semper
     {
         safe_flag_set(st->th_active,0);
         return(NULL);
     }
-    if(!CreatePipe(&app_std_in, &std_in, &saAttr,1024)) //to application from Semper
+    if(!CreatePipe(&app_std_in, &std_in, &saAttr,0x100000)) //to application from Semper
     {
         CloseHandle(std_out);
         CloseHandle(app_std_out);
@@ -334,7 +358,7 @@ static void *spawner_worker(void *pv)
         return(NULL);
     }
 
-    if(!CreatePipe(&std_err, &app_std_err, &saAttr, 1024)) //from application to Semper
+    if(!CreatePipe(&std_err, &app_std_err, &saAttr, 0x100000)) //from application to Semper
     {
         CloseHandle(std_in);
         CloseHandle(app_std_out);
@@ -353,6 +377,7 @@ static void *spawner_worker(void *pv)
     pthread_mutex_lock(&st->mtx);
     unsigned short *cmd = utf8_to_ucs(st->command);
     unsigned short *wd  = utf8_to_ucs(st->working_dir);
+    unsigned char *fout = clone_string(st->file_out);
     pthread_mutex_unlock(&st->mtx);
 
     if(CreateProcessW(NULL,cmd,NULL,NULL,1,0,NULL,wd,&si,&pi))
@@ -373,14 +398,7 @@ static void *spawner_worker(void *pv)
         {
             WaitForMultipleObjects(3, harr, 0, -1);
 
-            if(WaitForSingleObject(pi.hProcess,100)==0)
-            {
 
-                CloseHandle(pi.hProcess);
-                CloseHandle(pi.hThread);
-                pi.hProcess = NULL;
-                break;
-            }
 
             if(!WaitForSingleObject(std_out,0))
             {
@@ -418,6 +436,14 @@ static void *spawner_worker(void *pv)
                     sfree((void**)&buf);
                 }
             }
+
+            if(WaitForSingleObject(pi.hProcess,100)==0)
+            {
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+                pi.hProcess = NULL;
+                break;
+            }
         }
     }
 
@@ -437,153 +463,157 @@ static void *spawner_worker(void *pv)
 
 #elif defined(__linux__)
 
-    int temp_p[2];
-    pid_t pid = -1;
-    /*STD_IN*/
-    if(pipe2(temp_p,O_NONBLOCK))
-    {
-        return(NULL);
-    }
-    app_std_in = temp_p[1];
-    std_in = temp_p[0];
+int temp_p[2];
+pid_t pid = -1;
+/*STD_IN*/
+if(pipe2(temp_p,O_NONBLOCK))
+{
+    return(NULL);
+}
+app_std_in = temp_p[1];
+std_in = temp_p[0];
 
-    /*STD_OUT*/
-    if(pipe2(temp_p,O_NONBLOCK))
-    {
-        close(app_std_in);
-        close(std_in);
-        return(NULL);
-    }
+/*STD_OUT*/
+if(pipe2(temp_p,O_NONBLOCK))
+{
+    close(app_std_in);
+    close(std_in);
+    return(NULL);
+}
 
-    app_std_out =temp_p[0];
-    std_out = temp_p[1];
+app_std_out =temp_p[0];
+std_out = temp_p[1];
 
-    /*STD_ERR*/
-    if(pipe2(temp_p,O_NONBLOCK))
-    {
-        close(app_std_in);
-        close(std_in);
-        close(app_std_out);
-        close(std_out);
-        return(NULL);
-    }
-
-    app_std_err = temp_p[0];
-    std_err = temp_p[1];
-    pthread_mutex_lock(&st->mtx);
-    unsigned char *bin = clone_string(st->bin_path);
-    unsigned char *params = clone_string(st->params);
-    unsigned char *wd  = clone_string(st->working_dir);
-    unsigned char **args = spawner_param_to_argv(params);
-    extern char **environ;
-
-    pthread_mutex_unlock(&st->mtx);
-
-    if(args != NULL)
-    {
-        args[0] =  bin;
-    }
-    else
-    {
-        args = zmalloc(sizeof(char*)*2);
-        args[0] = bin;
-    }
-
-    for(int  i=1;args[i];i++)
-    {
-        printf("%s\n",args[i]);
-    }
-
-    posix_spawn_file_actions_t file_act;
-    posix_spawnattr_t attr;
-    posix_spawn_file_actions_init(&file_act);
-    posix_spawn_file_actions_adddup2(&file_act, std_out, 1);
-    posix_spawn_file_actions_adddup2(&file_act, std_err, 2);
-    posix_spawnattr_init(&attr);
-
-    if(!posix_spawn(&pid,bin,&file_act,&attr,(char**)args,environ))
-    {
-        pthread_mutex_lock(&st->mtx);
-        st->ph = pid;
-        pthread_mutex_unlock(&st->mtx);
-
-        while(1)
-        {
-            struct pollfd events[2];
-            int status = 0;
-            int ret = 0;
-            memset(events,0,sizeof(events));
-            events[0].fd=(int)(size_t)app_std_out;
-            events[0].events = POLLIN;
-            events[1].fd=(int)(size_t)app_std_err;
-            events[1].events = POLLIN;
-            poll(events, 2, 1);
-
-
-            if(events[0].revents)
-            {
-                char buf[4096];
-                ssize_t tr = 0;
-
-                while((tr = read(app_std_out,buf,4096))>0)
-                {
-                    spawner_convert_and_append(buf,tr,&raw_str,&raw_len);
-                }
-            }
-
-            if(events[1].revents)
-            {
-                char buf[4096];
-                ssize_t tr = 0;
-
-                while((tr = read(app_std_err,buf,4096))>0)
-                {
-                    spawner_convert_and_append(buf,tr,&raw_str,&raw_len);
-                }
-            }
-
-            ret = waitpid(pid,&status,WNOHANG);
-
-            if(ret == -1)
-            {
-                break;
-            }
-
-        }
-    }
-
+/*STD_ERR*/
+if(pipe2(temp_p,O_NONBLOCK))
+{
+    close(app_std_in);
     close(std_in);
     close(app_std_out);
-    close(app_std_in);
     close(std_out);
-    close(app_std_err);
-    close(std_err);
+    return(NULL);
+}
+
+app_std_err = temp_p[0];
+std_err = temp_p[1];
+pthread_mutex_lock(&st->mtx);
+unsigned char *fout = clone_string(st->file_out);
+unsigned char *bin = clone_string(st->bin_path);
+unsigned char *params = clone_string(st->params);
+unsigned char *wd  = clone_string(st->working_dir);
+unsigned char **args = spawner_param_to_argv(params);
+extern char **environ;
+
+pthread_mutex_unlock(&st->mtx);
+
+if(args != NULL)
+{
+    args[0] =  bin;
+}
+else
+{
+    args = zmalloc(sizeof(char*)*2);
+    args[0] = bin;
+}
+#if defined(DEBUG)
+            for(int  i=1;args[i];i++)
+            {
+                diag_info("%s: %s",__FUNCTION__,args[i]);
+            }
+#endif
+            posix_spawn_file_actions_t file_act;
+            posix_spawnattr_t attr;
+            posix_spawn_file_actions_init(&file_act);
+            posix_spawn_file_actions_adddup2(&file_act, std_out, 1);
+            posix_spawn_file_actions_adddup2(&file_act, std_err, 2);
+            posix_spawnattr_init(&attr);
+
+            if(!posix_spawn(&pid,bin,&file_act,&attr,(char**)args,environ))
+            {
+                pthread_mutex_lock(&st->mtx);
+                st->ph = pid;
+                pthread_mutex_unlock(&st->mtx);
+
+                while(1)
+                {
+                    struct pollfd events[2];
+                    int status = 0;
+                    int ret = 0;
+                    memset(events,0,sizeof(events));
+                    events[0].fd=(int)(size_t)app_std_out;
+                    events[0].events = POLLIN;
+                    events[1].fd=(int)(size_t)app_std_err;
+                    events[1].events = POLLIN;
+                    poll(events, 2, 1);
+
+
+                    if(events[0].revents)
+                    {
+                        char buf[4096];
+                        ssize_t tr = 0;
+
+                        while((tr = read(app_std_out,buf,4096))>0)
+                        {
+                            spawner_convert_and_append(buf,tr,&raw_str,&raw_len);
+                        }
+                    }
+
+                    if(events[1].revents)
+                    {
+                        char buf[4096];
+                        ssize_t tr = 0;
+
+                        while((tr = read(app_std_err,buf,4096))>0)
+                        {
+                            spawner_convert_and_append(buf,tr,&raw_str,&raw_len);
+                        }
+                    }
+
+                    ret = waitpid(pid,&status,WNOHANG);
+
+                    if(ret == -1)
+                    {
+                        break;
+                    }
+
+                }
+            }
+
+            close(std_in);
+            close(app_std_out);
+            close(app_std_in);
+            close(std_out);
+            close(app_std_err);
+            close(std_err);
 #endif
 
 #if defined(WIN32)
-    sfree((void**)&cmd);
+            sfree((void**)&cmd);
 #elif defined(__linux__)
-    sfree((void**)&params);
-    sfree((void**)&bin);
+            sfree((void**)&params);
+            sfree((void**)&bin);
 
-    for(size_t i = 1;args[i];i++)
-    {
-        sfree((void**)&args[i]);
-    }
+            for(size_t i = 1;args[i];i++)
+            {
+                sfree((void**)&args[i]);
+            }
 
-    sfree((void**)&args);
+            sfree((void**)&args);
 
 #endif
 
-    sfree((void**)&wd);
-    pthread_mutex_lock(&st->mtx);
-    st->raw_str = raw_str;
-    st->raw_str_len = raw_len;
-    st->ph = -1;
-    st->th = -1;
-    pthread_mutex_unlock(&st->mtx);
-    safe_flag_set(st->th_active,0);
-    return(NULL);
+            sfree((void**)&wd);
+
+            spawner_write_to_file(fout,raw_str,raw_len);
+            sfree((void**)&fout);
+            pthread_mutex_lock(&st->mtx);
+            st->raw_str = raw_str;
+            st->raw_str_len = raw_len;
+            st->ph = -1;
+            st->th = -1;
+            pthread_mutex_unlock(&st->mtx);
+            safe_flag_set(st->th_active,0);
+            return(NULL);
 }
 
 
@@ -650,7 +680,6 @@ static unsigned char **spawner_param_to_argv(unsigned char *str)
     unsigned char **temp = NULL;
     for(size_t i = 0; i < sti.oveclen / 2; i++)
     {
-        char bbb[256] = {0};
 
         size_t start = sti.ovecoff[i * 2];
         size_t end = sti.ovecoff[i * 2 + 1];
@@ -666,9 +695,6 @@ static unsigned char **spawner_param_to_argv(unsigned char *str)
 
         if(end == start)
             continue;
-
-        strncpy(bbb, sti.buffer + start, end - start);
-
 
         temp = realloc(res,sizeof(char*) * (pc+1));
 

@@ -631,7 +631,8 @@ int xpander(xpander_request *xr)
         { "SurfaceW",                                    &sw,     xpander_convert_long },
         { "SurfaceH",                                    &sh,     xpander_convert_long },
         { "SurfaceName",              sd->sp.surface_rel_dir,                     NULL },
-
+        { "SurfaceDir",                   sd->sp.surface_dir,                     NULL },
+        { "SurfaceFile",                 sd->sp.surface_file,                     NULL },
 #if defined(WIN32)
         { "OS",                               "Windows",                          NULL }
 #elif defined(__linux__)
