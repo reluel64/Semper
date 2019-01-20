@@ -20,10 +20,10 @@
 #include <pthread.h>
 #include <curl/curl.h>
 
-#define OVECTOR_LIMIT 300
-#define DOWNLOAD_TO_BUFFER 0x1
-#define DOWNLOAD_TO_FILE   0x2
-#define DOWNLOAD_TO_FILE_BUFFER DOWNLOAD_TO_BUFFER|DOWNLOAD_TO_FILE
+#define OVECTOR_LIMIT 300 /* must be a multiple of 3 */
+#define DOWNLOAD_TO_BUFFER (0x1)
+#define DOWNLOAD_TO_FILE   (0x2)
+#define DOWNLOAD_TO_FILE_BUFFER (DOWNLOAD_TO_BUFFER | DOWNLOAD_TO_FILE)
 typedef struct webget webget;
 
 typedef struct

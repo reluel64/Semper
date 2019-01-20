@@ -1,6 +1,6 @@
-21:00:31 **** Build of configuration Debug for project DiskSpeed ****
+11:47:55 **** Build of configuration Release for project DiskSpeed ****
 make all 
 make: Nothing to be done for 'all'.
 
-21:00:31 Build Finished. 0 errors, 0 warnings. (took 100ms)
+11:47:55 Build Finished. 0 errors, 0 warnings. (took 91ms)
 

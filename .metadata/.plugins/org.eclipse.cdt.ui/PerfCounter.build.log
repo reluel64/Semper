@@ -1,7 +1,7 @@
-21:00:54 **** Rebuild of configuration Debug for project PerfCounter ****
+11:47:56 **** Rebuild of configuration Release for project PerfCounter ****
 Info: Internal Builder is used for build
-gcc -DWIN32 "-ID:\\Semper_Eclipse\\PerfCounter\\include" "-includeD:\\Semper_Eclipse\\Semper\\include\\semper_api.h" -O0 -g3 -Wall -c -fmessage-length=0 -Wno-pointer-sign -o "src\\perfcounter.o" "..\\src\\perfcounter.c" 
-gcc -static "-LD:\\Semper_Eclipse\\Semper/Debug" -shared -o PerfCounter.dll "src\\perfcounter.o" -lsemper -lpthread -lpdh 
+gcc "-ID:\\Semper_Eclipse\\PerfCounter\\include" "-includeD:\\Semper_Eclipse\\Semper\\include\\semper_api.h" -O2 -Wall -c -fmessage-length=0 -Wno-pointer-sign -o "src\\perfcounter.o" "..\\src\\perfcounter.c" 
+gcc -s -static "-LD:\\Semper_Eclipse\\Semper/Release" -shared -o PerfCounter.dll "src\\perfcounter.o" -lsemper -lpthread -lpdh 
 
-21:00:55 Build Finished. 0 errors, 0 warnings. (took 981ms)
+11:47:57 Build Finished. 0 errors, 0 warnings. (took 1s.90ms)
 

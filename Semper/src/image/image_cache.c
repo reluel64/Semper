@@ -612,9 +612,10 @@ static image_entry* image_cache_request(void* ich, image_attributes* ia)
 {
     image_entry* ret = NULL;
 
-    if(ich == NULL || ia == NULL || ia->path == NULL)
+    if(ich == NULL || ia == NULL || ia->path == NULL || ia->path[0] == '%')
     {
-        diag_verb("%s Failed to do cache request - ich = %p ia = %p ia->path %p", ich, ia, ia ? ia->path : NULL);
+        if(ia->path == NULL || ia->path[0]!='%')
+        diag_verb("Failed to do cache request - ich = %p ia = %p ia->path %p", ich, ia, ia ? ia->path : NULL);
         return (NULL);
     }
 

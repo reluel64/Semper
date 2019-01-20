@@ -18,11 +18,11 @@ static inline unsigned char* surface_builtin_code(size_t* size, surface_builtin_
 {
     static char catalog_code[] =
     {
-#include <registry.h>
+#include <registry.ini>
     };
     static char tooltip_code[] =
     {
-#include <tooltip.h>
+#include <tooltip.ini>
     };
 
     if(size)

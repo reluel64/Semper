@@ -23,6 +23,7 @@
 #include <parameter.h>
 #include <ctype.h>
 #include <sys/time.h>
+#include <pthread.h>
 #ifndef WIN32
 #include <unistd.h>
 #endif
@@ -240,7 +241,7 @@ static timed_action_list *timed_action_list_entry(list_entry *act_head, size_t i
         tal = zmalloc(sizeof(timed_action_list));
         pthread_mutexattr_t mutex_attr;
         pthread_mutexattr_init(&mutex_attr);
-        pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
+        pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
         pthread_mutex_init(&tal->cmd_mtx, &mutex_attr);
         pthread_mutexattr_destroy(&mutex_attr);
         list_entry_init(&tal->current);
@@ -271,7 +272,7 @@ static timed_list *timed_list_entry(list_entry *list, size_t index)
         tl->running = safe_flag_init();
         pthread_mutexattr_t mutex_attr;
         pthread_mutexattr_init(&mutex_attr);
-        pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
+        pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
         pthread_mutex_init(&tl->mutex, &mutex_attr);
         pthread_mutexattr_destroy(&mutex_attr);
         list_entry_init(&tl->current);

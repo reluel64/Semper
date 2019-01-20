@@ -1,7 +1,5 @@
-21:00:51 **** Rebuild of configuration Debug for project MSIAfterburner ****
-Info: Internal Builder is used for build
-gcc "-ID:\\Semper_Eclipse\\MSIAfterburner\\include" "-includeD:\\Semper_Eclipse\\Semper\\include\\semper_api.h" -O0 -g3 -Wall -c -fmessage-length=0 -Wno-pointer-sign -fPIC -o "src\\MSIAfterburner.o" "..\\src\\MSIAfterburner.c" 
-gcc -static "-LD:\\Semper_Eclipse\\Semper\\Debug" -shared -o MSIAfterburner.dll "src\\MSIAfterburner.o" -lsemper 
+11:47:09 **** Clean-only build of configuration Debug for project MSIAfterburner ****
+rm -rf MSIAfterburner.dll src/MSIAfterburner.o src/MSIAfterburner.d 
 
-21:00:52 Build Finished. 0 errors, 0 warnings. (took 880ms)
+11:47:09 Build Finished. 0 errors, 0 warnings. (took 90ms)
 

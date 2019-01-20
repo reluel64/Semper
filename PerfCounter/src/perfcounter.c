@@ -16,6 +16,7 @@
 typedef struct
 {
         pthread_mutex_t mutex;
+        pthread_mutex_t vmutex;
         pthread_t th;
         pthread_cond_t cond;
         list_entry counters;
@@ -67,6 +68,7 @@ void init(void **spv,void *ip)
         pthread_mutexattr_init(&mutex_attr);
         pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE_NP);
         pthread_mutex_init(&pcc.mutex, &mutex_attr);
+        pthread_mutex_init(&pcc.vmutex, &mutex_attr);
         pthread_mutexattr_destroy(&mutex_attr);
         pthread_cond_init(&pcc.cond, NULL);
         PdhOpenQueryW(NULL,0,&pcc.query);
@@ -182,11 +184,14 @@ void reset(void *spv,void *ip)
 
 double update(void *spv)
 {
+    double ret = 0.0;
     perf_counter *pc=spv;
 
+    pthread_mutex_lock(&pc->pcc->vmutex);
+    ret =pc->cnt_cnt;
+    pthread_mutex_unlock(&pc->pcc->vmutex);
 
-
-    return(pc->v);
+    return(ret);
 }
 
 void destroy(void **spv)
@@ -220,6 +225,7 @@ void destroy(void **spv)
         semper_safe_flag_destroy(&pc->pcc->kill);
 
         pthread_mutex_destroy(&pc->pcc->mutex);
+        pthread_mutex_destroy(&pc->pcc->vmutex);
         pthread_cond_destroy(&pc->pcc->cond);
         PdhCloseQuery(pc->pcc->query);
     }
@@ -246,6 +252,7 @@ static void *perf_counter_thread(void *pv)
         PdhCollectQueryData(pcc->query);
         list_enum_part(pc,&pcc->counters,current)
         {
+            double cval = 0.0;
             if(pc->counter)
             {
                 PDH_FMT_COUNTERVALUE pfc= {0};
@@ -258,10 +265,14 @@ static void *perf_counter_thread(void *pv)
                     {
                         if(pfc.CStatus==PDH_CSTATUS_NEW_DATA ||pfc.CStatus==PDH_CSTATUS_VALID_DATA)
                         {
-                            pc->v+=pfc.doubleValue;
+                           cval+=pfc.doubleValue;
                         }
                     }
                 }
+
+                pthread_mutex_lock(&pcc->vmutex);
+                pc->v = cval;
+                pthread_mutex_unlock(&pcc->vmutex);
             }
         }
 

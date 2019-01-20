@@ -1,7 +1,5 @@
-21:00:57 **** Rebuild of configuration Debug for project GPU-Z ****
-Info: Internal Builder is used for build
-gcc "-includeD:\\Semper_Eclipse\\Semper\\include\\semper_api.h" -O0 -g3 -Wall -c -fmessage-length=0 -Wno-pointer-sign -fPIC -o "src\\gpuz.o" "..\\src\\gpuz.c" 
-gcc "-LD:\\Semper_Eclipse\\Semper/Debug" -static -shared -o GPU-Z.dll "src\\gpuz.o" -lsemper 
+11:47:09 **** Clean-only build of configuration Debug for project GPU-Z ****
+rm -rf src/gpuz.o GPU-Z.dll src/gpuz.d 
 
-21:00:57 Build Finished. 0 errors, 0 warnings. (took 880ms)
+11:47:09 Build Finished. 0 errors, 0 warnings. (took 90ms)
 

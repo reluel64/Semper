@@ -1,0 +1,6 @@
+#
+#Sun Jan 20 11:47:58 EET 2019
+Release/src/OHM.o=1
+include/semper_api.h=1
+Release/OpenHardwareMonitor.dll=1
+src/OHM.c=1
