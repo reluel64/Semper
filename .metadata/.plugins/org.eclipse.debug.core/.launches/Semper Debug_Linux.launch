@@ -31,6 +31,30 @@
 <listEntry value="4"/>
 </listAttribute>
 <stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;memoryBlockExpressionList context=&quot;reserved-for-future-use&quot;/&gt;&#10;"/>
+<stringAttribute key="org.eclipse.linuxtools.callgraph.launch.ARGUMENTS" value=""/>
+<stringAttribute key="org.eclipse.linuxtools.callgraph.launch.BINARY_ARGUMENTS" value=""/>
+<stringAttribute key="org.eclipse.linuxtools.callgraph.launch.BINARY_PATH" value=""/>
+<intAttribute key="org.eclipse.linuxtools.callgraph.launch.BUFFER_BYTES" value="0"/>
+<booleanAttribute key="org.eclipse.linuxtools.callgraph.launch.BULK_MODE" value="false"/>
+<intAttribute key="org.eclipse.linuxtools.callgraph.launch.COMMAND_VERBOSE" value="0"/>
+<stringAttribute key="org.eclipse.linuxtools.callgraph.launch.C_DIRECTIVES" value=""/>
+<booleanAttribute key="org.eclipse.linuxtools.callgraph.launch.DISABLE_WARNINGS" value="false"/>
+<booleanAttribute key="org.eclipse.linuxtools.callgraph.launch.GURU" value="false"/>
+<booleanAttribute key="org.eclipse.linuxtools.callgraph.launch.IGNORE_DWARF" value="false"/>
+<booleanAttribute key="org.eclipse.linuxtools.callgraph.launch.KEEP_TEMPORARY" value="false"/>
+<booleanAttribute key="org.eclipse.linuxtools.callgraph.launch.LEAVE_RUNNING" value="false"/>
+<booleanAttribute key="org.eclipse.linuxtools.callgraph.launch.NO_CODE_ELISION" value="false"/>
+<stringAttribute key="org.eclipse.linuxtools.callgraph.launch.OUTPUT_PATH" value=""/>
+<stringAttribute key="org.eclipse.linuxtools.callgraph.launch.PARSER_CLASS" value=""/>
+<intAttribute key="org.eclipse.linuxtools.callgraph.launch.PASS" value="0"/>
+<booleanAttribute key="org.eclipse.linuxtools.callgraph.launch.PROLOGUE_SEARCH" value="false"/>
+<stringAttribute key="org.eclipse.linuxtools.callgraph.launch.SCRIPT_PATH" value=""/>
+<booleanAttribute key="org.eclipse.linuxtools.callgraph.launch.SKIP_BADVARS" value="false"/>
+<booleanAttribute key="org.eclipse.linuxtools.callgraph.launch.TAPSET_COVERAGE" value="false"/>
+<intAttribute key="org.eclipse.linuxtools.callgraph.launch.TARGET_PID" value="0"/>
+<booleanAttribute key="org.eclipse.linuxtools.callgraph.launch.TIMING_INFO" value="false"/>
+<booleanAttribute key="org.eclipse.linuxtools.callgraph.launch.USE_COLOUR" value="false"/>
+<stringAttribute key="org.eclipse.linuxtools.callgraph.launch.VIEW_CLASS" value=""/>
 <booleanAttribute key="org.eclipse.linuxtools.valgrind.cachegrind.BRANCH_SIM" value="false"/>
 <booleanAttribute key="org.eclipse.linuxtools.valgrind.cachegrind.CACHE_SIM" value="true"/>
 <booleanAttribute key="org.eclipse.linuxtools.valgrind.cachegrind.D1" value="false"/>
@@ -60,5 +84,5 @@
 <booleanAttribute key="org.eclipse.linuxtools.valgrind.launch.GENERAL_TRACECHILD" value="false"/>
 <stringAttribute key="org.eclipse.linuxtools.valgrind.launch.TOOL" value="org.eclipse.linuxtools.valgrind.launch.cachegrind"/>
 <stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
-<stringAttribute key="provider" value="org.eclipse.linuxtools.profiling.provider.timing.gprof"/>
+<stringAttribute key="provider" value="org.eclipse.linuxtools.callgraph.launch.provider"/>
 </launchConfiguration>

@@ -9,21 +9,14 @@
 #include <surface.h>
 #include <mem.h>
 #include <string_util.h>
+#include <semper_listener.h>
 #if  defined(__linux__)
 #include <semaphore.h>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
 #endif
-typedef struct
-{
-        char buf[32 * 1024];
-#if defined(__linux__)
-        sem_t sem_wake;
-        sem_t sem_write;
-        size_t timestamp; //we will use this under Linux to avoid a nasty limitation
-#endif
-} listener_data;
+
 
 typedef struct
 {

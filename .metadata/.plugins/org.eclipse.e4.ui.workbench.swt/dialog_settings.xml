@@ -3,13 +3,12 @@
 	<section name="ShowViewDialog">
 		<item value="387" key="DIALOG_WIDTH"/>
 		<item value="1|Noto Sans|11.0|0|GTK|1|" key="DIALOG_FONT_NAME"/>
-		<item value="org.eclipse.ui.console.ConsoleView" key="ShowViewDialog.STORE_SELECTED_VIEW_ID"/>
+		<item value="org.eclipse.linuxtools.perf.ui.ProfileView" key="ShowViewDialog.STORE_SELECTED_VIEW_ID"/>
 		<item value="475" key="DIALOG_HEIGHT"/>
-		<item value="492" key="DIALOG_X_ORIGIN"/>
-		<item value="231" key="DIALOG_Y_ORIGIN"/>
+		<item value="0" key="DIALOG_X_ORIGIN"/>
+		<item value="0" key="DIALOG_Y_ORIGIN"/>
 		<list key="ShowViewDialog.STORE_EXPANDED_CATEGORIES_ID">
-			<item value="General"/>
-			<item value="Debug"/>
+			<item value="Profiling"/>
 		</list>
 	</section>
 </section>

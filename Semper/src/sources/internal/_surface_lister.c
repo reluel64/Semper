@@ -223,7 +223,7 @@ void surface_lister_command(void* spv, unsigned char* command)
         {
             unsigned char *lo = strrchr(sl->path, '/');
 
-            if(sl->path != sl->base_path && strncasecmp(sl->path, sl->base_path, lo - sl->path))
+            if(sl->path != sl->base_path && !strncasecmp(sl->path, sl->base_path, lo - sl->path))
             {
 
                 sfree((void**)&sl->path);
@@ -340,21 +340,24 @@ static int surface_lister_collect(surface_lister* sl)
 
     do
     {
-
+        char is_not_dir = 0;
         unsigned char* temp = NULL;
 
 #if defined(WIN32)
         temp = ucs_to_utf8(wfd.cFileName, NULL, 0);
+        is_not_dir = !(wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
 #elif defined(__linux__)
 
         temp = clone_string(dat->d_name);
+        is_not_dir = dat->d_type != DT_DIR;
 #endif
 
         if(temp == NULL)
             break;
 
 
-        if(!strcasecmp(temp, "..") || !strcasecmp(temp, ".") || !strcasecmp(temp, "Data"))
+
+        if(!strcasecmp(temp, "..") || !strcasecmp(temp, ".") || !strcasecmp(temp, "Data") || (sl->base_path == sl->path && is_not_dir))
         {
             sfree((void**)&temp);
             continue;

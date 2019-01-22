@@ -9,6 +9,7 @@
 #include <mem.h>
 #include <unistd.h>
 #include <X11/extensions/Xinerama.h>
+
 #define CONTEXT_ID 0x2712
 
 typedef struct Hints
@@ -172,31 +173,48 @@ int xlib_set_opacity(crosswin_window *w)
         cairo_pop_group_to_source(cr);
         cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
         cairo_paint(cr);
-        cairo_surface_flush(w->xlib_surface);
         cairo_destroy(cr); //destroy the context
         xlib_set_mask(w);
-        XSync(w->c->display,0);
         XFlush(w->c->display);
+
     }
     return(0);
 }
 
-void  xlib_set_position(crosswin_window *w)
-{
-    Atom type = XInternAtom(w->c->display, "_NET_MOVERESIZE_WINDOW", 1);
-    XEvent ev={0};
-    crosswin_monitor *cm = crosswin_get_monitor(w->c, w->mon);
 
-    ev.xclient.data.l[0] = (StaticGravity) | (1<<8)|(1<<9);
-    ev.xclient.message_type  = type;
-    ev.xclient.type = ClientMessage;
-    ev.xclient.format = 32;
-    ev.xclient.data.l[1] = w->x+cm->x;
-    ev.xclient.data.l[2] = w->y+cm->y;
+void xlib_drag(crosswin_window *w,int dr)
+{
+    return;
+    Atom type = XInternAtom(w->c->display, "_NET_WM_MOVERESIZE", 1);
+    XEvent ev={0};
+    XUngrabPointer(w->c->display,0);
+    crosswin_monitor *cm = crosswin_get_monitor(w->c, w->mon);
     ev.xclient.window = (Window)w->window;
-    ev.xclient.send_event=1;
+    ev.xclient.message_type  = type;
+    ev.xclient.format = 32;
+    ev.xclient.type = ClientMessage;
+    ev.xclient.data.l[0] = w->c->md.root_x;
+    ev.xclient.data.l[1] = w->c->md.root_y;
+    ev.xclient.data.l[2] = dr?8:11;
+    ev.xclient.data.l[3] = Button1;
+    ev.xclient.data.l[4] = 1;
+    ev.xclient.send_event=0;
+
 
     XSendEvent(w->c->display,DefaultRootWindow(w->c->display),0,  StructureNotifyMask|SubstructureNotifyMask   |  SubstructureRedirectMask,&ev);
+
+    // ev.xclient.data.l[2] = 11;
+    //  XSendEvent(w->c->display,DefaultRootWindow(w->c->display),0,  StructureNotifyMask|SubstructureNotifyMask   |  SubstructureRedirectMask,&ev);
+
+    //XFlush(w->c->display);
+
+}
+
+
+void  xlib_set_position(crosswin_window *w)
+{
+    crosswin_monitor *cm = crosswin_get_monitor(w->c, w->mon);
+    XMoveWindow(w->c->display,w->window,w->x+cm->x,w->y+cm->y);
 }
 
 void xlib_set_visible(crosswin_window *w)
@@ -254,11 +272,8 @@ static void xlib_render(crosswin_window *w)
         cairo_paint_with_alpha(cr,(double)w->opacity/255.0); //render it to the window
         cairo_pop_group_to_source(cr);
         cairo_paint(cr);
-
         cairo_surface_flush(w->xlib_surface);
         cairo_destroy(cr); //destroy the context
-        XSync(w->c->display,0);
-        XFlush(w->c->display);
     }
 }
 
@@ -278,11 +293,10 @@ void xlib_set_mask(crosswin_window *w)
             cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
         }
         cairo_paint(cr); //render it to the window
-        cairo_surface_flush(w->xlib_bitmap);
         XShapeCombineMask(w->c->display,(Window) w->window, ShapeInput, 0, 0, w->pixmap, ShapeSet);
         cairo_destroy(cr);
-        XSync(w->c->display,0);
         XFlush(w->c->display);
+
     }
 }
 
@@ -295,7 +309,6 @@ void xlib_draw(crosswin_window* w)
 {
     xlib_render(w);
     xlib_set_mask(w);
-
 }
 
 int xlib_message_dispatch(crosswin *c)
@@ -376,11 +389,14 @@ int xlib_message_dispatch(crosswin *c)
                 c->md.x = ev.xbutton.x;
                 c->md.y = ev.xbutton.y;
                 c->md.state = mouse_button_state_unpressed;
+                c->md.root_x = ev.xbutton.x_root;
+                c->md.root_y = ev.xbutton.y_root;
                 c->flags|=CROSSWIN_CHECK_ZORDER_FOR_FIX;
                 switch(ev.xbutton.button)
                 {
                     case Button1:
                         c->md.button = mouse_button_left;
+                        xlib_drag(w,0);
                         break;
 
                     case Button2:
@@ -408,9 +424,11 @@ int xlib_message_dispatch(crosswin *c)
 
             case ButtonPress:
             {
-              //   XSetInputFocus(w->c->display, (Window)w->window, RevertToParent, 0);
+                //   XSetInputFocus(w->c->display, (Window)w->window, RevertToParent, 0);
                 c->md.x = ev.xbutton.x;
                 c->md.y = ev.xbutton.y;
+                c->md.root_x = ev.xbutton.x_root;
+                c->md.root_y = ev.xbutton.y_root;
                 c->md.state = mouse_button_state_pressed;
                 c->flags|=CROSSWIN_CHECK_ZORDER_FOR_FIX;
 
@@ -418,6 +436,7 @@ int xlib_message_dispatch(crosswin *c)
                 {
                     case Button1:
                         c->md.button = mouse_button_left;
+                        xlib_drag(w,1);
                         break;
 
                     case Button2:
@@ -576,7 +595,7 @@ static int xlib_fixup_zpos(crosswin *c)
     {
 
         list_enum_part(cw,&c->windows,current)
-                {
+                                                                                                {
             if((Window)cw->window == chld[i])
             {
                 Window *tmp = realloc(server,sizeof(Window)*(server_cnt+1));
@@ -588,7 +607,7 @@ static int xlib_fixup_zpos(crosswin *c)
                 }
                 break;
             }
-                }
+                                                                                                }
     }
 
     XFree(chld);

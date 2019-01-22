@@ -82,7 +82,7 @@ int surface_builtin_init(void *holder, surface_builtin_type tp)
                 crosswin_monitor_resolution(&cd->c, sd->sw, &w, &h);
                 crosswin_monitor_origin(&cd->c, sd->sw, &x, &y);
                 crosswin_get_size(sd->sw,&sw,&sh);
-                crosswin_set_position(sd->sw, (x + w / 2) - sw / 2, (y + h / 2) - sh / 2);
+                crosswin_set_position(sd->sw, (w / 2) - sw / 2, (h / 2) - sh / 2);
                 cd->srf_reg = sd;
                 return(0);
             }

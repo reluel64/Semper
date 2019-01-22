@@ -23,9 +23,9 @@
 #include <font_config.h>
 
 #if defined(__linux__)
+#include <unistd.h>
 #include <sys/inotify.h>
 #include <sys/eventfd.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
@@ -33,6 +33,7 @@
 #include <limits.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
 #elif defined(WIN32)
 #include <windows.h>
 #include <winbase.h>
@@ -81,7 +82,14 @@ size_t tss()
     return(0);
 #endif
 }
-
+#if (defined (__linux__) && !defined (DEBUG))
+static size_t semper_timestamp_get(void)
+{
+    struct timespec t = {0};
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return(t.tv_sec * 1000 + t.tv_nsec / 1000000);
+}
+#endif
 
 static int semper_skeleton_ini_handler(unsigned char* sn, unsigned char* kn, unsigned char* kv, unsigned char* comm, void* pv)
 {
@@ -878,7 +886,7 @@ static void semper_main_wake_fcn(void *pv)
 #endif
 }
 
-#if defined(__linux__)
+#if defined(__linux__) && !defined(DEBUG)
 static void semper_kill_handler(int sig, siginfo_t *inf,void *rv)
 {
     static control_data *cd = NULL;
@@ -929,7 +937,9 @@ int semper_main(void)
     _cairo_mutex_initialize();
     sewd.event_wait = CreateEvent(NULL, 0, 0, NULL);
 #elif defined(__linux__)
+#if !defined(DEBUG)
     semper_install_kill_handler(cd);
+#endif
     sewd.event_wait = (void*)(size_t)eventfd(0, EFD_NONBLOCK);
 #endif
 
@@ -958,7 +968,7 @@ int semper_main(void)
 
 #endif
 
-    if(semper_load_surfaces(cd) == 0)
+      if(semper_load_surfaces(cd) == 0)
     {
         /*launch the catalog if no surface has been loaded due to various reasons*/
         surface_builtin_init(cd, catalog);

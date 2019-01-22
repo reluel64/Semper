@@ -45,6 +45,7 @@ void recycler_init(void **spv, void *ip)
 
     if(rc->inst_count == 0)
     {
+
         diag_info("Initializing Recycler Common");
         pthread_mutexattr_t mutex_attr;
         pthread_mutexattr_init(&mutex_attr);
@@ -208,6 +209,7 @@ void recycler_destroy(void **spv)
         safe_flag_destroy(&rc->tha);
         safe_flag_destroy(&rc->kill);
         pthread_mutex_destroy(&rc->mtx);
+        memset(rc,0,sizeof(recycler_common));
     }
 
     sfree(spv);
