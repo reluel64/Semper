@@ -1,5 +1,11 @@
-11:47:08 **** Clean-only build of configuration Debug for project CoreTemp ****
-rm -rf src/coretemp.d CoreTemp.dll src/coretemp.o 
+10:59:07 **** Rebuild of configuration Release for project CoreTemp ****
+Info: Internal Builder is used for build
+gcc "-includeD:\\Semper_Eclipse\\Semper\\include\\semper_api.h" -O2 -Wall -c -fmessage-length=0 -Wno-pointer-sign -fPIC -o "src\\coretemp.o" "..\\src\\coretemp.c" 
+Cannot run program "gcc": Launching failed
 
-11:47:08 Build Finished. 0 errors, 0 warnings. (took 100ms)
+Error: Program "gcc" not found in PATH
+PATH=[C:/Program Files/Java/jre1.8.0_202/bin/server;C:/Program Files/Java/jre1.8.0_202/bin;C:/Program Files/Java/jre1.8.0_202/lib/amd64;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Users\Alex\AppData\Local\Microsoft\WindowsApps;;D:\eclipse-cpp-2018-12-R-win32-x86_64\eclipse]
+
+
+10:59:07 Build Finished. 0 errors, 0 warnings. (took 40ms)
 

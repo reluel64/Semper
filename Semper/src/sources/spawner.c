@@ -463,157 +463,211 @@ static void *spawner_worker(void *pv)
 
 #elif defined(__linux__)
 
-int temp_p[2];
-pid_t pid = -1;
-/*STD_IN*/
-if(pipe2(temp_p,O_NONBLOCK))
-{
-    return(NULL);
-}
-app_std_in = temp_p[1];
-std_in = temp_p[0];
+    int temp_p[2];
+    int have_pwd = 0;
+    int env_cnt = 0;
+    unsigned char **env = NULL;
+    pid_t pid = -1;
+    /*STD_IN*/
+    if(pipe2(temp_p,O_NONBLOCK))
+    {
+        return(NULL);
+    }
+    app_std_in = temp_p[1];
+    std_in = temp_p[0];
 
-/*STD_OUT*/
-if(pipe2(temp_p,O_NONBLOCK))
-{
-    close(app_std_in);
-    close(std_in);
-    return(NULL);
-}
+    /*STD_OUT*/
+    if(pipe2(temp_p,O_NONBLOCK))
+    {
+        close(app_std_in);
+        close(std_in);
+        return(NULL);
+    }
 
-app_std_out =temp_p[0];
-std_out = temp_p[1];
+    app_std_out =temp_p[0];
+    std_out = temp_p[1];
 
-/*STD_ERR*/
-if(pipe2(temp_p,O_NONBLOCK))
-{
-    close(app_std_in);
-    close(std_in);
-    close(app_std_out);
-    close(std_out);
-    return(NULL);
-}
+    /*STD_ERR*/
+    if(pipe2(temp_p,O_NONBLOCK))
+    {
+        close(app_std_in);
+        close(std_in);
+        close(app_std_out);
+        close(std_out);
+        return(NULL);
+    }
 
-app_std_err = temp_p[0];
-std_err = temp_p[1];
-pthread_mutex_lock(&st->mtx);
-unsigned char *fout = clone_string(st->file_out);
-unsigned char *bin = clone_string(st->bin_path);
-unsigned char *params = clone_string(st->params);
-unsigned char *wd  = clone_string(st->working_dir);
-unsigned char **args = spawner_param_to_argv(params);
-extern char **environ;
+    app_std_err = temp_p[0];
+    std_err = temp_p[1];
+    pthread_mutex_lock(&st->mtx);
+    unsigned char *fout = clone_string(st->file_out);
+    unsigned char *bin = clone_string(st->bin_path);
+    unsigned char *params = clone_string(st->params);
+    unsigned char *wd  = clone_string(st->working_dir);
+    unsigned char **args = spawner_param_to_argv(params);
+    extern char **environ;
 
-pthread_mutex_unlock(&st->mtx);
+    for(int i=0;environ[i];i++)
+    {
+        unsigned char **tenv = realloc(env,sizeof(char*)*(env_cnt+2));
 
-if(args != NULL)
-{
-    args[0] =  bin;
-}
-else
-{
-    args = zmalloc(sizeof(char*)*2);
-    args[0] = bin;
-}
-#if defined(DEBUG)
-            for(int  i=1;args[i];i++)
+        if(tenv)
+        {
+            env = tenv;
+
+            if(strncasecmp(environ[i], "PWD", 3) || !wd)
             {
-                diag_info("%s: %s",__FUNCTION__,args[i]);
+                env[env_cnt] = zmalloc(string_length(environ[i])+1);
+                strncpy(env[env_cnt], environ[i], string_length(environ[i]));
+
             }
-#endif
-            posix_spawn_file_actions_t file_act;
-            posix_spawnattr_t attr;
-            posix_spawn_file_actions_init(&file_act);
-            posix_spawn_file_actions_adddup2(&file_act, std_out, 1);
-            posix_spawn_file_actions_adddup2(&file_act, std_err, 2);
-            posix_spawnattr_init(&attr);
-
-            if(!posix_spawn(&pid,bin,&file_act,&attr,(char**)args,environ))
+            else
             {
-                pthread_mutex_lock(&st->mtx);
-                st->ph = pid;
-                pthread_mutex_unlock(&st->mtx);
+                env[env_cnt] = zmalloc(string_length(wd)+5);
+                sprintf(env[env_cnt],"PWD=%s",wd);
+                have_pwd = 1;
+            }
+            env_cnt++;
+        }
+    }
 
-                while(1)
+    if(have_pwd == 0)
+    {
+        unsigned char **tenv = realloc(env,sizeof(char*)*(env_cnt+2));
+        if(tenv)
+        {
+            env = tenv;
+            env[env_cnt] = zmalloc(string_length(wd)+1);
+            strcpy(env[env_cnt], wd);
+            have_pwd = 1;
+            env_cnt++;
+        }
+    }
+
+    env[env_cnt] = 0;
+
+    for(size_t i=0;env[i];i++)
+    {
+        printf("%s\n",env[i]);
+    }
+
+
+    pthread_mutex_unlock(&st->mtx);
+
+    if(args != NULL)
+    {
+        args[0] =  bin;
+    }
+    else
+    {
+        args = zmalloc(sizeof(char*)*2);
+        args[0] = bin;
+    }
+#if defined(DEBUG)
+    for(int  i=1;args[i];i++)
+    {
+        diag_info("%s: %s",__FUNCTION__,args[i]);
+    }
+#endif
+    posix_spawn_file_actions_t file_act;
+    posix_spawnattr_t attr;
+    posix_spawn_file_actions_init(&file_act);
+    posix_spawn_file_actions_adddup2(&file_act, std_out, 1);
+    posix_spawn_file_actions_adddup2(&file_act, std_err, 2);
+    posix_spawnattr_init(&attr);
+
+    if(!posix_spawn(&pid,bin,&file_act,&attr,(char**)args,(char**)env))
+    {
+        pthread_mutex_lock(&st->mtx);
+        st->ph = pid;
+        pthread_mutex_unlock(&st->mtx);
+
+        while(1)
+        {
+            struct pollfd events[2];
+            int status = 0;
+            int ret = 0;
+            memset(events,0,sizeof(events));
+            events[0].fd=(int)(size_t)app_std_out;
+            events[0].events = POLLIN;
+            events[1].fd=(int)(size_t)app_std_err;
+            events[1].events = POLLIN;
+            poll(events, 2, 1);
+
+
+            if(events[0].revents)
+            {
+                char buf[4096];
+                ssize_t tr = 0;
+
+                while((tr = read(app_std_out,buf,4096))>0)
                 {
-                    struct pollfd events[2];
-                    int status = 0;
-                    int ret = 0;
-                    memset(events,0,sizeof(events));
-                    events[0].fd=(int)(size_t)app_std_out;
-                    events[0].events = POLLIN;
-                    events[1].fd=(int)(size_t)app_std_err;
-                    events[1].events = POLLIN;
-                    poll(events, 2, 1);
-
-
-                    if(events[0].revents)
-                    {
-                        char buf[4096];
-                        ssize_t tr = 0;
-
-                        while((tr = read(app_std_out,buf,4096))>0)
-                        {
-                            spawner_convert_and_append(buf,tr,&raw_str,&raw_len);
-                        }
-                    }
-
-                    if(events[1].revents)
-                    {
-                        char buf[4096];
-                        ssize_t tr = 0;
-
-                        while((tr = read(app_std_err,buf,4096))>0)
-                        {
-                            spawner_convert_and_append(buf,tr,&raw_str,&raw_len);
-                        }
-                    }
-
-                    ret = waitpid(pid,&status,WNOHANG);
-
-                    if(ret == -1)
-                    {
-                        break;
-                    }
-
+                    spawner_convert_and_append(buf,tr,&raw_str,&raw_len);
                 }
             }
 
-            close(std_in);
-            close(app_std_out);
-            close(app_std_in);
-            close(std_out);
-            close(app_std_err);
-            close(std_err);
+            if(events[1].revents)
+            {
+                char buf[4096];
+                ssize_t tr = 0;
+
+                while((tr = read(app_std_err,buf,4096))>0)
+                {
+                    spawner_convert_and_append(buf,tr,&raw_str,&raw_len);
+                }
+            }
+
+            ret = waitpid(pid,&status,WNOHANG);
+
+            if(ret == -1)
+            {
+                break;
+            }
+
+        }
+    }
+
+    close(std_in);
+    close(app_std_out);
+    close(app_std_in);
+    close(std_out);
+    close(app_std_err);
+    close(std_err);
 #endif
 
 #if defined(WIN32)
-            sfree((void**)&cmd);
+    sfree((void**)&cmd);
 #elif defined(__linux__)
-            sfree((void**)&params);
-            sfree((void**)&bin);
+    sfree((void**)&params);
+    sfree((void**)&bin);
 
-            for(size_t i = 1;args[i];i++)
-            {
-                sfree((void**)&args[i]);
-            }
+    for(size_t i = 1;args[i];i++)
+    {
+        sfree((void**)&args[i]);
+    }
 
-            sfree((void**)&args);
+    sfree((void**)&args);
 
+    for(size_t i = 0; i<env_cnt;i++)
+    {
+        sfree((void**)&env[i]);
+    }
+
+    sfree((void**)&env);
 #endif
 
-            sfree((void**)&wd);
+    sfree((void**)&wd);
 
-            spawner_write_to_file(fout,raw_str,raw_len);
-            sfree((void**)&fout);
-            pthread_mutex_lock(&st->mtx);
-            st->raw_str = raw_str;
-            st->raw_str_len = raw_len;
-            st->ph = -1;
-            st->th = -1;
-            pthread_mutex_unlock(&st->mtx);
-            safe_flag_set(st->th_active,0);
-            return(NULL);
+    spawner_write_to_file(fout,raw_str,raw_len);
+    sfree((void**)&fout);
+    pthread_mutex_lock(&st->mtx);
+    st->raw_str = raw_str;
+    st->raw_str_len = raw_len;
+    st->ph = -1;
+    st->th = -1;
+    pthread_mutex_unlock(&st->mtx);
+    safe_flag_set(st->th_active,0);
+    return(NULL);
 }
 
 
@@ -671,7 +725,7 @@ static unsigned char **spawner_param_to_argv(unsigned char *str)
 
     unsigned char **res = NULL;
     string_tokenizer_info sti = {0};
-    size_t tokens[2];
+    size_t tokens[2]={0};
     sti.buffer = str;
     sti.string_tokenizer_filter = spawner_filter;
     sti.filter_data = &tokens;

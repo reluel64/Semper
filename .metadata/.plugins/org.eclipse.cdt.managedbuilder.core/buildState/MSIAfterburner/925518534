@@ -1,0 +1,6 @@
+#
+#Thu Jan 24 10:59:06 EET 2019
+include/semper_api.h=1
+Release/MSIAfterburner.dll=1
+src/MSIAfterburner.c=1
+Release/src/MSIAfterburner.o=1

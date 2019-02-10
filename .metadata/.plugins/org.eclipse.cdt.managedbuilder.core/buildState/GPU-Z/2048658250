@@ -1,0 +1,6 @@
+#
+#Thu Jan 24 10:59:06 EET 2019
+include/semper_api.h=1
+src/gpuz.c=1
+Release/src/gpuz.o=1
+Release/GPU-Z.dll=1

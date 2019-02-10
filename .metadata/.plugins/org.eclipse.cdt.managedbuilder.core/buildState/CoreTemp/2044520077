@@ -1,0 +1,6 @@
+#
+#Thu Jan 24 10:59:07 EET 2019
+include/semper_api.h=1
+src/coretemp.c=1
+Release/src/coretemp.o=1
+Release/CoreTemp.dll=1

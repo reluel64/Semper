@@ -1,0 +1,6 @@
+#
+#Thu Jan 24 10:59:07 EET 2019
+include/semper_api.h=1
+Release/src/speedfan.o=1
+Release/SpeedFan.dll=1
+src/speedfan.c=1

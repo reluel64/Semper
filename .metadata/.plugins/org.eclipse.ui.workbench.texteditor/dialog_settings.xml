@@ -2,12 +2,13 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="Map" key="selection"/>
+		<item value="spawner_param_to_argv" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="spawner_param_to_argv"/>
 			<item value="Map"/>
 			<item value="xlib_drag"/>
 			<item value="set_pos"/>
@@ -15,7 +16,6 @@
 			<item value="Move"/>
 			<item value="FILE_A"/>
 			<item value="MOVE"/>
-			<item value="dr"/>
 		</list>
 		<list key="replacehistory">
 			<item value="c-&gt;flags"/>

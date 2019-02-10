@@ -70,7 +70,7 @@ int diag_init(control_data *cd)
 
 #else
     ds->ltf = 1;
-    ds->level = 0x0;
+    ds->level = 0x1;
 #endif
 
     if((k = skeleton_get_key(cd->smp, "LogMaxEntries")) != NULL)

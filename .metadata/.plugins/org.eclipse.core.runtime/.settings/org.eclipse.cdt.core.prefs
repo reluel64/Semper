@@ -10,7 +10,7 @@ ToolChainManager/order/4.id=gcc-x86_64-/bin/clang
 ToolChainManager/order/4.type=org.eclipse.cdt.build.clang
 ToolChainManager/order/5.id=gcc-x86_64-/usr/bin/clang
 ToolChainManager/order/5.type=org.eclipse.cdt.build.clang
-ToolChainManager/order/n=3
+ToolChainManager/order/n=2
 build.all.configs.enabled=false
 build.proj.ref.configs.enabled=false
 eclipse.preferences.version=1
@@ -35,7 +35,7 @@ indexer/skipTypeReferences=false
 indexer/updatePolicy=0
 indexer/useHeuristicIncludeResolution=true
 language.settings.providers.workspace.prefs.toggle=true
-macros/workspace=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\n<macros>\n<stringMacro name\="BIN_DIR" type\="VALUE_TEXT" value\="${workspace_loc}/bin/${ConfigName}"/>\n<stringMacro name\="EXT_DIR" type\="VALUE_TEXT" value\="${workspace_loc}/bin/${ConfigName}/Extensions"/>\n<stringMacro name\="BUILD_DIR" type\="VALUE_TEXT" value\="${workspace_loc}/build/${ConfigName}/${ProjName}"/>\n</macros>\n
+macros/workspace=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?>\r\n<macros>\r\n<stringMacro name\="BIN_DIR" type\="VALUE_TEXT" value\="${workspace_loc}/bin/${ConfigName}"/>\r\n<stringMacro name\="EXT_DIR" type\="VALUE_TEXT" value\="${workspace_loc}/bin/${ConfigName}/Extensions"/>\r\n<stringMacro name\="BUILD_DIR" type\="VALUE_TEXT" value\="${workspace_loc}/build/${ConfigName}/${ProjName}"/>\r\n</macros>\r\n
 org.eclipse.cdt.core.formatter.alignment_for_arguments_in_method_invocation=16
 org.eclipse.cdt.core.formatter.alignment_for_assignment=16
 org.eclipse.cdt.core.formatter.alignment_for_base_clause_in_type_declaration=80

@@ -1,12 +1,12 @@
 applyBackground=false
 approved.defs.file.last.changed.time=1540329737000
 codemix.dont.show.upsell.until=1547827351846
-configurationInstallLocation=/usr/lib/eclipse/
+configurationInstallLocation=/D\:/eclipse-cpp-2018-12-R-win32-x86_64/eclipse/
 eclipse.preferences.version=1
-iconcolormode=primary
+iconcolormode=pastel
 includeThemingInOomph=false
-last.download.attempt.time=1548185940549
-lastConfiguration=1548185933199
+last.download.attempt.time=1548871998201
+lastConfiguration=1548871991258
 newinstall=false
 openjdk.warning.shown=true
 showWelcomeDialog=false
